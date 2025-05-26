@@ -1,0 +1,222 @@
+{
+  "itemCategories": {
+    "rods": {
+      "type": "equipment",
+      "stackable": false,
+      "equipSlot": "rod",
+      "maxEquipped": 1,
+      "requiredProperties": ["id", "name", "rarity", "stats", "description", "unlockLevel"],
+      "optionalProperties": ["cost", "craftingMaterials", "craftingTime", "durability", "condition"]
+    },
+    "lures": {
+      "type": "equipment", 
+      "stackable": true,
+      "equipSlot": "lure",
+      "maxEquipped": 1,
+      "requiredProperties": ["id", "name", "type", "rarity", "description", "unlockLevel"],
+      "optionalProperties": ["cost", "craftingMaterials", "craftingTime", "quantity", "durability", "condition"]
+    },
+    "bait": {
+      "type": "consumable",
+      "stackable": true,
+      "equipSlot": "bait",
+      "maxEquipped": 1,
+      "requiredProperties": ["id", "name", "rarity", "description"],
+      "optionalProperties": ["cost", "quantity", "effectiveness", "duration"]
+    },
+    "boats": {
+      "type": "equipment",
+      "stackable": false,
+      "equipSlot": "boat",
+      "maxEquipped": 1,
+      "requiredProperties": ["id", "name", "rarity", "stats", "description", "unlockLevel"],
+      "optionalProperties": ["cost", "craftingMaterials", "craftingTime", "durability", "condition"]
+    },
+    "upgrades": {
+      "type": "upgrade",
+      "stackable": false,
+      "equipSlot": "none",
+      "maxEquipped": 999,
+      "requiredProperties": ["id", "name", "rarity", "description", "effect"],
+      "optionalProperties": ["cost", "unlockLevel", "permanent"]
+    },
+    "fish": {
+      "type": "resource",
+      "stackable": true,
+      "equipSlot": "none",
+      "maxEquipped": 0,
+      "requiredProperties": ["id", "name", "rarity", "weight", "value", "description"],
+      "optionalProperties": ["quantity", "catchLocation", "catchTime", "size", "experience"]
+    },
+    "consumables": {
+      "type": "consumable",
+      "stackable": true,
+      "equipSlot": "none",
+      "maxEquipped": 0,
+      "requiredProperties": ["id", "name", "rarity", "description", "effect"],
+      "optionalProperties": ["cost", "quantity", "duration", "cooldown"]
+    },
+    "materials": {
+      "type": "resource",
+      "stackable": true,
+      "equipSlot": "none",
+      "maxEquipped": 0,
+      "requiredProperties": ["id", "name", "rarity", "description"],
+      "optionalProperties": ["cost", "quantity", "source"]
+    }
+  },
+  "itemProperties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the item",
+      "required": true
+    },
+    "name": {
+      "type": "string", 
+      "description": "Display name of the item",
+      "required": true
+    },
+    "type": {
+      "type": "string",
+      "description": "Item subtype (e.g., spinner, soft_plastic for lures)",
+      "required": false
+    },
+    "rarity": {
+      "type": "integer",
+      "description": "Item rarity level (1-6, 1=common, 6=legendary)",
+      "required": true,
+      "min": 1,
+      "max": 6
+    },
+    "description": {
+      "type": "string",
+      "description": "Flavor text describing the item",
+      "required": true
+    },
+    "cost": {
+      "type": "integer",
+      "description": "Purchase price in coins",
+      "required": false,
+      "min": 0
+    },
+    "unlockLevel": {
+      "type": "integer",
+      "description": "Player level required to use this item",
+      "required": false,
+      "min": 1
+    },
+    "quantity": {
+      "type": "integer",
+      "description": "Stack size for stackable items",
+      "required": false,
+      "min": 1,
+      "default": 1
+    },
+    "durability": {
+      "type": "integer",
+      "description": "Maximum durability points",
+      "required": false,
+      "min": 1
+    },
+    "condition": {
+      "type": "integer",
+      "description": "Current condition/durability",
+      "required": false,
+      "min": 0
+    },
+    "stats": {
+      "type": "object",
+      "description": "Item stat bonuses and effects",
+      "required": false,
+      "properties": {
+        "castAccuracy": {"type": "integer", "min": 0},
+        "tensionStability": {"type": "integer", "min": 0},
+        "rareFishChance": {"type": "integer", "min": 0},
+        "castingRange": {"type": "integer", "min": 0},
+        "reelSpeed": {"type": "integer", "min": 0},
+        "struggleResistance": {"type": "integer", "min": 0},
+        "biteRate": {"type": "integer", "min": 0},
+        "lureSuccess": {"type": "integer", "min": 0},
+        "lureDurability": {"type": "integer", "min": 0},
+        "lurePrecision": {"type": "integer", "min": 0}
+      }
+    },
+    "craftingMaterials": {
+      "type": "array",
+      "description": "List of materials needed to craft this item",
+      "required": false,
+      "items": {"type": "string"}
+    },
+    "craftingTime": {
+      "type": "integer",
+      "description": "Time in minutes to craft this item",
+      "required": false,
+      "min": 1
+    },
+    "effect": {
+      "type": "object",
+      "description": "Special effects or abilities",
+      "required": false,
+      "properties": {
+        "type": {"type": "string"},
+        "value": {"type": "number"},
+        "duration": {"type": "integer"},
+        "target": {"type": "string"}
+      }
+    },
+    "owned": {
+      "type": "boolean",
+      "description": "Whether player owns this item",
+      "required": false,
+      "default": false
+    },
+    "equipped": {
+      "type": "boolean",
+      "description": "Whether this item is currently equipped",
+      "required": false,
+      "default": false
+    },
+    "unique": {
+      "type": "boolean",
+      "description": "Whether this is a unique item (only one can be owned)",
+      "required": false,
+      "default": false
+    },
+    "tradeable": {
+      "type": "boolean",
+      "description": "Whether this item can be traded or sold",
+      "required": false,
+      "default": true
+    }
+  },
+  "rarityColors": {
+    "1": "#8C7853",
+    "2": "#FFFFFF", 
+    "3": "#1EFF00",
+    "4": "#0070DD",
+    "5": "#A335EE",
+    "6": "#FF8000"
+  },
+  "rarityNames": {
+    "1": "Common",
+    "2": "Uncommon",
+    "3": "Rare", 
+    "4": "Epic",
+    "5": "Legendary",
+    "6": "Mythic"
+  },
+  "inventoryLimits": {
+    "maxSlots": 100,
+    "maxStackSize": 999,
+    "categories": {
+      "rods": 20,
+      "lures": 30,
+      "bait": 10,
+      "boats": 5,
+      "upgrades": 50,
+      "fish": 100,
+      "consumables": 20,
+      "materials": 50
+    }
+  }
+} 

@@ -1,0 +1,400 @@
+LUXURY ANGLER: GAME DESIGN DOCUMENT
+====================================
+
+Date: May 25, 2025
+
+TABLE OF CONTENTS
+-----------------
+1. Game Overview
+2. Core Gameplay Loop
+3. Attributes System
+4. Fishing System
+   4.1 Fishing Mechanics
+      4.1.1 Cast Minigame
+      4.1.2 Lure Minigame (Enhanced)
+      4.1.3 Reel-In Minigame
+   4.2 Time System
+   4.3 Weather System
+   4.4 Lure Types
+   4.5 Fish Struggle Styles
+   4.6 QTE Reaction Controls
+5. Crafting System
+6. Level Progression
+7. Inventory and Equipment
+   7.1 Inventory System
+   7.2 Equipment System
+8. Social System
+   8.1 Cruise Chatroom
+   8.2 Story and Dialog System (RenJS)
+9. Shop System
+10. Achievement System
+11. Economy System
+12. Art and Audio
+13. Technical Design
+
+1. GAME OVERVIEW
+----------------
+
+1.1 Game Concept
+Luxury Angler is a 2D fishing simulation game that blends realistic fishing mechanics with a luxurious lifestyle theme. Players progress from novice to master angler across 50 levels, fishing in 5 exotic maps with 10 spots each, crafting elite gear via a merge system, competing in tournaments, and building relationships with 10 bikini girl companions. The game features 50 Fish Cards, a day-night cycle with 8 time periods, a weather system (Sunny/Rainy), and skill-based minigames (casting, luring, reeling), alongside idle auto-fishing options, appealing to both casual and mid-core players.
+
+1.2 Target Audience
+Casual to mid-core gamers aged 16-35, fans of simulation, life sim, and RPG games (e.g., Stardew Valley, Dave the Diver), who enjoy progression, crafting, and social elements with a luxurious twist.
+
+1.3 Platforms
+Primary: Mobile (iOS, Android). Potential: PC (Steam), Nintendo Switch.
+
+1.4 Game Genre
+Simulation, Fishing, Life Sim, Card Collection, Social, Idle.
+
+1.5 Unique Selling Proposition
+- Luxurious fishing lifestyle with high-end boats and exotic locations.
+- Deep crafting via merge system using Fish Cards.
+- Dynamic day-night and weather systems affecting fish availability.
+- Blend of skill-based and idle gameplay.
+
+1.6 Key Features
+- Fishing Mechanics: Skill-based casting, 5 lure types, 10 fish struggle styles, and QTEs.
+- Crafting: Merge Fish Cards into rods, lures, boats, and clothing.
+- Progression: 50 levels, 5 maps with 10 spots each, boss fights.
+- Social: 10 companions with romance mechanics.
+- Time/Weather: 8 time periods, Sunny/Rainy conditions.
+
+2. CORE GAMEPLAY LOOP
+---------------------
+
+2.1 Main Game Loop Flowchart
+The gameplay loop starts at the Title Screen and centers on the Boat Menu, where players choose actions: traveling to fishing spots, fishing, chatting, shopping, or managing inventory. Time and energy consumption tie into the day-night and weather systems. Players must return to the starting game port to access the Shop or sell Fish Cards from their boat’s fishtank.
+
+Flowchart (simplified):
+Title Screen -> Boat Menu (Time, Weather, Location Display)
+  -> Travel -> Select Map (1 of 5) -> Select Spot (1 of 10) -> Arrive (Time +1h, Energy -2)
+  -> Go Fishing -> Choose Mode: Story Mode or Practice Mode
+    -> Select Map (Story Mode: Story maps; Practice Mode: Practice maps, excluding story basic fish map)
+    -> Fishing (Cast, Lure, Reel; Time +30m, Energy -5)
+      -> Success -> Collect Fish Card (if fishtank not full) -> Return to Boat Menu
+      -> Fail -> Return to Boat Menu
+  -> Go Chatroom -> Cruise Chatroom (Social Interactions) -> Return to Boat Menu
+  -> Go Shop (Only at Starting Port) -> Shop Menu (Purchase Items) -> Return to Boat Menu
+  -> Go Inventory -> Inventory (Manage Cards, Gear) -> Return to Boat Menu
+  -> Return to Port (Time +1h, Energy -2) -> Sell Fish Cards -> Access Shop
+
+2.2 Gameplay Loop Description
+Players begin at the Title Screen, entering the Boat Menu after a tutorial or save load. The Boat Menu displays time (e.g., Dawn), weather (e.g., Sunny), and the boat’s current location (e.g., Starting Port or Map 3, Spot 7). From here, players can:
+- **Travel**: Move between the starting port and 5 fishing maps, each with 10 unique spots (e.g., Coral Reef, Deep Trench). Travel takes 1 hour and 2 Energy.
+- **Fish**: Choose between **Story Mode** or **Practice Mode**:
+  - **Story Mode**: Access story-related maps with unique fish and challenges tied to the narrative.
+  - **Practice Mode**: Access practice maps (excluding the story's basic fish map) for skill honing or catching specific fish without impacting story progression.
+- **Chat**: Interact socially with companions.
+- **Shop**: Purchase items, but only when docked at the starting port.
+- **Manage Inventory**: Craft or equip items.
+When the fishtank is full, players must return to the port (1 hour, 2 Energy) to sell all Fish Cards and free up space. Actions advance time and consume energy, looping back to the Boat Menu.
+
+3. ATTRIBUTES SYSTEM
+--------------------
+
+3.1 Player Attributes (34)
+Player attributes enhance fishing, crafting, and social interactions. They are improved via leveling, gear, or skills and are categorized into:
+
+3.1.1 Player Leveling Attributes (10)
+- Cast Accuracy: Increases hotspot target zone. Improved by leveling (+1%/level, max 20%).
+- Energy: Stamina for actions (base max 100). Improved by leveling (+2/level).
+- Bite Rate: Likelihood of fish biting. Improved by leveling (+0.5%/level).
+- Rare Fish Chance: Probability of rare fish encounters. Improved by leveling (+0.2%/level).
+- QTE Precision: Extends QTE timing windows. Improved by leveling (+0.5%/level).
+- Lure Success: Success rate of luring inputs. Improved by leveling (+0.5%/level).
+- Line Strength: Reduces line break chance. Improved by leveling (+0.3%/level).
+- Casting Range: Increases cast distance. Improved by leveling (+0.5%/level).
+- Boat Speed: Reduces travel time. Improved by leveling (+0.3%/level).
+- Coin Gain: Increases coins earned. Improved by leveling (+0.3%/level).
+
+3.1.2 Fishing Rod Attributes (6)
+- Cast Accuracy: Boosted by rods (e.g., +25% with 5-Star rod).
+- Tension Stability: Widens safe tension zone (e.g., +28% with 5-Star rod).
+- Rare Fish Chance: Increased by rods (e.g., +15% with 5-Star rod).
+- Casting Range: Extended by rods (e.g., +35% with 5-Star rod).
+- Reel Speed: Faster reeling (e.g., +15% with 5-Star rod).
+- Struggle Resistance: Reduces fish struggle intensity (e.g., +15% with 5-Star rod).
+
+3.1.3 Lure Attributes (4)
+- Bite Rate: Boosted by lures (e.g., +60% with 5-Star lure).
+- Lure Success: Improved by lures (e.g., +40% with 3-Star lure).
+- Lure Durability: Reduces failure chance (e.g., +10% with 5-Star lure).
+- Lure Precision: Tightens input windows (e.g., +10% with 5-Star lure).
+
+3.1.4 Bikini Assistant Attributes (6)
+- Romance Effectiveness: Increases romance points. Improved by skills.
+- Chatroom Affinity: Boosts chatroom interactions. Improved by boats.
+- Entertainment Mood Boost: Enhances companion mood. Improved by boats.
+- Fish Detection: Spots high-value fish. Improved by companions.
+- Energy: Boosted by companions. Improved by clothing.
+- QTE Precision: Extended by companions. Improved by skills.
+
+3.1.5 Boat Attributes (8)
+- Crafting Efficiency: Reduces crafting time/cost. Improved by boats.
+- Auto-Fishing Yield: Increases auto-fishing rewards. Improved by boats.
+- Fish Detection: Enhanced by boats (e.g., +10% with 5-Star boat).
+- Hotspot Stability: Increases hotspot duration. Improved by boats.
+- Companion Slot Capacity: Adds companion slots. Improved by boats.
+- Auto-Fishing Efficiency: Reduces auto-fishing time. Improved by boats.
+- Boat Durability: Reduces penalties in adverse conditions. Improved by boats.
+- Fishtank Storage: Expands Fish Card storage. Improved by boats.
+
+3.2 Fish Attributes (11)
+Fish attributes influence behavior and difficulty:
+- Size: 1-10 (e.g., Kraken: 10).
+- Aggressiveness: 1-10 (e.g., Shark: 10).
+- Elusiveness: 1-10 (e.g., Anglerfish: 10).
+- Strength: 1-10 (e.g., Tuna: 10).
+- Rarity: 1-10 (e.g., Blue Marlin: 10).
+- Weight: 0.1-500 kg (e.g., Giant Squid: 500 kg).
+- Speed: 1-10 (e.g., Marlin: 10).
+- Depth Preference: 1-10 (e.g., Viperfish: 10).
+- Bait Preference: 1-10 (e.g., Trout: 10 for Fly).
+- Endurance: 1-10 (e.g., Kraken: 10).
+- Active Time Period/Weather Preference: Specific time/weather (e.g., Moonlight Bass: Night, Rainy).
+
+4. FISHING SYSTEM
+-----------------
+
+4.1 Fishing Mechanics
+The fishing process in *Luxury Angler* consists of three minigames: **Cast**, **Lure**, and **Reel-In**, influenced by player and fish attributes.
+- **Visual**: A Fishing Rod and A lure will be shown always after entering Fishing process.
+
+4.1.1 Cast Minigame
+- **Description**: A timing-based minigame 
+- **Gameplay**: A cast meter showing up and if player click inside a Accurate Section on the cast meter, the lure will be casted to a hotspot(large or rare fishes have higher chance to appear), but if player missed the accurate section, the lure will be casted to a normal spot.
+- **Modifiers**: Player’s Cast Accuracy and Fish Detection attributes affect Accurate Section size and visibility.
+- **Outcome**: Success proceeds to the **Lure** minigame; failure ends the attempt.
+- **Visual**: Add the visual of a 2D fishing rod casting animation and after player click in the cast meter, a lure with fishing line is being thrown out toward the hotspot in the water. If the player clicked within the Accurate Section on the cast meter, The lure with fishing line will land in the hotspot in the water with a splash sound, otherwise if player failed to click within Accurate Section, the lure with fishing line will land outside hotspot.
+
+4.1.2 Lure Minigame (Enhanced)
+The **Lure** minigame involves a fish shadow approaching the lure, with players given 3 to 4 opportunities to hook the fish.
+
+Create a Lure Simulation UI at upper right corner showing a lure's movement in the water. Fishes nearby will swim at the bottom of Lure Simulation UI. A fish interested will stop, bubbling, and observe the lure for 5 seconds if the lure is acting correctly according to the Lure control scheme, then it will decide to bite the hook. If a player fails the control scheme of that lure type, the observing fish will swim away. 
+
+Regular Lure Control: If a player presses up(W in WASD control), the lure is swimming up quickly after a second, if a player press left or right (A or D in WASD), the lure is swimming upper right towards to boat(right side of the screen) for a second. All actions have 1 second cooldown.
+
+- **Fish Shadow Mechanics**:
+  - A shadow (small, medium, or large) swims toward the lure, indicating fish size/rarity.
+  - Shadow behavior (circling, darting) reflects fish **Aggressiveness** and **Elusiveness**.
+
+- **Luring Phases**:
+  - Players have **3 to 4 opportunities** (phases) to hook the fish.
+  - Each phase uses rhythm-based inputs specific to the lure (e.g., Pulse Tap for Spinner).
+  - **Success**: Correct inputs keep the shadow close.
+  - **Failure**: Mistakes make the shadow swim away; all failures pull the lure back.
+
+- **Progressive Difficulty**:
+  - Later phases are harder (tighter timing, complex sequences).
+  - Scales with fish **Elusiveness** and player **Lure Success**.
+
+- **Hooking the Fish**:
+  - After successful phases, a final timed input hooks the fish.
+  - **Feedback**: Splash (success) or thud (failure).
+
+- **Attribute Integration**:
+  - **Player Attributes**:
+    - **Lure Success**: Eases input timing.
+    - **Bite Rate**: May reduce phases needed.
+  - **Fish Attributes**:
+    - **Aggressiveness**: Faster shadow approach.
+    - **Elusiveness**: Higher failure risk.
+
+- **User Interface**:
+  - **Shadow Interest Meter**: Visual gauge of fish interest.
+  - **Input Prompts**: Guides for each phase.
+
+- **Lure Types**
+- Spinner: Pulse Tap.
+- Soft Plastic: Drag and Pause.
+- Fly: Swipe Flick Combo.
+- Popper: Tap and Hold Burst.
+- Spoon: Circular Trace.
+
+
+4.1.3 Reel-In Minigame
+- **Description**: Tension-based minigame with QTEs to reel in the fish.
+- **Modifiers**: Player’s Tension Stability and Reel Speed affect difficulty.
+- **Outcome**: Success yields rewards; failure loses the fish.
+- **Visual**: A hooked struggling fish with fishing line tied to it with splashing water. The fish will quickly swim left and right randomly.
+- **Meter**: A tension meter showing up, and player has to make sure the tension indicator doesn't reach the max of the tension meter or the fishline will snap. 
+- **control**: mouse press will Reel a bit and result fish losing Stamina, the consumed stamina number will pop up from a struggle fish.
+- **QTE control tie to Struggle**: A fish has chances to do 2 or 3 types of the 10 struggle ways. A QTE control needs to be input quickly, otherwise Tension Meter will suddenly increase to 90% max.
+- **Fish Stamina** A fish stamina bar will show on the fish's top. Fish will do a struggle several times until its stamina reaches 0 and being pulled up by the player. 
+
+- **Fish Struggle Styles** (Examples)
+- Rapid Thrashing, Deep Dive, Long Sprint.
+
+- **QTE Reaction Controls** (Examples)
+- Quick Tap, Hold and Release, Swipe Chain.
+
+4.2 Time System
+- **Cycle**: 8 periods (e.g., Dawn, Noon), each 3 in-game hours.
+- **Progression**: Fishing advances time by 30 minutes; travel by 1 hour.
+
+4.3 Weather System
+- **Types**: Sunny (boosts Fish Detection), Rainy (10% Bite Rate increase).
+- **Cycle**: Changes every 2 in-game hours.
+
+4.4 Map Selection
+- **Story Mode Maps**: These maps are tied to the main storyline, featuring unique fish, challenges, and narrative progression. Examples include Coral Cove and Deep Abyss.
+- **Practice Mode Maps**: Separate from the story, these maps (excluding the story's basic fish map) allow players to practice skills or target specific fish without affecting story progression. Examples include Training Lagoon and Open Waters.
+
+5. CRAFTING SYSTEM
+------------------
+
+5.1 Merge Mechanics
+Crafting at the Boat Workshop:
+- Inputs: Fish Cards (1-5 Stars).
+- Costs: 200-16,000 coins, 2-30 minutes.
+- Outputs: Rods, lures, boats, and clothing.
+- Upgrading: Merge lower-tier items.
+
+5.2 Sample Merge Recipes (60)
+Fishing Rods (15):
+1. Bamboo Rod: 2 Minnow Cards, 200 coins, 2 min.
+2. Fiberglass Rod: 2 Perch Cards, 400 coins, 4 min.
+3. Carbon Rod: 2 Trout Cards, 800 coins, 6 min.
+4. Steel Rod: 2 Pike Cards, 1,200 coins, 8 min.
+5. Titanium Rod: 2 Salmon Cards, 2,000 coins, 10 min.
+6. Elite Bamboo Rod: 2 Bamboo Rods, 1,000 coins, 12 min.
+7. Elite Fiberglass Rod: 2 Fiberglass Rods, 2,000 coins, 14 min.
+8. Elite Carbon Rod: 2 Carbon Rods, 3,000 coins, 16 min.
+9. Elite Steel Rod: 2 Steel Rods, 4,000 coins, 18 min.
+10. Elite Titanium Rod: 2 Titanium Rods, 6,000 coins, 20 min.
+11. Master Bamboo Rod: 2 Elite Bamboo Rods, 8,000 coins, 22 min.
+12. Master Fiberglass Rod: 2 Elite Fiberglass Rods, 10,000 coins, 24 min.
+13. Master Carbon Rod: 2 Elite Carbon Rods, 12,000 coins, 26 min.
+14. Master Steel Rod: 2 Elite Steel Rods, 14,000 coins, 28 min.
+15. Master Titanium Rod: 2 Elite Titanium Rods, 16,000 coins, 30 min.
+
+Lures (15):
+1. Basic Spinner: 2 Perch Cards, 300 coins, 2 min.
+2. Soft Worm: 2 Catfish Cards, 500 coins, 4 min.
+3. Fly Lure: 2 Trout Cards, 700 coins, 6 min.
+4. Popper Lure: 2 Pike Cards, 900 coins, 8 min.
+5. Spoon Lure: 2 Salmon Cards, 1,100 coins, 10 min.
+6. Elite Spinner: 2 Basic Spinners, 1,500 coins, 12 min.
+7. Elite Soft Worm: 2 Soft Worms, 2,000 coins, 14 min.
+8. Elite Fly Lure: 2 Fly Lures, 2,500 coins, 16 min.
+9. Elite Popper: 2 Popper Lures, 3,000 coins, 18 min.
+10. Elite Spoon: 2 Spoon Lures, 3,500 coins, 20 min.
+11. Master Spinner: 2 Elite Spinners, 4,000 coins, 22 min.
+12. Master Soft Worm: 2 Elite Soft Worms, 4,500 coins, 24 min.
+13. Master Fly Lure: 2 Elite Fly Lures, 5,000 coins, 26 min.
+14. Master Popper: 2 Elite Poppers, 5,500 coins, 28 min.
+15. Master Spoon: 2 Elite Spoons, 6,000 coins, 30 min.
+
+Boats (15):
+1. Rowboat: 3 Sardine Cards, 500 coins, 5 min.
+2. Skiff: 3 Bass Cards, 1,000 coins, 7 min.
+3. Speedboat: 3 Tuna Cards, 2,000 coins, 9 min.
+4. Yacht: 3 Marlin Cards, 4,000 coins, 11 min.
+5. Luxury Liner: 3 Shark Cards, 6,000 coins, 13 min.
+6. Elite Rowboat: 2 Rowboats, 2,000 coins, 15 min.
+7. Elite Skiff: 2 Skiffs, 3,000 coins, 17 min.
+8. Elite Speedboat: 2 Speedboats, 5,000 coins, 19 min.
+9. Elite Yacht: 2 Yachts, 8,000 coins, 21 min.
+10. Elite Luxury Liner: 2 Luxury Liners, 12,000 coins, 23 min.
+11. Master Rowboat: 2 Elite Rowboats, 10,000 coins, 25 min.
+12. Master Skiff: 2 Elite Skiffs, 11,000 coins, 27 min.
+13. Master Speedboat: 2 Elite Speedboats, 13,000 coins, 29 min.
+14. Master Yacht: 2 Elite Yachts, 15,000 coins, 31 min.
+15. Master Luxury Liner: 2 Elite Luxury Liners, 16,000 coins, 33 min.
+
+Clothing (15):
+1. Fisher’s Cap: 2 Trout Cards, 400 coins, 3 min.
+2. Sunglasses: 2 Pike Cards, 600 coins, 5 min.
+3. Fishing Vest: 2 Salmon Cards, 800 coins, 7 min.
+4. Bikini Top: 2 Bass Cards, 1,000 coins, 9 min.
+5. Sandals: 2 Perch Cards, 1,200 coins, 11 min.
+6. Elite Fisher’s Cap: 2 Fisher’s Caps, 1,500 coins, 13 min.
+7. Elite Sunglasses: 2 Sunglasses, 2,000 coins, 15 min.
+8. Elite Fishing Vest: 2 Fishing Vests, 2,500 coins, 17 min.
+9. Elite Bikini Top: 2 Bikini Tops, 3,000 coins, 19 min.
+10. Elite Sandals: 2 Sandals, 3,500 coins, 21 min.
+11. Master Fisher’s Cap: 2 Elite Fisher’s Caps, 4,000 coins, 23 min.
+12. Master Sunglasses: 2 Elite Sunglasses, 4,500 coins, 25 min.
+13. Master Fishing Vest: 2 Elite Fishing Vests, 5,000 coins, 27 min.
+14. Master Bikini Top: 2 Elite Bikini Tops, 5,500 coins, 29 min.
+15. Master Sandals: 2 Elite Sandals, 6,000 coins, 31 min.
+
+6. LEVEL PROGRESSION
+--------------------
+
+- Levels: 50 across 5 maps (e.g., Coral Cove, Deep Abyss), each with 10 spots.
+- Boss Fights: Every 5 levels (e.g., Level 5: Giant Bass, Level 50: Kraken).
+- Scaling: Fish attributes increase (e.g., Weight: 0.1 kg at Level 1 to 500 kg at Level 50).
+- **Story Mode Maps**: Integrated into the narrative, these maps unlock as players progress through the story, offering unique fish and challenges.
+- **Practice Mode Maps**: Available for skill improvement or specific fish hunting, these maps are separate from the story and exclude the basic fish map used in Story Mode.
+
+7. INVENTORY AND EQUIPMENT
+--------------------------
+
+7.1 Inventory System
+The inventory system allows players to manage Fish Cards, equipment, and other items:
+- **Capacity**: 50 slots (expandable to 100 via boats or skills).
+- **Organization**: Items are categorized into Fish Cards, Equipment (Rods, Lures, Boats, Clothing), and Consumables (e.g., Energy Potions).
+- **Management**: Players can sort items by type, rarity, or acquisition time. Bulk actions (e.g., sell all duplicates) are available.
+- **Fish Cards**: Collected via fishing or auto-fishing, used for crafting or gifting. Each card displays the fish’s name, rarity, and attributes.
+- **Equipment**: Includes rods, lures, boats, and clothing, each with unique stats and effects.
+- **Actions**: Equip, merge, sell, or gift items to companions.
+
+7.2 Equipment System
+Equipment enhances player attributes and is categorized into four types:
+- **Fishing Rods**: Boost Cast Accuracy, Tension Stability, etc. (e.g., Bamboo Rod: +5% Cast Accuracy).
+- **Lures**: Improve Bite Rate, Lure Success, etc. (e.g., Basic Spinner: +20% Bite Rate).
+- **Boats**: Enhance Boat Speed, Fish Detection, etc. (e.g., Rowboat: +3% Boat Speed).
+- **Clothing**: Provide various buffs (e.g., Fisher’s Cap: +5% Energy).
+
+**Equipment Slots**: 7 slots (1 Rod, 1 Lure, 1 Boat, 3 Clothing, 1-3 Companions).
+- **Acquisition**: Crafted via merge recipes or purchased from the shop.
+- **Upgrading**: Merge lower-tier equipment to create higher-tier versions with better stats.
+- **Effects**: Equipment stats stack additively with player attributes.
+
+8. SOCIAL SYSTEM
+----------------
+
+8.1 Cruise Chatroom
+- **Companions**: 10 unique bikini girl companions (e.g., Mia, Luna), each with distinct personalities and storylines.
+- **Interactions**: Gift (using Fish Cards or crafted items), Chat (dialogue choices), Task (e.g., auto-fishing assignments).
+- **Romance Meter**: 0-100 points, increased by interactions. Milestones (e.g., 50, 100) unlock rewards like HCG scenes.
+
+8.2 Story and Dialog System (RenJS)
+- **RenJS**: A visual novel engine used for creating and managing storylines, character interactions, and dialogue.
+- **Integration**: RenJS handles all narrative content, including companion backstories, romance arcs, and event dialogues.
+- **Features**: Branching dialogue choices, affection-based responses, and scripted events tied to player progression.
+- **Cross-System Integration**: Dialogue choices can influence gameplay (e.g., unlocking new fishing spots or temporary buffs).
+
+9. SHOP SYSTEM
+--------------
+
+- Menu: Buy Fish Cards, gear, gems.
+- Currencies: Coins (earned via fishing), Gems (premium purchases).
+- Refresh: Daily at 00:00 with new stock.
+
+10. ACHIEVEMENT SYSTEM
+----------------------
+
+- Types: Story (e.g., "Catch Kraken"), Progression (e.g., "Reach Level 50"), Daily/Weekly Quests.
+- Rewards: Coins (e.g., 500), Gems (e.g., 10), Fish Cards (e.g., 1-Star).
+
+11. ECONOMY SYSTEM
+------------------
+
+- Currencies: Coins (earned via fishing, 50-5,000 per catch), Gems (IAP or achievements, 1-100).
+- Balance: Early game: coin focus (e.g., 200 coins for Bamboo Rod); late game: gem utility (e.g., 50 gems for rare Fish Cards).
+
+12. ART AND AUDIO
+-----------------
+
+- Art Style: Hand-painted 2D, vibrant waters, luxurious boats, detailed fish.
+- Audio: Relaxing ocean music, water splashes, triumphant catch fanfares.
+
+13. TECHNICAL DESIGN
+--------------------
+
+- Engine: Phaser 3 (optimized for 2D mobile).
+- Data: Cloud saves, JSON for Fish Cards and player progress.
+- Performance: 60 FPS target, lightweight time/weather simulation.

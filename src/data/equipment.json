@@ -1,0 +1,628 @@
+{
+  "fishingRods": [
+    {
+      "id": "bamboo_rod",
+      "name": "Bamboo Rod",
+      "rarity": 1,
+      "stats": {
+        "castAccuracy": 5,
+        "tensionStability": 8,
+        "rareFishChance": 2,
+        "castingRange": 10,
+        "reelSpeed": 5,
+        "struggleResistance": 3
+      },
+      "cost": 200,
+      "craftingMaterials": ["minnow", "minnow"],
+      "craftingTime": 2,
+      "description": "Traditional bamboo rod for beginners",
+      "unlockLevel": 1
+    },
+    {
+      "id": "fiberglass_rod",
+      "name": "Fiberglass Rod",
+      "rarity": 2,
+      "stats": {
+        "castAccuracy": 8,
+        "tensionStability": 12,
+        "rareFishChance": 4,
+        "castingRange": 15,
+        "reelSpeed": 8,
+        "struggleResistance": 6
+      },
+      "cost": 400,
+      "craftingMaterials": ["perch", "perch"],
+      "craftingTime": 4,
+      "description": "Flexible fiberglass construction",
+      "unlockLevel": 5
+    },
+    {
+      "id": "carbon_rod",
+      "name": "Carbon Rod",
+      "rarity": 3,
+      "stats": {
+        "castAccuracy": 12,
+        "tensionStability": 16,
+        "rareFishChance": 6,
+        "castingRange": 20,
+        "reelSpeed": 12,
+        "struggleResistance": 9
+      },
+      "cost": 800,
+      "craftingMaterials": ["trout", "trout"],
+      "craftingTime": 6,
+      "description": "Lightweight carbon fiber rod",
+      "unlockLevel": 10
+    },
+    {
+      "id": "steel_rod",
+      "name": "Steel Rod",
+      "rarity": 4,
+      "stats": {
+        "castAccuracy": 16,
+        "tensionStability": 20,
+        "rareFishChance": 8,
+        "castingRange": 25,
+        "reelSpeed": 15,
+        "struggleResistance": 12
+      },
+      "cost": 1200,
+      "craftingMaterials": ["pike", "pike"],
+      "craftingTime": 8,
+      "description": "Durable steel construction",
+      "unlockLevel": 15
+    },
+    {
+      "id": "titanium_rod",
+      "name": "Titanium Rod",
+      "rarity": 5,
+      "stats": {
+        "castAccuracy": 25,
+        "tensionStability": 28,
+        "rareFishChance": 15,
+        "castingRange": 35,
+        "reelSpeed": 15,
+        "struggleResistance": 15
+      },
+      "cost": 2000,
+      "craftingMaterials": ["salmon", "salmon"],
+      "craftingTime": 10,
+      "description": "Premium titanium alloy rod",
+      "unlockLevel": 20
+    },
+    {
+      "id": "elite_bamboo_rod",
+      "name": "Elite Bamboo Rod",
+      "rarity": 3,
+      "stats": {
+        "castAccuracy": 15,
+        "tensionStability": 18,
+        "rareFishChance": 7,
+        "castingRange": 22,
+        "reelSpeed": 10,
+        "struggleResistance": 8
+      },
+      "cost": 1000,
+      "craftingMaterials": ["bamboo_rod", "bamboo_rod"],
+      "craftingTime": 12,
+      "description": "Masterfully crafted bamboo rod",
+      "unlockLevel": 12
+    },
+    {
+      "id": "elite_fiberglass_rod",
+      "name": "Elite Fiberglass Rod",
+      "rarity": 4,
+      "stats": {
+        "castAccuracy": 20,
+        "tensionStability": 24,
+        "rareFishChance": 10,
+        "castingRange": 28,
+        "reelSpeed": 18,
+        "struggleResistance": 12
+      },
+      "cost": 2000,
+      "craftingMaterials": ["fiberglass_rod", "fiberglass_rod"],
+      "craftingTime": 14,
+      "description": "Enhanced fiberglass with precision guides",
+      "unlockLevel": 18
+    },
+    {
+      "id": "elite_carbon_rod",
+      "name": "Elite Carbon Rod",
+      "rarity": 5,
+      "stats": {
+        "castAccuracy": 28,
+        "tensionStability": 32,
+        "rareFishChance": 18,
+        "castingRange": 40,
+        "reelSpeed": 22,
+        "struggleResistance": 18
+      },
+      "cost": 3000,
+      "craftingMaterials": ["carbon_rod", "carbon_rod"],
+      "craftingTime": 16,
+      "description": "High-modulus carbon fiber",
+      "unlockLevel": 25
+    },
+    {
+      "id": "elite_steel_rod",
+      "name": "Elite Steel Rod",
+      "rarity": 6,
+      "stats": {
+        "castAccuracy": 35,
+        "tensionStability": 40,
+        "rareFishChance": 25,
+        "castingRange": 50,
+        "reelSpeed": 28,
+        "struggleResistance": 25
+      },
+      "cost": 4000,
+      "craftingMaterials": ["steel_rod", "steel_rod"],
+      "craftingTime": 18,
+      "description": "Forged steel with titanium guides",
+      "unlockLevel": 30
+    },
+    {
+      "id": "elite_titanium_rod",
+      "name": "Elite Titanium Rod",
+      "rarity": 6,
+      "stats": {
+        "castAccuracy": 45,
+        "tensionStability": 50,
+        "rareFishChance": 35,
+        "castingRange": 65,
+        "reelSpeed": 35,
+        "struggleResistance": 30
+      },
+      "cost": 6000,
+      "craftingMaterials": ["titanium_rod", "titanium_rod"],
+      "craftingTime": 20,
+      "description": "Aerospace-grade titanium construction",
+      "unlockLevel": 35
+    }
+  ],
+  "boats": [
+    {
+      "id": "rowboat",
+      "name": "Rowboat",
+      "rarity": 1,
+      "stats": {
+        "craftingEfficiency": 5,
+        "autoFishingYield": 8,
+        "fishDetection": 3,
+        "hotspotStability": 10,
+        "companionSlotCapacity": 1,
+        "autoFishingEfficiency": 5,
+        "boatDurability": 15,
+        "fishtankStorage": 10
+      },
+      "cost": 500,
+      "craftingMaterials": ["sardine", "sardine", "sardine"],
+      "craftingTime": 5,
+      "description": "Simple wooden rowboat",
+      "unlockLevel": 1
+    },
+    {
+      "id": "skiff",
+      "name": "Skiff",
+      "rarity": 2,
+      "stats": {
+        "craftingEfficiency": 8,
+        "autoFishingYield": 12,
+        "fishDetection": 5,
+        "hotspotStability": 15,
+        "companionSlotCapacity": 1,
+        "autoFishingEfficiency": 8,
+        "boatDurability": 20,
+        "fishtankStorage": 15
+      },
+      "cost": 1000,
+      "craftingMaterials": ["bass", "bass", "bass"],
+      "craftingTime": 7,
+      "description": "Small motorized fishing boat",
+      "unlockLevel": 8
+    },
+    {
+      "id": "speedboat",
+      "name": "Speedboat",
+      "rarity": 3,
+      "stats": {
+        "craftingEfficiency": 12,
+        "autoFishingYield": 18,
+        "fishDetection": 8,
+        "hotspotStability": 20,
+        "companionSlotCapacity": 2,
+        "autoFishingEfficiency": 12,
+        "boatDurability": 25,
+        "fishtankStorage": 20
+      },
+      "cost": 2000,
+      "craftingMaterials": ["tuna", "tuna", "tuna"],
+      "craftingTime": 9,
+      "description": "Fast boat with twin engines",
+      "unlockLevel": 15
+    },
+    {
+      "id": "yacht",
+      "name": "Yacht",
+      "rarity": 4,
+      "stats": {
+        "craftingEfficiency": 18,
+        "autoFishingYield": 25,
+        "fishDetection": 12,
+        "hotspotStability": 30,
+        "companionSlotCapacity": 3,
+        "autoFishingEfficiency": 18,
+        "boatDurability": 35,
+        "fishtankStorage": 30
+      },
+      "cost": 4000,
+      "craftingMaterials": ["marlin", "marlin", "marlin"],
+      "craftingTime": 11,
+      "description": "Luxury yacht with premium amenities",
+      "unlockLevel": 25
+    },
+    {
+      "id": "luxury_liner",
+      "name": "Luxury Liner",
+      "rarity": 5,
+      "stats": {
+        "craftingEfficiency": 25,
+        "autoFishingYield": 35,
+        "fishDetection": 18,
+        "hotspotStability": 40,
+        "companionSlotCapacity": 5,
+        "autoFishingEfficiency": 25,
+        "boatDurability": 50,
+        "fishtankStorage": 50
+      },
+      "cost": 6000,
+      "craftingMaterials": ["shark", "shark", "shark"],
+      "craftingTime": 13,
+      "description": "Massive luxury cruise vessel",
+      "unlockLevel": 35
+    },
+    {
+      "id": "elite_rowboat",
+      "name": "Elite Rowboat",
+      "rarity": 3,
+      "stats": {
+        "craftingEfficiency": 10,
+        "autoFishingYield": 15,
+        "fishDetection": 6,
+        "hotspotStability": 18,
+        "companionSlotCapacity": 2,
+        "autoFishingEfficiency": 10,
+        "boatDurability": 25,
+        "fishtankStorage": 18
+      },
+      "cost": 2000,
+      "craftingMaterials": ["rowboat", "rowboat"],
+      "craftingTime": 15,
+      "description": "Reinforced rowboat with modern fittings",
+      "unlockLevel": 12
+    },
+    {
+      "id": "elite_skiff",
+      "name": "Elite Skiff",
+      "rarity": 4,
+      "stats": {
+        "craftingEfficiency": 15,
+        "autoFishingYield": 22,
+        "fishDetection": 10,
+        "hotspotStability": 25,
+        "companionSlotCapacity": 2,
+        "autoFishingEfficiency": 15,
+        "boatDurability": 30,
+        "fishtankStorage": 25
+      },
+      "cost": 3000,
+      "craftingMaterials": ["skiff", "skiff"],
+      "craftingTime": 17,
+      "description": "Upgraded skiff with fish finder",
+      "unlockLevel": 20
+    },
+    {
+      "id": "elite_speedboat",
+      "name": "Elite Speedboat",
+      "rarity": 5,
+      "stats": {
+        "craftingEfficiency": 20,
+        "autoFishingYield": 30,
+        "fishDetection": 15,
+        "hotspotStability": 35,
+        "companionSlotCapacity": 3,
+        "autoFishingEfficiency": 20,
+        "boatDurability": 40,
+        "fishtankStorage": 35
+      },
+      "cost": 5000,
+      "craftingMaterials": ["speedboat", "speedboat"],
+      "craftingTime": 19,
+      "description": "High-performance racing boat",
+      "unlockLevel": 28
+    },
+    {
+      "id": "elite_yacht",
+      "name": "Elite Yacht",
+      "rarity": 6,
+      "stats": {
+        "craftingEfficiency": 30,
+        "autoFishingYield": 45,
+        "fishDetection": 22,
+        "hotspotStability": 50,
+        "companionSlotCapacity": 4,
+        "autoFishingEfficiency": 30,
+        "boatDurability": 60,
+        "fishtankStorage": 45
+      },
+      "cost": 8000,
+      "craftingMaterials": ["yacht", "yacht"],
+      "craftingTime": 21,
+      "description": "Superyacht with advanced technology",
+      "unlockLevel": 38
+    },
+    {
+      "id": "elite_luxury_liner",
+      "name": "Elite Luxury Liner",
+      "rarity": 6,
+      "stats": {
+        "craftingEfficiency": 40,
+        "autoFishingYield": 60,
+        "fishDetection": 30,
+        "hotspotStability": 65,
+        "companionSlotCapacity": 6,
+        "autoFishingEfficiency": 40,
+        "boatDurability": 80,
+        "fishtankStorage": 70
+      },
+      "cost": 12000,
+      "craftingMaterials": ["luxury_liner", "luxury_liner"],
+      "craftingTime": 23,
+      "description": "Ultimate floating palace",
+      "unlockLevel": 45
+    }
+  ],
+  "clothing": [
+    {
+      "id": "fishers_cap",
+      "name": "Fisher's Cap",
+      "rarity": 1,
+      "stats": {
+        "energy": 5,
+        "castAccuracy": 2,
+        "sunProtection": 10
+      },
+      "cost": 400,
+      "craftingMaterials": ["trout", "trout"],
+      "craftingTime": 3,
+      "description": "Classic fishing cap with sun protection",
+      "unlockLevel": 2
+    },
+    {
+      "id": "sunglasses",
+      "name": "Sunglasses",
+      "rarity": 2,
+      "stats": {
+        "fishDetection": 8,
+        "glareReduction": 15,
+        "style": 5
+      },
+      "cost": 600,
+      "craftingMaterials": ["pike", "pike"],
+      "craftingTime": 5,
+      "description": "Polarized sunglasses for better vision",
+      "unlockLevel": 5
+    },
+    {
+      "id": "fishing_vest",
+      "name": "Fishing Vest",
+      "rarity": 3,
+      "stats": {
+        "storage": 20,
+        "lureSuccess": 5,
+        "convenience": 10
+      },
+      "cost": 800,
+      "craftingMaterials": ["salmon", "salmon"],
+      "craftingTime": 7,
+      "description": "Multi-pocket vest for tackle storage",
+      "unlockLevel": 8
+    },
+    {
+      "id": "bikini_top",
+      "name": "Bikini Top",
+      "rarity": 2,
+      "stats": {
+        "companionAffinity": 10,
+        "style": 15,
+        "comfort": 8
+      },
+      "cost": 1000,
+      "craftingMaterials": ["bass", "bass"],
+      "craftingTime": 9,
+      "description": "Stylish bikini top for luxury fishing",
+      "unlockLevel": 10
+    },
+    {
+      "id": "sandals",
+      "name": "Sandals",
+      "rarity": 1,
+      "stats": {
+        "boatSpeed": 3,
+        "comfort": 12,
+        "stability": 5
+      },
+      "cost": 1200,
+      "craftingMaterials": ["perch", "perch"],
+      "craftingTime": 11,
+      "description": "Non-slip deck sandals",
+      "unlockLevel": 3
+    },
+    {
+      "id": "elite_fishers_cap",
+      "name": "Elite Fisher's Cap",
+      "rarity": 3,
+      "stats": {
+        "energy": 12,
+        "castAccuracy": 8,
+        "sunProtection": 20,
+        "weatherResistance": 10
+      },
+      "cost": 1500,
+      "craftingMaterials": ["fishers_cap", "fishers_cap"],
+      "craftingTime": 13,
+      "description": "Premium cap with advanced materials",
+      "unlockLevel": 15
+    },
+    {
+      "id": "elite_sunglasses",
+      "name": "Elite Sunglasses",
+      "rarity": 4,
+      "stats": {
+        "fishDetection": 18,
+        "glareReduction": 30,
+        "style": 12,
+        "nightVision": 5
+      },
+      "cost": 2000,
+      "craftingMaterials": ["sunglasses", "sunglasses"],
+      "craftingTime": 15,
+      "description": "Designer sunglasses with fish-spotting tech",
+      "unlockLevel": 20
+    },
+    {
+      "id": "elite_fishing_vest",
+      "name": "Elite Fishing Vest",
+      "rarity": 5,
+      "stats": {
+        "storage": 40,
+        "lureSuccess": 15,
+        "convenience": 20,
+        "organization": 15
+      },
+      "cost": 2500,
+      "craftingMaterials": ["fishing_vest", "fishing_vest"],
+      "craftingTime": 17,
+      "description": "Professional vest with smart organization",
+      "unlockLevel": 25
+    },
+    {
+      "id": "elite_bikini_top",
+      "name": "Elite Bikini Top",
+      "rarity": 4,
+      "stats": {
+        "companionAffinity": 25,
+        "style": 30,
+        "comfort": 18,
+        "confidence": 10
+      },
+      "cost": 3000,
+      "craftingMaterials": ["bikini_top", "bikini_top"],
+      "craftingTime": 19,
+      "description": "Designer bikini with luxury materials",
+      "unlockLevel": 30
+    },
+    {
+      "id": "elite_sandals",
+      "name": "Elite Sandals",
+      "rarity": 3,
+      "stats": {
+        "boatSpeed": 8,
+        "comfort": 25,
+        "stability": 15,
+        "durability": 12
+      },
+      "cost": 3500,
+      "craftingMaterials": ["sandals", "sandals"],
+      "craftingTime": 21,
+      "description": "Premium deck shoes with grip technology",
+      "unlockLevel": 18
+    },
+    {
+      "id": "master_fishers_cap",
+      "name": "Master Fisher's Cap",
+      "rarity": 5,
+      "stats": {
+        "energy": 25,
+        "castAccuracy": 18,
+        "sunProtection": 40,
+        "weatherResistance": 25,
+        "luck": 5
+      },
+      "cost": 4000,
+      "craftingMaterials": ["elite_fishers_cap", "elite_fishers_cap"],
+      "craftingTime": 23,
+      "description": "Legendary cap worn by master anglers",
+      "unlockLevel": 35
+    },
+    {
+      "id": "master_sunglasses",
+      "name": "Master Sunglasses",
+      "rarity": 6,
+      "stats": {
+        "fishDetection": 35,
+        "glareReduction": 50,
+        "style": 25,
+        "nightVision": 15,
+        "thermalVision": 10
+      },
+      "cost": 4500,
+      "craftingMaterials": ["elite_sunglasses", "elite_sunglasses"],
+      "craftingTime": 25,
+      "description": "High-tech glasses with fish tracking",
+      "unlockLevel": 40
+    },
+    {
+      "id": "master_fishing_vest",
+      "name": "Master Fishing Vest",
+      "rarity": 6,
+      "stats": {
+        "storage": 70,
+        "lureSuccess": 30,
+        "convenience": 40,
+        "organization": 30,
+        "autoSort": 20
+      },
+      "cost": 5000,
+      "craftingMaterials": ["elite_fishing_vest", "elite_fishing_vest"],
+      "craftingTime": 27,
+      "description": "AI-powered vest with auto-organization",
+      "unlockLevel": 42
+    },
+    {
+      "id": "master_bikini_top",
+      "name": "Master Bikini Top",
+      "rarity": 6,
+      "stats": {
+        "companionAffinity": 50,
+        "style": 60,
+        "comfort": 35,
+        "confidence": 25,
+        "charisma": 15
+      },
+      "cost": 5500,
+      "craftingMaterials": ["elite_bikini_top", "elite_bikini_top"],
+      "craftingTime": 29,
+      "description": "Enchanted bikini that captivates all",
+      "unlockLevel": 45
+    },
+    {
+      "id": "master_sandals",
+      "name": "Master Sandals",
+      "rarity": 5,
+      "stats": {
+        "boatSpeed": 20,
+        "comfort": 50,
+        "stability": 30,
+        "durability": 25,
+        "waterWalk": 10
+      },
+      "cost": 6000,
+      "craftingMaterials": ["elite_sandals", "elite_sandals"],
+      "craftingTime": 31,
+      "description": "Mystical sandals that glide on water",
+      "unlockLevel": 48
+    }
+  ]
+} 

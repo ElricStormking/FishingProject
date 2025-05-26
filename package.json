@@ -1,0 +1,20 @@
+{
+  "name": "luxury-angler",
+  "version": "1.0.0",
+  "description": "A luxury fishing game built with Phaser 3",
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": ["phaser", "fishing", "game"],
+  "author": "Elric Tang",
+  "license": "ISC",
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "vite": "^6.3.5"
+  }
+}

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phaser Test</title>
+</head>
+<body>
+    <script type="module">
+        import Phaser from './node_modules/phaser/dist/phaser.esm.js';
+        
+        const config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            backgroundColor: '#2c3e50',
+            scene: {
+                create: function() {
+                    this.add.text(400, 300, 'Phaser is working!', {
+                        fontSize: '32px',
+                        fill: '#ffffff'
+                    }).setOrigin(0.5);
+                }
+            }
+        };
+        
+        new Phaser.Game(config);
+    </script>
+</body>
+</html> 

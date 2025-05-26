@@ -1,0 +1,91 @@
+{
+  "fishing": {
+    "baseCatchChance": 0.2,
+    "proximityBonus": 0.3,
+    "proximityDistance": 80,
+    "castDelay": 1500,
+    "castDurationBase": 500,
+    "castDurationMultiplier": 2,
+    "maxCastDuration": 1500,
+    "fishingLineWidth": 2,
+    "fishingLineColor": "0x8B4513",
+    "fishingLineAlpha": 0.8,
+    "lureScale": 0.8,
+    "fishScale": 0.8,
+    "fishCount": 8,
+    "fishSpeedRange": {
+      "min": -30,
+      "max": 30
+    },
+    "fishVerticalSpeedRange": {
+      "min": -20,
+      "max": 20
+    },
+    "fishBounce": 1,
+    "fishWaterAreaTop": 0.4,
+    "fishWaterAreaBottom": 0.75
+  },
+  "spawning": {
+    "baseSpawnChance": 100,
+    "rarityPenalty": 10,
+    "timeBonus": 20,
+    "weatherBonus": 15,
+    "depthPenalty": 5,
+    "levelRequirementMultiplier": 5,
+    "levelPenalty": 0.5
+  },
+  "lureEffectiveness": {
+    "typeMatchBonus": 25,
+    "depthMatchBonus": 15,
+    "baitPreferenceMultiplier": 2
+  },
+  "ui": {
+    "crosshairSize": 10,
+    "crosshairLineLength": 15,
+    "crosshairColor": "0xffffff",
+    "crosshairAlpha": 0.8,
+    "crosshairLineWidth": 2
+  },
+  "boat": {
+    "deckHeight": 0.15,
+    "deckColor": "0x8B4513",
+    "sideWidth": 40,
+    "sideColor": "0x654321",
+    "frontEdgeHeight": 8,
+    "frontEdgeColor": "0x5D4037",
+    "plankSpacing": 60,
+    "plankColor": "0x5D4037",
+    "plankAlpha": 0.3,
+    "rodHolderColor": "0x424242",
+    "rodHolderRadius": 8,
+    "rodHolderHeight": 20,
+    "tackleBoxColor": "0x37474F",
+    "tackleBoxWidth": 60,
+    "tackleBoxHeight": 30,
+    "tackleBoxBorderColor": "0x263238",
+    "rodColor": "0x8D6E63",
+    "rodWidth": 4
+  },
+  "experience": {
+    "baseExperiencePerFish": 10,
+    "levelUpThreshold": 100,
+    "levelUpMultiplier": 1.5
+  },
+  "economy": {
+    "baseCoinValue": 50,
+    "rarityMultiplier": 2,
+    "shopPriceMultiplier": 1.2
+  },
+  "time": {
+    "gameTimeMultiplier": 60,
+    "realTimeToGameTime": 1000,
+    "autoSaveInterval": 30000
+  },
+  "graphics": {
+    "fishAnimationDuration": 1000,
+    "fishAnimationHeight": 50,
+    "splashEffectDuration": 800,
+    "rippleEffectDuration": 1200,
+    "rippleMaxRadius": 50
+  }
+} 
