@@ -196,6 +196,199 @@ export class PlayerProgression {
             100: { coins: 50000, skillPoints: 15, item: { category: 'boats', id: 'luxury_yacht' } }
         };
         
+        // Comprehensive Achievement System
+        this.achievements = {
+            // Catch Achievements
+            firstCatch: {
+                id: 'first_catch',
+                name: 'First Fish',
+                description: 'Catch your first fish',
+                icon: '🐟',
+                category: 'catch',
+                requirement: { type: 'fishCaught', value: 1 },
+                rewards: { experience: 50, coins: 100, item: { category: 'lures', id: 'basic_spinner' } },
+                unlocked: false,
+                completed: false
+            },
+            fisherman: {
+                id: 'fisherman',
+                name: 'Fisherman',
+                description: 'Catch 25 fish',
+                icon: '🎣',
+                category: 'catch',
+                requirement: { type: 'totalFishCaught', value: 25 },
+                rewards: { experience: 200, coins: 500, skillPoints: 1 },
+                unlocked: false,
+                completed: false
+            },
+            angler: {
+                id: 'angler',
+                name: 'Master Angler',
+                description: 'Catch 100 fish',
+                icon: '🏆',
+                category: 'catch',
+                requirement: { type: 'totalFishCaught', value: 100 },
+                rewards: { experience: 500, coins: 2000, skillPoints: 3 },
+                unlocked: false,
+                completed: false
+            },
+            
+            // Rarity Achievements
+            firstRare: {
+                id: 'first_rare',
+                name: 'Rare Find',
+                description: 'Catch your first rare fish (rarity 3+)',
+                icon: '✨',
+                category: 'rarity',
+                requirement: { type: 'rareFishCaught', rarity: 3, value: 1 },
+                rewards: { experience: 150, coins: 300 },
+                unlocked: false,
+                completed: false
+            },
+            firstEpic: {
+                id: 'first_epic',
+                name: 'Epic Catch',
+                description: 'Catch your first epic fish (rarity 4+)',
+                icon: '🌟',
+                category: 'rarity',
+                requirement: { type: 'rareFishCaught', rarity: 4, value: 1 },
+                rewards: { experience: 300, coins: 750, skillPoints: 1 },
+                unlocked: false,
+                completed: false
+            },
+            firstLegendary: {
+                id: 'first_legendary',
+                name: 'Legendary Hunter',
+                description: 'Catch your first legendary fish (rarity 5+)',
+                icon: '👑',
+                category: 'rarity',
+                requirement: { type: 'rareFishCaught', rarity: 5, value: 1 },
+                rewards: { experience: 500, coins: 1500, skillPoints: 2 },
+                unlocked: false,
+                completed: false
+            },
+            
+            // Collection Achievements
+            collector: {
+                id: 'collector',
+                name: 'Species Collector',
+                description: 'Discover 10 different fish species',
+                icon: '📋',
+                category: 'collection',
+                requirement: { type: 'speciesDiscovered', value: 10 },
+                rewards: { experience: 300, coins: 500, skillPoints: 1 },
+                unlocked: false,
+                completed: false
+            },
+            encyclopedia: {
+                id: 'encyclopedia',
+                name: 'Fish Encyclopedia',
+                description: 'Discover 25 different fish species',
+                icon: '📚',
+                category: 'collection',
+                requirement: { type: 'speciesDiscovered', value: 25 },
+                rewards: { experience: 750, coins: 1500, skillPoints: 3 },
+                unlocked: false,
+                completed: false
+            },
+            
+            // Skill Achievements
+            perfectionist: {
+                id: 'perfectionist',
+                name: 'Perfectionist',
+                description: 'Achieve 10 perfect casts',
+                icon: '🎯',
+                category: 'skill',
+                requirement: { type: 'perfectCasts', value: 10 },
+                rewards: { experience: 250, coins: 400, skillPoints: 1 },
+                unlocked: false,
+                completed: false
+            },
+            lureMaster: {
+                id: 'lure_master',
+                name: 'Lure Master',
+                description: 'Achieve 15 perfect lures',
+                icon: '🌟',
+                category: 'skill',
+                requirement: { type: 'perfectLures', value: 15 },
+                rewards: { experience: 300, coins: 600, skillPoints: 1 },
+                unlocked: false,
+                completed: false
+            },
+            reelExpert: {
+                id: 'reel_expert',
+                name: 'Reel Expert',
+                description: 'Achieve 20 perfect reels',
+                icon: '⚡',
+                category: 'skill',
+                requirement: { type: 'perfectReels', value: 20 },
+                rewards: { experience: 350, coins: 800, skillPoints: 2 },
+                unlocked: false,
+                completed: false
+            },
+            
+            // Level Achievements
+            levelUp5: {
+                id: 'level_5',
+                name: 'Rising Angler',
+                description: 'Reach level 5',
+                icon: '📈',
+                category: 'level',
+                requirement: { type: 'level', value: 5 },
+                rewards: { experience: 100, coins: 200 },
+                unlocked: false,
+                completed: false
+            },
+            levelUp10: {
+                id: 'level_10',
+                name: 'Skilled Fisher',
+                description: 'Reach level 10',
+                icon: '📊',
+                category: 'level',
+                requirement: { type: 'level', value: 10 },
+                rewards: { experience: 200, coins: 500, skillPoints: 1 },
+                unlocked: false,
+                completed: false
+            },
+            levelUp25: {
+                id: 'level_25',
+                name: 'Expert Angler',
+                description: 'Reach level 25',
+                icon: '🏅',
+                category: 'level',
+                requirement: { type: 'level', value: 25 },
+                rewards: { experience: 500, coins: 1500, skillPoints: 3 },
+                unlocked: false,
+                completed: false
+            },
+            
+            // Wealth Achievements
+            thousandaire: {
+                id: 'thousandaire',
+                name: 'Thousandaire',
+                description: 'Earn 1,000 total coins',
+                icon: '💰',
+                category: 'wealth',
+                requirement: { type: 'totalCoinsEarned', value: 1000 },
+                rewards: { experience: 150, coins: 250 },
+                unlocked: false,
+                completed: false
+            },
+            
+            // Exploration Achievements
+            explorer: {
+                id: 'explorer',
+                name: 'Explorer',
+                description: 'Visit 3 different fishing locations',
+                icon: '🗺️',
+                category: 'exploration',
+                requirement: { type: 'locationsVisited', value: 3 },
+                rewards: { experience: 200, coins: 300, skillPoints: 1 },
+                unlocked: false,
+                completed: false
+            }
+        };
+        
         // Initialize player progression if not exists
         this.initializeProgression();
         
@@ -240,6 +433,67 @@ export class PlayerProgression {
             };
         }
         
+        // Initialize achievements if not exists
+        if (!player.achievements) {
+            player.achievements = {};
+        }
+        
+        // Ensure all achievements are initialized, including any new ones
+        Object.keys(this.achievements).forEach(achievementId => {
+            if (!player.achievements[achievementId]) {
+                player.achievements[achievementId] = {
+                    unlocked: false,
+                    completed: false,
+                    progress: 0,
+                    completedAt: null
+                };
+            }
+        });
+        
+        // Initialize enhanced statistics if not exists
+        if (!player.statistics.enhanced) {
+            player.statistics.enhanced = {
+                // Fishing Stats
+                totalFishCaught: player.fishCaught || 0,
+                totalFishValue: 0,
+                biggestFishWeight: 0,
+                biggestFishSpecies: null,
+                rareFishCaught: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 },
+                
+                // Performance Stats  
+                castAccuracy: 0,
+                averageCastAccuracy: 0,
+                lureSuccessRate: 0,
+                reelingSuccessRate: 0,
+                lineBreaks: 0,
+                fishLost: 0,
+                
+                // Time Stats
+                totalPlayTime: 0,
+                longestSession: 0,
+                fishingTime: 0,
+                
+                // Collection Stats
+                speciesCaught: {},
+                locationsFished: [],
+                firstCatches: [],
+                
+                // Coins and Rewards
+                totalCoinsEarned: 0,
+                totalCoinsSpent: 0,
+                itemsBought: 0,
+                itemsCrafted: 0,
+                
+                // Perfect Actions
+                perfectCastStreak: 0,
+                longestPerfectCastStreak: 0,
+                perfectLureStreak: 0,
+                longestPerfectLureStreak: 0,
+                perfectReelStreak: 0,
+                longestPerfectReelStreak: 0
+            };
+        }
+        
         // Ensure level calculation is correct
         this.recalculateLevel();
     }
@@ -260,8 +514,25 @@ export class PlayerProgression {
         player.experience += finalAmount;
         player.progression.totalExperienceEarned += finalAmount;
         
-        // Track source
+        // Track source and update statistics
         this.trackExperienceSource(source, finalAmount, details);
+        
+        // Update enhanced statistics and check achievements
+        if (source === 'fishCaught') {
+            this.updateStatistics('fishCaught', {
+                value: details.value || 0,
+                weight: details.weight || 0,
+                name: details.name || 'Unknown Fish',
+                species: details.fishId || 'unknown',
+                rarity: details.rarity || 1
+            });
+        } else if (source === 'perfectCast') {
+            this.updateStatistics('perfectCast');
+        } else if (source === 'perfectLure') {
+            this.updateStatistics('perfectLure');
+        } else if (source === 'perfectReel') {
+            this.updateStatistics('perfectReel');
+        }
         
         // Check for level ups
         const levelsGained = this.checkLevelUp(oldLevel);
@@ -698,5 +969,237 @@ export class PlayerProgression {
             experienceFormula: this.levelFormula,
             nextRewards: this.getNextLevelReward()
         };
+    }
+
+    // Achievement tracking methods
+    checkAchievements(eventType, data = {}) {
+        const unlockedAchievements = [];
+        
+        Object.values(this.achievements).forEach(achievement => {
+            const playerAchievement = this.gameState.player.achievements[achievement.id];
+            
+            // Add null check for playerAchievement
+            if (playerAchievement && !playerAchievement.completed) {
+                const progress = this.calculateAchievementProgress(achievement, data);
+                playerAchievement.progress = progress;
+                
+                if (this.meetsAchievementRequirement(achievement, data)) {
+                    this.unlockAchievement(achievement.id);
+                    unlockedAchievements.push(achievement);
+                }
+            }
+        });
+        
+        return unlockedAchievements;
+    }
+    
+    calculateAchievementProgress(achievement, data) {
+        const req = achievement.requirement;
+        const stats = this.gameState.player.statistics.enhanced || {};
+        const progression = this.gameState.player.progression || {};
+        const player = this.gameState.player;
+        
+        switch (req.type) {
+            case 'fishCaught':
+            case 'totalFishCaught':
+                return stats.totalFishCaught || 0;
+                
+            case 'rareFishCaught':
+                return (stats.rareFishCaught && stats.rareFishCaught[req.rarity]) || 0;
+                
+            case 'speciesDiscovered':
+                return Object.keys(stats.speciesCaught || {}).length;
+                
+            case 'perfectCasts':
+                return progression.perfectCasts || 0;
+                
+            case 'perfectLures': 
+                return progression.perfectLures || 0;
+                
+            case 'perfectReels':
+                return progression.perfectReels || 0;
+                
+            case 'level':
+                return player.level || 1;
+                
+            case 'totalCoinsEarned':
+                return stats.totalCoinsEarned || 0;
+                
+            case 'locationsVisited':
+                return (stats.locationsFished && stats.locationsFished.length) || 1;
+                
+            default:
+                return 0;
+        }
+    }
+    
+    meetsAchievementRequirement(achievement, data) {
+        const progress = this.calculateAchievementProgress(achievement, data);
+        return progress >= achievement.requirement.value;
+    }
+    
+    unlockAchievement(achievementId) {
+        const achievement = this.achievements[achievementId];
+        const playerAchievement = this.gameState.player.achievements[achievementId];
+        
+        // Add null check for playerAchievement
+        if (playerAchievement && !playerAchievement.completed) {
+            playerAchievement.completed = true;
+            playerAchievement.completedAt = new Date().toISOString();
+            
+            // Award achievement rewards
+            if (achievement.rewards.experience) {
+                this.addExperience(achievement.rewards.experience, 'achievementUnlock', { achievementId });
+            }
+            if (achievement.rewards.coins) {
+                this.gameState.addMoney(achievement.rewards.coins);
+            }
+            if (achievement.rewards.skillPoints) {
+                this.gameState.player.skillPoints.available += achievement.rewards.skillPoints;
+                this.gameState.player.skillPoints.total += achievement.rewards.skillPoints;
+            }
+            if (achievement.rewards.item) {
+                this.gameState.addItem(achievement.rewards.item.category, {
+                    id: achievement.rewards.item.id,
+                    owned: true,
+                    unlocked: true
+                });
+            }
+            
+            this.emit('achievementUnlocked', {
+                achievement: achievement,
+                rewards: achievement.rewards
+            });
+            
+            console.log(`PlayerProgression: Achievement unlocked: ${achievement.name}`);
+            return true;
+        }
+        return false;
+    }
+    
+    getAchievementData() {
+        const player = this.gameState.player;
+        const achievementData = {};
+        
+        Object.entries(this.achievements).forEach(([id, achievement]) => {
+            const playerProgress = player.achievements[id];
+            const progress = this.calculateAchievementProgress(achievement);
+            
+            // Add null check for playerProgress
+            achievementData[id] = {
+                ...achievement,
+                progress: progress,
+                progressPercent: Math.min(100, (progress / achievement.requirement.value) * 100),
+                completed: playerProgress?.completed || false,
+                completedAt: playerProgress?.completedAt || null
+            };
+        });
+        
+        return achievementData;
+    }
+    
+    // Enhanced statistics tracking
+    updateStatistics(eventType, data = {}) {
+        const player = this.gameState.player;
+        
+        // Ensure enhanced statistics exist
+        if (!player.statistics.enhanced) {
+            this.initializeProgression();
+        }
+        
+        const stats = player.statistics.enhanced;
+        const progression = player.progression;
+        
+        switch (eventType) {
+            case 'fishCaught':
+                stats.totalFishCaught++;
+                stats.totalFishValue += data.value || 0;
+                stats.totalCoinsEarned += data.value || 0;
+                
+                if (data.weight && data.weight > stats.biggestFishWeight) {
+                    stats.biggestFishWeight = data.weight;
+                    stats.biggestFishSpecies = data.name;
+                }
+                
+                if (data.rarity) {
+                    stats.rareFishCaught[data.rarity] = (stats.rareFishCaught[data.rarity] || 0) + 1;
+                }
+                
+                if (data.species && !stats.speciesCaught[data.species]) {
+                    stats.speciesCaught[data.species] = 0;
+                    stats.firstCatches.push({
+                        species: data.species,
+                        caughtAt: new Date().toISOString()
+                    });
+                }
+                stats.speciesCaught[data.species] = (stats.speciesCaught[data.species] || 0) + 1;
+                break;
+                
+            case 'perfectCast':
+                progression.perfectCasts++;
+                stats.perfectCastStreak++;
+                if (stats.perfectCastStreak > stats.longestPerfectCastStreak) {
+                    stats.longestPerfectCastStreak = stats.perfectCastStreak;
+                }
+                break;
+                
+            case 'failedCast':
+                stats.perfectCastStreak = 0;
+                break;
+                
+            case 'perfectLure':
+                progression.perfectLures++;
+                stats.perfectLureStreak++;
+                if (stats.perfectLureStreak > stats.longestPerfectLureStreak) {
+                    stats.longestPerfectLureStreak = stats.perfectLureStreak;
+                }
+                break;
+                
+            case 'failedLure':
+                stats.perfectLureStreak = 0;
+                break;
+                
+            case 'perfectReel':
+                progression.perfectReels++;
+                stats.perfectReelStreak++;
+                if (stats.perfectReelStreak > stats.longestPerfectReelStreak) {
+                    stats.longestPerfectReelStreak = stats.perfectReelStreak;
+                }
+                break;
+                
+            case 'failedReel':
+                stats.perfectReelStreak = 0;
+                break;
+                
+            case 'lineBreak':
+                stats.lineBreaks++;
+                stats.fishLost++;
+                break;
+                
+            case 'fishEscaped':
+                stats.fishLost++;
+                break;
+                
+            case 'locationVisited':
+                if (data.location && !stats.locationsFished.includes(data.location)) {
+                    stats.locationsFished.push(data.location);
+                }
+                break;
+                
+            case 'itemPurchased':
+                stats.totalCoinsSpent += data.cost || 0;
+                stats.itemsBought++;
+                break;
+                
+            case 'itemCrafted':
+                stats.itemsCrafted++;
+                break;
+        }
+        
+        // Check for achievements after updating stats
+        const unlockedAchievements = this.checkAchievements(eventType, data);
+        
+        this.gameState.markDirty();
+        return unlockedAchievements;
     }
 } 
