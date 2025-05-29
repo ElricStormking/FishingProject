@@ -9,6 +9,9 @@ export default class PlayerController {
         this.scene = scene;
         this.gameState = GameState.getInstance();
         
+        // Initialize audio manager
+        this.audioManager = this.gameState.getAudioManager(scene);
+        
         // Player state
         this.isActive = true;
         this.isCasting = false;
@@ -144,28 +147,61 @@ export default class PlayerController {
     castLine() {
         if (!this.canCast()) return;
         
-        this.isCasting = true;
-        console.log('PlayerController: Starting cast minigame...');
-        
-        // Hide crosshair during minigame
-        if (this.scene.crosshair) {
-            this.scene.crosshair.setVisible(false);
+        try {
+            this.isCasting = true;
+            console.log('PlayerController: Starting cast minigame...');
+            
+            // Play casting preparation sound
+            this.audioManager?.playSFX('cast_prepare');
+            
+            // Hide crosshair during minigame
+            if (this.scene.crosshair) {
+                this.scene.crosshair.setVisible(false);
+            }
+            
+            // Get player fishing stats
+            const playerStats = this.getPlayerFishingStats();
+            console.log('PlayerController: Player stats:', playerStats);
+            
+            // Get water area
+            const waterArea = this.getWaterArea();
+            console.log('PlayerController: Water area:', waterArea);
+            
+            // Create and start cast minigame
+            this.castMinigame = new CastingMiniGame(this.scene, {});
+            this.castMinigame.start(playerStats, waterArea);
+            
+            // Listen for cast completion
+            this.scene.events.once('fishing:castComplete', (data) => {
+                this.onCastComplete(data.success, data.accuracy, data.hitAccurateSection, data.castType);
+            });
+            
+            // Update statistics
+            this.gameState.trackCastAttempt();
+            
+            console.log('PlayerController: Cast minigame started successfully');
+        } catch (error) {
+            console.error('PlayerController: Error starting cast minigame:', error);
+            this.isCasting = false;
+            
+            // Show crosshair again on error
+            if (this.scene.crosshair) {
+                this.scene.crosshair.setVisible(true);
+            }
+            
+            // Clean up any partially created minigame
+            if (this.castMinigame) {
+                try {
+                    this.castMinigame.destroy();
+                } catch (destroyError) {
+                    console.error('PlayerController: Error destroying failed minigame:', destroyError);
+                }
+                this.castMinigame = null;
+            }
+            
+            // Re-enable casting input
+            this.enableCastingInput();
         }
-        
-        // Get player fishing stats
-        const playerStats = this.getPlayerFishingStats();
-        
-        // Create and start cast minigame
-        this.castMinigame = new CastingMiniGame(this.scene, {});
-        this.castMinigame.start(playerStats, this.getWaterArea());
-        
-        // Listen for cast completion
-        this.scene.events.once('fishing:castComplete', (data) => {
-            this.onCastComplete(data.success, data.accuracy, data.hitAccurateSection, data.castType);
-        });
-        
-        // Update statistics
-        this.gameState.trackCastAttempt();
     }
 
     getPlayerFishingStats() {
@@ -458,6 +494,13 @@ export default class PlayerController {
             this.scene.crosshair.setVisible(false);
         }
         
+        // Handle error case
+        if (success === false) {
+            console.log('PlayerController: Cast failed with error');
+            this.cleanupCast();
+            return;
+        }
+        
         if (success) {
             console.log(`PlayerController: Cast successful! Accuracy: ${accuracy.toFixed(1)}%, Type: ${castType}, Hit accurate section: ${hitAccurateSection}`);
             
@@ -478,9 +521,25 @@ export default class PlayerController {
         // Get equipped lure stats
         const lureStats = this.getLureStats();
         
-        // Create and start lure minigame
+        // Select a fish from available fish for luring
+        let selectedFish = null;
+        if (availableFish && availableFish.length > 0) {
+            // For now, randomly select from available fish
+            // In the future, this could be based on cast accuracy, lure type, etc.
+            selectedFish = Phaser.Utils.Array.GetRandom(availableFish);
+            console.log('PlayerController: Selected fish for luring:', selectedFish.name);
+        }
+        
+        // Create and start lure minigame with options object
         this.lureMinigame = new LuringMiniGame(this.scene, {});
-        this.lureMinigame.start(castAccuracy, availableFish, lureStats);
+        this.lureMinigame.start({
+            castAccuracy: castAccuracy,
+            selectedFish: selectedFish,
+            availableFish: availableFish,
+            lureStats: lureStats,
+            castType: castType,
+            hitAccurateSection: hitAccurateSection
+        });
         
         // Listen for lure completion
         this.scene.events.once('fishing:lureComplete', (data) => {
@@ -501,11 +560,25 @@ export default class PlayerController {
             return;
         }
         
+        // Validate fish data before proceeding
+        if (!fishHooked || !fishHooked.name) {
+            console.error('PlayerController: Invalid fish data received from luring phase:', fishHooked);
+            this.cleanupCast();
+            return;
+        }
+        
         console.log(`PlayerController: Fish hooked: ${fishHooked.name} (Interest: ${finalInterest}%)`);
         this.startReelPhase(fishHooked);
     }
 
     startReelPhase(fish) {
+        // Validate fish data before starting reel phase
+        if (!fish || !fish.name) {
+            console.error('PlayerController: Cannot start reel phase - invalid fish data:', fish);
+            this.cleanupCast();
+            return;
+        }
+        
         console.log(`PlayerController: Starting reel phase with ${fish.name}...`);
         
         // Keep crosshair hidden during reel phase
@@ -517,9 +590,14 @@ export default class PlayerController {
         const playerStats = this.getPlayerFishingStats();
         const rodStats = this.getRodStats();
         
-        // Create and start reel minigame
+        // Create and start reel minigame with correct options format
         this.reelMinigame = new ReelingMiniGame(this.scene, {});
-        this.reelMinigame.start(fish, playerStats, rodStats);
+        this.reelMinigame.start({
+            selectedFish: fish,
+            fishId: fish.id || fish.fishId,
+            playerStats: playerStats,
+            rodStats: rodStats
+        });
         
         // Listen for reel completion
         this.scene.events.once('fishing:reelComplete', (data) => {
@@ -675,11 +753,25 @@ export default class PlayerController {
     onFishCaught(fish) {
         console.log(`PlayerController: Fish caught: ${fish.name}`);
         
+        // Play catch success audio based on fish rarity
+        if (fish.rarity >= 8) {
+            this.audioManager?.playSFX('catch_legendary');
+        } else if (fish.rarity >= 6) {
+            this.audioManager?.playSFX('catch_rare');
+        } else {
+            this.audioManager?.playSFX('catch');
+        }
+        
         // Process fish catch through GameState (handles inventory, stats, progression)
         this.gameState.catchFish(fish);
         
         // Calculate rewards and bonuses
         const rewards = this.calculateCatchRewards(fish);
+        
+        // Play coin collection sound for rewards
+        if (rewards.coins > 0) {
+            this.audioManager?.playSFX('coin');
+        }
         
         // Show success feedback with rewards
         this.showCatchSuccessFeedback(fish, rewards);
@@ -800,18 +892,21 @@ export default class PlayerController {
 
     openTackleBox() {
         console.log('PlayerController: Opening tackle box...');
+        this.audioManager?.playSFX('button');
         this.scene.events.emit('player:openTackleBox');
         // Could open inventory or equipment screen
     }
 
     changeRod() {
         console.log('PlayerController: Changing fishing rod...');
+        this.audioManager?.playSFX('button');
         this.scene.events.emit('player:changeRod');
         // Could cycle through available rods
     }
 
     openInventory() {
         console.log('PlayerController: Opening inventory...');
+        this.audioManager?.playSFX('button');
         this.scene.events.emit('player:openInventory');
         // Could switch to inventory scene or open overlay
     }
@@ -889,6 +984,19 @@ export default class PlayerController {
     onFishingFailed(reason, fish, finalStats) {
         // Process fishing failure
         console.log(`PlayerController: Fishing failed - ${reason}`);
+        
+        // Play failure audio based on reason
+        switch (reason) {
+            case 'line_break':
+                this.audioManager?.playSFX('line_break');
+                break;
+            case 'fish_escape':
+                this.audioManager?.playSFX('fish_escape');
+                break;
+            default:
+                this.audioManager?.playSFX('fail');
+                break;
+        }
         
         // Apply failure consequences
         this.applyFailureConsequences(reason, fish);

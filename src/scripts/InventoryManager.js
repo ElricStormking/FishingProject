@@ -23,13 +23,19 @@ export class InventoryManager {
                 return false;
             }
 
+            console.log(`InventoryManager: Adding item to ${category}:`, itemData);
+
             // Create proper item structure
             const item = this.validator.createItem(category, itemData);
+            
+            console.log(`InventoryManager: Item after createItem:`, item);
             
             // Validate item
             const validation = this.validator.validateItem(category, item);
             if (!validation.valid) {
-                console.error(`Invalid item:`, validation.errors);
+                console.error(`Invalid item for category ${category}:`, validation.errors);
+                console.error(`Item data:`, item);
+                console.error(`Original item data:`, itemData);
                 return false;
             }
 
@@ -45,6 +51,7 @@ export class InventoryManager {
                     this.gameState.markDirty();
                     this.emit('itemAdded', { category, item: existingItem, quantity: actualAdded });
                     
+                    console.log(`InventoryManager: Added ${actualAdded} to existing stack of ${item.id}`);
                     return actualAdded > 0;
                 }
             }
@@ -66,11 +73,14 @@ export class InventoryManager {
             this.gameState.inventory[category].push(item);
             this.gameState.markDirty();
             
+            console.log(`InventoryManager: Successfully added ${item.name} to ${category}`);
             this.emit('itemAdded', { category, item, quantity: item.quantity || 1 });
             return true;
 
         } catch (error) {
             console.error('Error adding item:', error);
+            console.error('Category:', category);
+            console.error('Item data:', itemData);
             return false;
         }
     }
@@ -493,6 +503,183 @@ export class InventoryManager {
         }
         
         return true;
+    }
+
+    /**
+     * Add sample items for testing (development only)
+     */
+    addSampleItems() {
+        console.log('InventoryManager: Adding sample items for testing');
+        
+        // Add sample lures - include all required properties: id, name, type, rarity, description, unlockLevel
+        const sampleLures = [
+            { 
+                id: 'spoon_lure', 
+                name: 'Spoon Lure', 
+                type: 'spoon',
+                rarity: 2, 
+                description: 'Shiny spoon lure for medium fish',
+                unlockLevel: 1
+            },
+            { 
+                id: 'fly_lure', 
+                name: 'Fly Lure', 
+                type: 'fly',
+                rarity: 2, 
+                description: 'Perfect for surface fishing',
+                unlockLevel: 1
+            },
+            { 
+                id: 'deep_diver', 
+                name: 'Deep Diver', 
+                type: 'deep',
+                rarity: 3, 
+                description: 'Reaches deep waters',
+                unlockLevel: 3
+            }
+        ];
+        
+        sampleLures.forEach(lure => {
+            this.addItem('lures', lure);
+        });
+        
+        // Add sample bait - include all required properties: id, name, rarity, description
+        const sampleBait = [
+            { 
+                id: 'worms', 
+                name: 'Earthworms', 
+                rarity: 1, 
+                description: 'Classic fishing bait',
+                quantity: 10
+            },
+            { 
+                id: 'minnows', 
+                name: 'Live Minnows', 
+                rarity: 2, 
+                description: 'Live bait for bigger fish',
+                quantity: 5
+            },
+            { 
+                id: 'corn', 
+                name: 'Sweet Corn', 
+                rarity: 1, 
+                description: 'Cheap and effective',
+                quantity: 15
+            }
+        ];
+        
+        sampleBait.forEach(bait => {
+            this.addItem('bait', bait);
+        });
+        
+        // Add sample consumables - include all required properties: id, name, rarity, description, effect
+        const sampleConsumables = [
+            { 
+                id: 'energy_drink', 
+                name: 'Energy Drink', 
+                rarity: 1, 
+                description: 'Restores 25 energy',
+                effect: { type: 'energy', value: 25 },
+                quantity: 3
+            },
+            { 
+                id: 'lucky_charm', 
+                name: 'Lucky Charm', 
+                rarity: 3, 
+                description: 'Increases rare fish chance',
+                effect: { type: 'rareFishChance', value: 15 },
+                quantity: 1
+            },
+            { 
+                id: 'repair_kit', 
+                name: 'Repair Kit', 
+                rarity: 2, 
+                description: 'Repairs damaged equipment',
+                effect: { type: 'repair', value: 50 },
+                quantity: 2
+            }
+        ];
+        
+        sampleConsumables.forEach(consumable => {
+            this.addItem('consumables', consumable);
+        });
+        
+        // Add sample materials - include all required properties: id, name, rarity, description
+        const sampleMaterials = [
+            { 
+                id: 'wood', 
+                name: 'Wood', 
+                rarity: 1, 
+                description: 'Basic crafting material',
+                quantity: 20
+            },
+            { 
+                id: 'metal_scraps', 
+                name: 'Metal Scraps', 
+                rarity: 2, 
+                description: 'Used for advanced crafting',
+                quantity: 8
+            },
+            { 
+                id: 'rare_gems', 
+                name: 'Rare Gems', 
+                rarity: 4, 
+                description: 'Precious crafting component',
+                quantity: 2
+            }
+        ];
+        
+        sampleMaterials.forEach(material => {
+            this.addItem('materials', material);
+        });
+        
+        // Add sample upgrades - include all required properties: id, name, rarity, description, effect
+        const sampleUpgrades = [
+            { 
+                id: 'better_reel', 
+                name: 'Better Reel', 
+                rarity: 2, 
+                description: 'Improves reel speed',
+                effect: { type: 'reelSpeed', value: 10 }
+            },
+            { 
+                id: 'lucky_hook', 
+                name: 'Lucky Hook', 
+                rarity: 3, 
+                description: 'Increases bite rate',
+                effect: { type: 'biteRate', value: 15 }
+            }
+        ];
+        
+        sampleUpgrades.forEach(upgrade => {
+            this.addItem('upgrades', upgrade);
+        });
+        
+        // Add sample rods - include all required properties: id, name, rarity, stats, description, unlockLevel
+        const sampleRods = [
+            {
+                id: 'basic_rod',
+                name: 'Basic Fishing Rod',
+                rarity: 1,
+                stats: { castAccuracy: 5, tensionStability: 3 },
+                description: 'A simple fishing rod for beginners',
+                unlockLevel: 1
+            },
+            {
+                id: 'advanced_rod',
+                name: 'Advanced Carbon Rod',
+                rarity: 3,
+                stats: { castAccuracy: 15, tensionStability: 12, rareFishChance: 5 },
+                description: 'High-quality carbon fiber rod',
+                unlockLevel: 5
+            }
+        ];
+        
+        sampleRods.forEach(rod => {
+            this.addItem('rods', rod);
+        });
+        
+        console.log('InventoryManager: Sample items added successfully');
     }
 }
 

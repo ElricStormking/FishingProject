@@ -15,6 +15,12 @@ export class LuringMiniGame {
         this.inputSequence = [];
         this.requiredInputs = [];
         
+        // Initialize audio manager safely
+        this.audioManager = scene.audioManager || null;
+        if (!this.audioManager) {
+            console.warn('LuringMiniGame: No audio manager available from scene');
+        }
+        
         // Lure Simulation UI elements
         this.simulationUI = null;
         this.simulationContainer = null;
@@ -28,36 +34,137 @@ export class LuringMiniGame {
         console.log('LuringMiniGame: Initialized');
     }
 
-    start(castAccuracy, availableFish, lureStats) {
-        this.isActive = true;
-        this.castAccuracy = castAccuracy;
-        this.availableFish = availableFish;
-        this.lureStats = lureStats;
+    start(options = {}) {
+        console.log('LuringMiniGame: Starting luring phase with options:', options);
+        
+        this.isActive = true; // Set active state manually instead of calling super
+        
+        // Handle different calling patterns for backwards compatibility
+        if (typeof options === 'number') {
+            // Old calling pattern: start(castAccuracy, availableFish, lureStats)
+            console.warn('LuringMiniGame: Using deprecated calling pattern, please update to options object');
+            const castAccuracy = arguments[0];
+            const availableFish = arguments[1];
+            const lureStats = arguments[2];
+            
+            // Convert to new format
+            options = {
+                castAccuracy: castAccuracy,
+                availableFish: availableFish,
+                lureStats: lureStats,
+                selectedFish: availableFish && availableFish.length > 0 ? Phaser.Utils.Array.GetRandom(availableFish) : null
+            };
+        }
+        
+        // Extract options
+        this.castAccuracy = options.castAccuracy || 50;
+        this.availableFish = options.availableFish || [];
+        this.lureStats = options.lureStats || { attractionRadius: 100, lureSuccess: 5, lureControl: 5, biteRate: 5 };
+        this.castType = options.castType || 'normal';
+        this.hitAccurateSection = options.hitAccurateSection || false;
+        
+        // Get selected fish from options
+        this.selectedFish = options.selectedFish || null;
+        this.fishId = options.fishId || null;
+        
+        // If we have a selected fish from database, use its properties
+        if (this.selectedFish) {
+            console.log('LuringMiniGame: Using selected fish:', this.selectedFish.name);
+            
+            // Determine fish shadow size based on fish size attribute
+            if (this.selectedFish.size <= 3) {
+                this.fishShadowSize = 'small';
+            } else if (this.selectedFish.size <= 6) {
+                this.fishShadowSize = 'medium';
+            } else {
+                this.fishShadowSize = 'large';
+            }
+            
+            // Set fish behavior based on attributes
+            this.fishAggressiveness = this.selectedFish.aggressiveness || 5;
+            this.fishElusiveness = this.selectedFish.elusiveness || 5;
+            
+            // Adjust phase count based on elusiveness (3-4 phases)
+            this.totalPhases = this.fishElusiveness >= 7 ? 4 : 3;
+            
+        } else {
+            // Fallback to random fish shadow
+            const shadowSizes = ['small', 'medium', 'large'];
+            this.fishShadowSize = shadowSizes[Math.floor(Math.random() * shadowSizes.length)];
+            this.totalPhases = Math.random() < 0.3 ? 4 : 3;
+            this.fishAggressiveness = 5;
+            this.fishElusiveness = 5;
+        }
+        
         this.currentPhase = 0;
-        this.shadowInterest = 50;
+        this.phaseSuccesses = [];
         
-        // Apply equipment effects to luring
-        this.applyEquipmentEffects();
+        // Initialize missing properties
+        this.simulationFish = [];
+        this.lureType = 'spinner'; // Default lure type
+        this.shadowInterest = 50; // Starting interest level
         
-        // Select fish based on cast accuracy and available fish
-        this.selectTargetFish();
+        // Initialize phaseSuccesses array to match totalPhases
+        this.phaseSuccesses = new Array(this.totalPhases).fill(false);
         
-        // Determine lure type and input pattern
-        this.setupLurePattern();
-        
-        // Create Lure Simulation UI
-        this.createLureSimulationUI();
-        
-        // Create fish shadow
+        // Initialize UI elements
+        this.createBackground();
+        this.createLureSimulation();
         this.createFishShadow();
+        this.createUI();
         
-        // Start first phase
-        this.startPhase();
+        // Start the first approach
+        this.startFishApproach();
         
-        // Set up input handling for lure controls
-        this.setupLureControls();
+        // Set up input handling
+        this.setupInputHandling();
+    }
+
+    setupInputHandling() {
+        // Set up keyboard input handling
+        if (this.scene.input && this.scene.input.keyboard) {
+            this.scene.input.keyboard.on('keydown', this.handleLureInput, this);
+            console.log('LuringMiniGame: Input handling setup');
+        } else {
+            console.warn('LuringMiniGame: No keyboard input available');
+        }
+    }
+
+    handleLureInput(event) {
+        if (!this.isActive) return;
         
-        console.log(`LuringMiniGame: Started with ${this.targetFish.name}, lure type: ${this.lureType}`);
+        const key = event.key.toLowerCase();
+        console.log('LuringMiniGame: Input received:', key);
+        
+        // Handle different input types based on key
+        let inputType = 'unknown';
+        let inputData = {};
+        
+        switch (key) {
+            case ' ': // Spacebar
+                inputType = 'tap';
+                break;
+            case 'w':
+                inputType = 'flick';
+                inputData = { direction: 'up', speed: 120 };
+                break;
+            case 'a':
+                inputType = 'flick';
+                inputData = { direction: 'left', speed: 120 };
+                break;
+            case 's':
+                inputType = 'drag';
+                inputData = { direction: 'down', speed: 120 };
+                break;
+            case 'd':
+                inputType = 'flick';
+                inputData = { direction: 'right', speed: 120 };
+                break;
+        }
+        
+        if (inputType !== 'unknown') {
+            this.handleInput(inputType, inputData);
+        }
     }
 
     applyEquipmentEffects() {
@@ -250,337 +357,153 @@ export class LuringMiniGame {
         fish.graphic.clear();
         fish.graphic.setPosition(fish.x, fish.y);
         
-        // Fish body
-        fish.graphic.fillStyle(fish.color);
-        fish.graphic.fillEllipse(0, 0, fish.size * 2, fish.size);
+        // Fish size and color based on type and state
+        const baseSize = fish.size || 8;
+        let fishColor = fish.color || 0x4488ff;
+        let glowColor = null;
+        let showBubbles = false;
+        
+        // State-based visual changes
+        if (fish.interested) {
+            fishColor = 0x00ff88; // Green when interested
+            glowColor = 0x88ffaa;
+            showBubbles = true;
+        } else if (fish.nearLure) {
+            fishColor = 0xffaa00; // Orange when near lure
+            glowColor = 0xffcc66;
+        } else if (fish.observing) {
+            fishColor = 0xff6600; // Red when observing
+            glowColor = 0xff9966;
+            showBubbles = true;
+        }
+        
+        // Draw fish body
+        fish.graphic.fillStyle(fishColor);
+        fish.graphic.fillEllipse(0, 0, baseSize * 2, baseSize);
         
         // Fish tail
-        fish.graphic.fillTriangle(-fish.size, 0, -fish.size * 1.5, -fish.size * 0.5, -fish.size * 1.5, fish.size * 0.5);
+        const tailDirection = fish.direction || 1;
+        fish.graphic.fillTriangle(
+            tailDirection * baseSize, 0,
+            tailDirection * baseSize * 1.5, -baseSize * 0.5,
+            tailDirection * baseSize * 1.5, baseSize * 0.5
+        );
         
-        // Eye
+        // Fish eye
         fish.graphic.fillStyle(0xFFFFFF);
-        fish.graphic.fillCircle(fish.size * 0.3, -fish.size * 0.2, fish.size * 0.3);
+        fish.graphic.fillCircle(baseSize * 0.3 * -tailDirection, -baseSize * 0.2, baseSize * 0.3);
         fish.graphic.fillStyle(0x000000);
-        fish.graphic.fillCircle(fish.size * 0.3, -fish.size * 0.2, fish.size * 0.15);
+        fish.graphic.fillCircle(baseSize * 0.3 * -tailDirection, -baseSize * 0.2, baseSize * 0.15);
         
-        // Interest indicator (if interested)
-        if (fish.interested) {
-            fish.graphic.lineStyle(2, 0x00FF00, 0.8);
-            fish.graphic.strokeCircle(0, 0, fish.size * 3);
+        // Glow effect for special states
+        if (glowColor) {
+            fish.graphic.lineStyle(2, glowColor, 0.8);
+            fish.graphic.strokeEllipse(0, 0, baseSize * 2.5, baseSize * 1.5);
         }
         
-        // Bubbles (if observing)
-        if (fish.bubbling) {
-            for (let i = 0; i < 3; i++) {
-                fish.graphic.fillStyle(0x87CEEB, 0.6);
-                fish.graphic.fillCircle(
-                    Phaser.Math.Between(-fish.size, fish.size),
-                    -fish.size * 2 - i * 5,
-                    1 + i * 0.5
-                );
-            }
+        // Bubbles for interested/observing fish
+        if (showBubbles && fish.bubbling) {
+            this.createFishBubbles(fish);
+        }
+        
+        // Interest indicator above fish
+        if (fish.interested || fish.observing) {
+            this.createInterestIndicator(fish);
         }
     }
 
-    startFishMovement(fish, uiWidth) {
-        // Fish swimming behavior
-        const moveToTarget = () => {
-            if (!this.isActive) return;
-            
-            // Move towards target
-            const dx = fish.targetX - fish.x;
-            const distance = Math.abs(dx);
-            
-            if (distance > 5) {
-                fish.x += Math.sign(dx) * Math.min(fish.speed * 0.016, distance);
-            } else {
-                // Reached target, set new target
-                fish.targetX = Phaser.Math.Between(20, uiWidth - 20);
-            }
-            
-            this.updateFishVisual(fish);
-        };
-        
-        // Update fish position every frame
-        fish.moveTimer = this.scene.time.addEvent({
-            delay: 16, // ~60 FPS
-            callback: moveToTarget,
-            loop: true
-        });
-        
-        // Randomly change direction
-        fish.directionTimer = this.scene.time.addEvent({
-            delay: Phaser.Math.Between(2000, 5000),
-            callback: () => {
-                if (this.isActive) {
-                    fish.targetX = Phaser.Math.Between(20, uiWidth - 20);
-                }
-            },
-            loop: true
-        });
-    }
-
-    createControlInstructions(uiWidth, uiHeight) {
-        // Control scheme instructions based on lure type
-        const controlTexts = {
-            spinner: 'Pulse Tap: Tap repeatedly',
-            soft_plastic: 'Drag & Pause: Hold then release',
-            fly: 'Swipe Flick: Quick directional swipes',
-            popper: 'Tap & Hold Burst: Tap then hold',
-            spoon: 'Circular Trace: Move in circles'
-        };
-        
-        const instructionText = this.scene.add.text(
-            uiWidth / 2, uiHeight - 15,
-            controlTexts[this.lureType] || 'Use WASD to control lure',
-            {
-                fontSize: '12px',
-                fill: '#ffffff',
-                align: 'center'
-            }
-        ).setOrigin(0.5, 0);
-        
-        this.simulationContainer.add(instructionText);
-    }
-
-    setupLureControls() {
-        // Set up WASD controls for lure movement
-        this.cursors = this.scene.input.keyboard.createCursorKeys();
-        this.wasd = this.scene.input.keyboard.addKeys('W,S,A,D');
-        
-        // Handle input based on lure type with high priority
-        // Use prependOnceListener to ensure this handler runs before others
-        this.scene.input.keyboard.on('keydown', this.handleLureInput, this);
-        
-        console.log('LuringMiniGame: Lure controls set up with spacebar override');
-    }
-
-    handleLureInput(event) {
-        if (!this.isActive || this.inputCooldown) return;
-        
-        const key = event.key.toLowerCase();
-        const code = event.code;
-        let inputHandled = false;
-        
-        // Prevent event propagation for spacebar to stop it from triggering casting
-        // Check both event.key (' ') and event.code ('Space')
-        if (key === ' ' || code === 'Space') {
-            event.preventDefault();
-            event.stopPropagation();
-            console.log('LuringMiniGame: Prevented spacebar event propagation');
-        }
-        
-        // Regular lure control as specified in GDD
-        if (key === 'w') {
-            // Lure swims up quickly
-            this.moveLureUp();
-            inputHandled = true;
-        } else if (key === 'a' || key === 'd') {
-            // Lure swims upper right towards boat (right side)
-            this.moveLureTowardsBoat();
-            inputHandled = true;
-        }
-        
-        // Lure-specific controls
-        switch (this.lureType) {
-            case 'spinner':
-                if (key === ' ' || code === 'Space') { // Spacebar for pulse tap
-                    this.handleSpinnerPulse();
-                    inputHandled = true;
-                    console.log('LuringMiniGame: Spinner pulse tap executed');
-                }
-                break;
-                
-            case 'soft_plastic':
-                if (key === 's') { // S for drag down
-                    this.handleSoftPlasticDrag();
-                    inputHandled = true;
-                }
-                break;
-                
-            case 'fly':
-                if (['w', 'a', 's', 'd'].includes(key)) {
-                    this.handleFlySwipe(key);
-                    inputHandled = true;
-                }
-                break;
-                
-            case 'popper':
-                if (key === ' ' || code === 'Space') { // Spacebar for tap and hold
-                    this.handlePopperBurst();
-                    inputHandled = true;
-                    console.log('LuringMiniGame: Popper burst executed');
-                }
-                break;
-                
-            case 'spoon':
-                if (['w', 'a', 's', 'd'].includes(key)) {
-                    this.handleSpoonTrace(key);
-                    inputHandled = true;
-                }
-                break;
-        }
-        
-        // If spacebar was used for lure control, mark it as handled to prevent casting
-        if ((key === ' ' || code === 'Space') && (this.lureType === 'spinner' || this.lureType === 'popper')) {
-            inputHandled = true;
-            console.log('LuringMiniGame: Spacebar consumed for lure control, preventing casting');
-        }
-        
-        if (inputHandled) {
-            this.startInputCooldown();
-            this.checkFishInterest();
+    createFishBubbles(fish) {
+        // Create bubble effect above fish
+        if (!fish.bubbleTimer) {
+            fish.bubbleTimer = this.scene.time.addEvent({
+                delay: 500,
+                callback: () => {
+                    if (fish.bubbling && fish.graphic && fish.graphic.active) {
+                        const bubble = this.scene.add.graphics();
+                        bubble.setDepth(1003);
+                        bubble.fillStyle(0x87CEEB, 0.6);
+                        bubble.fillCircle(
+                            fish.x + Phaser.Math.Between(-5, 5),
+                            fish.y - 15,
+                            Phaser.Math.Between(2, 4)
+                        );
+                        this.simulationContainer.add(bubble);
+                        
+                        // Animate bubble rising
+                        this.scene.tweens.add({
+                            targets: bubble,
+                            y: fish.y - 30,
+                            alpha: 0,
+                            duration: 1000,
+                            ease: 'Power2.easeOut',
+                            onComplete: () => bubble.destroy()
+                        });
+                    }
+                },
+                loop: true
+            });
         }
     }
 
-    moveLureUp() {
-        // Move lure up quickly
-        this.lurePosition.y = Math.max(45, this.lurePosition.y - 20);
-        this.updateLureVisual();
-        this.updateFishingLineVisual(300);
-        
-        // Add upward motion effect
-        this.scene.tweens.add({
-            targets: this.simulationLure,
-            y: this.lurePosition.y - 5,
-            duration: 200,
-            yoyo: true,
-            ease: 'Power2.easeOut'
-        });
-    }
-
-    moveLureTowardsBoat() {
-        // Move lure upper right towards boat (right side of screen)
-        this.lurePosition.x = Math.min(280, this.lurePosition.x + 15);
-        this.lurePosition.y = Math.max(45, this.lurePosition.y - 10);
-        this.updateLureVisual();
-        this.updateFishingLineVisual(300);
-        
-        // Add diagonal motion effect
-        this.scene.tweens.add({
-            targets: this.simulationLure,
-            x: this.lurePosition.x + 3,
-            y: this.lurePosition.y - 3,
-            duration: 300,
-            yoyo: true,
-            ease: 'Power2.easeOut'
-        });
-    }
-
-    handleSpinnerPulse() {
-        // Spinner: Quick pulsing motion
-        this.scene.tweens.add({
-            targets: this.simulationLure,
-            scaleX: 1.5,
-            scaleY: 1.5,
-            duration: 150,
-            yoyo: true,
-            ease: 'Power2.easeOut'
-        });
-        
-        // Add rotation effect
-        this.scene.tweens.add({
-            targets: this.simulationLure,
-            rotation: this.simulationLure.rotation + Math.PI,
-            duration: 300,
-            ease: 'Power2.easeOut'
-        });
-    }
-
-    handleSoftPlasticDrag() {
-        // Soft Plastic: Drag down then pause
-        const originalY = this.lurePosition.y;
-        this.lurePosition.y = Math.min(180, this.lurePosition.y + 25);
-        this.updateLureVisual();
-        this.updateFishingLineVisual(300);
-        
-        // Pause effect
-        this.scene.time.delayedCall(500, () => {
-            if (this.isActive) {
-                this.lurePosition.y = originalY;
-                this.updateLureVisual();
-                this.updateFishingLineVisual(300);
-            }
-        });
-    }
-
-    handleFlySwipe(direction) {
-        // Fly: Quick flick movements
-        let deltaX = 0, deltaY = 0;
-        
-        switch (direction) {
-            case 'w': deltaY = -15; break;
-            case 's': deltaY = 15; break;
-            case 'a': deltaX = -15; break;
-            case 'd': deltaX = 15; break;
+    createInterestIndicator(fish) {
+        // Create interest level indicator
+        if (!fish.interestIndicator) {
+            fish.interestIndicator = this.scene.add.graphics();
+            fish.interestIndicator.setDepth(1004);
+            this.simulationContainer.add(fish.interestIndicator);
         }
         
-        // Quick flick motion
-        this.scene.tweens.add({
-            targets: this.simulationLure,
-            x: this.lurePosition.x + deltaX,
-            y: this.lurePosition.y + deltaY,
-            duration: 100,
-            yoyo: true,
-            ease: 'Power3.easeOut'
-        });
+        fish.interestIndicator.clear();
+        fish.interestIndicator.setPosition(fish.x, fish.y - 25);
+        
+        // Interest meter background
+        fish.interestIndicator.fillStyle(0x000000, 0.7);
+        fish.interestIndicator.fillRoundedRect(-15, -3, 30, 6, 2);
+        
+        // Interest level bar
+        const interestLevel = this.shadowInterest / 100;
+        const barWidth = 26 * interestLevel;
+        
+        let barColor = 0xff0000; // Red for low interest
+        if (interestLevel > 0.3) barColor = 0xffaa00; // Orange for medium
+        if (interestLevel > 0.7) barColor = 0x00ff00; // Green for high
+        
+        fish.interestIndicator.fillStyle(barColor);
+        fish.interestIndicator.fillRoundedRect(-13, -2, barWidth, 4, 1);
+        
+        // Interest percentage text
+        const interestText = this.scene.add.text(0, -15, `${Math.round(this.shadowInterest)}%`, {
+            fontSize: '10px',
+            fill: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 1
+        }).setOrigin(0.5);
+        
+        fish.interestIndicator.add ? fish.interestIndicator.add(interestText) : 
+            this.simulationContainer.add(interestText);
     }
 
-    handlePopperBurst() {
-        // Popper: Surface burst effect
-        this.lurePosition.y = Math.max(45, this.lurePosition.y - 30);
-        this.updateLureVisual();
-        this.updateFishingLineVisual(300);
+    startFishApproach() {
+        console.log(`LuringMiniGame: Starting fish approach phase ${this.currentPhase + 1}/${this.totalPhases}`);
         
-        // Create splash effect
-        const splash = this.scene.add.graphics();
-        splash.setDepth(1003);
-        splash.fillStyle(0x87CEEB, 0.6);
-        for (let i = 0; i < 6; i++) {
-            const angle = (i / 6) * Math.PI * 2;
-            splash.fillCircle(
-                this.lurePosition.x + Math.cos(angle) * 10,
-                this.lurePosition.y + Math.sin(angle) * 10,
-                2
-            );
-        }
-        this.simulationContainer.add(splash);
+        // Reset phase state
+        this.phaseActive = true;
+        this.phaseComplete = false;
+        this.fishInterested = false;
         
-        // Remove splash after animation
-        this.scene.tweens.add({
-            targets: splash,
-            alpha: 0,
-            scaleX: 2,
-            scaleY: 2,
-            duration: 500,
-            onComplete: () => splash.destroy()
-        });
-    }
-
-    handleSpoonTrace(direction) {
-        // Spoon: Circular tracing motion
-        const radius = 15;
-        const angle = this.simulationLure.rotation || 0;
-        let newAngle = angle;
+        // Calculate approach speed based on aggressiveness
+        const baseSpeed = 100;
+        const speedMultiplier = 0.5 + (this.fishAggressiveness / 10) * 1.5; // 0.5x to 2x
+        const approachSpeed = baseSpeed * speedMultiplier;
         
-        switch (direction) {
-            case 'w': newAngle += Math.PI / 4; break;
-            case 's': newAngle -= Math.PI / 4; break;
-            case 'a': newAngle += Math.PI / 2; break;
-            case 'd': newAngle -= Math.PI / 2; break;
-        }
+        // Calculate interest threshold based on elusiveness
+        this.interestThreshold = 3 + Math.floor(this.fishElusiveness / 3); // 3-6 bubbles needed
         
-        const centerX = 150;
-        const centerY = 100;
-        const newX = centerX + Math.cos(newAngle) * radius;
-        const newY = centerY + Math.sin(newAngle) * radius;
+        // Start the luring phase instead of complex fish positioning
+        this.startPhase();
         
-        this.lurePosition.x = Math.max(20, Math.min(280, newX));
-        this.lurePosition.y = Math.max(45, Math.min(180, newY));
-        this.simulationLure.rotation = newAngle;
-        
-        this.updateLureVisual();
-        this.updateFishingLineVisual(300);
+        // Update phase display
+        this.updatePhaseDisplay();
     }
 
     startInputCooldown() {
@@ -598,10 +521,10 @@ export class LuringMiniGame {
                 this.lurePosition.x, this.lurePosition.y
             );
             
-            // Use equipment effects for attraction radius and interest chance
+            // Use equipment effects for attraction radius and interest chance (with null checking)
             const attractionRadius = this.equipmentEffects?.attractionRadius || 100;
             const baseInterestChance = 0.3;
-            const equipmentBonus = (this.lureStats.biteRate || 5) * 0.05; // 5% per bite rate point
+            const equipmentBonus = (this.lureStats?.biteRate || 5) * 0.05; // 5% per bite rate point
             const interestChance = Math.min(0.8, baseInterestChance + equipmentBonus);
             
             if (distance < attractionRadius && !fish.interested && Math.random() < interestChance) {
@@ -658,6 +581,9 @@ export class LuringMiniGame {
     handleFishBite(fish) {
         console.log('LuringMiniGame: Fish bit the lure!');
         
+        // Play fish bite audio
+        this.audioManager?.playSFX('fish_bite');
+        
         // Create bite effect
         const biteEffect = this.scene.add.graphics();
         biteEffect.setDepth(1004);
@@ -694,39 +620,75 @@ export class LuringMiniGame {
         const equippedLure = this.scene.gameState?.getEquippedItem('lures');
         this.lureType = equippedLure?.type || 'spinner';
         
-        // Define input patterns for each lure type
+        // Define input patterns for each lure type according to GDD
         const lurePatterns = {
-            spinner: ['tap', 'tap', 'hold'],
-            soft_plastic: ['drag', 'pause', 'drag'],
-            fly: ['swipe', 'flick', 'swipe'],
-            popper: ['tap', 'hold', 'burst'],
-            spoon: ['circle', 'trace', 'circle']
+            spinner: {
+                name: 'Spinner',
+                control: 'Pulse Tap',
+                description: 'Press SPACEBAR for quick pulses',
+                phases: ['pulse', 'pulse', 'pulse'],
+                instructions: 'TAP SPACEBAR when fish approaches!'
+            },
+            soft_plastic: {
+                name: 'Soft Plastic',
+                control: 'Drag and Pause',
+                description: 'Press S to drag down, then pause',
+                phases: ['drag', 'pause', 'drag'],
+                instructions: 'DRAG DOWN (S) then PAUSE!'
+            },
+            fly: {
+                name: 'Fly',
+                control: 'Swipe Flick Combo',
+                description: 'Use WASD for quick flick movements',
+                phases: ['flick', 'swipe', 'combo'],
+                instructions: 'FLICK with WASD directions!'
+            },
+            popper: {
+                name: 'Popper',
+                control: 'Tap and Hold Burst',
+                description: 'SPACEBAR for surface bursts',
+                phases: ['tap', 'hold', 'burst'],
+                instructions: 'TAP and HOLD SPACEBAR for bursts!'
+            },
+            spoon: {
+                name: 'Spoon',
+                control: 'Circular Trace',
+                description: 'Use WASD in circular motions',
+                phases: ['trace', 'circle', 'trace'],
+                instructions: 'TRACE CIRCLES with WASD!'
+            }
         };
         
-        this.requiredInputs = lurePatterns[this.lureType] || lurePatterns.spinner;
-        this.maxPhases = this.requiredInputs.length;
+        this.lurePattern = lurePatterns[this.lureType] || lurePatterns.spinner;
+        this.requiredInputs = this.lurePattern.phases;
+        this.maxPhases = Math.min(4, Math.max(3, this.requiredInputs.length)); // 3-4 opportunities as per GDD
+        
+        console.log(`LuringMiniGame: Setup ${this.lurePattern.name} lure with ${this.maxPhases} phases`);
     }
 
     createFishShadow() {
-        const shadowSize = this.getShadowSize();
+        // Create fish shadow representation (using selectedFish data if available)
+        const shadowSize = this.fishShadowSize || 'medium';
         
+        // Create visual fish shadow (this will be used in the simulation)
         this.fishShadow = {
-            x: Phaser.Math.Between(100, this.scene.cameras.main.width - 100),
-            y: Phaser.Math.Between(
-                this.scene.cameras.main.height * 0.4,
-                this.scene.cameras.main.height * 0.7
-            ),
             size: shadowSize,
-            speed: this.targetFish.speed || 3,
-            aggressiveness: this.targetFish.aggressiveness || 5,
-            elusiveness: this.targetFish.elusiveness || 5,
+            aggressiveness: this.fishAggressiveness,
+            elusiveness: this.fishElusiveness,
+            x: 0,
+            y: 0,
+            visible: false,
             approaching: false,
-            distance: 200
+            distance: 200,
+            approachSpeed: 1 + (this.fishAggressiveness / 10),
+            fleeChance: this.fishElusiveness / 20
         };
+        
+        console.log('LuringMiniGame: Fish shadow created with size:', shadowSize);
     }
 
     getShadowSize() {
-        const fishSize = this.targetFish.size || 5;
+        const fishSize = this.selectedFish?.size || 5;
         if (fishSize <= 3) return 'small';
         if (fishSize <= 7) return 'medium';
         return 'large';
@@ -741,38 +703,151 @@ export class LuringMiniGame {
         const requiredInput = this.requiredInputs[this.currentPhase];
         const difficulty = this.calculatePhaseDifficulty();
         
-        // Make fish shadow approach
+        // Update phase instructions
+        this.updatePhaseInstructions();
+        
+        // Enhanced fish shadow approach mechanics
         this.fishShadow.approaching = true;
-        this.fishShadow.distance = 200 - (this.currentPhase * 40);
+        this.fishShadow.distance = Math.max(50, 200 - (this.currentPhase * 40));
         
-        console.log(`LuringMiniGame: Phase ${this.currentPhase + 1} - Input: ${requiredInput}`);
+        // Fish behavior based on aggressiveness and elusiveness
+        const aggressiveness = this.fishAggressiveness || 5;
+        const elusiveness = this.fishElusiveness || 5;
         
-        // Emit phase start event
+        // Aggressive fish approach faster
+        this.fishShadow.approachSpeed = 1 + (aggressiveness / 10);
+        
+        // Elusive fish are more likely to flee on mistakes
+        this.fishShadow.fleeChance = elusiveness / 20;
+        
+        console.log(`LuringMiniGame: Phase ${this.currentPhase + 1}/${this.maxPhases} - Input: ${requiredInput}, Difficulty: ${difficulty.toFixed(1)}`);
+        
+        // Create visual fish shadow approach animation
+        this.animateFishShadowApproach();
+        
+        // Emit phase start event with enhanced data
         this.scene.events.emit('fishing:lurePhase', {
             phase: this.currentPhase + 1,
             maxPhases: this.maxPhases,
             requiredInput: requiredInput,
             difficulty: difficulty,
             shadowInterest: this.shadowInterest,
-            fishShadow: this.fishShadow
+            fishShadow: this.fishShadow,
+            lureType: this.lureType,
+            instructions: this.lurePattern.instructions
         });
         
-        // Set phase timeout
-        this.phaseTimeout = this.scene.time.delayedCall(3000 + difficulty * 1000, () => {
+        // Set phase timeout with difficulty scaling
+        const timeLimit = Math.max(2000, 4000 - (difficulty * 500)); // 2-4 seconds based on difficulty
+        this.phaseTimeout = this.scene.time.delayedCall(timeLimit, () => {
             this.phaseTimeout = null;
+            console.log(`LuringMiniGame: Phase ${this.currentPhase + 1} timed out`);
             this.handlePhaseFailure();
         });
+        
+        // Show phase progress
+        this.updatePhaseProgress();
+    }
+
+    animateFishShadowApproach() {
+        // Find a fish in the simulation to animate as approaching
+        const approachingFish = this.simulationFish.find(fish => !fish.interested);
+        if (approachingFish) {
+            // Stop current movement
+            if (approachingFish.moveTimer) approachingFish.moveTimer.destroy();
+            
+            // Animate approach towards lure
+            const targetX = this.lurePosition.x + Phaser.Math.Between(-30, 30);
+            const targetY = this.lurePosition.y + Phaser.Math.Between(-20, 20);
+            
+            // Use default approach speed if not set
+            const approachSpeed = this.fishShadow?.approachSpeed || 1;
+            
+            this.scene.tweens.add({
+                targets: approachingFish,
+                x: targetX,
+                y: targetY,
+                duration: 2000 / approachSpeed,
+                ease: 'Power2.easeInOut',
+                onComplete: () => {
+                    // Fish reaches lure area
+                    approachingFish.nearLure = true;
+                    this.updateFishVisual(approachingFish);
+                }
+            });
+        }
+    }
+
+    updatePhaseProgress() {
+        // Create or update phase progress indicator
+        if (!this.phaseProgressContainer) {
+            this.phaseProgressContainer = this.scene.add.container(150, 40);
+            this.phaseProgressContainer.setDepth(1005);
+            this.simulationContainer.add(this.phaseProgressContainer);
+        }
+        
+        this.phaseProgressContainer.removeAll(true);
+        
+        // Create phase dots
+        for (let i = 0; i < this.maxPhases; i++) {
+            const dot = this.scene.add.graphics();
+            const x = i * 20;
+            const y = 0;
+            
+            if (i < this.currentPhase) {
+                // Completed phase - green
+                dot.fillStyle(0x00ff00);
+                dot.fillCircle(x, y, 6);
+            } else if (i === this.currentPhase) {
+                // Current phase - pulsing yellow
+                dot.fillStyle(0xffff00);
+                dot.fillCircle(x, y, 8);
+                
+                // Add pulsing animation
+                this.scene.tweens.add({
+                    targets: dot,
+                    scaleX: 1.3,
+                    scaleY: 1.3,
+                    duration: 500,
+                    yoyo: true,
+                    repeat: -1,
+                    ease: 'Sine.easeInOut'
+                });
+            } else {
+                // Future phase - gray
+                dot.fillStyle(0x666666);
+                dot.fillCircle(x, y, 5);
+            }
+            
+            this.phaseProgressContainer.add(dot);
+        }
+        
+        // Phase label
+        const phaseLabel = this.scene.add.text(0, -20, `Phase ${this.currentPhase + 1}/${this.maxPhases}`, {
+            fontSize: '12px',
+            fill: '#ffffff',
+            fontWeight: 'bold'
+        }).setOrigin(0, 0.5);
+        this.phaseProgressContainer.add(phaseLabel);
     }
 
     calculatePhaseDifficulty() {
         // Later phases are harder, modified by fish elusiveness
         const baseDifficulty = this.currentPhase * 0.5;
-        const fishDifficulty = (this.targetFish.elusiveness || 5) / 10;
+        const fishDifficulty = (this.fishElusiveness || 5) / 10;
         return Math.min(2, baseDifficulty + fishDifficulty);
     }
 
     handleInput(inputType, inputData) {
         if (!this.isActive || this.currentPhase >= this.maxPhases) return false;
+
+        // Ensure requiredInputs is available
+        if (!this.requiredInputs || this.requiredInputs.length === 0) {
+            console.warn('LuringMiniGame: No required inputs defined, using default validation');
+            // Accept any input as success for now
+            this.handlePhaseSuccess();
+            return true;
+        }
 
         const requiredInput = this.requiredInputs[this.currentPhase];
         const success = this.validateInput(inputType, requiredInput, inputData);
@@ -787,25 +862,65 @@ export class LuringMiniGame {
     }
 
     validateInput(inputType, requiredInput, inputData) {
-        // Basic input validation - can be expanded for more complex patterns
-        if (inputType === requiredInput) {
-            // Additional validation based on input type
-            switch (inputType) {
-                case 'tap':
-                    return true; // Simple tap always valid
-                case 'hold':
-                    return inputData.duration >= 500; // Must hold for 500ms
-                case 'drag':
-                    return inputData.distance >= 50; // Must drag at least 50 pixels
-                case 'swipe':
-                    return inputData.speed >= 100; // Must swipe fast enough
-                case 'circle':
-                    return inputData.completeness >= 0.8; // Must complete 80% of circle
-                default:
-                    return true;
-            }
+        // Enhanced input validation for each lure type
+        console.log(`LuringMiniGame: Validating ${inputType} against ${requiredInput}`);
+        
+        // Handle case where requiredInput is undefined
+        if (!requiredInput) {
+            console.warn('LuringMiniGame: No required input specified, accepting any input');
+            return true;
         }
-        return false;
+        
+        switch (requiredInput) {
+            case 'pulse':
+                // Spinner: Quick spacebar taps
+                return inputType === 'pulse' || inputType === 'tap';
+                
+            case 'drag':
+                // Soft Plastic: S key drag down
+                return inputType === 'drag' && inputData?.direction === 'down';
+                
+            case 'pause':
+                // Soft Plastic: Brief pause (no input for 1 second)
+                return inputType === 'pause' || inputType === 'wait';
+                
+            case 'flick':
+                // Fly: Quick WASD directional inputs
+                return inputType === 'flick' && inputData?.speed >= 100;
+                
+            case 'swipe':
+                // Fly: Longer WASD movements
+                return inputType === 'swipe' && inputData?.distance >= 30;
+                
+            case 'combo':
+                // Fly: Combination of flick movements
+                return inputType === 'combo' || (inputType === 'flick' && inputData?.sequence);
+                
+            case 'tap':
+                // Popper: Single spacebar tap
+                return inputType === 'tap';
+                
+            case 'hold':
+                // Popper: Hold spacebar for burst
+                return inputType === 'hold' && inputData?.duration >= 500;
+                
+            case 'burst':
+                // Popper: Release for surface burst
+                return inputType === 'burst' || inputType === 'release';
+                
+            case 'trace':
+                // Spoon: Circular WASD movements
+                return inputType === 'trace' && inputData?.pattern === 'circular';
+                
+            case 'circle':
+                // Spoon: Complete circular motion
+                return inputType === 'circle' && inputData?.completeness >= 0.7;
+                
+            default:
+                // Fallback to basic validation
+                console.log(`LuringMiniGame: Using fallback validation for ${requiredInput}`);
+                return inputType === requiredInput || inputType === 'tap'; // Accept tap as fallback
+        }
     }
 
     handlePhaseSuccess() {
@@ -815,11 +930,14 @@ export class LuringMiniGame {
             this.phaseTimeout = null;
         }
 
+        // Play phase success audio
+        this.audioManager?.playSFX('lure_success');
+
         // Increase shadow interest
         this.shadowInterest = Math.min(100, this.shadowInterest + 20);
         
-        // Apply lure success bonus
-        const lureBonus = this.lureStats.lureSuccess || 0;
+        // Apply lure success bonus (with null checking)
+        const lureBonus = this.lureStats?.lureSuccess || 0;
         this.shadowInterest += lureBonus;
         
         console.log(`LuringMiniGame: Phase ${this.currentPhase + 1} success! Interest: ${this.shadowInterest}`);
@@ -879,7 +997,7 @@ export class LuringMiniGame {
     attemptHook() {
         // Final hooking attempt based on accumulated interest
         const hookChance = this.shadowInterest / 100;
-        const biteRateBonus = (this.lureStats.biteRate || 0) / 100;
+        const biteRateBonus = (this.lureStats?.biteRate || 0) / 100;
         const finalChance = Math.min(0.95, hookChance + biteRateBonus);
         
         const success = Math.random() < finalChance;
@@ -887,7 +1005,7 @@ export class LuringMiniGame {
         console.log(`LuringMiniGame: Hook attempt - Chance: ${(finalChance * 100).toFixed(1)}%, Success: ${success}`);
         
         if (success) {
-            this.complete(true, this.targetFish);
+            this.complete(true, this.selectedFish);
         } else {
             this.complete(false, null);
         }
@@ -895,6 +1013,8 @@ export class LuringMiniGame {
 
     complete(success, fishHooked) {
         this.isActive = false;
+        
+        console.log('LuringMiniGame: Complete called with:', { success, fishHooked });
         
         // IMMEDIATELY clean up input handling to prevent interference with next phase
         this.scene.input.keyboard.off('keydown', this.handleLureInput, this);
@@ -908,10 +1028,36 @@ export class LuringMiniGame {
             this.fishObservationTimer.destroy();
         }
 
+        // Validate and ensure fish data has required properties
+        let validatedFishHooked = null;
+        
+        if (success && fishHooked && typeof fishHooked === 'object') {
+            // Ensure fish object has all required properties
+            validatedFishHooked = {
+                id: fishHooked.id || 'unknown_fish',
+                name: fishHooked.name || 'Unknown Fish',
+                size: fishHooked.size || 5,
+                rarity: fishHooked.rarity || 1,
+                aggressiveness: fishHooked.aggressiveness || 5,
+                elusiveness: fishHooked.elusiveness || 5,
+                strength: fishHooked.strength || 5,
+                speed: fishHooked.speed || 5,
+                endurance: fishHooked.endurance || 5,
+                // Preserve any additional properties
+                ...fishHooked
+            };
+        }
+        
+        console.log('LuringMiniGame: Emitting lureComplete event with validated data:', {
+            success,
+            fishHooked: validatedFishHooked,
+            finalInterest: this.shadowInterest
+        });
+
         // Emit completion event
         this.scene.events.emit('fishing:lureComplete', {
             success: success,
-            fishHooked: fishHooked,
+            fishHooked: validatedFishHooked,
             finalInterest: this.shadowInterest
         });
     }
@@ -940,6 +1086,311 @@ export class LuringMiniGame {
         // Clean up UI
         if (this.simulationContainer) {
             this.simulationContainer.destroy();
+        }
+    }
+
+    detectCircularPattern() {
+        if (!this.spoonPattern || this.spoonPattern.length < 4) return false;
+        
+        // Get last 4 inputs
+        const recent = this.spoonPattern.slice(-4).map(input => input.key);
+        
+        // Check for circular patterns
+        const clockwise = ['w', 'd', 's', 'a'];
+        const counterclockwise = ['w', 'a', 's', 'd'];
+        
+        // Check if recent inputs match circular pattern
+        for (let i = 0; i <= clockwise.length - recent.length; i++) {
+            const slice = clockwise.slice(i, i + recent.length);
+            if (JSON.stringify(slice) === JSON.stringify(recent)) return true;
+        }
+        
+        for (let i = 0; i <= counterclockwise.length - recent.length; i++) {
+            const slice = counterclockwise.slice(i, i + recent.length);
+            if (JSON.stringify(slice) === JSON.stringify(recent)) return true;
+        }
+        
+        return false;
+    }
+
+    calculateCircularCompleteness() {
+        if (!this.spoonPattern || this.spoonPattern.length < 2) return 0;
+        
+        const uniqueDirections = new Set(this.spoonPattern.map(input => input.key));
+        const completeness = uniqueDirections.size / 4; // 4 directions = 100%
+        
+        return Math.min(1, completeness);
+    }
+
+    updatePhaseInstructions() {
+        if (!this.phaseInstructionText || !this.isActive) return;
+        
+        const currentPhase = this.currentPhase;
+        const requiredInput = this.requiredInputs[currentPhase];
+        
+        let instruction = 'Get ready...';
+        
+        if (currentPhase < this.maxPhases) {
+            switch (requiredInput) {
+                case 'pulse':
+                    instruction = '⚡ TAP SPACEBAR quickly!';
+                    break;
+                case 'drag':
+                    instruction = '⬇️ PRESS S to drag down!';
+                    break;
+                case 'pause':
+                    instruction = '⏸️ WAIT... don\'t press anything!';
+                    break;
+                case 'flick':
+                    instruction = '💨 QUICK WASD movements!';
+                    break;
+                case 'swipe':
+                    instruction = '↗️ SWIPE with WASD!';
+                    break;
+                case 'combo':
+                    instruction = '🔥 COMBO! Multiple quick inputs!';
+                    break;
+                case 'tap':
+                    instruction = '👆 TAP SPACEBAR!';
+                    break;
+                case 'hold':
+                    instruction = '⏳ HOLD SPACEBAR down!';
+                    break;
+                case 'burst':
+                    instruction = '💥 RELEASE for burst!';
+                    break;
+                case 'trace':
+                    instruction = '🔄 TRACE with WASD!';
+                    break;
+                case 'circle':
+                    instruction = '⭕ COMPLETE the circle!';
+                    break;
+                default:
+                    instruction = `Phase ${currentPhase + 1}: ${requiredInput}`;
+            }
+        } else {
+            instruction = '🎣 Ready to hook!';
+        }
+        
+        this.phaseInstructionText.setText(instruction);
+        
+        // Add color coding based on phase
+        if (currentPhase === 0) {
+            this.phaseInstructionText.setFill('#00ff88'); // Green for first phase
+        } else if (currentPhase === this.maxPhases - 1) {
+            this.phaseInstructionText.setFill('#ff6600'); // Orange for final phase
+        } else {
+            this.phaseInstructionText.setFill('#ffff00'); // Yellow for middle phases
+        }
+    }
+
+    completePhase(success) {
+        console.log(`LuringMiniGame: Phase ${this.currentPhase + 1} complete. Success:`, success);
+        
+        this.phaseComplete = true;
+        this.phaseActive = false;
+        this.phaseSuccesses[this.currentPhase] = success;
+        
+        if (success) {
+            // Show success feedback
+            this.createSuccessFeedback();
+            
+            // Check if all phases complete
+            if (this.currentPhase >= this.totalPhases - 1) {
+                // All phases complete - hook the fish!
+                this.hookFish();
+            } else {
+                // Move to next phase
+                this.currentPhase++;
+                this.scene.time.delayedCall(1500, () => {
+                    this.startFishApproach();
+                });
+            }
+        } else {
+            // Phase failed - fish swims away
+            this.fishSwimAway();
+        }
+    }
+
+    createSuccessFeedback() {
+        // Visual feedback for successful phase completion
+        console.log('LuringMiniGame: Creating success feedback');
+        
+        // Simple success indication - could be enhanced with visual effects
+        if (this.phaseInstructionText) {
+            this.phaseInstructionText.setText('✅ SUCCESS! Fish is interested!');
+            this.phaseInstructionText.setFill('#00ff88');
+        }
+    }
+
+    fishSwimAway() {
+        console.log('LuringMiniGame: Fish swims away due to failed phase');
+        
+        // Complete the minigame as failure
+        this.scene.time.delayedCall(1000, () => {
+            this.complete(false, null);
+        });
+    }
+
+    createHookAnimation() {
+        console.log('LuringMiniGame: Creating hook animation');
+        
+        // Simple hook animation - could be enhanced with visual effects
+        if (this.phaseInstructionText) {
+            this.phaseInstructionText.setText('🎣 FISH HOOKED! Transitioning to reeling...');
+            this.phaseInstructionText.setFill('#FFD700');
+        }
+    }
+
+    hookFish() {
+        console.log('LuringMiniGame: Fish hooked successfully!');
+        
+        // Create hook animation
+        this.createHookAnimation();
+        
+        // Play hook sound with null checking
+        if (this.scene && this.scene.gameState) {
+            const audioManager = this.scene.gameState.getAudioManager(this.scene);
+            audioManager?.playSFX('hook_set');
+        } else {
+            console.warn('LuringMiniGame: Cannot play hook sound - gameState not available');
+        }
+        
+        // Transition to reeling minigame
+        this.scene.time.delayedCall(1500, () => {
+            // Ensure we have a valid fish object to pass
+            const fishToPass = this.selectedFish || {
+                id: 'fallback_fish',
+                name: 'Mystery Fish',
+                size: 5,
+                rarity: 3,
+                aggressiveness: 5,
+                elusiveness: 5
+            };
+            
+            this.complete(true, fishToPass);
+        });
+    }
+
+    createBackground() {
+        // Don't create a dark background overlay - let the fishing scene remain visible
+        // The luring minigame UI has its own containers and backgrounds
+        console.log('LuringMiniGame: Skipping background creation to keep scene visible');
+    }
+
+    createLureSimulation() {
+        // Create the lure simulation UI
+        this.createLureSimulationUI();
+        
+        // Set up lure pattern and equipment effects
+        this.setupLurePattern();
+        this.applyEquipmentEffects();
+        
+        console.log('LuringMiniGame: Lure simulation created');
+    }
+
+    createUI() {
+        // Create main UI elements
+        const width = this.scene.cameras.main.width;
+        const height = this.scene.cameras.main.height;
+        
+        // Instructions text
+        this.phaseInstructionText = this.scene.add.text(
+            width / 2, 
+            height - 100, 
+            'Get ready to lure the fish...', 
+            {
+                fontSize: '20px',
+                fill: '#ffffff',
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: { x: 15, y: 10 },
+                align: 'center'
+            }
+        ).setOrigin(0.5).setDepth(1005);
+        
+        console.log('LuringMiniGame: UI created');
+    }
+
+    startFishMovement(fish, uiWidth) {
+        // Stop existing timers
+        if (fish.moveTimer) fish.moveTimer.destroy();
+        if (fish.directionTimer) fish.directionTimer.destroy();
+        
+        // Set new target position
+        fish.targetX = Phaser.Math.Between(20, uiWidth - 20);
+        fish.direction = fish.targetX > fish.x ? -1 : 1; // Face direction of movement
+        
+        // Move towards target
+        fish.moveTimer = this.scene.time.addEvent({
+            delay: 50,
+            callback: () => {
+                if (!fish.interested && !fish.observing) {
+                    const distance = fish.targetX - fish.x;
+                    if (Math.abs(distance) > 2) {
+                        fish.x += Math.sign(distance) * fish.speed * 0.05;
+                        this.updateFishVisual(fish);
+                    } else {
+                        // Reached target, set new target
+                        fish.targetX = Phaser.Math.Between(20, uiWidth - 20);
+                        fish.direction = fish.targetX > fish.x ? -1 : 1;
+                    }
+                }
+            },
+            loop: true
+        });
+        
+        // Change direction randomly
+        fish.directionTimer = this.scene.time.addEvent({
+            delay: Phaser.Math.Between(2000, 5000),
+            callback: () => {
+                if (!fish.interested && !fish.observing) {
+                    fish.targetX = Phaser.Math.Between(20, uiWidth - 20);
+                    fish.direction = fish.targetX > fish.x ? -1 : 1;
+                }
+            },
+            loop: true
+        });
+    }
+
+    createControlInstructions(uiWidth, uiHeight) {
+        // Create control instructions at the bottom of the simulation
+        const instructionY = uiHeight - 15;
+        
+        const instructions = this.scene.add.text(
+            uiWidth / 2, 
+            instructionY, 
+            'Use WASD or SPACEBAR to control lure', 
+            {
+                fontSize: '10px',
+                fill: '#cccccc',
+                align: 'center'
+            }
+        ).setOrigin(0.5);
+        
+        this.simulationContainer.add(instructions);
+    }
+
+    updatePhaseDisplay() {
+        // Update the phase display in the UI
+        if (this.phaseInstructionText) {
+            this.updatePhaseInstructions();
+        }
+        
+        console.log(`LuringMiniGame: Phase display updated - ${this.currentPhase + 1}/${this.totalPhases}`);
+    }
+
+    startObservation() {
+        console.log('LuringMiniGame: Fish is observing the lure');
+        
+        // Find a fish to make interested
+        const availableFish = this.simulationFish.find(fish => !fish.interested && !fish.observing);
+        if (availableFish) {
+            this.makeFishInterested(availableFish);
+        } else {
+            // If no fish available, proceed to next phase
+            this.scene.time.delayedCall(2000, () => {
+                this.handlePhaseSuccess();
+            });
         }
     }
 } 

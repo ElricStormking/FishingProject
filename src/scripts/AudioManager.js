@@ -1,3 +1,7 @@
+// Import audio assets
+import BoatBGMusic from '../assets/audio/Boat_BG.mp3';
+import FishingBGMusic from '../assets/audio/Fishing_BG.mp3';
+
 export class AudioManager {
     constructor(scene) {
         this.scene = scene;
@@ -47,58 +51,291 @@ export class AudioManager {
     }
 
     loadAudioAssets() {
-        // Define audio assets to load
+        // Define audio assets - only load real files that exist, use placeholders for others
         const audioAssets = {
             music: {
-                menu: { key: 'music_menu', url: 'assets/audio/music/menu.mp3', loop: true },
-                fishing: { key: 'music_fishing', url: 'assets/audio/music/fishing.mp3', loop: true },
-                boat: { key: 'music_boat', url: 'assets/audio/music/boat.mp3', loop: true },
-                shop: { key: 'music_shop', url: 'assets/audio/music/shop.mp3', loop: true },
-                victory: { key: 'music_victory', url: 'assets/audio/music/victory.mp3', loop: false }
+                menu: { key: 'music_menu', url: 'placeholder', loop: true }, // No file - use placeholder
+                fishing: { key: 'music_fishing', url: FishingBGMusic, loop: true }, // Real file
+                boat: { key: 'music_boat', url: BoatBGMusic, loop: true }, // Real file
+                shop: { key: 'music_shop', url: 'placeholder', loop: true }, // No file - use placeholder
+                victory: { key: 'music_victory', url: 'placeholder', loop: false } // No file - use placeholder
             },
             sfx: {
-                cast: { key: 'sfx_cast', url: 'assets/audio/sfx/cast.wav' },
-                splash: { key: 'sfx_splash', url: 'assets/audio/sfx/splash.wav' },
-                reel: { key: 'sfx_reel', url: 'assets/audio/sfx/reel.wav' },
-                catch: { key: 'sfx_catch', url: 'assets/audio/sfx/catch.wav' },
-                fail: { key: 'sfx_fail', url: 'assets/audio/sfx/fail.wav' },
-                button: { key: 'sfx_button', url: 'assets/audio/sfx/button.wav' },
-                coin: { key: 'sfx_coin', url: 'assets/audio/sfx/coin.wav' },
-                levelup: { key: 'sfx_levelup', url: 'assets/audio/sfx/levelup.wav' },
-                craft: { key: 'sfx_craft', url: 'assets/audio/sfx/craft.wav' },
-                equip: { key: 'sfx_equip', url: 'assets/audio/sfx/equip.wav' },
-                notification: { key: 'sfx_notification', url: 'assets/audio/sfx/notification.wav' },
-                struggle: { key: 'sfx_struggle', url: 'assets/audio/sfx/struggle.wav' },
-                tension: { key: 'sfx_tension', url: 'assets/audio/sfx/tension.wav' }
+                cast: { key: 'sfx_cast', url: 'placeholder' }, // No file - use placeholder
+                splash: { key: 'sfx_splash', url: 'placeholder' }, // No file - use placeholder
+                reel: { key: 'sfx_reel', url: 'placeholder' }, // No file - use placeholder
+                catch: { key: 'sfx_catch', url: 'placeholder' }, // No file - use placeholder
+                fail: { key: 'sfx_fail', url: 'placeholder' }, // No file - use placeholder
+                button: { key: 'sfx_button', url: 'placeholder' }, // No file - use placeholder
+                coin: { key: 'sfx_coin', url: 'placeholder' }, // No file - use placeholder
+                levelup: { key: 'sfx_levelup', url: 'placeholder' }, // No file - use placeholder
+                craft: { key: 'sfx_craft', url: 'placeholder' }, // No file - use placeholder
+                equip: { key: 'sfx_equip', url: 'placeholder' }, // No file - use placeholder
+                notification: { key: 'sfx_notification', url: 'placeholder' }, // No file - use placeholder
+                struggle: { key: 'sfx_struggle', url: 'placeholder' }, // No file - use placeholder
+                tension: { key: 'sfx_tension', url: 'placeholder' }, // No file - use placeholder
+                
+                // Additional SFX for fishing mechanics
+                cast_prepare: { key: 'sfx_cast_prepare', url: 'placeholder' },
+                cast_perfect: { key: 'sfx_cast_perfect', url: 'placeholder' },
+                cast_normal: { key: 'sfx_cast_normal', url: 'placeholder' },
+                splash_perfect: { key: 'sfx_splash_perfect', url: 'placeholder' },
+                catch_legendary: { key: 'sfx_catch_legendary', url: 'placeholder' },
+                catch_rare: { key: 'sfx_catch_rare', url: 'placeholder' },
+                line_break: { key: 'sfx_line_break', url: 'placeholder' },
+                fish_escape: { key: 'sfx_fish_escape', url: 'placeholder' },
+                fish_bite: { key: 'sfx_fish_bite', url: 'placeholder' },
+                lure_success: { key: 'sfx_lure_success', url: 'placeholder' },
+                fish_struggle: { key: 'sfx_fish_struggle', url: 'placeholder' },
+                qte_success: { key: 'sfx_qte_success', url: 'placeholder' },
+                qte_fail: { key: 'sfx_qte_fail', url: 'placeholder' },
+                reel_success: { key: 'sfx_reel_success', url: 'placeholder' },
+                reel_fail: { key: 'sfx_reel_fail', url: 'placeholder' }
             },
             ambient: {
-                water: { key: 'ambient_water', url: 'assets/audio/ambient/water.mp3', loop: true },
-                seagulls: { key: 'ambient_seagulls', url: 'assets/audio/ambient/seagulls.mp3', loop: true },
-                wind: { key: 'ambient_wind', url: 'assets/audio/ambient/wind.mp3', loop: true },
-                harbor: { key: 'ambient_harbor', url: 'assets/audio/ambient/harbor.mp3', loop: true }
+                water: { key: 'ambient_water', url: 'placeholder', loop: true }, // No file - use placeholder
+                seagulls: { key: 'ambient_seagulls', url: 'placeholder', loop: true }, // No file - use placeholder
+                wind: { key: 'ambient_wind', url: 'placeholder', loop: true }, // No file - use placeholder
+                harbor: { key: 'ambient_harbor', url: 'placeholder', loop: true } // No file - use placeholder
             }
         };
 
-        // Since we don't have actual audio files, create placeholder audio
-        this.createPlaceholderAudio(audioAssets);
+        // Load audio assets with smart fallback
+        this.loadAudioAssetsWithFallback(audioAssets);
     }
 
-    createPlaceholderAudio(audioAssets) {
-        // Create silent audio buffers as placeholders
-        // In a real implementation, these would be actual audio files
+    loadAudioAssetsWithFallback(audioAssets) {
+        console.log('AudioManager: Loading audio assets with smart fallback...');
         
-        console.log('AudioManager: Creating placeholder audio (no actual files loaded)');
-        
-        // Store asset definitions for future use
+        // Store asset definitions
         this.audioAssetDefinitions = audioAssets;
         
-        // Mark assets as "loaded" for the placeholder system
-        Object.values(audioAssets).forEach(category => {
-            Object.values(category).forEach(asset => {
-                // Create placeholder sound objects
-                this.createPlaceholderSound(asset.key, asset.loop || false);
+        // Load each category of audio
+        Object.entries(audioAssets).forEach(([category, assets]) => {
+            Object.entries(assets).forEach(([name, asset]) => {
+                if (asset.url === 'placeholder') {
+                    // Create placeholder immediately for missing files
+                    console.log(`AudioManager: Creating placeholder for ${asset.key} (no file available)`);
+                    this.createPlaceholderSound(asset.key, asset.loop || false);
+                } else {
+                    // Try to load real file
+                    this.loadAudioFile(asset.key, asset.url, asset.loop || false, category);
+                }
             });
         });
+    }
+
+    loadAudioFile(key, url, loop = false, category = 'sfx') {
+        try {
+            // Check if the scene has a load method (for preloading)
+            if (this.scene.load && this.scene.load.audio) {
+                // Use Phaser's audio loading system
+                this.scene.load.audio(key, url);
+                
+                // Set up completion handler
+                this.scene.load.once('complete', () => {
+                    this.createRealSound(key, loop, category);
+                });
+                
+                // Set up error handler
+                this.scene.load.once('loaderror', (event) => {
+                    console.warn(`AudioManager: Failed to load ${key}, using placeholder`);
+                    this.createPlaceholderSound(key, loop);
+                });
+                
+                // Start loading if not already started
+                if (!this.scene.load.isLoading()) {
+                    this.scene.load.start();
+                }
+            } else {
+                // Create HTML5 Audio element directly
+                this.createHTML5Audio(key, url, loop, category);
+            }
+        } catch (error) {
+            console.warn(`AudioManager: Failed to load ${key}, creating placeholder:`, error);
+            this.createPlaceholderSound(key, loop);
+        }
+    }
+
+    createHTML5Audio(key, url, loop = false, category = 'sfx') {
+        const audio = new Audio();
+        audio.src = url;
+        audio.loop = loop;
+        audio.preload = 'auto';
+        
+        // Create Phaser-like sound interface
+        const soundObject = {
+            key: key,
+            isPlaying: false,
+            isPaused: false,
+            volume: 1,
+            loop: loop,
+            _audio: audio,
+            
+            play: (config = {}) => {
+                try {
+                    if (soundObject.isPlaying) {
+                        audio.currentTime = 0;
+                    }
+                    
+                    audio.volume = (config.volume || soundObject.volume) * this.getEffectiveVolume(category);
+                    audio.loop = config.loop !== undefined ? config.loop : loop;
+                    
+                    const playPromise = audio.play();
+                    if (playPromise) {
+                        playPromise.then(() => {
+                            soundObject.isPlaying = true;
+                            soundObject.isPaused = false;
+                            console.log(`AudioManager: Playing ${key}`);
+                        }).catch(error => {
+                            console.warn(`AudioManager: Failed to play ${key}:`, error);
+                        });
+                    }
+                } catch (error) {
+                    console.warn(`AudioManager: Error playing ${key}:`, error);
+                }
+                return soundObject;
+            },
+            
+            stop: () => {
+                try {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    soundObject.isPlaying = false;
+                    soundObject.isPaused = false;
+                    console.log(`AudioManager: Stopping ${key}`);
+                } catch (error) {
+                    console.warn(`AudioManager: Error stopping ${key}:`, error);
+                }
+                return soundObject;
+            },
+            
+            pause: () => {
+                try {
+                    audio.pause();
+                    soundObject.isPaused = true;
+                    soundObject.isPlaying = false;
+                    console.log(`AudioManager: Pausing ${key}`);
+                } catch (error) {
+                    console.warn(`AudioManager: Error pausing ${key}:`, error);
+                }
+                return soundObject;
+            },
+            
+            resume: () => {
+                try {
+                    const playPromise = audio.play();
+                    if (playPromise) {
+                        playPromise.then(() => {
+                            soundObject.isPlaying = true;
+                            soundObject.isPaused = false;
+                            console.log(`AudioManager: Resuming ${key}`);
+                        }).catch(error => {
+                            console.warn(`AudioManager: Failed to resume ${key}:`, error);
+                        });
+                    }
+                } catch (error) {
+                    console.warn(`AudioManager: Error resuming ${key}:`, error);
+                }
+                return soundObject;
+            },
+            
+            setVolume: (volume) => {
+                soundObject.volume = volume;
+                audio.volume = volume * this.getEffectiveVolume(category);
+                return soundObject;
+            },
+            
+            setLoop: (loopValue) => {
+                soundObject.loop = loopValue;
+                audio.loop = loopValue;
+                return soundObject;
+            },
+            
+            destroy: () => {
+                try {
+                    audio.pause();
+                    audio.src = '';
+                    console.log(`AudioManager: Destroying ${key}`);
+                } catch (error) {
+                    console.warn(`AudioManager: Error destroying ${key}:`, error);
+                }
+            }
+        };
+
+        // Handle loading events
+        audio.addEventListener('canplaythrough', () => {
+            console.log(`AudioManager: ${key} loaded successfully`);
+        });
+        
+        audio.addEventListener('error', (error) => {
+            console.warn(`AudioManager: Failed to load ${key}, using placeholder`);
+            // Remove the failed audio object and create placeholder
+            if (key.startsWith('music_')) {
+                this.musicTracks.delete(key);
+            } else if (key.startsWith('sfx_')) {
+                this.soundEffects.delete(key);
+            } else if (key.startsWith('ambient_')) {
+                this.ambientSounds.delete(key);
+            }
+            this.createPlaceholderSound(key, loop);
+            return;
+        });
+
+        // Store in appropriate category
+        if (key.startsWith('music_')) {
+            this.musicTracks.set(key, soundObject);
+        } else if (key.startsWith('sfx_')) {
+            this.soundEffects.set(key, soundObject);
+        } else if (key.startsWith('ambient_')) {
+            this.ambientSounds.set(key, soundObject);
+        }
+
+        return soundObject;
+    }
+
+    createRealSound(key, loop = false, category = 'sfx') {
+        // Create sound using Phaser's audio system
+        try {
+            const sound = this.scene.sound.add(key, {
+                loop: loop,
+                volume: this.getEffectiveVolume(category)
+            });
+
+            // Store in appropriate category
+            if (key.startsWith('music_')) {
+                this.musicTracks.set(key, sound);
+            } else if (key.startsWith('sfx_')) {
+                this.soundEffects.set(key, sound);
+            } else if (key.startsWith('ambient_')) {
+                this.ambientSounds.set(key, sound);
+            }
+
+            console.log(`AudioManager: Created real sound for ${key}`);
+            return sound;
+        } catch (error) {
+            console.warn(`AudioManager: Failed to create real sound for ${key}, using placeholder:`, error);
+            return this.createPlaceholderSound(key, loop);
+        }
+    }
+
+    getEffectiveVolume(category) {
+        if (this.muted) return 0;
+        
+        let categoryVolume = 1;
+        switch (category) {
+            case 'music':
+                categoryVolume = this.musicVolume;
+                break;
+            case 'sfx':
+                categoryVolume = this.sfxVolume;
+                break;
+            case 'ambient':
+                categoryVolume = this.ambientVolume;
+                break;
+        }
+        
+        return categoryVolume * this.masterVolume;
     }
 
     createPlaceholderSound(key, loop = false) {

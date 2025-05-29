@@ -10,10 +10,12 @@ export class InventoryUI {
         
         this.gameState = scene.gameState;
         this.inventoryManager = this.gameState.inventoryManager;
+        this.audioManager = this.gameState.getAudioManager(scene);
         
-        console.log('InventoryUI: GameState and InventoryManager initialized', {
+        console.log('InventoryUI: GameState, InventoryManager, and AudioManager initialized', {
             gameState: !!this.gameState,
-            inventoryManager: !!this.inventoryManager
+            inventoryManager: !!this.inventoryManager,
+            audioManager: !!this.audioManager
         });
         
         // UI state
@@ -45,10 +47,37 @@ export class InventoryUI {
     }
 
     createUI() {
+        // Create a click blocker behind the container
+        this.clickBlocker = this.scene.add.rectangle(
+            this.x + this.width/2, 
+            this.y + this.height/2, 
+            this.width + 40, 
+            this.height + 40
+        ).setInteractive().setAlpha(0).setDepth(9999);
+        
+        this.clickBlocker.on('pointerdown', (pointer, localX, localY) => {
+            console.log('InventoryUI: Click blocker activated - preventing passthrough at', localX, localY);
+            // This prevents clicks from going through to elements behind
+            pointer.event.stopPropagation();
+        });
+
+        // Also make the background itself interactive to block clicks
+        this.backgroundBlocker = this.scene.add.rectangle(
+            this.x + this.width/2,
+            this.y + this.height/2,
+            this.width,
+            this.height
+        ).setInteractive().setAlpha(0).setDepth(9998);
+        
+        this.backgroundBlocker.on('pointerdown', (pointer, localX, localY) => {
+            console.log('InventoryUI: Background blocker activated at', localX, localY);
+            pointer.event.stopPropagation();
+        });
+
         // Main container
         this.container = this.scene.add.container(this.x, this.y);
         this.container.setVisible(false);
-        this.container.setDepth(1000);
+        this.container.setDepth(10000); // Maximum depth to be above everything
 
         // Background
         this.background = this.scene.add.graphics();
@@ -56,6 +85,17 @@ export class InventoryUI {
         this.background.fillRoundedRect(0, 0, this.width, this.height, 10);
         this.background.lineStyle(2, 0x4a4a4a);
         this.background.strokeRoundedRect(0, 0, this.width, this.height, 10);
+        
+        // Make the background itself interactive to block clicks
+        this.background.setInteractive(new Phaser.Geom.Rectangle(0, 0, this.width, this.height), Phaser.Geom.Rectangle.Contains);
+        this.background.on('pointerdown', (pointer, localX, localY) => {
+            console.log('InventoryUI: Background graphics clicked at', localX, localY, '- blocking click passthrough');
+            // Block the click from going through
+            if (pointer.event) {
+                pointer.event.stopPropagation();
+            }
+        });
+        
         this.container.add(this.background);
 
         // Title
@@ -75,10 +115,17 @@ export class InventoryUI {
             fontStyle: 'bold'
         }).setOrigin(0.5).setInteractive();
         
-        closeButton.on('pointerdown', () => this.hide());
+        closeButton.on('pointerdown', () => {
+            console.log('InventoryUI: Close button clicked!');
+            this.audioManager?.playSFX('button');
+            this.hide();
+        });
         closeButton.on('pointerover', () => closeButton.setColor('#ff9999'));
         closeButton.on('pointerout', () => closeButton.setColor('#ff6666'));
         this.container.add(closeButton);
+
+        // Crafting button
+        this.createCraftingButton();
 
         // Category tabs
         this.createCategoryTabs();
@@ -94,6 +141,12 @@ export class InventoryUI {
 
         // Equipment slots panel
         this.createEquipmentPanel();
+        
+        console.log('InventoryUI: UI created with container depth:', this.container.depth);
+        console.log('InventoryUI: Container position:', this.container.x, this.container.y);
+        console.log('InventoryUI: Container size:', this.width, this.height);
+        console.log('InventoryUI: Click blocker created at depth:', this.clickBlocker.depth);
+        console.log('InventoryUI: Background blocker created at depth:', this.backgroundBlocker.depth);
     }
 
     createCategoryTabs() {
@@ -103,9 +156,13 @@ export class InventoryUI {
         const startX = 20;
         const startY = 70;
 
+        console.log('InventoryUI: Creating category tabs:', categories);
+
         categories.forEach((category, index) => {
             const x = startX + (index % 4) * (tabWidth + 5);
             const y = startY + Math.floor(index / 4) * (tabHeight + 5);
+
+            console.log(`InventoryUI: Tab ${index} (${category}): x=${x}, y=${y}`);
 
             // Tab background
             const tabBg = this.scene.add.graphics();
@@ -123,13 +180,23 @@ export class InventoryUI {
                 color: isActive ? '#ffffff' : '#cccccc'
             }).setOrigin(0.5);
 
-            // Make interactive
+            // Create a working interactive area (like the Fish test area)
             const tabArea = this.scene.add.rectangle(x + tabWidth/2, y + tabHeight/2, tabWidth, tabHeight)
                 .setInteractive()
                 .setAlpha(0);
 
-            tabArea.on('pointerdown', () => this.switchCategory(category));
+            console.log(`InventoryUI: Setting up tab for category: ${category}`);
+            
+            tabArea.on('pointerdown', (pointer, localX, localY) => {
+                console.log(`InventoryUI: Tab clicked for category: ${category}`);
+                console.log(`InventoryUI: Tab area bounds:`, tabArea.getBounds());
+                console.log(`InventoryUI: Tab position: x=${x}, y=${y}, width=${tabWidth}, height=${tabHeight}`);
+                console.log(`InventoryUI: Local click position:`, localX, localY);
+                this.switchCategory(category);
+            });
+            
             tabArea.on('pointerover', () => {
+                console.log(`InventoryUI: Tab hover for category: ${category}`);
                 if (category !== this.currentCategory) {
                     tabBg.clear();
                     tabBg.fillStyle(0x4a4a4a);
@@ -138,6 +205,7 @@ export class InventoryUI {
                     tabBg.strokeRoundedRect(x, y, tabWidth, tabHeight, 5);
                 }
             });
+            
             tabArea.on('pointerout', () => {
                 if (category !== this.currentCategory) {
                     tabBg.clear();
@@ -148,9 +216,165 @@ export class InventoryUI {
                 }
             });
 
-            this.categoryTabs[category] = { bg: tabBg, text: tabText, area: tabArea };
+            this.categoryTabs[category] = { 
+                bg: tabBg, 
+                text: tabText, 
+                area: tabArea,
+                x: x,
+                y: y,
+                width: tabWidth,
+                height: tabHeight
+            };
             this.container.add([tabBg, tabText, tabArea]);
+            
+            // Add a working interactive area for ALL tabs (the original tabs don't work)
+            // Create outside container with absolute positioning
+            const workingTabArea = this.scene.add.rectangle(
+                this.x + x + tabWidth/2, 
+                this.y + y + tabHeight/2, 
+                tabWidth + 5, 
+                tabHeight + 5
+            ).setInteractive()
+            .setAlpha(0.01) // Barely visible but functional
+            .setFillStyle(0x000000) // Black fill for functionality
+            .setDepth(10002); // Above container and background
+            
+            workingTabArea.on('pointerdown', () => {
+                this.switchCategory(category);
+            });
+            
+            workingTabArea.on('pointerover', () => {
+                workingTabArea.setAlpha(0.02); // Slight change for functionality
+                if (category !== this.currentCategory) {
+                    tabBg.clear();
+                    tabBg.fillStyle(0x4a4a4a);
+                    tabBg.fillRoundedRect(x, y, tabWidth, tabHeight, 5);
+                    tabBg.lineStyle(1, 0x6a6a6a);
+                    tabBg.strokeRoundedRect(x, y, tabWidth, tabHeight, 5);
+                }
+            });
+            
+            workingTabArea.on('pointerout', () => {
+                workingTabArea.setAlpha(0.01); // Back to barely visible
+                if (category !== this.currentCategory) {
+                    tabBg.clear();
+                    tabBg.fillStyle(0x3a3a3a);
+                    tabBg.fillRoundedRect(x, y, tabWidth, tabHeight, 5);
+                    tabBg.lineStyle(1, 0x5a5a5a);
+                    tabBg.strokeRoundedRect(x, y, tabWidth, tabHeight, 5);
+                }
+            });
+            
+            // Store reference for cleanup
+            this.categoryTabs[category].workingArea = workingTabArea;
         });
+    }
+
+    createCraftingButton() {
+        // Create crafting button in the top right area
+        const buttonX = this.width - 150;
+        const buttonY = 30;
+        const buttonWidth = 100;
+        const buttonHeight = 30;
+
+        // Button background
+        const craftingBg = this.scene.add.graphics();
+        craftingBg.fillStyle(0x4a90e2);
+        craftingBg.fillRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
+        craftingBg.lineStyle(2, 0x6bb6ff);
+        craftingBg.strokeRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
+
+        // Button text
+        const craftingText = this.scene.add.text(buttonX + buttonWidth/2, buttonY, 'CRAFTING', {
+            fontSize: '14px',
+            fontFamily: 'Arial',
+            color: '#ffffff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+
+        // Make button interactive
+        const craftingButton = this.scene.add.rectangle(
+            buttonX + buttonWidth/2, 
+            buttonY, 
+            buttonWidth, 
+            buttonHeight
+        ).setInteractive().setAlpha(0);
+
+        craftingButton.on('pointerdown', () => {
+            console.log('InventoryUI: Crafting button clicked');
+            this.openCraftingUI();
+        });
+
+        craftingButton.on('pointerover', () => {
+            craftingBg.clear();
+            craftingBg.fillStyle(0x6bb6ff);
+            craftingBg.fillRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
+            craftingBg.lineStyle(2, 0x4a90e2);
+            craftingBg.strokeRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
+        });
+
+        craftingButton.on('pointerout', () => {
+            craftingBg.clear();
+            craftingBg.fillStyle(0x4a90e2);
+            craftingBg.fillRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
+            craftingBg.lineStyle(2, 0x6bb6ff);
+            craftingBg.strokeRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
+        });
+
+        this.container.add([craftingBg, craftingText, craftingButton]);
+
+        // Working interactive area for crafting button
+        const workingCraftingButton = this.scene.add.rectangle(
+            this.x + buttonX + buttonWidth/2,
+            this.y + buttonY,
+            buttonWidth + 5,
+            buttonHeight + 5
+        ).setInteractive()
+        .setAlpha(0.01)
+        .setFillStyle(0x000000)
+        .setDepth(10002);
+
+        workingCraftingButton.on('pointerdown', () => {
+            this.openCraftingUI();
+        });
+
+        workingCraftingButton.on('pointerover', () => {
+            workingCraftingButton.setAlpha(0.02);
+            craftingBg.clear();
+            craftingBg.fillStyle(0x6bb6ff);
+            craftingBg.fillRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
+            craftingBg.lineStyle(2, 0x4a90e2);
+            craftingBg.strokeRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
+        });
+
+        workingCraftingButton.on('pointerout', () => {
+            workingCraftingButton.setAlpha(0.01);
+            craftingBg.clear();
+            craftingBg.fillStyle(0x4a90e2);
+            craftingBg.fillRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
+            craftingBg.lineStyle(2, 0x6bb6ff);
+            craftingBg.strokeRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
+        });
+
+        this.craftingButtonArea = workingCraftingButton;
+    }
+
+    openCraftingUI() {
+        console.log('InventoryUI: Opening Crafting UI');
+        this.audioManager?.playSFX('button');
+        
+        // Hide inventory UI
+        this.hide();
+        
+        // Show crafting UI
+        if (this.scene.craftingUI) {
+            this.scene.craftingUI.show();
+            
+            // Store reference that crafting was opened from inventory
+            this.scene.craftingUI.openedFromInventory = true;
+        } else {
+            console.error('InventoryUI: CraftingUI not found in scene');
+        }
     }
 
     createControls() {
@@ -241,6 +465,37 @@ export class InventoryUI {
                 const slot = this.createItemSlot(slotX, slotY, row * this.slotsPerRow + col);
                 this.itemSlots.push(slot);
                 this.container.add([slot.bg, slot.area]);
+                
+                // Add a working interactive area for each slot (the original slots don't work)
+                // Create outside container with absolute positioning
+                const workingSlotArea = this.scene.add.rectangle(
+                    this.x + slotX + this.slotSize/2, 
+                    this.y + slotY + this.slotSize/2, 
+                    this.slotSize + 2, 
+                    this.slotSize + 2
+                ).setInteractive()
+                .setAlpha(0.01) // Barely visible but functional
+                .setFillStyle(0x000000) // Black fill for functionality
+                .setDepth(10002); // Above container and background
+                
+                const slotIndex = row * this.slotsPerRow + col;
+                
+                workingSlotArea.on('pointerover', () => {
+                    workingSlotArea.setAlpha(0.02); // Slight change for functionality
+                    this.onSlotHover(slotIndex);
+                });
+                
+                workingSlotArea.on('pointerout', () => {
+                    workingSlotArea.setAlpha(0.01); // Back to barely visible
+                    this.onSlotOut(slotIndex);
+                });
+                
+                workingSlotArea.on('pointerdown', () => {
+                    this.onSlotClick(slotIndex);
+                });
+                
+                // Store reference for cleanup
+                slot.workingArea = workingSlotArea;
             }
         }
     }
@@ -253,7 +508,7 @@ export class InventoryUI {
         slotBg.lineStyle(1, 0x3a3a3a);
         slotBg.strokeRoundedRect(x, y, this.slotSize, this.slotSize, 3);
 
-        // Interactive area
+        // Interactive area - make it more reliable like the working tab areas
         const slotArea = this.scene.add.rectangle(
             x + this.slotSize/2, 
             y + this.slotSize/2, 
@@ -261,10 +516,21 @@ export class InventoryUI {
             this.slotSize
         ).setInteractive().setAlpha(0);
 
-        // Slot events
-        slotArea.on('pointerover', () => this.onSlotHover(index));
-        slotArea.on('pointerout', () => this.onSlotOut(index));
-        slotArea.on('pointerdown', () => this.onSlotClick(index));
+        // Slot events with better debugging
+        slotArea.on('pointerover', () => {
+            console.log(`InventoryUI: Slot ${index} hover`);
+            this.onSlotHover(index);
+        });
+        
+        slotArea.on('pointerout', () => {
+            console.log(`InventoryUI: Slot ${index} out`);
+            this.onSlotOut(index);
+        });
+        
+        slotArea.on('pointerdown', () => {
+            console.log(`InventoryUI: Slot ${index} clicked`);
+            this.onSlotClick(index);
+        });
 
         return {
             bg: slotBg,
@@ -350,7 +616,7 @@ export class InventoryUI {
     createTooltip() {
         this.tooltip = this.scene.add.container(0, 0);
         this.tooltip.setVisible(false);
-        this.tooltip.setDepth(2000);
+        this.tooltip.setDepth(3000);
 
         // Tooltip background
         this.tooltipBg = this.scene.add.graphics();
@@ -395,11 +661,24 @@ export class InventoryUI {
 
     onSlotClick(index) {
         const slot = this.itemSlots[index];
+        console.log(`InventoryUI: Slot ${index} clicked, item:`, slot.item);
+        
         if (slot.item) {
+            this.audioManager?.playSFX('button');
             this.selectedItem = slot.item;
+            console.log(`InventoryUI: Selected item: ${slot.item.name}`);
+            
+            // Add visual feedback for selected item
+            slot.bg.clear();
+            slot.bg.fillStyle(0x2a2a2a);
+            slot.bg.fillRoundedRect(slot.x, slot.y, this.slotSize, this.slotSize, 3);
+            slot.bg.lineStyle(3, 0xffff00); // Yellow border for selection
+            slot.bg.strokeRoundedRect(slot.x, slot.y, this.slotSize, this.slotSize, 3);
             
             // Show item actions menu
             this.showItemActions(slot.item, slot.x + this.slotSize/2, slot.y + this.slotSize/2);
+        } else {
+            console.log(`InventoryUI: Empty slot ${index} clicked`);
         }
     }
 
@@ -420,18 +699,84 @@ export class InventoryUI {
     // UI Management
     show() {
         console.log('InventoryUI: Showing inventory UI');
+        console.log('InventoryUI: Container position:', this.container.x, this.container.y);
+        console.log('InventoryUI: Container visible:', this.container.visible);
+        console.log('InventoryUI: Current inventory state:', this.gameState.inventory);
+        
+        // Debug: Check all display objects and their depths
+        console.log('InventoryUI: Checking scene display objects...');
+        const displayList = this.scene.children.list;
+        const highDepthObjects = displayList.filter(obj => obj.depth >= 1000);
+        console.log('InventoryUI: High depth objects (>=1000):', highDepthObjects.map(obj => ({
+            type: obj.type || obj.constructor.name,
+            depth: obj.depth,
+            visible: obj.visible,
+            interactive: obj.input ? obj.input.enabled : false
+        })));
+        
         this.isVisible = true;
+        this.clickBlocker.setVisible(true);
+        this.backgroundBlocker.setVisible(true);
         this.container.setVisible(true);
+        
+        // Show working areas
+        Object.values(this.categoryTabs).forEach(tab => {
+            if (tab.workingArea) {
+                tab.workingArea.setVisible(true);
+            }
+        });
+        
+        this.itemSlots.forEach(slot => {
+            if (slot.workingArea) {
+                slot.workingArea.setVisible(true);
+            }
+        });
+        
+        // Show crafting button area
+        if (this.craftingButtonArea) {
+            this.craftingButtonArea.setVisible(true);
+        }
+        
+        // Force refresh all categories to see what's available
+        Object.keys(this.gameState.inventory).forEach(category => {
+            const items = this.gameState.inventory[category];
+            console.log(`InventoryUI: Category ${category} has ${items.length} items:`, items.map(item => item.name));
+        });
+        
         this.refreshItems();
         this.updateStats();
         this.updateEquipmentSlots();
         console.log('InventoryUI: Inventory UI shown successfully');
+        
+        // Final depth check
+        console.log('InventoryUI: Final container depth:', this.container.depth);
+        console.log('InventoryUI: Container in scene children:', this.scene.children.list.includes(this.container));
     }
 
     hide() {
         this.isVisible = false;
+        this.clickBlocker.setVisible(false);
+        this.backgroundBlocker.setVisible(false);
         this.container.setVisible(false);
         this.hideTooltip();
+        
+        // Hide working areas
+        Object.values(this.categoryTabs).forEach(tab => {
+            if (tab.workingArea) {
+                tab.workingArea.setVisible(false);
+            }
+        });
+        
+        this.itemSlots.forEach(slot => {
+            if (slot.workingArea) {
+                slot.workingArea.setVisible(false);
+            }
+        });
+        
+        // Hide crafting button area
+        if (this.craftingButtonArea) {
+            this.craftingButtonArea.setVisible(false);
+        }
     }
 
     toggle() {
@@ -443,31 +788,54 @@ export class InventoryUI {
     }
 
     switchCategory(category) {
+        console.log('InventoryUI: Switching to category:', category);
+        console.log('InventoryUI: Current category:', this.currentCategory);
+        
         if (this.currentCategory === category) return;
+        
+        // Play tab switch sound
+        this.audioManager?.playSFX('button');
+        
+        // Update current category FIRST
+        this.currentCategory = category;
+        console.log('InventoryUI: Category switched to:', this.currentCategory);
         
         // Update tab appearance
         Object.entries(this.categoryTabs).forEach(([cat, tab]) => {
             const isActive = cat === category;
+            console.log(`InventoryUI: Updating tab ${cat}, active: ${isActive}`);
+            
             tab.bg.clear();
             tab.bg.fillStyle(isActive ? 0x4a90e2 : 0x3a3a3a);
-            tab.bg.fillRoundedRect(tab.area.x - tab.area.width/2, tab.area.y - tab.area.height/2, 
-                                   tab.area.width, tab.area.height, 5);
+            tab.bg.fillRoundedRect(tab.x, tab.y, tab.width, tab.height, 5);
             tab.bg.lineStyle(1, isActive ? 0x6bb6ff : 0x5a5a5a);
-            tab.bg.strokeRoundedRect(tab.area.x - tab.area.width/2, tab.area.y - tab.area.height/2, 
-                                     tab.area.width, tab.area.height, 5);
+            tab.bg.strokeRoundedRect(tab.x, tab.y, tab.width, tab.height, 5);
             tab.text.setColor(isActive ? '#ffffff' : '#cccccc');
         });
 
-        this.currentCategory = category;
+        // Force a visual update
+        this.scene.sys.updateList.update();
+        
         this.refreshItems();
+        this.updateStats();
     }
 
     refreshItems() {
+        console.log('InventoryUI: Refreshing items for category:', this.currentCategory);
+        
+        // Debug: Log the entire inventory structure
+        console.log('InventoryUI: Full inventory structure:', this.gameState.inventory);
+        console.log('InventoryUI: Available categories:', Object.keys(this.gameState.inventory));
+        
         // Clear existing item displays
         this.itemSlots.forEach(slot => {
             if (slot.itemSprite) {
                 slot.itemSprite.destroy();
                 slot.itemSprite = null;
+            }
+            if (slot.itemText) {
+                slot.itemText.destroy();
+                slot.itemText = null;
             }
             if (slot.quantityText) {
                 slot.quantityText.destroy();
@@ -480,93 +848,289 @@ export class InventoryUI {
             slot.item = null;
         });
 
-        // Get items for current category
-        let items = this.gameState.inventory[this.currentCategory] || [];
+        // Get items for current category with error handling
+        let items = [];
+        try {
+            items = this.gameState.inventory[this.currentCategory] || [];
+            console.log('InventoryUI: Items in category:', this.currentCategory, items.length, items);
+        } catch (error) {
+            console.error('InventoryUI: Error accessing inventory category:', error);
+            items = [];
+        }
         
-        // Apply search filter
+        // If no items found, try alternative category names
+        if (items.length === 0) {
+            const alternativeNames = {
+                'fish': ['fish', 'fishes', 'caught_fish', 'fishTank'],
+                'rods': ['rods', 'rod', 'fishing_rods'],
+                'lures': ['lures', 'lure', 'fishing_lures'],
+                'bait': ['bait', 'baits', 'fishing_bait']
+            };
+            
+            if (alternativeNames[this.currentCategory]) {
+                for (const altName of alternativeNames[this.currentCategory]) {
+                    try {
+                        if (this.gameState.inventory[altName] && this.gameState.inventory[altName].length > 0) {
+                            items = this.gameState.inventory[altName];
+                            console.log('InventoryUI: Found items under alternative name:', altName, items.length);
+                            break;
+                        }
+                    } catch (error) {
+                        console.warn('InventoryUI: Error checking alternative category:', altName, error);
+                    }
+                }
+            }
+        }
+        
+        // Apply search filter with error handling
         if (this.searchQuery) {
-            items = items.filter(item => 
-                item.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-                item.description.toLowerCase().includes(this.searchQuery.toLowerCase())
-            );
+            try {
+                items = items.filter(item => {
+                    if (!item || !item.name || !item.description) {
+                        console.warn('InventoryUI: Invalid item structure:', item);
+                        return false;
+                    }
+                    return item.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                           item.description.toLowerCase().includes(this.searchQuery.toLowerCase());
+                });
+            } catch (error) {
+                console.error('InventoryUI: Error filtering items:', error);
+            }
         }
 
-        // Apply sorting
-        items = [...items].sort((a, b) => {
-            let valueA = a[this.sortBy];
-            let valueB = b[this.sortBy];
-            
-            if (typeof valueA === 'string') {
-                valueA = valueA.toLowerCase();
-                valueB = valueB.toLowerCase();
-            }
-            
-            let comparison = 0;
-            if (valueA < valueB) comparison = -1;
-            else if (valueA > valueB) comparison = 1;
-            
-            return this.sortAscending ? comparison : -comparison;
-        });
+        // Apply sorting with error handling
+        try {
+            items = [...items].sort((a, b) => {
+                try {
+                    let valueA = a[this.sortBy];
+                    let valueB = b[this.sortBy];
+                    
+                    // Handle undefined values
+                    if (valueA === undefined) valueA = '';
+                    if (valueB === undefined) valueB = '';
+                    
+                    if (typeof valueA === 'string') {
+                        valueA = valueA.toLowerCase();
+                        valueB = valueB.toLowerCase();
+                    }
+                    
+                    let comparison = 0;
+                    if (valueA < valueB) comparison = -1;
+                    else if (valueA > valueB) comparison = 1;
+                    
+                    return this.sortAscending ? comparison : -comparison;
+                } catch (error) {
+                    console.warn('InventoryUI: Error sorting items:', error);
+                    return 0;
+                }
+            });
+        } catch (error) {
+            console.error('InventoryUI: Error in sorting process:', error);
+        }
 
-        // Display items
+        console.log('InventoryUI: Displaying', items.length, 'items');
+        
+        // Add a temporary category indicator
+        if (items.length > 0) {
+            const categoryIndicator = this.scene.add.text(
+                400, 300, 
+                `${this.currentCategory.toUpperCase()}: ${items.length} items`, {
+                fontSize: '16px',
+                fontFamily: 'Arial',
+                color: '#ffff00',
+                fontStyle: 'bold',
+                stroke: '#000000',
+                strokeThickness: 2
+            }).setOrigin(0.5);
+            this.container.add(categoryIndicator);
+            
+            // Remove after 2 seconds
+            this.scene.time.delayedCall(2000, () => {
+                if (categoryIndicator) categoryIndicator.destroy();
+            });
+        } else {
+            // Show "no items" indicator
+            const noItemsIndicator = this.scene.add.text(
+                400, 300, 
+                `NO ITEMS IN ${this.currentCategory.toUpperCase()}`, {
+                fontSize: '16px',
+                fontFamily: 'Arial',
+                color: '#ff6666',
+                fontStyle: 'bold',
+                stroke: '#000000',
+                strokeThickness: 2
+            }).setOrigin(0.5);
+            this.container.add(noItemsIndicator);
+            
+            // Remove after 3 seconds
+            this.scene.time.delayedCall(3000, () => {
+                if (noItemsIndicator) noItemsIndicator.destroy();
+            });
+        }
+        
+        // Add immediate visual feedback for category switch
+        const switchIndicator = this.scene.add.text(
+            this.width / 2, 120, 
+            `SWITCHED TO: ${this.currentCategory.toUpperCase()}`, {
+            fontSize: '14px',
+            fontFamily: 'Arial',
+            color: '#00ff00',
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5);
+        this.container.add(switchIndicator);
+        
+        // Remove after 1 second
+        this.scene.time.delayedCall(1000, () => {
+            if (switchIndicator) switchIndicator.destroy();
+        });
+        
+        // Display items with error handling
         items.forEach((item, index) => {
             if (index < this.itemSlots.length) {
-                this.displayItemInSlot(item, index);
+                try {
+                    this.displayItemInSlot(item, index);
+                } catch (error) {
+                    console.error('InventoryUI: Error displaying item in slot:', index, item, error);
+                }
             }
         });
     }
 
     displayItemInSlot(item, slotIndex) {
+        console.log('InventoryUI: Displaying item in slot', slotIndex, item.name, item);
+        
+        // Validate item data
+        if (!item || !item.name) {
+            console.error('InventoryUI: Invalid item data:', item);
+            return;
+        }
+        
         const slot = this.itemSlots[slotIndex];
+        if (!slot) {
+            console.error('InventoryUI: Invalid slot index:', slotIndex);
+            return;
+        }
+        
         slot.item = item;
 
         // Create item sprite (placeholder colored rectangle for now)
-        const rarityColor = this.inventoryManager.validator.getRarityColor(item.rarity);
-        slot.itemSprite = this.scene.add.graphics();
-        slot.itemSprite.fillStyle(parseInt(rarityColor.replace('#', '0x')));
-        slot.itemSprite.fillRoundedRect(
-            slot.x + 8, slot.y + 8, 
-            this.slotSize - 16, this.slotSize - 16, 
-            3
-        );
-
-        // Add item icon/text
-        const itemText = this.scene.add.text(
-            slot.x + this.slotSize/2, 
-            slot.y + this.slotSize/2, 
-            item.name.substring(0, 3).toUpperCase(), {
-            fontSize: '10px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
+        let rarity = item.rarity || 1; // Default to rarity 1 if undefined
+        let rarityColor = '#8C7853'; // Default color
         
-        slot.itemSprite.add = itemText; // Store reference
+        try {
+            if (this.inventoryManager && this.inventoryManager.validator) {
+                rarityColor = this.inventoryManager.validator.getRarityColor(rarity);
+            }
+        } catch (error) {
+            console.log('InventoryUI: Error getting rarity color, using default:', error);
+        }
+        
+        console.log('InventoryUI: Item rarity color:', rarityColor, 'for rarity:', rarity);
+        
+        // Create a more visible item background
+        try {
+            slot.itemSprite = this.scene.add.graphics();
+            
+            // Convert color string to hex number
+            let colorHex = 0x8C7853; // Default
+            try {
+                if (rarityColor.startsWith('#')) {
+                    colorHex = parseInt(rarityColor.replace('#', '0x'));
+                } else if (rarityColor.startsWith('0x')) {
+                    colorHex = parseInt(rarityColor);
+                }
+            } catch (error) {
+                console.log('InventoryUI: Error parsing color, using default');
+            }
+            
+            slot.itemSprite.fillStyle(colorHex);
+            slot.itemSprite.fillRoundedRect(
+                slot.x + 4, slot.y + 4, 
+                this.slotSize - 8, this.slotSize - 8, 
+                3
+            );
+            
+            // Add a border to make it more visible
+            slot.itemSprite.lineStyle(2, 0xffffff, 0.8);
+            slot.itemSprite.strokeRoundedRect(
+                slot.x + 4, slot.y + 4, 
+                this.slotSize - 8, this.slotSize - 8, 
+                3
+            );
+        } catch (error) {
+            console.error('InventoryUI: Error creating item sprite:', error);
+            return;
+        }
 
-        // Add quantity text for stackable items
-        if (item.quantity && item.quantity > 1) {
-            slot.quantityText = this.scene.add.text(
-                slot.x + this.slotSize - 5, 
-                slot.y + this.slotSize - 5, 
-                item.quantity.toString(), {
-                fontSize: '10px',
+        // Add item icon/text with better visibility
+        try {
+            const itemText = this.scene.add.text(
+                slot.x + this.slotSize/2, 
+                slot.y + this.slotSize/2, 
+                item.name.substring(0, 3).toUpperCase(), {
+                fontSize: '12px',
                 fontFamily: 'Arial',
                 color: '#ffffff',
-                backgroundColor: '#000000',
-                padding: { x: 2, y: 1 }
-            }).setOrigin(1);
+                fontStyle: 'bold',
+                stroke: '#000000',
+                strokeThickness: 2
+            }).setOrigin(0.5);
+            
+            console.log('InventoryUI: Created item text:', item.name.substring(0, 3).toUpperCase());
+            
+            // Store reference for cleanup
+            slot.itemText = itemText;
+        } catch (error) {
+            console.error('InventoryUI: Error creating item text:', error);
+        }
+
+        // Add quantity text for stackable items
+        try {
+            if (item.quantity && item.quantity > 1) {
+                slot.quantityText = this.scene.add.text(
+                    slot.x + this.slotSize - 8, 
+                    slot.y + this.slotSize - 8, 
+                    item.quantity.toString(), {
+                    fontSize: '12px',
+                    fontFamily: 'Arial',
+                    color: '#ffff00',
+                    fontStyle: 'bold',
+                    stroke: '#000000',
+                    strokeThickness: 2
+                }).setOrigin(1);
+                console.log('InventoryUI: Added quantity text:', item.quantity);
+            }
+        } catch (error) {
+            console.error('InventoryUI: Error creating quantity text:', error);
         }
 
         // Add equipped indicator
-        if (item.equipped) {
-            slot.rarityBorder = this.scene.add.graphics();
-            slot.rarityBorder.lineStyle(3, 0x00ff00);
-            slot.rarityBorder.strokeRoundedRect(slot.x, slot.y, this.slotSize, this.slotSize, 3);
+        try {
+            if (item.equipped) {
+                slot.rarityBorder = this.scene.add.graphics();
+                slot.rarityBorder.lineStyle(4, 0x00ff00);
+                slot.rarityBorder.strokeRoundedRect(slot.x + 2, slot.y + 2, this.slotSize - 4, this.slotSize - 4, 3);
+                console.log('InventoryUI: Added equipped indicator');
+            }
+        } catch (error) {
+            console.error('InventoryUI: Error creating equipped indicator:', error);
         }
 
-        this.container.add([slot.itemSprite, itemText]);
-        if (slot.quantityText) this.container.add(slot.quantityText);
-        if (slot.rarityBorder) this.container.add(slot.rarityBorder);
+        // Add all elements to container with proper depth
+        try {
+            this.container.add(slot.itemSprite);
+            if (slot.itemText) this.container.add(slot.itemText);
+            if (slot.quantityText) this.container.add(slot.quantityText);
+            if (slot.rarityBorder) this.container.add(slot.rarityBorder);
+        } catch (error) {
+            console.error('InventoryUI: Error adding elements to container:', error);
+        }
+        
+        console.log('InventoryUI: Item display completed for slot', slotIndex);
+        console.log('InventoryUI: Item sprite position:', slot.x, slot.y);
+        console.log('InventoryUI: Container children count:', this.container.list.length);
     }
 
     updateEquipmentSlots() {
@@ -592,7 +1156,8 @@ export class InventoryUI {
                 const item = equipped[category][0];
                 
                 // Create item display
-                const rarityColor = this.inventoryManager.validator.getRarityColor(item.rarity);
+                const rarity = item.rarity || 1; // Default to rarity 1 if undefined
+                const rarityColor = this.inventoryManager.validator.getRarityColor(rarity);
                 slot.itemSprite = this.scene.add.graphics();
                 slot.itemSprite.fillStyle(parseInt(rarityColor.replace('#', '0x')));
                 slot.itemSprite.fillRoundedRect(
@@ -650,8 +1215,9 @@ export class InventoryUI {
     }
 
     showTooltip(item, x, y) {
-        const rarityName = this.inventoryManager.validator.getRarityName(item.rarity);
-        const rarityColor = this.inventoryManager.validator.getRarityColor(item.rarity);
+        const rarity = item.rarity || 1; // Default to rarity 1 if undefined
+        const rarityName = this.inventoryManager.validator.getRarityName(rarity);
+        const rarityColor = this.inventoryManager.validator.getRarityColor(rarity);
         
         let tooltipText = `${item.name}\n`;
         tooltipText += `${rarityName} ${item.type || ''}\n`;
@@ -687,8 +1253,59 @@ export class InventoryUI {
 
     showItemActions(item, x, y) {
         // Create context menu for item actions
-        // This would show options like Equip/Unequip, Drop, Use, etc.
-        console.log('Item actions for:', item.name);
+        console.log('InventoryUI: Showing item actions for:', item.name);
+        
+        // Create a simple popup showing item info
+        const actionPopup = this.scene.add.container(x, y);
+        actionPopup.setDepth(11000); // Above inventory
+        
+        // Popup background
+        const popupBg = this.scene.add.graphics();
+        popupBg.fillStyle(0x000000, 0.9);
+        popupBg.fillRoundedRect(-60, -40, 120, 80, 5);
+        popupBg.lineStyle(2, 0xffffff);
+        popupBg.strokeRoundedRect(-60, -40, 120, 80, 5);
+        
+        // Item name
+        const itemName = this.scene.add.text(0, -20, item.name, {
+            fontSize: '12px',
+            fontFamily: 'Arial',
+            color: '#ffffff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        // Item info
+        const itemInfo = this.scene.add.text(0, 0, `Value: ${item.value || 0}`, {
+            fontSize: '10px',
+            fontFamily: 'Arial',
+            color: '#cccccc'
+        }).setOrigin(0.5);
+        
+        // Close instruction
+        const closeText = this.scene.add.text(0, 20, 'Click anywhere to close', {
+            fontSize: '8px',
+            fontFamily: 'Arial',
+            color: '#888888'
+        }).setOrigin(0.5);
+        
+        actionPopup.add([popupBg, itemName, itemInfo, closeText]);
+        
+        // Make popup interactive to close it
+        const popupArea = this.scene.add.rectangle(0, 0, 120, 80)
+            .setInteractive()
+            .setAlpha(0);
+        
+        popupArea.on('pointerdown', () => {
+            console.log('InventoryUI: Closing item actions popup');
+            actionPopup.destroy();
+        });
+        
+        actionPopup.add(popupArea);
+        
+        // Auto-close after 3 seconds
+        this.scene.time.delayedCall(3000, () => {
+            if (actionPopup) actionPopup.destroy();
+        });
     }
 
     setupEventListeners() {
@@ -725,6 +1342,32 @@ export class InventoryUI {
     }
 
     destroy() {
+        // Clean up working areas
+        Object.values(this.categoryTabs).forEach(tab => {
+            if (tab.workingArea) {
+                tab.workingArea.destroy();
+            }
+        });
+        
+        this.itemSlots.forEach(slot => {
+            if (slot.workingArea) {
+                slot.workingArea.destroy();
+            }
+        });
+        
+        // Clean up crafting button area
+        if (this.craftingButtonArea) {
+            this.craftingButtonArea.destroy();
+        }
+        
+        // Clean up blockers
+        if (this.clickBlocker) {
+            this.clickBlocker.destroy();
+        }
+        if (this.backgroundBlocker) {
+            this.backgroundBlocker.destroy();
+        }
+        
         if (this.container) {
             this.container.destroy();
         }

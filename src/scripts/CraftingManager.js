@@ -47,6 +47,7 @@ export class CraftingManager {
                         name: 'Bamboo Rod',
                         type: 'rod',
                         rarity: 1,
+                        description: 'A simple bamboo fishing rod',
                         stats: {
                             castAccuracy: 5,
                             tensionStability: 3,
@@ -75,6 +76,7 @@ export class CraftingManager {
                         name: 'Fiberglass Rod',
                         type: 'rod',
                         rarity: 2,
+                        description: 'A durable fiberglass fishing rod',
                         stats: {
                             castAccuracy: 8,
                             tensionStability: 6,
@@ -103,6 +105,7 @@ export class CraftingManager {
                         name: 'Carbon Rod',
                         type: 'rod',
                         rarity: 3,
+                        description: 'A lightweight carbon fiber rod',
                         stats: {
                             castAccuracy: 12,
                             tensionStability: 10,
@@ -131,6 +134,7 @@ export class CraftingManager {
                         name: 'Steel Rod',
                         type: 'rod',
                         rarity: 4,
+                        description: 'A strong steel fishing rod',
                         stats: {
                             castAccuracy: 15,
                             tensionStability: 15,
@@ -159,6 +163,7 @@ export class CraftingManager {
                         name: 'Titanium Rod',
                         type: 'rod',
                         rarity: 5,
+                        description: 'A premium titanium fishing rod',
                         stats: {
                             castAccuracy: 20,
                             tensionStability: 20,
@@ -188,6 +193,7 @@ export class CraftingManager {
                         name: 'Elite Bamboo Rod',
                         type: 'rod',
                         rarity: 3,
+                        description: 'An enhanced bamboo rod',
                         stats: {
                             castAccuracy: 15,
                             tensionStability: 10,
@@ -220,6 +226,7 @@ export class CraftingManager {
                         type: 'lure',
                         lureType: 'spinner',
                         rarity: 1,
+                        description: 'A simple spinning lure',
                         stats: {
                             biteRate: 20,
                             lureSuccess: 15,
@@ -247,6 +254,7 @@ export class CraftingManager {
                         type: 'lure',
                         lureType: 'soft_plastic',
                         rarity: 2,
+                        description: 'A soft plastic worm lure',
                         stats: {
                             biteRate: 30,
                             lureSuccess: 25,
@@ -274,6 +282,7 @@ export class CraftingManager {
                         type: 'lure',
                         lureType: 'fly',
                         rarity: 3,
+                        description: 'A delicate fly fishing lure',
                         stats: {
                             biteRate: 40,
                             lureSuccess: 35,
@@ -301,6 +310,7 @@ export class CraftingManager {
                         type: 'lure',
                         lureType: 'popper',
                         rarity: 4,
+                        description: 'A surface popping lure',
                         stats: {
                             biteRate: 50,
                             lureSuccess: 40,
@@ -328,13 +338,14 @@ export class CraftingManager {
                         type: 'lure',
                         lureType: 'spoon',
                         rarity: 5,
+                        description: 'A metallic spoon lure',
                         stats: {
                             biteRate: 60,
                             lureSuccess: 50,
                             lureDurability: 30,
                             lurePrecision: 20
                         },
-                        unlockLevel: 18,
+                        unlockLevel: 17,
                         cost: 2200,
                         durability: 160,
                         condition: 160
@@ -356,6 +367,7 @@ export class CraftingManager {
                         name: 'Rowboat',
                         type: 'boat',
                         rarity: 1,
+                        description: 'A simple wooden rowboat',
                         stats: {
                             craftingEfficiency: 5,
                             autoFishingYield: 10,
@@ -386,6 +398,7 @@ export class CraftingManager {
                         name: 'Skiff',
                         type: 'boat',
                         rarity: 2,
+                        description: 'A small motorized skiff',
                         stats: {
                             craftingEfficiency: 10,
                             autoFishingYield: 15,
@@ -419,6 +432,7 @@ export class CraftingManager {
                         type: 'clothing',
                         slot: 'head',
                         rarity: 1,
+                        description: 'A practical fishing cap',
                         stats: {
                             energy: 5,
                             castAccuracy: 3,

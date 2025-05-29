@@ -10,6 +10,13 @@ export class ReelingMiniGame {
         this.fish = null;
         this.playerStats = null;
         this.rodStats = null;
+        this.fishCaughtCalled = false; // Flag to prevent multiple fish caught calls
+        
+        // Initialize audio manager safely
+        this.audioManager = scene.audioManager || null;
+        if (!this.audioManager) {
+            console.warn('ReelingMiniGame: No audio manager available from scene');
+        }
         
         // Tension system
         this.tension = 50; // 0-100, safe zone 30-70
@@ -60,66 +67,270 @@ export class ReelingMiniGame {
         console.log('ReelingMiniGame: Initialized');
     }
 
-    start(fish, playerStats, rodStats) {
+    start(options = {}) {
         this.isActive = true;
-        this.fish = fish;
-        this.playerStats = playerStats;
-        this.rodStats = rodStats;
+        this.startTime = this.scene.time.now;
+        this.gameState = this.scene.gameState;
+        this.fishCaughtCalled = false; // Reset the flag for new session
         
-        // Apply equipment effects to reeling mechanics
-        this.applyEquipmentEffects();
+        console.log('ReelingMiniGame: Starting with options:', options);
         
-        // Initialize fish stamina based on size and endurance
-        this.fishStamina = (fish.size || 5) * 10 + (fish.endurance || 5) * 5;
-        this.maxFishStamina = this.fishStamina; // Store max for stamina bar
+        // Get selected fish from luring result
+        this.selectedFish = options.selectedFish || null;
+        this.fishId = options.fishId || null;
         
-        // Adjust tension safe zone based on rod stats and equipment
-        this.tensionSafeZone = this.rodStats.tensionSafeZone || { min: 30, max: 70 };
+        // Configure fish behavior based on database
+        if (this.selectedFish && this.gameState.fishDatabase) {
+            console.log('ReelingMiniGame: Using selected fish:', this.selectedFish.name);
+            
+            // Get struggle style data
+            const struggleStyle = this.gameState.fishDatabase.getStruggleStyle(this.selectedFish.struggleStyle);
+            if (struggleStyle) {
+                console.log('ReelingMiniGame: Using struggle style:', struggleStyle.name);
+                this.struggleStyle = struggleStyle;
+            }
+            
+            // Set fish properties
+            this.fishProperties = {
+                name: this.selectedFish.name,
+                size: this.selectedFish.size,
+                strength: this.selectedFish.strength,
+                speed: this.selectedFish.speed,
+                endurance: this.selectedFish.endurance,
+                weight: this.gameState.fishDatabase.calculateFishWeight(this.selectedFish),
+                aggressiveness: this.selectedFish.aggressiveness
+            };
+            
+            // Calculate fish stamina based on endurance
+            this.fishStamina = 50 + (this.selectedFish.endurance * 15); // 65-200 stamina
+            this.maxFishStamina = this.fishStamina;
+            
+            // Calculate tension rates based on struggle style and fish strength
+            this.baseTensionIncrease = (struggleStyle?.tensionIncrease || 15) * (1 + this.selectedFish.strength / 20);
+            this.tensionDecreaseRate = 0.5 + (this.selectedFish.speed / 20); // Faster fish = harder to manage tension
+            
+        } else {
+            // Fallback to default fish properties
+            console.log('ReelingMiniGame: Using default fish properties');
+            
+            this.fishProperties = {
+                name: 'Unknown Fish',
+                size: 5,
+                strength: 5,
+                speed: 5,
+                endurance: 5,
+                weight: 2.5,
+                aggressiveness: 5
+            };
+            
+            this.fishStamina = 100;
+            this.maxFishStamina = 100;
+            this.baseTensionIncrease = 15;
+            this.tensionDecreaseRate = 0.75;
+            
+            this.struggleStyle = {
+                id: 'steady_pull',
+                name: 'Steady Pull',
+                qteType: 'hold_and_release',
+                difficulty: 3,
+                tensionIncrease: 10
+            };
+        }
         
-        // Create visual elements
-        this.createFishVisuals();
+        // Initialize game state
+        this.tension = 50;
+        this.maxTension = 100;
+        this.reelSpeed = 1;
+        this.lineIntegrity = 100;
+        this.isReeling = false;
+        this.fishStruggling = false;
+        this.qteActive = false;
+        this.qteCount = 0;
+        this.maxQTEs = 2 + Math.floor(this.fishProperties.aggressiveness / 4); // 2-4 QTEs
+        
+        // Apply equipment bonuses
+        this.applyEquipmentBonuses();
+        
+        // Create UI elements
+        this.createBackground();
+        this.createFishingLine();
+        this.createFish();
         this.createTensionMeter();
+        this.createStaminaBar();
+        this.createUI();
         
-        // Set up input handling
+        // Set up controls
         this.setupInputHandling();
         
-        // Start the reeling process
-        this.startReeling();
-        
-        console.log(`ReelingMiniGame: Started with ${fish.name}`);
-        
-        // UI feedback
-        this.scene.events.emit('fishing:reelStart', {
-            fish: fish,
-            tension: this.tension,
-            tensionSafeZone: this.tensionSafeZone,
-            lineIntegrity: this.lineIntegrity,
-            fishStamina: this.fishStamina,
-            instructions: 'Keep tension in the green zone and respond to QTEs!'
+        // Start the reeling phase
+        this.scene.time.delayedCall(500, () => {
+            this.startReeling();
         });
     }
 
-    applyEquipmentEffects() {
+    applyEquipmentBonuses() {
+        // Get equipped rod stats
+        const equippedRod = this.gameState.getEquippedItem('rods');
+        this.rodStats = equippedRod?.stats || {
+            reelSpeed: 5,
+            lineStrength: 5,
+            tensionStability: 5
+        };
+        
         // Apply rod and equipment stats to reeling mechanics
         const reelSpeed = this.rodStats.reelSpeed || 5;
         const lineStrength = this.rodStats.lineStrength || 5;
-        const tensionControl = this.rodStats.tensionControl || 5;
-        const staminaDrain = this.rodStats.staminaDrainRate || 1;
-        const qteWindow = this.rodStats.qteWindow || 2;
+        const tensionControl = this.rodStats.tensionStability || 5;
         
         // Calculate equipment effects
         this.equipmentEffects = {
             reelSpeedMultiplier: 1 + (reelSpeed * 0.1), // 10% faster reeling per point
-            maxTension: this.rodStats.maxTension || 100,
+            maxTension: 100,
             tensionRecovery: 1 + (tensionControl * 0.05), // 5% faster tension recovery per point
-            staminaDrainRate: staminaDrain,
-            qteTimeWindow: qteWindow,
+            staminaDrainRate: 1,
+            qteTimeWindow: 2,
             lineBreakThreshold: 80 + (lineStrength * 2), // Higher line strength = more tension tolerance
-            criticalChance: this.playerStats.criticalChance || 0,
-            experienceBonus: this.playerStats.experienceBonus || 0
+            criticalChance: 0,
+            experienceBonus: 0
         };
         
         console.log('ReelingMiniGame: Equipment effects applied:', this.equipmentEffects);
+    }
+
+    createBackground() {
+        // Create water background
+        const width = this.scene.cameras.main.width;
+        const height = this.scene.cameras.main.height;
+        
+        const waterBg = this.scene.add.graphics();
+        waterBg.setDepth(10);
+        waterBg.fillGradientStyle(0x001a33, 0x001a33, 0x004080, 0x004080);
+        waterBg.fillRect(0, height * 0.3, width, height * 0.7);
+        
+        // Add wave effect
+        for (let i = 0; i < 5; i++) {
+            const wave = this.scene.add.graphics();
+            wave.setDepth(11);
+            wave.lineStyle(2, 0x0066cc, 0.3);
+            wave.beginPath();
+            wave.moveTo(0, height * 0.3 + i * 20);
+            
+            for (let x = 0; x < width; x += 20) {
+                wave.lineTo(x, height * 0.3 + i * 20 + Math.sin(x * 0.05) * 5);
+            }
+            
+            wave.strokePath();
+        }
+    }
+
+    createFish() {
+        const width = this.scene.cameras.main.width;
+        const height = this.scene.cameras.main.height;
+        
+        // Create UI container if not exists
+        if (!this.uiContainer) {
+            this.uiContainer = this.scene.add.container(0, 0);
+            this.uiContainer.setDepth(1000);
+        }
+        
+        // Initial fish position (center-left of water area)
+        this.fishPosition.x = width * 0.3;
+        this.fishPosition.y = height * 0.6;
+        this.fishTargetPosition.x = this.fishPosition.x;
+        this.fishTargetPosition.y = this.fishPosition.y;
+        
+        // Create struggling fish graphic
+        this.fishGraphic = this.scene.add.graphics();
+        this.fishGraphic.setDepth(200);
+        this.drawFish();
+        
+        console.log('ReelingMiniGame: Fish created');
+    }
+
+    createUI() {
+        // Additional UI elements
+        const width = this.scene.cameras.main.width;
+        const height = this.scene.cameras.main.height;
+        
+        // Reel progress bar
+        const progressBarX = width / 2;
+        const progressBarY = 50;
+        const progressBarWidth = 300;
+        const progressBarHeight = 20;
+        
+        // Progress bar background
+        const progressBg = this.scene.add.graphics();
+        progressBg.setDepth(1001);
+        progressBg.fillStyle(0x333333, 0.8);
+        progressBg.fillRoundedRect(progressBarX - progressBarWidth/2, progressBarY - progressBarHeight/2, progressBarWidth, progressBarHeight, 5);
+        progressBg.lineStyle(2, 0x666666, 1);
+        progressBg.strokeRoundedRect(progressBarX - progressBarWidth/2, progressBarY - progressBarHeight/2, progressBarWidth, progressBarHeight, 5);
+        this.uiContainer.add(progressBg);
+        
+        // Progress bar fill
+        this.progressBar = this.scene.add.graphics();
+        this.progressBar.setDepth(1002);
+        this.uiContainer.add(this.progressBar);
+        
+        // Progress text
+        this.progressText = this.scene.add.text(progressBarX, progressBarY, '0%', {
+            fontSize: '14px',
+            fill: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 2,
+            fontWeight: 'bold'
+        }).setOrigin(0.5);
+        this.progressText.setDepth(1003);
+        this.uiContainer.add(this.progressText);
+        
+        // Instructions
+        const instructions = this.scene.add.text(width / 2, height - 50, 
+            'Click and Hold to REEL | Release to reduce TENSION | Complete QTEs!', {
+            fontSize: '16px',
+            fill: '#ffffff',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            padding: { x: 10, y: 5 }
+        }).setOrigin(0.5);
+        this.uiContainer.add(instructions);
+        
+        this.updateProgressBar();
+    }
+
+    updateProgressBar() {
+        if (!this.progressBar) return;
+        
+        const width = this.scene.cameras.main.width;
+        const progressBarX = width / 2;
+        const progressBarY = 50;
+        const progressBarWidth = 300;
+        const progressBarHeight = 20;
+        
+        this.progressBar.clear();
+        
+        // Calculate fill width
+        const fillWidth = (this.reelProgress / 100) * (progressBarWidth - 4);
+        
+        // Color based on progress
+        let fillColor = 0x00ff00;
+        if (this.reelProgress < 30) {
+            fillColor = 0xff0000;
+        } else if (this.reelProgress < 70) {
+            fillColor = 0xffaa00;
+        }
+        
+        this.progressBar.fillStyle(fillColor);
+        this.progressBar.fillRoundedRect(
+            progressBarX - progressBarWidth/2 + 2,
+            progressBarY - progressBarHeight/2 + 2,
+            fillWidth,
+            progressBarHeight - 4,
+            3
+        );
+        
+        // Update progress text
+        if (this.progressText) {
+            this.progressText.setText(`${Math.round(this.reelProgress)}%`);
+        }
     }
 
     createFishVisuals() {
@@ -159,7 +370,7 @@ export class ReelingMiniGame {
         this.fishGraphic.setPosition(this.fishPosition.x, this.fishPosition.y);
         
         // Fish size based on fish attributes
-        const fishSize = (this.fish.size || 5) * 2;
+        const fishSize = (this.fishProperties?.size || 5) * 2;
         const fishColor = this.getFishColor();
         
         // Fish body (ellipse)
@@ -189,7 +400,7 @@ export class ReelingMiniGame {
 
     getFishColor() {
         // Different colors based on fish rarity/type
-        const rarity = this.fish.rarity || 1;
+        const rarity = this.selectedFish?.rarity || this.fishProperties?.rarity || 1;
         const colors = [
             0x8B4513, // Brown (common)
             0x4169E1, // Blue
@@ -203,6 +414,23 @@ export class ReelingMiniGame {
             0xDC143C  // Crimson (legendary)
         ];
         return colors[Math.min(rarity - 1, colors.length - 1)];
+    }
+
+    createFishingLine() {
+        // Create fishing line graphic
+        this.fishingLine = this.scene.add.graphics();
+        this.fishingLine.setDepth(190);
+        
+        // Store the rod tip position (from GameScene or default position)
+        this.scene.rodTipPosition = this.scene.rodTipPosition || {
+            x: this.scene.cameras.main.width / 2,
+            y: this.scene.cameras.main.height * 0.9
+        };
+        
+        // Initial line drawing
+        this.updateFishingLine();
+        
+        console.log('ReelingMiniGame: Fishing line created');
     }
 
     updateFishingLine() {
@@ -278,64 +506,137 @@ export class ReelingMiniGame {
         
         // Tension meter position (right side of screen)
         const meterX = width - 80;
-        const meterY = height / 2;
+        const meterY = height * 0.3;
         const meterWidth = 30;
-        const meterHeight = 200;
+        const meterHeight = 300;
         
-        // Tension meter background
+        // Tension meter background with gradient
         this.tensionMeterBg = this.scene.add.graphics();
         this.tensionMeterBg.setDepth(1001);
-        this.tensionMeterBg.fillStyle(0x000000, 0.8);
-        this.tensionMeterBg.fillRoundedRect(meterX - 2, meterY - meterHeight/2 - 2, meterWidth + 4, meterHeight + 4, 5);
         
-        // Danger zone (red) at top - INVERTED positioning
-        this.tensionMeterBg.fillStyle(0xFF0000, 0.4);
-        const dangerZoneStart = meterY - meterHeight/2;
-        const dangerZoneHeight = (15 / 100) * meterHeight; // Top 15% is danger zone
-        this.tensionMeterBg.fillRoundedRect(meterX, dangerZoneStart, meterWidth, dangerZoneHeight, 3);
+        // Background with depth effect
+        this.tensionMeterBg.fillGradientStyle(0x1a1a1a, 0x1a1a1a, 0x333333, 0x333333);
+        this.tensionMeterBg.fillRoundedRect(meterX - meterWidth/2, meterY - meterHeight/2, meterWidth, meterHeight, 8);
         
-        // Safe zone (green) - INVERTED positioning
-        this.tensionMeterBg.fillStyle(0x00FF00, 0.6);
-        const safeZoneStart = meterY + meterHeight/2 - (this.tensionSafeZone.max / 100) * meterHeight;
-        const safeZoneHeight = ((this.tensionSafeZone.max - this.tensionSafeZone.min) / 100) * meterHeight;
-        this.tensionMeterBg.fillRoundedRect(meterX, safeZoneStart, meterWidth, safeZoneHeight, 3);
+        // Border with glow
+        this.tensionMeterBg.lineStyle(3, 0x00aaff, 0.8);
+        this.tensionMeterBg.strokeRoundedRect(meterX - meterWidth/2, meterY - meterHeight/2, meterWidth, meterHeight, 8);
         
-        // Tension indicator
-        this.tensionIndicator = this.scene.add.graphics();
-        this.tensionIndicator.setDepth(1002);
-        this.updateTensionMeter();
-        
-        // Tension meter label
-        const label = this.scene.add.text(meterX + meterWidth/2, meterY - meterHeight/2 - 20, 'TENSION', {
-            fontSize: '12px',
-            fill: '#ffffff',
-            align: 'center'
-        }).setOrigin(0.5);
-        label.setDepth(1003);
-        
-        // Add "DANGER" label at top
-        const dangerLabel = this.scene.add.text(meterX + meterWidth/2, meterY - meterHeight/2 + 10, 'SNAP!', {
-            fontSize: '10px',
-            fill: '#ff0000',
-            fontWeight: 'bold',
-            align: 'center'
-        }).setOrigin(0.5);
-        dangerLabel.setDepth(1003);
-        
-        // Add "SAFE" label in middle
-        const safeLabel = this.scene.add.text(meterX + meterWidth/2, meterY, 'SAFE', {
-            fontSize: '10px',
-            fill: '#00ff00',
-            fontWeight: 'bold',
-            align: 'center'
-        }).setOrigin(0.5);
-        safeLabel.setDepth(1003);
+        // Inner border
+        this.tensionMeterBg.lineStyle(1, 0xffffff, 0.3);
+        this.tensionMeterBg.strokeRoundedRect(meterX - meterWidth/2 + 2, meterY - meterHeight/2 + 2, meterWidth - 4, meterHeight - 4, 6);
         
         this.uiContainer.add(this.tensionMeterBg);
+        
+        // Create danger zones
+        this.createTensionZones(meterX, meterY, meterWidth, meterHeight);
+        
+        // Safe zone indicator (green zone)
+        this.tensionSafeZoneGraphic = this.scene.add.graphics();
+        this.tensionSafeZoneGraphic.setDepth(1002);
+        
+        const safeZoneStart = meterY - meterHeight/2 + ((100 - this.tensionSafeZone.max) / 100) * meterHeight;
+        const safeZoneEnd = meterY - meterHeight/2 + ((100 - this.tensionSafeZone.min) / 100) * meterHeight;
+        const safeZoneHeight = safeZoneEnd - safeZoneStart;
+        
+        // Glowing green safe zone
+        this.tensionSafeZoneGraphic.fillGradientStyle(0x00ff44, 0x00ff44, 0x00aa22, 0x00aa22);
+        this.tensionSafeZoneGraphic.fillRoundedRect(meterX - meterWidth/2 + 3, safeZoneStart, meterWidth - 6, safeZoneHeight, 4);
+        
+        // Safe zone glow effect
+        this.tensionSafeZoneGraphic.lineStyle(2, 0x88ff88, 0.6);
+        this.tensionSafeZoneGraphic.strokeRoundedRect(meterX - meterWidth/2 + 2, safeZoneStart - 1, meterWidth - 4, safeZoneHeight + 2, 4);
+        
+        this.uiContainer.add(this.tensionSafeZoneGraphic);
+        
+        // Tension indicator (moving element)
+        this.tensionIndicator = this.scene.add.graphics();
+        this.tensionIndicator.setDepth(1003);
         this.uiContainer.add(this.tensionIndicator);
-        this.uiContainer.add(label);
-        this.uiContainer.add(dangerLabel);
-        this.uiContainer.add(safeLabel);
+        
+        // Tension meter label
+        const meterLabel = this.scene.add.text(meterX, meterY - meterHeight/2 - 30, '⚡ TENSION', {
+            fontSize: '14px',
+            fill: '#00aaff',
+            align: 'center',
+            fontWeight: 'bold'
+        }).setOrigin(0.5);
+        this.uiContainer.add(meterLabel);
+        
+        // Safe zone label with animation
+        this.safeZoneLabel = this.scene.add.text(meterX + 40, (safeZoneStart + safeZoneEnd) / 2, '✓ SAFE', {
+            fontSize: '12px',
+            fill: '#00ff88',
+            stroke: '#004422',
+            strokeThickness: 1,
+            fontWeight: 'bold'
+        }).setOrigin(0, 0.5);
+        this.uiContainer.add(this.safeZoneLabel);
+        
+        // Animate safe zone label
+        this.scene.tweens.add({
+            targets: this.safeZoneLabel,
+            alpha: 0.7,
+            duration: 1000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+        
+        // Tension value display
+        this.tensionValueText = this.scene.add.text(meterX, meterY + meterHeight/2 + 20, '50%', {
+            fontSize: '16px',
+            fill: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 2,
+            align: 'center',
+            fontWeight: 'bold'
+        }).setOrigin(0.5);
+        this.uiContainer.add(this.tensionValueText);
+        
+        // Line integrity warning
+        this.lineIntegrityText = this.scene.add.text(meterX, meterY + meterHeight/2 + 45, 'LINE: 100%', {
+            fontSize: '12px',
+            fill: '#00ff00',
+            stroke: '#000000',
+            strokeThickness: 1,
+            align: 'center'
+        }).setOrigin(0.5);
+        this.uiContainer.add(this.lineIntegrityText);
+        
+        console.log('ReelingMiniGame: Enhanced tension meter created');
+    }
+
+    createTensionZones(meterX, meterY, meterWidth, meterHeight) {
+        // Create visual zones for different tension levels
+        const zones = [
+            { start: 0, end: 30, color: 0xff4444, alpha: 0.3, label: 'DANGER' },
+            { start: 30, end: 70, color: 0x44ff44, alpha: 0.3, label: 'SAFE' },
+            { start: 70, end: 100, color: 0xff4444, alpha: 0.3, label: 'DANGER' }
+        ];
+        
+        zones.forEach((zone, index) => {
+            const zoneStart = meterY - meterHeight/2 + ((100 - zone.end) / 100) * meterHeight;
+            const zoneEnd = meterY - meterHeight/2 + ((100 - zone.start) / 100) * meterHeight;
+            const zoneHeight = zoneEnd - zoneStart;
+            
+            const zoneGraphic = this.scene.add.graphics();
+            zoneGraphic.setDepth(1001);
+            zoneGraphic.fillStyle(zone.color, zone.alpha);
+            zoneGraphic.fillRoundedRect(meterX - meterWidth/2 + 3, zoneStart, meterWidth - 6, zoneHeight, 3);
+            this.uiContainer.add(zoneGraphic);
+            
+            // Zone labels
+            if (index !== 1) { // Don't label safe zone here, we have a special label
+                const labelY = zoneStart + zoneHeight / 2;
+                const zoneLabel = this.scene.add.text(meterX + 35, labelY, zone.label, {
+                    fontSize: '10px',
+                    fill: zone.color === 0xff4444 ? '#ff4444' : '#44ff44',
+                    fontWeight: 'bold'
+                }).setOrigin(0, 0.5);
+                this.uiContainer.add(zoneLabel);
+            }
+        });
     }
 
     setupInputHandling() {
@@ -408,32 +709,159 @@ export class ReelingMiniGame {
         const width = this.scene.cameras.main.width;
         const height = this.scene.cameras.main.height;
         const meterX = width - 80;
-        const meterY = height / 2;
+        const meterY = height * 0.3;
         const meterWidth = 30;
-        const meterHeight = 200;
+        const meterHeight = 300;
         
+        // Clear and redraw tension indicator
         this.tensionIndicator.clear();
         
-        // Calculate indicator position (INVERTED - high tension at top)
-        const indicatorY = meterY + meterHeight/2 - (this.tension / 100) * meterHeight;
+        // Calculate indicator position (inverted - 100% tension at top)
+        const tensionPercent = Math.max(0, Math.min(100, this.tension));
+        const indicatorY = meterY + meterHeight/2 - (tensionPercent / 100) * meterHeight;
         
-        // Color based on tension level
-        let indicatorColor = 0x00FF00; // Green (safe)
-        if (this.tension < this.tensionSafeZone.min || this.tension > this.tensionSafeZone.max) {
-            indicatorColor = 0xFF0000; // Red (danger)
-        }
+        // Determine indicator color and effects based on tension level
+        let indicatorColor = 0x00ff00; // Default green
+        let glowColor = 0x88ff88;
+        let pulseEffect = false;
+        // Screen shake removed to prevent visual problems
+        // let screenShake = false;
         
-        // Additional visual warning when tension is very high (near line break)
-        if (this.tension > 85) {
-            indicatorColor = 0xFF0000; // Bright red
-            // Add pulsing effect for critical tension
-            const pulseAlpha = 0.5 + 0.5 * Math.sin(this.scene.time.now * 0.01);
-            this.tensionIndicator.fillStyle(indicatorColor, pulseAlpha);
+        if (tensionPercent < this.tensionSafeZone.min || tensionPercent > this.tensionSafeZone.max) {
+            // Danger zone - red with pulsing
+            indicatorColor = 0xff0000;
+            glowColor = 0xff8888;
+            pulseEffect = true;
+            
+            // Screen shake removed to prevent visual problems
+            // if (tensionPercent > 85 || tensionPercent < 15) {
+            //     screenShake = true;
+            //     indicatorColor = 0xff4444;
+            //     glowColor = 0xffaaaa;
+            // }
+            
+            // Keep color changes for extreme danger without screen shake
+            if (tensionPercent > 85 || tensionPercent < 15) {
+                indicatorColor = 0xff4444;
+                glowColor = 0xffaaaa;
+            }
         } else {
-            this.tensionIndicator.fillStyle(indicatorColor);
+            // Safe zone - green
+            indicatorColor = 0x00ff00;
+            glowColor = 0x88ff88;
         }
         
-        this.tensionIndicator.fillRect(meterX - 5, indicatorY - 3, meterWidth + 10, 6);
+        // Draw main indicator bar
+        const indicatorHeight = 8;
+        this.tensionIndicator.fillStyle(indicatorColor);
+        this.tensionIndicator.fillRoundedRect(
+            meterX - meterWidth/2 - 5, 
+            indicatorY - indicatorHeight/2, 
+            meterWidth + 10, 
+            indicatorHeight, 
+            4
+        );
+        
+        // Glow effect
+        this.tensionIndicator.lineStyle(3, glowColor, 0.8);
+        this.tensionIndicator.strokeRoundedRect(
+            meterX - meterWidth/2 - 7, 
+            indicatorY - indicatorHeight/2 - 2, 
+            meterWidth + 14, 
+            indicatorHeight + 4, 
+            6
+        );
+        
+        // Indicator arrows pointing to current tension
+        this.tensionIndicator.fillStyle(indicatorColor);
+        this.tensionIndicator.fillTriangle(
+            meterX - meterWidth/2 - 12, indicatorY,
+            meterX - meterWidth/2 - 5, indicatorY - 5,
+            meterX - meterWidth/2 - 5, indicatorY + 5
+        );
+        this.tensionIndicator.fillTriangle(
+            meterX + meterWidth/2 + 12, indicatorY,
+            meterX + meterWidth/2 + 5, indicatorY - 5,
+            meterX + meterWidth/2 + 5, indicatorY + 5
+        );
+        
+        // Update tension value text with color coding
+        if (this.tensionValueText) {
+            this.tensionValueText.setText(`${Math.round(tensionPercent)}%`);
+            
+            if (tensionPercent < this.tensionSafeZone.min || tensionPercent > this.tensionSafeZone.max) {
+                this.tensionValueText.setFill('#ff4444');
+                if (pulseEffect) {
+                    // Add pulsing effect for danger
+                    this.scene.tweens.killTweensOf(this.tensionValueText);
+                    this.scene.tweens.add({
+                        targets: this.tensionValueText,
+                        scaleX: 1.2,
+                        scaleY: 1.2,
+                        duration: 200,
+                        yoyo: true,
+                        ease: 'Power2'
+                    });
+                }
+            } else {
+                this.tensionValueText.setFill('#00ff88');
+                this.scene.tweens.killTweensOf(this.tensionValueText);
+                this.tensionValueText.setScale(1);
+            }
+        }
+        
+        // Update line integrity display
+        if (this.lineIntegrityText) {
+            const integrityPercent = Math.round(this.lineIntegrity);
+            this.lineIntegrityText.setText(`LINE: ${integrityPercent}%`);
+            
+            if (integrityPercent < 30) {
+                this.lineIntegrityText.setFill('#ff0000');
+                // Keep text visible without blinking
+                this.scene.tweens.killTweensOf(this.lineIntegrityText);
+                this.lineIntegrityText.setAlpha(1);
+            } else if (integrityPercent < 60) {
+                this.lineIntegrityText.setFill('#ffaa00');
+                this.scene.tweens.killTweensOf(this.lineIntegrityText);
+                this.lineIntegrityText.setAlpha(1);
+            } else {
+                this.lineIntegrityText.setFill('#00ff00');
+                this.scene.tweens.killTweensOf(this.lineIntegrityText);
+                this.lineIntegrityText.setAlpha(1);
+            }
+        }
+        
+        // Screen shake for extreme tension
+        // if (screenShake) {
+        //     this.scene.cameras.main.shake(100, 2);
+        // }
+        
+        // Create tension warning particles in danger zones
+        if (tensionPercent > 90 || tensionPercent < 10) {
+            this.createTensionWarningEffects(meterX, indicatorY);
+        }
+    }
+
+    createTensionWarningEffects(x, y) {
+        // Create warning particles for extreme tension
+        for (let i = 0; i < 3; i++) {
+            const particle = this.scene.add.graphics();
+            particle.fillStyle(0xff4444, 0.8);
+            particle.fillCircle(0, 0, Phaser.Math.Between(2, 4));
+            particle.setPosition(x + Phaser.Math.Between(-20, 20), y + Phaser.Math.Between(-10, 10));
+            
+            // Animate warning particle
+            this.scene.tweens.add({
+                targets: particle,
+                y: y - 30,
+                alpha: 0,
+                scaleX: 0.1,
+                scaleY: 0.1,
+                duration: 800,
+                ease: 'Power2',
+                onComplete: () => particle.destroy()
+            });
+        }
     }
 
     startReeling() {
@@ -650,7 +1078,7 @@ export class ReelingMiniGame {
         let progressChange = 0;
         
         // Base reel speed
-        const reelSpeed = this.rodStats.reelSpeed || 1;
+        const reelSpeed = this.rodStats?.reelSpeed || 1;
         progressChange += reelSpeed * 0.1;
         
         // Tension affects progress
@@ -672,11 +1100,14 @@ export class ReelingMiniGame {
         if (progressChange > 0) {
             this.fishStamina = Math.max(0, this.fishStamina - progressChange * 0.5);
         }
+        
+        // Update progress bar visual
+        this.updateProgressBar();
     }
 
     calculateStruggleIntensity() {
-        const fishSize = this.fish.size || 5;
-        const fishAggressiveness = this.fish.aggressiveness || 5;
+        const fishSize = this.fishProperties?.size || 5;
+        const fishAggressiveness = this.fishProperties?.aggressiveness || 5;
         const baseIntensity = (fishSize + fishAggressiveness) / 2;
         
         // Different struggle types have different intensities
@@ -715,6 +1146,9 @@ export class ReelingMiniGame {
         const struggleTypes = ['dash', 'thrash', 'dive', 'surface', 'circle', 'jump', 'roll', 'shake', 'pull', 'spiral'];
         this.struggleType = Phaser.Utils.Array.GetRandom(struggleTypes);
         this.fishStruggling = true;
+        
+        // Play fish struggle audio
+        this.audioManager?.playSFX('fish_struggle');
         
         console.log(`ReelingMiniGame: Fish struggling - ${this.struggleType}`);
         
@@ -756,7 +1190,8 @@ export class ReelingMiniGame {
         let qteType = Phaser.Utils.Array.GetRandom(this.qteTypes);
         
         // Adjust QTE difficulty based on fish elusiveness
-        const difficulty = Math.min(3, Math.max(1, this.fish.elusiveness / 3));
+        const elusiveness = this.selectedFish?.elusiveness || this.fishProperties?.elusiveness || 5;
+        const difficulty = Math.min(3, Math.max(1, elusiveness / 3));
         
         this.activeQTE = {
             type: qteType,
@@ -1230,17 +1665,17 @@ export class ReelingMiniGame {
                     qte.currentTaps++;
                     this.updateQTEVisuals(); // Update visual feedback
                     
-                    // Flash effect on tap
-                    if (this.qteTapIndicator && this.qteTapIndicator.active) {
-                        this.scene.tweens.add({
-                            targets: this.qteTapIndicator,
-                            scaleX: 1.5,
-                            scaleY: 1.5,
-                            duration: 100,
-                            yoyo: true,
-                            ease: 'Power2.easeOut'
-                        });
-                    }
+                    // Flash effect removed to prevent visual problems
+                    // if (this.qteTapIndicator && this.qteTapIndicator.active) {
+                    //     this.scene.tweens.add({
+                    //         targets: this.qteTapIndicator,
+                    //         scaleX: 1.5,
+                    //         scaleY: 1.5,
+                    //         duration: 100,
+                    //         yoyo: true,
+                    //         ease: 'Power2.easeOut'
+                    //     });
+                    // }
                     
                     if (qte.currentTaps >= qte.requiredTaps) {
                         success = true;
@@ -1276,46 +1711,48 @@ export class ReelingMiniGame {
                     qte.currentIndex++;
                     this.updateQTEVisuals(); // Update arrow highlighting
                     
+                    // Flash effects removed to prevent visual problems
                     // Success flash for correct input
-                    if (this.qteArrows && this.qteArrows[qte.currentIndex - 1] && this.qteArrows[qte.currentIndex - 1].active) {
-                        const arrow = this.qteArrows[qte.currentIndex - 1];
-                        // Flash the arrow with a bright green
-                        this.drawArrow(arrow, arrow.direction, 0x00FF88);
-                        
-                        this.scene.tweens.add({
-                            targets: arrow,
-                            scaleX: 1.5,
-                            scaleY: 1.5,
-                            duration: 150,
-                            yoyo: true,
-                            ease: 'Power2.easeOut',
-                            onComplete: () => {
-                                // Restore normal color after animation
-                                if (arrow && arrow.active) {
-                                    this.drawArrow(arrow, arrow.direction, 0x666666);
-                                }
-                            }
-                        });
-                    }
+                    // if (this.qteArrows && this.qteArrows[qte.currentIndex - 1] && this.qteArrows[qte.currentIndex - 1].active) {
+                    //     const arrow = this.qteArrows[qte.currentIndex - 1];
+                    //     // Flash the arrow with a bright green
+                    //     this.drawArrow(arrow, arrow.direction, 0x00FF88);
+                    //     
+                    //     this.scene.tweens.add({
+                    //         targets: arrow,
+                    //         scaleX: 1.5,
+                    //         scaleY: 1.5,
+                    //         duration: 150,
+                    //         yoyo: true,
+                    //         ease: 'Power2.easeOut',
+                    //         onComplete: () => {
+                    //             // Restore normal color after animation
+                    //             if (arrow && arrow.active) {
+                    //                 this.drawArrow(arrow, arrow.direction, 0x666666);
+                    //             }
+                    //         }
+                    //     });
+                    // }
                     
                     if (qte.currentIndex >= qte.sequence.length) {
                         success = true;
                     }
                 } else if (inputType === 'direction') {
+                    // Flash effects removed to prevent visual problems
                     // Wrong input, flash red and fail QTE
-                    if (this.qteArrows && this.qteArrows[qte.currentIndex] && this.qteArrows[qte.currentIndex].active) {
-                        const arrow = this.qteArrows[qte.currentIndex];
-                        this.drawArrow(arrow, arrow.direction, 0xFF0000);
-                        
-                        this.scene.tweens.add({
-                            targets: arrow,
-                            scaleX: 1.3,
-                            scaleY: 1.3,
-                            duration: 200,
-                            yoyo: true,
-                            ease: 'Power2.easeOut'
-                        });
-                    }
+                    // if (this.qteArrows && this.qteArrows[qte.currentIndex] && this.qteArrows[qte.currentIndex].active) {
+                    //     const arrow = this.qteArrows[qte.currentIndex];
+                    //     this.drawArrow(arrow, arrow.direction, 0xFF0000);
+                    //     
+                    //     this.scene.tweens.add({
+                    //         targets: arrow,
+                    //         scaleX: 1.3,
+                    //         scaleY: 1.3,
+                    //         duration: 200,
+                    //         yoyo: true,
+                    //         ease: 'Power2.easeOut'
+                    //     });
+                    // }
                     this.completeQTE(false);
                     return true;
                 }
@@ -1326,29 +1763,35 @@ export class ReelingMiniGame {
                     const currentTime = this.scene.time.now - qte.startTime;
                     const timeDiff = Math.abs(currentTime - qte.targetTime);
                     
+                    // Flash effects removed to prevent visual problems
                     // Visual feedback based on timing accuracy
-                    if (this.qteTimingIndicator && this.qteTimingIndicator.active) {
-                        if (timeDiff <= qte.tolerance) {
-                            // Perfect timing - green flash
-                            this.qteTimingIndicator.clear();
-                            this.qteTimingIndicator.fillStyle(0x00FF00);
-                            this.qteTimingIndicator.fillRect(-2, -15, 4, 30);
-                            success = true;
-                        } else {
-                            // Bad timing - red flash
-                            this.qteTimingIndicator.clear();
-                            this.qteTimingIndicator.fillStyle(0xFF0000);
-                            this.qteTimingIndicator.fillRect(-2, -15, 4, 30);
-                        }
-                        
-                        this.scene.tweens.add({
-                            targets: this.qteTimingIndicator,
-                            scaleX: 2,
-                            scaleY: 2,
-                            duration: 200,
-                            yoyo: true,
-                            ease: 'Power2.easeOut'
-                        });
+                    // if (this.qteTimingIndicator && this.qteTimingIndicator.active) {
+                    //     if (timeDiff <= qte.tolerance) {
+                    //         // Perfect timing - green flash
+                    //         this.qteTimingIndicator.clear();
+                    //         this.qteTimingIndicator.fillStyle(0x00FF00);
+                    //         this.qteTimingIndicator.fillRect(-2, -15, 4, 30);
+                    //         success = true;
+                    //     } else {
+                    //         // Bad timing - red flash
+                    //         this.qteTimingIndicator.clear();
+                    //         this.qteTimingIndicator.fillStyle(0xFF0000);
+                    //         this.qteTimingIndicator.fillRect(-2, -15, 4, 30);
+                    //     }
+                    //     
+                    //     this.scene.tweens.add({
+                    //         targets: this.qteTimingIndicator,
+                    //         scaleX: 2,
+                    //         scaleY: 2,
+                    //         duration: 200,
+                    //         yoyo: true,
+                    //         ease: 'Power2.easeOut'
+                    //     });
+                    // }
+                    
+                    // Simple success check without visual effects
+                    if (timeDiff <= qte.tolerance) {
+                        success = true;
                     }
                     
                     if (!success) {
@@ -1425,6 +1868,13 @@ export class ReelingMiniGame {
         this.activeQTE.completed = true;
         this.activeQTE.success = success;
         
+        // Play audio feedback for QTE result
+        if (success) {
+            this.audioManager?.playSFX('qte_success');
+        } else {
+            this.audioManager?.playSFX('qte_fail');
+        }
+        
         // Show success/failure feedback
         if (success) {
             this.qteSuccess++;
@@ -1445,20 +1895,6 @@ export class ReelingMiniGame {
                         this.destroyQTEVisuals();
                     }
                 });
-                
-                // Green flash - create temporary overlay
-                if (this.qteContainer) {
-                    const flashOverlay = this.scene.add.graphics();
-                    flashOverlay.fillStyle(0x00FF00, 0.3);
-                    flashOverlay.fillRoundedRect(-150, -80, 300, 160, 10);
-                    this.qteContainer.add(flashOverlay);
-                    
-                    this.scene.time.delayedCall(200, () => {
-                        if (flashOverlay && flashOverlay.active) {
-                            flashOverlay.destroy();
-                        }
-                    });
-                }
             }
         } else {
             this.qteFails++;
@@ -1466,32 +1902,35 @@ export class ReelingMiniGame {
             this.tension = Math.min(100, this.tension + 15);
             console.log(`ReelingMiniGame: QTE failed! Tension increased.`);
             
-            // Failure visual feedback
+            // Failure visual feedback - flash effects removed to prevent visual problems
             if (this.qteContainer) {
-                // Red flash - create temporary overlay
-                const flashOverlay = this.scene.add.graphics();
-                flashOverlay.fillStyle(0xFF0000, 0.3);
-                flashOverlay.fillRoundedRect(-150, -80, 300, 160, 10);
-                this.qteContainer.add(flashOverlay);
+                // Red flash removed to prevent visual problems
+                // const flashOverlay = this.scene.add.graphics();
+                // flashOverlay.fillStyle(0xFF0000, 0.3);
+                // flashOverlay.fillRoundedRect(-150, -80, 300, 160, 10);
+                // this.qteContainer.add(flashOverlay);
+                // 
+                // this.scene.time.delayedCall(200, () => {
+                //     if (flashOverlay && flashOverlay.active) {
+                //         flashOverlay.destroy();
+                //     }
+                // });
                 
-                this.scene.time.delayedCall(200, () => {
-                    if (flashOverlay && flashOverlay.active) {
-                        flashOverlay.destroy();
-                    }
-                });
+                // Shake animation removed to prevent visual problems
+                // this.scene.tweens.add({
+                //     targets: this.qteContainer,
+                //     x: this.qteContainer.x + 10,
+                //     duration: 50,
+                //     yoyo: true,
+                //     repeat: 3,
+                //     ease: 'Power2.easeInOut',
+                //     onComplete: () => {
+                //         this.destroyQTEVisuals();
+                //     }
+                // });
                 
-                // Shake animation
-                this.scene.tweens.add({
-                    targets: this.qteContainer,
-                    x: this.qteContainer.x + 10,
-                    duration: 50,
-                    yoyo: true,
-                    repeat: 3,
-                    ease: 'Power2.easeInOut',
-                    onComplete: () => {
-                        this.destroyQTEVisuals();
-                    }
-                });
+                // Simple cleanup without visual effects
+                this.destroyQTEVisuals();
             }
         }
         
@@ -1517,19 +1956,38 @@ export class ReelingMiniGame {
         
         // Win condition: Fish stamina depleted OR reel progress complete
         if (this.fishStamina <= 0 || this.reelProgress >= 100) {
-            this.complete(true, 'caught');
+            // Fish caught! Call the fishCaught method
+            this.fishCaught();
             return;
         }
         
         // Lose condition: Fish escapes (very rare, based on elusiveness)
-        if (this.fishStruggling && Math.random() < (this.fish.elusiveness / 1000)) {
+        const elusiveness = this.selectedFish?.elusiveness || this.fishProperties?.elusiveness || 5;
+        if (this.fishStruggling && Math.random() < (elusiveness / 1000)) {
             this.complete(false, 'fish_escape');
             return;
         }
     }
 
-    complete(success, reason) {
+    complete(success, result) {
         this.isActive = false;
+        
+        // Play completion audio based on result
+        if (success) {
+            this.audioManager?.playSFX('reel_success');
+        } else {
+            switch (result) {
+                case 'line_break':
+                    this.audioManager?.playSFX('line_break');
+                    break;
+                case 'fish_escape':
+                    this.audioManager?.playSFX('fish_escape');
+                    break;
+                default:
+                    this.audioManager?.playSFX('reel_fail');
+                    break;
+            }
+        }
         
         // Clean up timers
         if (this.reelingTimer) {
@@ -1542,13 +2000,28 @@ export class ReelingMiniGame {
             this.qteTimer.destroy();
         }
         
-        console.log(`ReelingMiniGame: ${success ? 'Success' : 'Failed'} - ${reason}`);
+        console.log(`ReelingMiniGame: ${success ? 'Success' : 'Failed'} - ${result}`);
+        
+        // Handle fish catch data properly
+        let fishData = null;
+        let reason = result;
+        
+        if (success && typeof result === 'object' && result.caught) {
+            // Fish was caught successfully - extract fish data
+            fishData = result.fishData || this.selectedFish || {
+                name: 'Unknown Fish',
+                id: 'unknown',
+                weight: 2.5,
+                rarity: 1
+            };
+            reason = 'fish_caught';
+        }
         
         // Emit completion event
         this.scene.events.emit('fishing:reelComplete', {
             success: success,
             reason: reason,
-            fish: this.fish,
+            fish: fishData, // Pass the actual fish data instead of this.fish (which is null)
             finalStats: {
                 tension: this.tension,
                 lineIntegrity: this.lineIntegrity,
@@ -1556,7 +2029,9 @@ export class ReelingMiniGame {
                 fishStamina: this.fishStamina,
                 qteSuccess: this.qteSuccess,
                 qteFails: this.qteFails
-            }
+            },
+            // Include catch result for additional data
+            catchResult: (typeof result === 'object' && result.catchResult) ? result.catchResult : null
         });
     }
 
@@ -1625,6 +2100,247 @@ export class ReelingMiniGame {
         });
         this.splashEffects = [];
         
+        // Clean up celebration container
+        if (this.celebrationContainer) {
+            this.scene.tweens.killTweensOf(this.celebrationContainer);
+            this.celebrationContainer.destroy();
+            this.celebrationContainer = null;
+        }
+        
         console.log('ReelingMiniGame: All visual elements destroyed');
+    }
+
+    fishCaught() {
+        // Prevent multiple calls to fishCaught
+        if (!this.isActive || this.fishCaughtCalled) {
+            return;
+        }
+        
+        this.fishCaughtCalled = true;
+        this.isActive = false; // Immediately stop the game loop to prevent multiple calls
+        
+        console.log('ReelingMiniGame: Fish caught successfully!');
+        
+        // Calculate actual weight based on fish properties
+        let actualWeight = 2.5; // Default weight
+        
+        if (this.selectedFish && this.gameState.fishDatabase) {
+            // Use FishDatabase to calculate weight with variation
+            actualWeight = this.gameState.fishDatabase.calculateFishWeight(this.selectedFish);
+        } else if (this.fishProperties) {
+            // Fallback to fish properties
+            actualWeight = this.fishProperties.weight || 2.5;
+        }
+        
+        // Determine if it was a perfect catch based on QTE performance
+        const perfectCatch = this.qteSuccess > 0 && this.qteFails === 0;
+        
+        // Create comprehensive fish data for GameState
+        const fishData = {
+            fishId: this.fishId || this.selectedFish?.id || 'unknown',
+            name: this.selectedFish?.name || this.fishProperties?.name || 'Unknown Fish',
+            weight: actualWeight,
+            rarity: Math.min(this.selectedFish?.rarity || 1, 6), // Cap rarity at 6
+            value: this.selectedFish?.coinValue || 100,
+            isPerfectCatch: perfectCatch,
+            qtePerformance: {
+                successes: this.qteSuccess,
+                failures: this.qteFails,
+                totalQTEs: this.qteSuccess + this.qteFails
+            },
+            catchStats: {
+                finalTension: this.tension,
+                lineIntegrity: this.lineIntegrity,
+                timeToReel: this.scene.time.now - this.startTime
+            }
+        };
+        
+        console.log('ReelingMiniGame: Fish data being processed:', fishData);
+        console.log('ReelingMiniGame: Selected fish original data:', this.selectedFish);
+        
+        // Let GameState handle the catch with FishDatabase
+        const catchResult = this.gameState.catchFish(fishData, perfectCatch);
+        
+        // Award perfect reel bonus if applicable
+        if (perfectCatch) {
+            this.gameState.trackPerfectReel();
+        }
+        
+        // Show catch celebration
+        this.showCatchCelebration(catchResult);
+        
+        // Complete the minigame
+        this.scene.time.delayedCall(2000, () => {
+            this.complete(true, {
+                caught: true,
+                catchResult: catchResult,
+                fishData: fishData
+            });
+        });
+    }
+    
+    showCatchCelebration(catchResult) {
+        if (!catchResult || !catchResult.fish) {
+            console.warn('ReelingMiniGame: No catch result or fish data for celebration');
+            return;
+        }
+        
+        const fish = catchResult.fish;
+        const weight = catchResult.weight || 0;
+        const rewards = catchResult.rewards || { coins: 0, experience: 0 };
+        
+        console.log('ReelingMiniGame: Showing celebration for:', { fish, weight, rewards });
+        
+        // Validate fish data
+        if (!fish.name) {
+            console.warn('ReelingMiniGame: Fish missing name, using fallback');
+            fish.name = 'Unknown Fish';
+        }
+        
+        if (!fish.rarity || fish.rarity < 1) {
+            console.warn('ReelingMiniGame: Invalid fish rarity, using fallback');
+            fish.rarity = 1;
+        }
+        
+        // Cap rarity for display
+        const displayRarity = Math.min(fish.rarity, 6);
+        
+        // Create celebration UI
+        const celebrationContainer = this.scene.add.container(
+            this.scene.cameras.main.width / 2,
+            this.scene.cameras.main.height / 2
+        );
+        celebrationContainer.setDepth(3000);
+        
+        // Background panel
+        const bg = this.scene.add.graphics();
+        bg.fillStyle(0x000000, 0.9);
+        bg.fillRoundedRect(-200, -150, 400, 300, 20);
+        bg.lineStyle(3, 0xFFD700, 1);
+        bg.strokeRoundedRect(-200, -150, 400, 300, 20);
+        celebrationContainer.add(bg);
+        
+        // Title
+        const title = this.scene.add.text(0, -120, 'FISH CAUGHT!', {
+            fontSize: '32px',
+            fontFamily: 'Arial',
+            color: '#FFD700',
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 4
+        }).setOrigin(0.5);
+        celebrationContainer.add(title);
+        
+        // Fish name and rarity
+        const rarityColors = ['#888888', '#FFFFFF', '#00FF00', '#0080FF', '#FF00FF', 
+                            '#FF8000', '#FF0000', '#FFD700', '#FF1493', '#00FFFF'];
+        const rarityColor = rarityColors[Math.min(displayRarity - 1, rarityColors.length - 1)];
+        
+        const fishName = this.scene.add.text(0, -60, fish.name, {
+            fontSize: '24px',
+            fontFamily: 'Arial',
+            color: rarityColor,
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5);
+        celebrationContainer.add(fishName);
+        
+        // Weight
+        const weightText = this.scene.add.text(0, -20, `Weight: ${weight} kg`, {
+            fontSize: '20px',
+            fontFamily: 'Arial',
+            color: '#FFFFFF',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5);
+        celebrationContainer.add(weightText);
+        
+        // Special badges
+        let badgeY = 20;
+        
+        if (catchResult.isFirstCatch) {
+            const firstCatchBadge = this.scene.add.text(0, badgeY, '⭐ FIRST CATCH! ⭐', {
+                fontSize: '18px',
+                fontFamily: 'Arial',
+                color: '#FFD700',
+                fontStyle: 'bold',
+                stroke: '#000000',
+                strokeThickness: 2
+            }).setOrigin(0.5);
+            celebrationContainer.add(firstCatchBadge);
+            badgeY += 30;
+        }
+        
+        if (catchResult.isRecord) {
+            const recordBadge = this.scene.add.text(0, badgeY, '🏆 NEW RECORD! 🏆', {
+                fontSize: '18px',
+                fontFamily: 'Arial',
+                color: '#FF6B6B',
+                fontStyle: 'bold',
+                stroke: '#000000',
+                strokeThickness: 2
+            }).setOrigin(0.5);
+            celebrationContainer.add(recordBadge);
+            badgeY += 30;
+        }
+        
+        if (catchResult.isPerfectCatch) {
+            const perfectBadge = this.scene.add.text(0, badgeY, '✨ PERFECT CATCH! ✨', {
+                fontSize: '18px',
+                fontFamily: 'Arial',
+                color: '#00FFFF',
+                fontStyle: 'bold',
+                stroke: '#000000',
+                strokeThickness: 2
+            }).setOrigin(0.5);
+            celebrationContainer.add(perfectBadge);
+            badgeY += 30;
+        }
+        
+        // Rewards
+        const coinsText = this.scene.add.text(-80, 90, `+${rewards.coins || 0} 🪙`, {
+            fontSize: '20px',
+            fontFamily: 'Arial',
+            color: '#FFD700',
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5);
+        celebrationContainer.add(coinsText);
+        
+        const expText = this.scene.add.text(80, 90, `+${rewards.experience || 0} XP`, {
+            fontSize: '20px',
+            fontFamily: 'Arial',
+            color: '#00FF00',
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5);
+        celebrationContainer.add(expText);
+        
+        // Animate celebration
+        celebrationContainer.setScale(0);
+        this.scene.tweens.add({
+            targets: celebrationContainer,
+            scaleX: 1,
+            scaleY: 1,
+            duration: 500,
+            ease: 'Back.easeOut'
+        });
+        
+        // Pulse animation for title
+        this.scene.tweens.add({
+            targets: title,
+            scaleX: 1.1,
+            scaleY: 1.1,
+            duration: 800,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+        
+        // Store reference for cleanup
+        this.celebrationContainer = celebrationContainer;
     }
 } 

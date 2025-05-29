@@ -3,6 +3,10 @@ import InventoryManager from './InventoryManager.js';
 import CraftingManager from './CraftingManager.js';
 import { SettingsManager } from './SettingsManager.js';
 import { AudioManager } from './AudioManager.js';
+import { TimeManager } from './TimeManager.js';
+import { WeatherManager } from './WeatherManager.js';
+import { PlayerProgression } from './PlayerProgression.js';
+import FishDatabase from './FishDatabase.js';
 
 class GameState {
     constructor() {
@@ -19,11 +23,23 @@ class GameState {
         // Initialize audio manager (will be properly initialized when first scene loads)
         this.audioManager = null;
         
+        // Initialize time manager
+        this.timeManager = new TimeManager(this);
+        
+        // Weather manager will be initialized when scene is available
+        this.weatherManager = null;
+        
+        // Initialize player progression system
+        this.playerProgression = new PlayerProgression(this);
+        
         // Initialize inventory manager after state is set up
         this.inventoryManager = new InventoryManager(this);
         
         // Initialize crafting manager
         this.craftingManager = new CraftingManager(this, this.inventoryManager);
+        
+        // Initialize FishDatabase  
+        this.fishDatabase = new FishDatabase(this);
         
         this.loadFromStorage();
     }
@@ -135,7 +151,7 @@ class GameState {
                 // Sample fish cards for testing crafting
                 { id: 'minnow', name: 'Minnow', rarity: 1, quantity: 5, owned: true },
                 { id: 'perch', name: 'Perch', rarity: 1, quantity: 4, owned: true },
-                { id: 'trout', name: 'Trout', rarity: 2, quantity: 3, owned: true },
+                { id: 'trout', name: 'Trout', rarity: 2, quantity: 5, owned: true },
                 { id: 'pike', name: 'Pike', rarity: 3, quantity: 2, owned: true },
                 { id: 'salmon', name: 'Salmon', rarity: 3, quantity: 2, owned: true },
                 { id: 'sardine', name: 'Sardine', rarity: 1, quantity: 6, owned: true },
@@ -255,25 +271,15 @@ class GameState {
     }
 
     // Player methods
-    addExperience(amount) {
-        this.player.experience += amount;
-        this.session.sessionStats.experienceGained += amount;
-        this.markDirty();
-        
-        // Check for level up
-        while (this.player.experience >= this.player.experienceToNext) {
-            this.levelUp();
-        }
-        
-        this.emit('experienceGained', { amount, total: this.player.experience });
+    addExperience(amount, source = 'unknown', details = {}) {
+        // Use the comprehensive progression system
+        return this.playerProgression.addExperience(amount, source, details);
     }
 
     levelUp() {
-        this.player.experience -= this.player.experienceToNext;
-        this.player.level++;
-        this.player.experienceToNext = Math.floor(this.player.experienceToNext * 1.2);
-        
-        this.emit('levelUp', { level: this.player.level });
+        // This is now handled automatically by PlayerProgression
+        // Keep this method for backward compatibility
+        console.log('GameState: levelUp() called - now handled by PlayerProgression system');
     }
 
     addMoney(amount) {
@@ -390,57 +396,151 @@ class GameState {
     }
 
     // Fish catching
-    catchFish(fishData) {
-        // Update basic statistics
+    /**
+     * Process fish catch
+     * @param {object} fishData - Fish information including fishId, weight, etc.
+     * @param {boolean} isPerfectCatch - Whether it was a perfect catch
+     */
+    catchFish(fishData, isPerfectCatch = false) {
+        console.log('GameState: Catching fish:', fishData);
+        
+        let catchResult = null;
+        
+        // Use FishDatabase if available
+        if (this.fishDatabase && fishData.fishId) {
+            // Record catch in database
+            catchResult = this.fishDatabase.recordCatch(fishData.fishId, fishData.weight);
+            
+            if (catchResult) {
+                const fish = catchResult.fish;
+                const multiplier = this.fishDatabase.getFishValueMultiplier(fish, isPerfectCatch);
+                
+                // Calculate rewards
+                const coinReward = Math.floor(fish.coinValue * multiplier);
+                const expReward = Math.floor(fish.experienceValue * multiplier);
+                
+                // Award coins and experience
+                this.player.money += coinReward;
+                if (this.playerProgression) {
+                    const fishRarity = Math.min(fish.rarity || 1, 6); // Cap rarity for progression system
+                    const rarityMultiplier = this.playerProgression.getRarityMultiplier(fishRarity);
+                    this.playerProgression.addExperience(expReward * rarityMultiplier, 'fishCaught', {
+                        fishId: fish.id,
+                        rarity: fishRarity,
+                        weight: catchResult.weight
+                    });
+                    
+                    // Award bonus for first catch
+                    if (catchResult.isFirstCatch) {
+                        this.playerProgression.addExperience(50, 'firstTimeSpecies', {
+                            species: fish.name
+                        });
+                    }
+                }
+                
+                // Create properly structured fish card for inventory
+                const fishCard = {
+                    id: `fish_${fish.id}_${Date.now()}`,
+                    fishId: fish.id,
+                    name: fish.name || 'Unknown Fish',
+                    rarity: Math.min(fish.rarity || 1, 6), // Cap rarity at 6
+                    weight: catchResult.weight || 1.0,
+                    value: coinReward,
+                    description: fish.description || `A ${fish.name} weighing ${catchResult.weight}kg`,
+                    caughtAt: new Date().toISOString(),
+                    quantity: 1,
+                    owned: true
+                };
+                
+                console.log('GameState: Adding fish card to inventory:', fishCard);
+                
+                // Add to inventory with error handling
+                try {
+                    const addResult = this.inventoryManager.addItem('fish', fishCard);
+                    if (!addResult) {
+                        console.error('GameState: Failed to add fish card to inventory');
+                    }
+                } catch (error) {
+                    console.error('GameState: Error adding fish to inventory:', error);
+                }
+                
+                console.log('GameState: Fish caught successfully:', {
+                    fish: fish.name,
+                    weight: catchResult.weight,
+                    coins: coinReward,
+                    exp: expReward,
+                    isFirstCatch: catchResult.isFirstCatch,
+                    isRecord: catchResult.isRecord
+                });
+                
+                this.markDirty();
+                return {
+                    success: true,
+                    fish: fish,
+                    weight: catchResult.weight,
+                    rewards: {
+                        coins: coinReward,
+                        experience: expReward
+                    },
+                    isFirstCatch: catchResult.isFirstCatch,
+                    isRecord: catchResult.isRecord,
+                    isPerfectCatch: isPerfectCatch
+                };
+            }
+        }
+        
+        // Fallback to legacy behavior if FishDatabase not available
         this.player.fishCaught++;
-        this.player.statistics.fishCaught++;
-        this.player.statistics.fishingAttempts = (this.player.statistics.fishingAttempts || 0) + 1;
-        this.player.statistics.totalValue += fishData.coinValue || fishData.value || 50;
         
-        // Update session statistics
-        this.session.sessionStats.fishCaught++;
-        this.session.sessionStats.successfulCasts++;
-        
-        // Update biggest fish
-        if (!this.player.statistics.biggestFish || fishData.weight > this.player.statistics.biggestFish.weight) {
-            this.player.statistics.biggestFish = { ...fishData };
-        }
-        
-        // Update rarest fish
-        if (!this.player.statistics.rarest || fishData.rarity > this.player.statistics.rarest.rarity) {
-            this.player.statistics.rarest = { ...fishData };
-        }
-        
-        // Track fish species collection
-        if (!this.player.statistics.speciesCaught) {
-            this.player.statistics.speciesCaught = {};
-        }
-        this.player.statistics.speciesCaught[fishData.id] = (this.player.statistics.speciesCaught[fishData.id] || 0) + 1;
-        
-        // Add to inventory with proper fish card format
-        const fishCard = {
-            ...fishData,
+        // Legacy fish data structure with proper validation
+        const fish = {
+            id: `fish_${Date.now()}`,
+            fishId: fishData.fishId || 'unknown',
+            name: fishData.name || 'Unknown Fish',
+            rarity: Math.min(fishData.rarity || 1, 6), // Cap rarity at 6
+            weight: fishData.weight || 1.0,
+            value: fishData.value || 100,
+            description: `A ${fishData.name || 'fish'} weighing ${fishData.weight || 1.0}kg`,
+            caughtAt: new Date().toISOString(),
             quantity: 1,
-            catchTime: Date.now(),
-            catchLocation: this.world.currentLocation || 'Unknown'
+            owned: true
         };
-        this.addItem('fish', fishCard);
         
-        // Add money and experience
-        const coinValue = fishData.coinValue || fishData.value || 50;
-        const expValue = fishData.experienceValue || fishData.experience || 10;
-        this.addMoney(coinValue);
-        this.addExperience(expValue);
+        // Add to inventory with error handling
+        try {
+            const addResult = this.inventoryManager.addItem('fish', fish);
+            if (!addResult) {
+                console.error('GameState: Failed to add fish to inventory (legacy)');
+            }
+        } catch (error) {
+            console.error('GameState: Error adding fish to inventory (legacy):', error);
+        }
         
-        // Check for progression milestones
-        this.checkProgressionMilestones(fishData);
+        // Award money and experience (legacy)
+        this.player.money += fish.value;
+        if (this.playerProgression) {
+            this.playerProgression.addExperience(fish.value / 10, 'fishCaught', {
+                fishId: fish.fishId,
+                rarity: fish.rarity,
+                weight: fish.weight
+            });
+        }
         
+        console.log('GameState: Fish caught (legacy):', fish);
         this.markDirty();
-        this.emit('fishCaught', {
-            fish: fishData,
-            rewards: { coins: coinValue, experience: expValue },
-            milestones: this.getRecentMilestones()
-        });
+        
+        return {
+            success: true,
+            fish: fish,
+            weight: fish.weight,
+            rewards: {
+                coins: fish.value,
+                experience: fish.value / 10
+            },
+            isFirstCatch: false,
+            isRecord: false,
+            isPerfectCatch: isPerfectCatch
+        };
     }
 
     // Simplified fish adding method
@@ -497,9 +597,201 @@ class GameState {
         return this.audioManager;
     }
 
+    getAudioManager(scene) {
+        // Initialize audio if not already done
+        if (!this.audioManager) {
+            return this.initializeAudio(scene);
+        }
+        return this.audioManager;
+    }
+
     setSceneAudio(sceneKey) {
         if (this.audioManager) {
             this.audioManager.setSceneAudio(sceneKey);
+        }
+    }
+
+    // Time & Weather management
+    initializeTimeWeather(scene) {
+        try {
+            // Initialize weather manager with scene reference
+            if (!this.weatherManager && scene) {
+                this.weatherManager = new WeatherManager(this, scene);
+                if (this.weatherManager) {
+                    this.weatherManager.start();
+                    console.log('GameState: Weather manager initialized');
+                }
+            }
+            
+            // Start time manager if not already running
+            if (this.timeManager && !this.timeManager.isRunning) {
+                this.timeManager.start();
+                console.log('GameState: Time manager started');
+            }
+            
+            // Set up event listeners for time/weather changes
+            this.setupTimeWeatherEvents();
+        } catch (error) {
+            console.error('GameState: Error initializing time/weather systems:', error);
+        }
+    }
+
+    setupTimeWeatherEvents() {
+        if (this.timeManager) {
+            this.timeManager.on('periodChanged', (data) => {
+                console.log(`Time period changed to ${data.newPeriod}`);
+                this.emit('timePeriodChanged', data);
+                
+                // Update fish behavior based on time
+                this.updateFishBehaviorForTime(data.effects);
+            });
+            
+            this.timeManager.on('newDay', (data) => {
+                console.log('New day started');
+                this.emit('newDay', data);
+                
+                // Reset daily activities, update shop, etc.
+                this.onNewDay();
+            });
+        }
+        
+        if (this.weatherManager) {
+            this.weatherManager.on('weatherChanged', (data) => {
+                console.log(`Weather changed to ${data.newWeather}`);
+                this.emit('weatherChanged', data);
+                
+                // Update fish behavior based on weather
+                this.updateFishBehaviorForWeather(data.effects);
+            });
+        }
+    }
+
+    updateTimeWeather(deltaTime) {
+        // Update time manager
+        if (this.timeManager) {
+            this.timeManager.update(deltaTime);
+        }
+        
+        // Update weather manager
+        if (this.weatherManager) {
+            this.weatherManager.update(deltaTime);
+        }
+    }
+
+    updateFishBehaviorForTime(timeEffects) {
+        // Apply time-based modifiers to fish behavior
+        // This will be used by fishing minigames
+        this.currentTimeEffects = timeEffects;
+        this.emit('fishBehaviorUpdated', { source: 'time', effects: timeEffects });
+    }
+
+    updateFishBehaviorForWeather(weatherEffects) {
+        // Apply weather-based modifiers to fish behavior
+        // This will be used by fishing minigames
+        this.currentWeatherEffects = weatherEffects;
+        this.emit('fishBehaviorUpdated', { source: 'weather', effects: weatherEffects });
+    }
+
+    onNewDay() {
+        // Reset daily energy
+        this.player.attributes.energy = 100;
+        
+        // Update shop inventory
+        this.refreshShopInventory();
+        
+        // Reset daily achievements/bonuses
+        this.resetDailyProgress();
+        
+        this.markDirty();
+    }
+
+    refreshShopInventory() {
+        // Add logic to refresh shop items daily
+        console.log('GameState: Shop inventory refreshed for new day');
+    }
+
+    resetDailyProgress() {
+        // Reset any daily progress tracking
+        console.log('GameState: Daily progress reset');
+    }
+
+    getCurrentTimeInfo() {
+        if (this.timeManager) {
+            return this.timeManager.getCurrentTime();
+        }
+        return null;
+    }
+
+    getCurrentWeatherInfo() {
+        if (this.weatherManager) {
+            return this.weatherManager.getWeatherInfo();
+        }
+        return null;
+    }
+
+    getFishingConditions() {
+        const conditions = {
+            time: this.timeManager ? this.timeManager.getFishingConditions() : null,
+            weather: this.weatherManager ? this.weatherManager.getFishingConditions() : null,
+            combined: {
+                fishActivity: 1.0,
+                biteRate: 1.0,
+                rareChance: 1.0,
+                visibility: 1.0,
+                castAccuracy: 1.0,
+                isOptimal: false
+            }
+        };
+        
+        // Combine time and weather effects
+        if (conditions.time && conditions.weather) {
+            conditions.combined = {
+                fishActivity: conditions.time.fishActivity * conditions.weather.fishActivity,
+                biteRate: conditions.time.biteRate * conditions.weather.biteRate,
+                rareChance: conditions.time.rareChance * conditions.weather.rareChance,
+                visibility: Math.min(conditions.time.visibility || 1.0, conditions.weather.visibility),
+                castAccuracy: Math.min(conditions.time.castAccuracy || 1.0, conditions.weather.castAccuracy),
+                isOptimal: (conditions.time.isOptimal || conditions.weather.isOptimal)
+            };
+        } else if (conditions.time) {
+            conditions.combined = { ...conditions.time };
+        } else if (conditions.weather) {
+            conditions.combined = { ...conditions.weather };
+        }
+        
+        return conditions;
+    }
+
+    getWeatherForecast() {
+        if (this.weatherManager) {
+            return this.weatherManager.getForecast();
+        }
+        return [];
+    }
+
+    getOptimalFishingTimes() {
+        if (this.timeManager) {
+            return this.timeManager.getOptimalFishingTimes();
+        }
+        return [];
+    }
+
+    // Manual time/weather control (for testing/debugging)
+    setTime(hours, minutes = 0) {
+        if (this.timeManager) {
+            this.timeManager.setTime(hours, minutes);
+        }
+    }
+
+    setTimeSpeed(speed) {
+        if (this.timeManager) {
+            this.timeManager.setTimeSpeed(speed);
+        }
+    }
+
+    setWeather(weatherType, duration = null) {
+        if (this.weatherManager) {
+            this.weatherManager.setWeather(weatherType, duration);
         }
     }
 
@@ -508,6 +800,42 @@ class GameState {
         this.player.statistics.totalCasts++;
         this.session.sessionStats.castsAttempted++;
         this.markDirty();
+    }
+
+    trackPerfectCast() {
+        this.trackCastAttempt();
+        this.session.sessionStats.successfulCasts++;
+        
+        // Award experience for perfect cast
+        const expGained = this.addExperience(
+            this.playerProgression.experienceSources.perfectCast,
+            'perfectCast'
+        );
+        
+        this.emit('perfectCast', { experienceGained: expGained });
+        console.log('GameState: Perfect cast! +' + expGained + ' experience');
+    }
+
+    trackPerfectLure() {
+        // Award experience for perfect lure
+        const expGained = this.addExperience(
+            this.playerProgression.experienceSources.perfectLure,
+            'perfectLure'
+        );
+        
+        this.emit('perfectLure', { experienceGained: expGained });
+        console.log('GameState: Perfect lure! +' + expGained + ' experience');
+    }
+
+    trackPerfectReel() {
+        // Award experience for perfect reel
+        const expGained = this.addExperience(
+            this.playerProgression.experienceSources.perfectReel,
+            'perfectReel'
+        );
+        
+        this.emit('perfectReel', { experienceGained: expGained });
+        console.log('GameState: Perfect reel! +' + expGained + ' experience');
     }
 
     trackCraftingActivity(itemId) {
@@ -647,6 +975,9 @@ class GameState {
             shop: this.shop,
             sceneStates: this.sceneStates,
             crafting: this.craftingManager ? this.craftingManager.save() : null,
+            time: this.timeManager ? this.timeManager.getSaveData() : null,
+            weather: this.weatherManager ? this.weatherManager.getSaveData() : null,
+            progression: this.playerProgression ? this.playerProgression.getSaveData() : null,
             session: {
                 ...this.session,
                 totalSaves: (this.session.totalSaves || 0) + 1,
@@ -732,6 +1063,19 @@ class GameState {
                     this.craftingManager.load(data.crafting);
                 }
                 
+                // Load time and weather data
+                if (this.timeManager && data.time) {
+                    this.timeManager.loadSaveData(data.time);
+                }
+                if (this.weatherManager && data.weather) {
+                    this.weatherManager.loadSaveData(data.weather);
+                }
+                
+                // Load progression data
+                if (this.playerProgression && data.progression) {
+                    this.playerProgression.loadSaveData(data.progression);
+                }
+                
                 // Calculate play time since last save
                 const timeSinceLastSave = Date.now() - (data.timestamp || Date.now());
                 console.log(`GameState: Game loaded successfully (${Math.round(timeSinceLastSave / 1000)}s since last save)`);
@@ -770,6 +1114,19 @@ class GameState {
                 
                 if (this.craftingManager && backup.crafting) {
                     this.craftingManager.load(backup.crafting);
+                }
+                
+                // Load time and weather data from backup
+                if (this.timeManager && backup.time) {
+                    this.timeManager.loadSaveData(backup.time);
+                }
+                if (this.weatherManager && backup.weather) {
+                    this.weatherManager.loadSaveData(backup.weather);
+                }
+                
+                // Load progression data from backup
+                if (this.playerProgression && backup.progression) {
+                    this.playerProgression.loadSaveData(backup.progression);
                 }
                 
                 this.emit('gameLoadedFromBackup', { 
@@ -1076,6 +1433,82 @@ class GameState {
         };
         
         return defaultBoatAttributes[attributeId] || 5;
+    }
+
+    // Debug and testing methods
+    debugFishInventory() {
+        console.log('GameState: Current fish inventory:', this.inventory.fish);
+        return this.inventory.fish;
+    }
+
+    debugProgressionSystem() {
+        console.log('GameState: Testing progression system...');
+        
+        // Add some experience
+        this.addExperience(500, 'debug', { reason: 'Testing progression' });
+        
+        // Add skill points
+        this.playerProgression.debugAddSkillPoints(10);
+        
+        // Show progression summary
+        const summary = this.playerProgression.getProgressionSummary();
+        console.log('Progression Summary:', summary);
+        
+        return summary;
+    }
+
+    debugTestPerfectActions() {
+        console.log('GameState: Testing perfect action tracking...');
+        
+        // Test perfect actions
+        this.trackPerfectCast();
+        this.trackPerfectLure();
+        this.trackPerfectReel();
+        
+        return {
+            perfectCasts: this.player.progression.perfectCasts,
+            perfectLures: this.player.progression.perfectLures,
+            perfectReels: this.player.progression.perfectReels
+        };
+    }
+
+    forceResetFishInventory() {
+        console.log('GameState: Force resetting fish inventory to default values');
+        this.inventory.fish = [
+            // Sample fish cards for testing crafting
+            { id: 'minnow', name: 'Minnow', rarity: 1, quantity: 5, owned: true },
+            { id: 'perch', name: 'Perch', rarity: 1, quantity: 4, owned: true },
+            { id: 'trout', name: 'Trout', rarity: 2, quantity: 5, owned: true },
+            { id: 'pike', name: 'Pike', rarity: 3, quantity: 2, owned: true },
+            { id: 'salmon', name: 'Salmon', rarity: 3, quantity: 2, owned: true },
+            { id: 'sardine', name: 'Sardine', rarity: 1, quantity: 6, owned: true },
+            { id: 'bass', name: 'Bass', rarity: 2, quantity: 4, owned: true },
+            { id: 'catfish', name: 'Catfish', rarity: 2, quantity: 3, owned: true }
+        ];
+        this.markDirty();
+        this.save();
+        console.log('GameState: Fish inventory reset and saved');
+        return this.inventory.fish;
+    }
+
+    forceAddTestingCoins() {
+        console.log('GameState: Adding 50,000 coins for testing');
+        this.player.money += 50000;
+        this.markDirty();
+        this.save();
+        console.log('GameState: Player now has', this.player.money, 'coins');
+        return this.player.money;
+    }
+
+    forceSetTestingLevel() {
+        console.log('GameState: Setting player level to 15 for testing');
+        this.player.level = 15;
+        this.player.experience = 0;
+        this.player.experienceToNext = 1000;
+        this.markDirty();
+        this.save();
+        console.log('GameState: Player is now level', this.player.level);
+        return this.player.level;
     }
 
     // Singleton getter

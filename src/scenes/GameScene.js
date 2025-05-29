@@ -5,6 +5,10 @@ import PlayerController from '../scripts/PlayerController.js';
 import SceneManager from '../scripts/SceneManager.js';
 import { gameDataLoader } from '../scripts/DataLoader.js';
 import { InventoryUI } from '../ui/InventoryUI.js';
+import { TimeWeatherUI } from '../ui/TimeWeatherUI.js';
+import { PlayerProgressionUI } from '../ui/PlayerProgressionUI.js';
+import { FishCollectionUI } from '../ui/FishCollectionUI.js';
+import { CraftingUI } from '../ui/CraftingUI.js';
 
 export default class GameScene extends Phaser.Scene {
     constructor() {
@@ -20,6 +24,17 @@ export default class GameScene extends Phaser.Scene {
         this.gameState.startAutoSave();
         this.sceneManager = SceneManager.getInstance();
         this.sceneManager.setCurrentScene(this);
+
+        // Initialize audio manager for this scene
+        this.audioManager = this.gameState.getAudioManager(this);
+        if (this.audioManager) {
+            this.audioManager.setSceneAudio('GameScene');
+            console.log('GameScene: Audio manager initialized');
+        }
+
+        // Initialize time and weather systems
+        this.gameState.initializeTimeWeather(this);
+        console.log('GameScene: Time and weather systems initialized');
 
         // Create sky background (top portion)
         const skyGradient = this.add.graphics();
@@ -70,7 +85,7 @@ export default class GameScene extends Phaser.Scene {
         this.createFishPopulation();
 
         // UI Elements
-        this.add.text(16, 16, 'SPACE: Start Fishing | ESC: Menu | I: Inventory | Mouse: Aim & Click', {
+        this.add.text(16, 16, 'SPACE: Start Fishing | ESC: Menu | I: Inventory | P: Progression | Mouse: Aim & Click', {
             fontSize: '16px',
             fill: '#ffffff',
             backgroundColor: '#000000',
@@ -79,6 +94,21 @@ export default class GameScene extends Phaser.Scene {
 
         // Create inventory UI
         this.inventoryUI = new InventoryUI(this, 100, 50, 800, 600);
+
+        // Create time and weather UI
+        this.timeWeatherUI = new TimeWeatherUI(this, 20, 20);
+
+        // Create player progression UI
+        this.playerProgressionUI = new PlayerProgressionUI(this, 50, 50, 900, 700);
+
+        // Create fish collection UI
+        this.fishCollectionUI = new FishCollectionUI(this, 50, 50, 900, 650);
+
+        // Create Player button in lower right corner
+        this.createPlayerButton();
+
+        // Create Collection button next to Player button
+        this.createCollectionButton();
 
         // Crosshair for aiming using configuration
         this.createCrosshair();
@@ -91,6 +121,11 @@ export default class GameScene extends Phaser.Scene {
         // Add inventory key binding
         this.input.keyboard.on('keydown-I', () => {
             this.inventoryUI.toggle();
+        });
+
+        // Add progression key binding
+        this.input.keyboard.on('keydown-P', () => {
+            this.playerProgressionUI.toggle();
         });
 
         // PlayerController now handles casting
@@ -120,8 +155,8 @@ export default class GameScene extends Phaser.Scene {
             );
         }
 
-        // Update game time
-        this.gameState.updateTime(this.game.loop.delta);
+        // Update time and weather systems
+        this.gameState.updateTimeWeather(this.game.loop.delta);
     }
 
     // Casting and fish catching now handled by PlayerController
@@ -516,5 +551,171 @@ export default class GameScene extends Phaser.Scene {
         }).setOrigin(0.5);
         
         console.log('GameScene: Permanent hotspot created at', hotspotX, hotspotY);
+    }
+
+    createPlayerButton() {
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
+        
+        // Button dimensions and position
+        const buttonWidth = 80;
+        const buttonHeight = 40;
+        const buttonX = width - buttonWidth - 20;
+        const buttonY = height - buttonHeight - 20;
+        
+        // Create button background
+        this.playerButton = this.add.graphics();
+        this.playerButton.setDepth(1500);
+        
+        // Button styling
+        this.playerButton.fillStyle(0x4a90e2, 0.9);
+        this.playerButton.fillRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 8);
+        this.playerButton.lineStyle(2, 0x6bb6ff, 0.8);
+        this.playerButton.strokeRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 8);
+        
+        // Button text
+        this.playerButtonText = this.add.text(buttonX + buttonWidth/2, buttonY + buttonHeight/2, '👤 Player', {
+            fontSize: '14px',
+            fontWeight: 'bold',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5);
+        this.playerButtonText.setDepth(1501);
+        
+        // Make button interactive
+        const buttonHitArea = this.add.rectangle(buttonX + buttonWidth/2, buttonY + buttonHeight/2, buttonWidth, buttonHeight, 0x000000, 0);
+        buttonHitArea.setDepth(1502);
+        buttonHitArea.setInteractive({ useHandCursor: true });
+        
+        // Button hover effects
+        buttonHitArea.on('pointerover', () => {
+            this.playerButton.clear();
+            this.playerButton.fillStyle(0x5ba0f2, 0.9);
+            this.playerButton.fillRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 8);
+            this.playerButton.lineStyle(2, 0x7bc6ff, 0.8);
+            this.playerButton.strokeRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 8);
+            this.playerButtonText.setScale(1.05);
+        });
+        
+        buttonHitArea.on('pointerout', () => {
+            this.playerButton.clear();
+            this.playerButton.fillStyle(0x4a90e2, 0.9);
+            this.playerButton.fillRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 8);
+            this.playerButton.lineStyle(2, 0x6bb6ff, 0.8);
+            this.playerButton.strokeRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 8);
+            this.playerButtonText.setScale(1.0);
+        });
+        
+        // Button click handler
+        buttonHitArea.on('pointerdown', () => {
+            // Visual feedback
+            this.playerButton.clear();
+            this.playerButton.fillStyle(0x3a80d2, 0.9);
+            this.playerButton.fillRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 8);
+            this.playerButton.lineStyle(2, 0x5ba0f2, 0.8);
+            this.playerButton.strokeRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 8);
+            this.playerButtonText.setScale(0.95);
+            
+            // Open progression UI
+            this.playerProgressionUI.show();
+            
+            // Reset button appearance after click
+            this.time.delayedCall(100, () => {
+                this.playerButton.clear();
+                this.playerButton.fillStyle(0x4a90e2, 0.9);
+                this.playerButton.fillRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 8);
+                this.playerButton.lineStyle(2, 0x6bb6ff, 0.8);
+                this.playerButton.strokeRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 8);
+                this.playerButtonText.setScale(1.0);
+            });
+        });
+        
+        // Store references for cleanup
+        this.playerButtonHitArea = buttonHitArea;
+        
+        console.log('GameScene: Player button created in lower right corner');
+    }
+
+    createCollectionButton() {
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
+        
+        // Button dimensions and position (next to Player button)
+        const buttonWidth = 90;
+        const buttonHeight = 40;
+        const buttonX = width - buttonWidth - 110; // 110 = 80 (player button width) + 20 (margin) + 10 (spacing)
+        const buttonY = height - buttonHeight - 20;
+        
+        // Create button background
+        this.collectionButton = this.add.graphics();
+        this.collectionButton.setDepth(1500);
+        
+        // Button styling
+        this.collectionButton.fillStyle(0xe24a90, 0.9); // Different color to distinguish from Player button
+        this.collectionButton.fillRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 8);
+        this.collectionButton.lineStyle(2, 0xff6bb6, 0.8);
+        this.collectionButton.strokeRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 8);
+        
+        // Button text
+        this.collectionButtonText = this.add.text(buttonX + buttonWidth/2, buttonY + buttonHeight/2, '🐟 Collection', {
+            fontSize: '14px',
+            fontWeight: 'bold',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5);
+        this.collectionButtonText.setDepth(1501);
+        
+        // Make button interactive
+        const buttonHitArea = this.add.rectangle(buttonX + buttonWidth/2, buttonY + buttonHeight/2, buttonWidth, buttonHeight, 0x000000, 0);
+        buttonHitArea.setDepth(1502);
+        buttonHitArea.setInteractive({ useHandCursor: true });
+        
+        // Button hover effects
+        buttonHitArea.on('pointerover', () => {
+            this.collectionButton.clear();
+            this.collectionButton.fillStyle(0xf25ba0, 0.9);
+            this.collectionButton.fillRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 8);
+            this.collectionButton.lineStyle(2, 0xff7bc6, 0.8);
+            this.collectionButton.strokeRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 8);
+            this.collectionButtonText.setScale(1.05);
+        });
+        
+        buttonHitArea.on('pointerout', () => {
+            this.collectionButton.clear();
+            this.collectionButton.fillStyle(0xe24a90, 0.9);
+            this.collectionButton.fillRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 8);
+            this.collectionButton.lineStyle(2, 0xff6bb6, 0.8);
+            this.collectionButton.strokeRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 8);
+            this.collectionButtonText.setScale(1.0);
+        });
+        
+        // Button click handler
+        buttonHitArea.on('pointerdown', () => {
+            // Visual feedback
+            this.collectionButton.clear();
+            this.collectionButton.fillStyle(0xd23a80, 0.9);
+            this.collectionButton.fillRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 8);
+            this.collectionButton.lineStyle(2, 0xf25ba0, 0.8);
+            this.collectionButton.strokeRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 8);
+            this.collectionButtonText.setScale(0.95);
+            
+            // Open fish collection UI
+            this.fishCollectionUI.show();
+            
+            // Reset button appearance after click
+            this.time.delayedCall(100, () => {
+                this.collectionButton.clear();
+                this.collectionButton.fillStyle(0xe24a90, 0.9);
+                this.collectionButton.fillRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 8);
+                this.collectionButton.lineStyle(2, 0xff6bb6, 0.8);
+                this.collectionButton.strokeRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 8);
+                this.collectionButtonText.setScale(1.0);
+            });
+        });
+        
+        // Store references for cleanup
+        this.collectionButtonHitArea = buttonHitArea;
+        
+        console.log('GameScene: Collection button created next to Player button');
     }
 } 

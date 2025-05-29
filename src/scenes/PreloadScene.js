@@ -94,6 +94,12 @@ export default class PreloadScene extends Phaser.Scene {
             graphics.fillRoundedRect(0, 0, 120, 40, 8);
             graphics.generateTexture('button', 120, 40);
             
+            // Pixel for weather particles
+            graphics.clear();
+            graphics.fillStyle(0xffffff);
+            graphics.fillRect(0, 0, 2, 2);
+            graphics.generateTexture('pixel', 2, 2);
+            
             // === ADDITIONAL FISH TYPES ===
             graphics.clear();
             graphics.fillStyle(0x228b22); // Bass (green)

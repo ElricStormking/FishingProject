@@ -101,6 +101,14 @@ export class InventoryValidator {
      * @returns {string} - Hex color code
      */
     getRarityColor(rarity) {
+        // Handle undefined, null, or invalid rarity values
+        if (rarity === undefined || rarity === null || isNaN(rarity)) {
+            rarity = 1; // Default to common rarity
+        }
+        
+        // Ensure rarity is within valid range
+        rarity = Math.max(1, Math.min(6, Math.floor(rarity)));
+        
         return this.schema.rarityColors[rarity.toString()] || this.schema.rarityColors['1'];
     }
 
@@ -110,6 +118,14 @@ export class InventoryValidator {
      * @returns {string} - Rarity name
      */
     getRarityName(rarity) {
+        // Handle undefined, null, or invalid rarity values
+        if (rarity === undefined || rarity === null || isNaN(rarity)) {
+            rarity = 1; // Default to common rarity
+        }
+        
+        // Ensure rarity is within valid range
+        rarity = Math.max(1, Math.min(6, Math.floor(rarity)));
+        
         return this.schema.rarityNames[rarity.toString()] || 'Common';
     }
 

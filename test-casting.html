@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casting MiniGame Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+</head>
+<body>
+    <div id="game-container"></div>
+    
+    <script type="module">
+        import { CastingMiniGame } from './src/scripts/CastingMiniGame.js';
+        
+        class TestScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'TestScene' });
+            }
+            
+            preload() {
+                // Create simple colored rectangles for testing
+                this.load.image('water', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
+            }
+            
+            create() {
+                console.log('TestScene: Starting casting minigame test');
+                
+                // Create a simple water background
+                this.add.rectangle(400, 300, 800, 600, 0x4488cc);
+                
+                // Add test instructions
+                this.add.text(400, 50, 'Casting MiniGame Test\nClick to start casting', {
+                    fontSize: '24px',
+                    fill: '#ffffff',
+                    align: 'center'
+                }).setOrigin(0.5);
+                
+                // Mock required scene properties
+                this.hotspotPosition = { x: 300, y: 200, radius: 100 };
+                this.rodTipPosition = { x: 400, y: 500 };
+                this.lurePosition = { x: 400, y: 530 };
+                
+                // Create mock lure
+                this.lure = this.add.circle(400, 530, 5, 0xffff00);
+                
+                // Mock updateFishingLine function
+                this.updateFishingLine = (x, y) => {
+                    console.log(`Fishing line updated to (${x}, ${y})`);
+                };
+                
+                // Start casting test on click
+                this.input.on('pointerdown', () => {
+                    this.startCastingTest();
+                });
+            }
+            
+            startCastingTest() {
+                try {
+                    console.log('Starting casting minigame test...');
+                    
+                    const playerStats = {
+                        castAccuracy: 7,
+                        castDistance: 6,
+                        castPower: 5
+                    };
+                    
+                    const targetArea = {
+                        x: 0,
+                        y: 100,
+                        width: 800,
+                        height: 400
+                    };
+                    
+                    this.castingMinigame = new CastingMiniGame(this, {});
+                    this.castingMinigame.start(playerStats, targetArea);
+                    
+                    // Listen for completion
+                    this.events.once('fishing:castComplete', (data) => {
+                        console.log('Casting completed:', data);
+                        this.add.text(400, 100, `Cast Complete!\nSuccess: ${data.success}\nAccuracy: ${data.accuracy?.toFixed(1)}%`, {
+                            fontSize: '18px',
+                            fill: '#00ff00',
+                            align: 'center',
+                            backgroundColor: '#000000',
+                            padding: { x: 10, y: 5 }
+                        }).setOrigin(0.5);
+                    });
+                    
+                } catch (error) {
+                    console.error('Error starting casting test:', error);
+                    this.add.text(400, 300, `Error: ${error.message}`, {
+                        fontSize: '18px',
+                        fill: '#ff0000',
+                        align: 'center',
+                        backgroundColor: '#000000',
+                        padding: { x: 10, y: 5 }
+                    }).setOrigin(0.5);
+                }
+            }
+        }
+        
+        const config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            parent: 'game-container',
+            scene: TestScene,
+            physics: {
+                default: 'arcade'
+            }
+        };
+        
+        const game = new Phaser.Game(config);
+    </script>
+</body>
+</html> 
