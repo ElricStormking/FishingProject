@@ -4,6 +4,7 @@
       "id": "bamboo_rod",
       "name": "Bamboo Rod",
       "rarity": 1,
+      "equipSlot": "rod",
       "stats": {
         "castAccuracy": 5,
         "tensionStability": 8,
@@ -22,6 +23,7 @@
       "id": "fiberglass_rod",
       "name": "Fiberglass Rod",
       "rarity": 2,
+      "equipSlot": "rod",
       "stats": {
         "castAccuracy": 8,
         "tensionStability": 12,
@@ -40,6 +42,7 @@
       "id": "carbon_rod",
       "name": "Carbon Rod",
       "rarity": 3,
+      "equipSlot": "rod",
       "stats": {
         "castAccuracy": 12,
         "tensionStability": 16,
@@ -58,6 +61,7 @@
       "id": "steel_rod",
       "name": "Steel Rod",
       "rarity": 4,
+      "equipSlot": "rod",
       "stats": {
         "castAccuracy": 16,
         "tensionStability": 20,
@@ -76,6 +80,7 @@
       "id": "titanium_rod",
       "name": "Titanium Rod",
       "rarity": 5,
+      "equipSlot": "rod",
       "stats": {
         "castAccuracy": 25,
         "tensionStability": 28,
@@ -94,6 +99,7 @@
       "id": "elite_bamboo_rod",
       "name": "Elite Bamboo Rod",
       "rarity": 3,
+      "equipSlot": "rod",
       "stats": {
         "castAccuracy": 15,
         "tensionStability": 18,
@@ -112,6 +118,7 @@
       "id": "elite_fiberglass_rod",
       "name": "Elite Fiberglass Rod",
       "rarity": 4,
+      "equipSlot": "rod",
       "stats": {
         "castAccuracy": 20,
         "tensionStability": 24,
@@ -130,6 +137,7 @@
       "id": "elite_carbon_rod",
       "name": "Elite Carbon Rod",
       "rarity": 5,
+      "equipSlot": "rod",
       "stats": {
         "castAccuracy": 28,
         "tensionStability": 32,
@@ -148,6 +156,7 @@
       "id": "elite_steel_rod",
       "name": "Elite Steel Rod",
       "rarity": 6,
+      "equipSlot": "rod",
       "stats": {
         "castAccuracy": 35,
         "tensionStability": 40,
@@ -166,6 +175,7 @@
       "id": "elite_titanium_rod",
       "name": "Elite Titanium Rod",
       "rarity": 6,
+      "equipSlot": "rod",
       "stats": {
         "castAccuracy": 45,
         "tensionStability": 50,
@@ -186,6 +196,7 @@
       "id": "rowboat",
       "name": "Rowboat",
       "rarity": 1,
+      "equipSlot": "boat",
       "stats": {
         "craftingEfficiency": 5,
         "autoFishingYield": 8,
@@ -206,6 +217,7 @@
       "id": "skiff",
       "name": "Skiff",
       "rarity": 2,
+      "equipSlot": "boat",
       "stats": {
         "craftingEfficiency": 8,
         "autoFishingYield": 12,
@@ -226,6 +238,7 @@
       "id": "speedboat",
       "name": "Speedboat",
       "rarity": 3,
+      "equipSlot": "boat",
       "stats": {
         "craftingEfficiency": 12,
         "autoFishingYield": 18,
@@ -246,6 +259,7 @@
       "id": "yacht",
       "name": "Yacht",
       "rarity": 4,
+      "equipSlot": "boat",
       "stats": {
         "craftingEfficiency": 18,
         "autoFishingYield": 25,
@@ -266,6 +280,7 @@
       "id": "luxury_liner",
       "name": "Luxury Liner",
       "rarity": 5,
+      "equipSlot": "boat",
       "stats": {
         "craftingEfficiency": 25,
         "autoFishingYield": 35,
@@ -286,6 +301,7 @@
       "id": "elite_rowboat",
       "name": "Elite Rowboat",
       "rarity": 3,
+      "equipSlot": "boat",
       "stats": {
         "craftingEfficiency": 10,
         "autoFishingYield": 15,
@@ -306,6 +322,7 @@
       "id": "elite_skiff",
       "name": "Elite Skiff",
       "rarity": 4,
+      "equipSlot": "boat",
       "stats": {
         "craftingEfficiency": 15,
         "autoFishingYield": 22,
@@ -326,6 +343,7 @@
       "id": "elite_speedboat",
       "name": "Elite Speedboat",
       "rarity": 5,
+      "equipSlot": "boat",
       "stats": {
         "craftingEfficiency": 20,
         "autoFishingYield": 30,
@@ -346,6 +364,7 @@
       "id": "elite_yacht",
       "name": "Elite Yacht",
       "rarity": 6,
+      "equipSlot": "boat",
       "stats": {
         "craftingEfficiency": 30,
         "autoFishingYield": 45,
@@ -366,6 +385,7 @@
       "id": "elite_luxury_liner",
       "name": "Elite Luxury Liner",
       "rarity": 6,
+      "equipSlot": "boat",
       "stats": {
         "craftingEfficiency": 40,
         "autoFishingYield": 60,
@@ -388,6 +408,7 @@
       "id": "fishers_cap",
       "name": "Fisher's Cap",
       "rarity": 1,
+      "equipSlot": "head",
       "stats": {
         "energy": 5,
         "castAccuracy": 2,
@@ -403,6 +424,7 @@
       "id": "sunglasses",
       "name": "Sunglasses",
       "rarity": 2,
+      "equipSlot": "head",
       "stats": {
         "fishDetection": 8,
         "glareReduction": 15,
@@ -418,6 +440,7 @@
       "id": "fishing_vest",
       "name": "Fishing Vest",
       "rarity": 3,
+      "equipSlot": "upper_body",
       "stats": {
         "storage": 20,
         "lureSuccess": 5,
@@ -433,6 +456,7 @@
       "id": "bikini_top",
       "name": "Bikini Top",
       "rarity": 2,
+      "equipSlot": "upper_body",
       "stats": {
         "companionAffinity": 10,
         "style": 15,
@@ -448,6 +472,7 @@
       "id": "sandals",
       "name": "Sandals",
       "rarity": 1,
+      "equipSlot": "lower_body",
       "stats": {
         "boatSpeed": 3,
         "comfort": 12,
@@ -463,6 +488,7 @@
       "id": "elite_fishers_cap",
       "name": "Elite Fisher's Cap",
       "rarity": 3,
+      "equipSlot": "head",
       "stats": {
         "energy": 12,
         "castAccuracy": 8,
@@ -479,6 +505,7 @@
       "id": "elite_sunglasses",
       "name": "Elite Sunglasses",
       "rarity": 4,
+      "equipSlot": "head",
       "stats": {
         "fishDetection": 18,
         "glareReduction": 30,
@@ -495,6 +522,7 @@
       "id": "elite_fishing_vest",
       "name": "Elite Fishing Vest",
       "rarity": 5,
+      "equipSlot": "upper_body",
       "stats": {
         "storage": 40,
         "lureSuccess": 15,
@@ -511,6 +539,7 @@
       "id": "elite_bikini_top",
       "name": "Elite Bikini Top",
       "rarity": 4,
+      "equipSlot": "upper_body",
       "stats": {
         "companionAffinity": 25,
         "style": 30,
@@ -527,6 +556,7 @@
       "id": "elite_sandals",
       "name": "Elite Sandals",
       "rarity": 3,
+      "equipSlot": "lower_body",
       "stats": {
         "boatSpeed": 8,
         "comfort": 25,
@@ -543,6 +573,7 @@
       "id": "master_fishers_cap",
       "name": "Master Fisher's Cap",
       "rarity": 5,
+      "equipSlot": "head",
       "stats": {
         "energy": 25,
         "castAccuracy": 18,
@@ -560,6 +591,7 @@
       "id": "master_sunglasses",
       "name": "Master Sunglasses",
       "rarity": 6,
+      "equipSlot": "head",
       "stats": {
         "fishDetection": 35,
         "glareReduction": 50,
@@ -577,6 +609,7 @@
       "id": "master_fishing_vest",
       "name": "Master Fishing Vest",
       "rarity": 6,
+      "equipSlot": "upper_body",
       "stats": {
         "storage": 70,
         "lureSuccess": 30,
@@ -594,6 +627,7 @@
       "id": "master_bikini_top",
       "name": "Master Bikini Top",
       "rarity": 6,
+      "equipSlot": "upper_body",
       "stats": {
         "companionAffinity": 50,
         "style": 60,
@@ -611,6 +645,7 @@
       "id": "master_sandals",
       "name": "Master Sandals",
       "rarity": 5,
+      "equipSlot": "lower_body",
       "stats": {
         "boatSpeed": 20,
         "comfort": 50,

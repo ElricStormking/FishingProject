@@ -275,258 +275,148 @@ export class EquipmentEnhancer extends EventEmitter {
     }
 
     /**
-     * Load specialization data
+     * Load specialization configuration data
      */
     loadSpecializationData() {
         try {
-            console.log('EquipmentEnhancer: Loading enhanced specialization data...');
+            console.log('EquipmentEnhancer: Loading specialization data...');
             
             const data = {
-                // Enhanced Fish type specializations
+                // Fish-specific specializations
                 fishSpecializations: {
-                    'bass_hunter': { 
+                    'bass_hunter': {
                         name: 'Bass Hunter',
-                        targetFish: ['bass', 'night_bass', 'tournament_bass', 'silver_bass'], 
-                        bonus: 25,
-                        description: 'Specialized in catching all bass species',
-                        unlockLevel: 5
+                        description: 'Specialized in catching bass species',
+                        targetFish: ['largemouth_bass', 'smallmouth_bass', 'striped_bass'],
+                        bonuses: { catchRate: 25, experienceBonus: 15 },
+                        unlockLevel: 10,
+                        materials: ['bass_essence', 'fishing_expertise']
                     },
-                    'trout_master': { 
-                        name: 'Trout Master',
-                        targetFish: ['trout', 'brook_trout', 'brown_trout', 'cutthroat_trout', 'golden_trout', 'starlight_trout', 'diamond_trout'], 
-                        bonus: 30,
-                        description: 'Expert in all trout varieties',
-                        unlockLevel: 8
+                    'deep_sea_master': {
+                        name: 'Deep Sea Master',
+                        description: 'Expert in deep water fishing',
+                        targetFish: ['tuna', 'marlin', 'swordfish'],
+                        bonuses: { catchRate: 30, tensionControl: 20, lineStrength: 15 },
+                        unlockLevel: 25,
+                        materials: ['deep_water_essence', 'oceanic_mastery']
                     },
-                    'deep_sea_expert': { 
-                        name: 'Deep Sea Expert',
-                        targetFish: ['tuna', 'shark', 'marlin', 'sailfish', 'giant_octopus', 'deep_sea_anglerfish'], 
-                        bonus: 35,
-                        description: 'Master of deep ocean creatures',
-                        unlockLevel: 12
-                    },
-                    'mystical_angler': { 
-                        name: 'Mystical Angler',
-                        targetFish: ['moonfish', 'vampire_fish', 'ghost_pike', 'cosmic_bass', 'phoenix_salmon', 'void_eel'], 
-                        bonus: 40,
-                        description: 'Hunter of supernatural fish',
-                        unlockLevel: 15
-                    },
-                    'legendary_hunter': {
-                        name: 'Legendary Hunter',
-                        targetFish: ['kraken_spawn', 'leviathan_scale', 'god_tier_fish'],
-                        bonus: 50,
-                        description: 'Slayer of legendary creatures',
-                        unlockLevel: 20
+                    'rare_fish_seeker': {
+                        name: 'Rare Fish Seeker',
+                        description: 'Increased chance for rare species',
+                        targetFish: [], // Applies to all rare fish
+                        bonuses: { rareFishChance: 40, luckBonus: 25 },
+                        unlockLevel: 30,
+                        materials: ['mystical_essence', 'fortune_stone', 'legendary_bait']
                     }
                 },
                 
-                // Enhanced Location specializations
+                // Location-specific specializations
                 locationSpecializations: {
-                    'lake_specialist': { 
-                        name: 'Lake Specialist',
-                        targetLocations: ['beginner_lake'], 
-                        bonus: 20,
-                        description: 'Expert in freshwater lake fishing',
-                        weatherBonus: { sunny: 5, cloudy: 10 },
-                        unlockLevel: 3
+                    'harbor_specialist': {
+                        name: 'Harbor Specialist',
+                        description: 'Optimized for harbor fishing',
+                        targetLocations: ['ocean_harbor'],
+                        bonuses: { castAccuracy: 20, biteRate: 15 },
+                        unlockLevel: 5,
+                        materials: ['harbor_knowledge', 'saltwater_experience']
                     },
-                    'ocean_expert': { 
-                        name: 'Ocean Expert',
-                        targetLocations: ['ocean_harbor'], 
-                        bonus: 25,
-                        description: 'Master of saltwater fishing',
-                        weatherBonus: { windy: 10, stormy: 15 },
-                        unlockLevel: 7
+                    'mountain_expert': {
+                        name: 'Mountain Expert',
+                        description: 'Master of mountain stream fishing',
+                        targetLocations: ['mountain_stream'],
+                        bonuses: { lureControl: 25, currentResistance: 30 },
+                        unlockLevel: 15,
+                        materials: ['mountain_wisdom', 'stream_mastery']
                     },
-                    'stream_master': { 
-                        name: 'Stream Master',
-                        targetLocations: ['mountain_stream'], 
-                        bonus: 30,
-                        description: 'Expert in fast-flowing waters',
-                        weatherBonus: { rainy: 15, clear: 5 },
-                        unlockLevel: 10
-                    },
-                    'mystical_guide': { 
-                        name: 'Mystical Guide',
-                        targetLocations: ['midnight_pond'], 
-                        bonus: 35,
-                        description: 'Navigator of supernatural waters',
-                        weatherBonus: { foggy: 20, mysterious: 25 },
-                        unlockLevel: 13
-                    },
-                    'champion_contender': { 
-                        name: 'Champion Contender',
-                        targetLocations: ['champions_cove'], 
-                        bonus: 40,
-                        description: 'Elite tournament competitor',
-                        weatherBonus: { perfect: 30 },
-                        unlockLevel: 18
+                    'champion_preparation': {
+                        name: 'Champion Preparation',
+                        description: 'Optimized for tournament fishing',
+                        targetLocations: ['champions_cove'],
+                        bonuses: { overallPerformance: 35, pressureResistance: 25 },
+                        unlockLevel: 40,
+                        materials: ['champion_spirit', 'tournament_medal', 'mastery_certificate']
                     }
                 },
                 
-                // Enhanced Time specializations
+                // Time-based specializations
                 timeSpecializations: {
-                    'dawn_fisher': { 
+                    'dawn_fisher': {
                         name: 'Dawn Fisher',
-                        targetTimes: ['dawn', 'early_morning'], 
-                        bonus: 25,
-                        description: 'Thrives in the early hours',
-                        temperatureBonus: { cool: 10 },
-                        unlockLevel: 4
+                        description: 'Specialized in early morning fishing',
+                        targetTimes: ['DAWN', 'EARLY_MORNING'],
+                        bonuses: { fishActivity: 30, patience: 20 },
+                        unlockLevel: 8,
+                        materials: ['dawn_essence', 'morning_dew']
                     },
-                    'night_hunter': { 
+                    'night_hunter': {
                         name: 'Night Hunter',
-                        targetTimes: ['night', 'late_night', 'midnight'], 
-                        bonus: 30,
                         description: 'Master of nocturnal fishing',
-                        temperatureBonus: { cold: 15 },
-                        unlockLevel: 8
-                    },
-                    'all_weather': { 
-                        name: 'All Weather Master',
-                        targetWeather: ['rainy', 'storm', 'snow', 'fog'], 
-                        bonus: 20,
-                        description: 'Unaffected by harsh conditions',
-                        immuneToWeatherPenalties: true,
-                        unlockLevel: 12
-                    },
-                    'perfect_timer': {
-                        name: 'Perfect Timer',
-                        targetTimes: ['golden_hour', 'blue_hour'],
-                        bonus: 35,
-                        description: 'Expert in optimal fishing windows',
-                        perfectCastBonus: 20,
-                        unlockLevel: 16
+                        targetTimes: ['NIGHT', 'LATE_NIGHT'],
+                        bonuses: { nightVision: 35, mysticalFishChance: 25 },
+                        unlockLevel: 20,
+                        materials: ['moonlight_essence', 'night_whispers']
                     }
                 },
-                
-                // NEW: Elemental Specializations
-                elementalSpecializations: {
-                    'fire_wielder': {
-                        name: 'Fire Wielder',
-                        element: 'fire',
-                        bonus: 30,
-                        description: 'Harnesses the power of flame',
-                        effects: {
-                            tensionDamage: 25,
-                            igniteChance: 15,
-                            fireResistance: true
+
+                // NEW: Advanced Specialization Trees
+                advancedSpecializations: {
+                    'legendary_angler': {
+                        name: 'Legendary Angler',
+                        description: 'Ultimate fishing mastery',
+                        prerequisites: ['bass_hunter', 'deep_sea_master', 'rare_fish_seeker'],
+                        bonuses: { 
+                            allFishBonus: 50, 
+                            legendaryFishChance: 100,
+                            masteryCrown: true 
                         },
-                        unlockLevel: 14
+                        unlockLevel: 50,
+                        materials: ['angler_crown', 'master_certificate', 'legendary_essence'],
+                        prestige: true
                     },
-                    'water_bender': {
-                        name: 'Water Bender',
-                        element: 'water',
-                        bonus: 30,
-                        description: 'Commands the flow of water',
-                        effects: {
-                            currentControl: 25,
-                            waterAffinity: true,
-                            tsunamiChance: 10
+                    'elemental_fusion': {
+                        name: 'Elemental Fusion Master',
+                        description: 'Harness all elemental powers',
+                        prerequisites: ['harbor_specialist', 'mountain_expert', 'champion_preparation'],
+                        bonuses: { 
+                            elementalMastery: 40,
+                            weatherResistance: 30,
+                            environmentalAdaptation: 35
                         },
-                        unlockLevel: 14
-                    },
-                    'earth_shaker': {
-                        name: 'Earth Shaker',
-                        element: 'earth',
-                        bonus: 30,
-                        description: 'Controls the riverbed and lakeshore',
-                        effects: {
-                            groundStability: 25,
-                            earthquakeChance: 10,
-                            rockSolid: true
-                        },
-                        unlockLevel: 14
-                    },
-                    'wind_caller': {
-                        name: 'Wind Caller',
-                        element: 'wind',
-                        bonus: 30,
-                        description: 'Summons favorable winds',
-                        effects: {
-                            castingRange: 30,
-                            windBoost: true,
-                            tornadoChance: 8
-                        },
-                        unlockLevel: 14
-                    },
-                    'shadow_master': {
-                        name: 'Shadow Master',
-                        element: 'shadow',
-                        bonus: 35,
-                        description: 'Controls darkness and stealth',
-                        effects: {
-                            stealthBonus: 40,
-                            nightVision: true,
-                            shadowStrike: 20
-                        },
-                        unlockLevel: 17
-                    },
-                    'divine_chosen': {
-                        name: 'Divine Chosen',
-                        element: 'divine',
-                        bonus: 50,
-                        description: 'Blessed by the fishing gods',
-                        effects: {
-                            divineBlessing: true,
-                            miracleChance: 15,
-                            holyLight: 25
-                        },
-                        unlockLevel: 25
+                        unlockLevel: 45,
+                        materials: ['elemental_core', 'fusion_crystal', 'mastery_stone'],
+                        prestige: true
                     }
                 },
-                
-                // NEW: Mastery Specializations
-                masterySpecializations: {
-                    'equipment_savant': {
-                        name: 'Equipment Savant',
-                        description: 'Master of all equipment types',
-                        effects: {
-                            enhancementSuccessBonus: 15,
-                            upgradeDiscountPercent: 10,
-                            equipmentDurabilityBonus: 25
+
+                // NEW: Prestige Specializations
+                prestigeSpecializations: {
+                    'transcendent_fisher': {
+                        name: 'Transcendent Fisher',
+                        description: 'Beyond mortal fishing limits',
+                        prerequisites: ['legendary_angler', 'elemental_fusion'],
+                        bonuses: {
+                            transcendentPower: 100,
+                            realityBend: 25,
+                            infinitePotential: true
                         },
-                        requirements: { totalUpgradeLevel: 50 },
-                        unlockLevel: 20
-                    },
-                    'set_collector': {
-                        name: 'Set Collector',
-                        description: 'Bonus for collecting multiple sets',
-                        effects: {
-                            setBonusMultiplier: 1.2,
-                            setDiscoveryBonus: 30,
-                            allSetBonusActive: true
-                        },
-                        requirements: { completedSets: 3 },
-                        unlockLevel: 22
-                    },
-                    'enhancement_master': {
-                        name: 'Enhancement Master',
-                        description: 'Supreme enhancement capabilities',
-                        effects: {
-                            maxEnhancementIncrease: 2,
-                            enhancementFailureImmunity: true,
-                            enhancementBonusMultiplier: 1.5
-                        },
-                        requirements: { totalEnhancementLevel: 100 },
-                        unlockLevel: 30
+                        unlockLevel: 100,
+                        materials: ['transcendence_orb', 'infinity_essence', 'cosmic_fragment'],
+                        prestige: 2 // Second prestige tier
                     }
                 }
             };
             
-            console.log('EquipmentEnhancer: Enhanced specialization data loaded successfully');
+            console.log('EquipmentEnhancer: Specialization data structure created successfully');
             return data;
             
         } catch (error) {
             console.error('EquipmentEnhancer: Error in loadSpecializationData:', error);
-            // Return minimal fallback data
             return {
                 fishSpecializations: {},
                 locationSpecializations: {},
                 timeSpecializations: {},
-                elementalSpecializations: {},
-                masterySpecializations: {}
+                advancedSpecializations: {},
+                prestigeSpecializations: {}
             };
         }
     }
@@ -1281,25 +1171,385 @@ export class EquipmentEnhancer extends EventEmitter {
      * NEW: Calculate overall equipment power score
      */
     calculateOverallPower(analysis) {
+        const baseStats = analysis.baseStats;
+        const setBonuses = analysis.setBonuses;
+        const elementalBonuses = analysis.elementalBonuses;
+
         let power = 0;
+        Object.values(baseStats).forEach(stat => {
+            if (typeof stat === 'number') {
+                power += stat;
+            }
+        });
 
-        // Base stats contribution
-        power += Object.values(analysis.baseStats).reduce((sum, stat) => sum + stat, 0);
+        // Add set bonus power
+        Object.values(setBonuses).forEach(bonus => {
+            power += bonus * 2; // Set bonuses count double
+        });
 
-        // Elemental bonuses contribution
-        power += Object.values(analysis.elementalBonuses).reduce((sum, bonus) => sum + bonus, 0) * 2;
-
-        // Specialization bonuses contribution
-        power += analysis.specializations.totalBonus * 3;
-
-        // Set bonuses contribution
-        power += Object.keys(analysis.setBonuses.activeSets).length * 50;
-
-        // Enhancement and upgrade levels
-        power += analysis.totalUpgrades * 10;
-        power += analysis.totalEnhancements * 15;
+        // Add elemental bonus power
+        Object.values(elementalBonuses).forEach(bonus => {
+            power += bonus * 1.5; // Elemental bonuses count 1.5x
+        });
 
         return Math.floor(power);
+    }
+
+    /**
+     * NEW: Helper methods for legendary enhancement system
+     */
+    getLegendaryMaterialRequirements(item) {
+        const level = item.legendaryEnhancement?.level || 0;
+        return {
+            'divine_essence': level + 1,
+            'cosmic_fragment': Math.floor((level + 1) / 2),
+            'transcendence_orb': level >= 5 ? 1 : 0
+        };
+    }
+
+    checkLegendaryMaterials(materials, requirements) {
+        // Simplified check - in real implementation would check inventory
+        return materials.length >= Object.keys(requirements).length;
+    }
+
+    consumeLegendaryMaterials(materials) {
+        console.log('EquipmentEnhancer: Consuming legendary materials:', materials);
+        // In real implementation, remove from inventory
+    }
+
+    calculateLegendaryBonuses(item) {
+        const level = item.legendaryEnhancement?.level || 0;
+        return {
+            allStatsBonus: level * 20,
+            specialAbilityPower: level * 15,
+            transcendentMultiplier: 1 + (level * 0.1)
+        };
+    }
+
+    applyLegendaryBonuses(item, bonuses) {
+        if (!item.legendaryBonuses) {
+            item.legendaryBonuses = {};
+        }
+        
+        Object.assign(item.legendaryBonuses, bonuses);
+        console.log('EquipmentEnhancer: Applied legendary bonuses:', bonuses);
+    }
+
+    /**
+     * NEW: Helper methods for combination enhancement system
+     */
+    validateCombinationItems(items, recipe) {
+        if (!items || !recipe) return false;
+        
+        // Check if all required items are present
+        const requiredTypes = recipe.requiredItemTypes || [];
+        const providedTypes = items.map(item => item.category);
+        
+        return requiredTypes.every(type => providedTypes.includes(type));
+    }
+
+    checkCombinationMaterials(materials) {
+        // Simplified check - in real implementation would check inventory
+        console.log('EquipmentEnhancer: Checking combination materials:', materials);
+        return true; // For demo purposes
+    }
+
+    consumeCombinationMaterials(materials) {
+        console.log('EquipmentEnhancer: Consuming combination materials:', materials);
+        // In real implementation, remove from inventory
+    }
+
+    applyCombinationEffect(items, recipe) {
+        console.log('EquipmentEnhancer: Applying combination effect:', recipe.name);
+        
+        // Apply the combination effect to all items
+        items.forEach(item => {
+            if (!item.combinationBonuses) {
+                item.combinationBonuses = {};
+            }
+            
+            Object.assign(item.combinationBonuses, recipe.bonuses);
+        });
+
+        return {
+            name: recipe.name,
+            effect: recipe.effect,
+            bonuses: recipe.bonuses,
+            affectedItems: items.length
+        };
+    }
+
+    /**
+     * NEW: Helper methods for prestige system
+     */
+    calculatePrestigeReset(item) {
+        // Calculate what gets reset and what gets retained
+        return {
+            resetLevels: {
+                enhancement: Math.floor((item.enhancementLevel || 0) * 0.3), // Keep 30%
+                upgrades: Math.floor((item.advancedUpgrades?.totalLevel || 0) * 0.5) // Keep 50%
+            },
+            retainedBonuses: {
+                legendary: true,
+                specializations: true,
+                milestones: true
+            }
+        };
+    }
+
+    applyPrestigeReset(item, prestigeData) {
+        console.log('EquipmentEnhancer: Applying prestige reset:', prestigeData);
+        
+        // Reset enhancement level (keep 30%)
+        if (item.enhancementLevel) {
+            item.enhancementLevel = prestigeData.resetLevels.enhancement;
+        }
+        
+        // Reset upgrade levels (keep 50%)
+        if (item.advancedUpgrades) {
+            const oldTotal = item.advancedUpgrades.totalLevel;
+            item.advancedUpgrades.totalLevel = prestigeData.resetLevels.upgrades;
+            
+            // Proportionally reduce individual path levels
+            const retainRatio = prestigeData.resetLevels.upgrades / oldTotal;
+            Object.keys(item.advancedUpgrades.paths).forEach(path => {
+                item.advancedUpgrades.paths[path] = Math.floor(
+                    item.advancedUpgrades.paths[path] * retainRatio
+                );
+            });
+        }
+        
+        // Mark as prestiged
+        if (!item.prestigeHistory) {
+            item.prestigeHistory = [];
+        }
+        item.prestigeHistory.push({
+            timestamp: Date.now(),
+            oldLevels: {
+                enhancement: item.enhancementLevel,
+                totalUpgrade: item.advancedUpgrades?.totalLevel || 0
+            }
+        });
+    }
+
+    /**
+     * NEW: Get combination recipes available to player
+     */
+    getAvailableCombinationRecipes() {
+        return {
+            'synergy_boost': {
+                name: 'Synergy Boost',
+                description: 'Enhance equipment synergy between items',
+                requiredItemTypes: ['rod', 'lure'],
+                materials: ['synergy_crystal', 'harmony_essence'],
+                bonuses: {
+                    synergyBonus: 25,
+                    combinedEffectiveness: 20
+                },
+                effect: 'Enhanced coordination between rod and lure'
+            },
+            'elemental_fusion': {
+                name: 'Elemental Fusion',
+                description: 'Fuse elemental powers across equipment',
+                requiredItemTypes: ['rod', 'lure', 'boat'],
+                materials: ['fusion_core', 'elemental_catalyst', 'harmony_orb'],
+                bonuses: {
+                    elementalPower: 40,
+                    fusionMultiplier: 1.3,
+                    crossElementalBonus: 30
+                },
+                effect: 'All equipment shares elemental powers'
+            },
+            'master_set_awakening': {
+                name: 'Master Set Awakening',
+                description: 'Awaken the true power of complete equipment sets',
+                requiredItemTypes: ['rod', 'lure', 'boat', 'accessory'],
+                materials: ['awakening_stone', 'master_essence', 'divine_catalyst'],
+                bonuses: {
+                    setAwakening: true,
+                    masterBonus: 50,
+                    awakenedPower: 100
+                },
+                effect: 'Unlocks hidden set abilities and transcendent bonuses'
+            }
+        };
+    }
+
+    /**
+     * NEW: Get upgrade path progression tree
+     */
+    getUpgradePathTree(category) {
+        const trees = {
+            'rod': {
+                'power_line': {
+                    name: 'Power Line',
+                    maxLevel: 25,
+                    branches: {
+                        5: ['devastating_power'],
+                        10: ['earth_shaker'],
+                        15: ['reality_breaker'],
+                        20: ['omnipotent_force']
+                    }
+                },
+                'precision_line': {
+                    name: 'Precision Line',
+                    maxLevel: 25,
+                    branches: {
+                        5: ['eagle_eye'],
+                        10: ['perfect_aim'],
+                        15: ['temporal_precision'],
+                        20: ['divine_accuracy']
+                    }
+                },
+                'master_line': {
+                    name: 'Master Line',
+                    maxLevel: 30,
+                    branches: {
+                        10: ['master_techniques'],
+                        20: ['legendary_mastery'],
+                        30: ['transcendent_expertise']
+                    }
+                }
+            },
+            'lure': {
+                'attraction_line': {
+                    name: 'Attraction Line',
+                    maxLevel: 25,
+                    branches: {
+                        5: ['magnetic_presence'],
+                        10: ['hypnotic_aura'],
+                        15: ['dimensional_call'],
+                        20: ['universal_attraction']
+                    }
+                },
+                'effectiveness_line': {
+                    name: 'Effectiveness Line',
+                    maxLevel: 25,
+                    branches: {
+                        5: ['enhanced_durability'],
+                        10: ['special_effects'],
+                        15: ['reality_manipulation'],
+                        20: ['perfect_effectiveness']
+                    }
+                }
+            },
+            'boat': {
+                'speed_line': {
+                    name: 'Speed Line',
+                    maxLevel: 20,
+                    branches: {
+                        5: ['swift_current'],
+                        10: ['wind_walker'],
+                        15: ['space_folder'],
+                        20: ['time_traveler']
+                    }
+                },
+                'storage_line': {
+                    name: 'Storage Line',
+                    maxLevel: 20,
+                    branches: {
+                        5: ['expanded_holds'],
+                        10: ['dimensional_storage'],
+                        15: ['infinite_capacity'],
+                        20: ['reality_warehouse']
+                    }
+                }
+            }
+        };
+
+        return trees[category] || {};
+    }
+
+    /**
+     * NEW: Get enhancement milestone rewards
+     */
+    getEnhancementMilestones() {
+        return {
+            10: {
+                name: 'Novice Enhancer',
+                rewards: ['enhancement_efficiency_1', 'basic_protection'],
+                bonuses: { enhancementSuccessRate: 5 }
+            },
+            25: {
+                name: 'Skilled Enhancer',
+                rewards: ['enhancement_efficiency_2', 'advanced_protection'],
+                bonuses: { enhancementSuccessRate: 10, enhancementBonusMultiplier: 1.1 }
+            },
+            50: {
+                name: 'Master Enhancer',
+                rewards: ['enhancement_mastery', 'legendary_protection'],
+                bonuses: { enhancementSuccessRate: 15, enhancementBonusMultiplier: 1.2 }
+            },
+            100: {
+                name: 'Grandmaster Enhancer',
+                rewards: ['transcendent_enhancement', 'divine_protection'],
+                bonuses: { enhancementSuccessRate: 25, enhancementBonusMultiplier: 1.5, noFailurePenalty: true }
+            },
+            200: {
+                name: 'Legendary Enhancer',
+                rewards: ['reality_enhancement', 'omnipotent_protection'],
+                bonuses: { enhancementSuccessRate: 50, enhancementBonusMultiplier: 2.0, guaranteedSuccess: true }
+            }
+        };
+    }
+
+    /**
+     * NEW: Calculate total progression score
+     */
+    calculateProgressionScore() {
+        const inventoryManager = this.getInventoryManager();
+        if (!inventoryManager) return 0;
+
+        let score = 0;
+
+        // Get all equipped items
+        const categories = ['rods', 'lures', 'boats', 'accessories'];
+        categories.forEach(category => {
+            const items = inventoryManager.getCategory(category) || [];
+            items.forEach(item => {
+                if (item.equipped) {
+                    // Base enhancement score
+                    score += (item.enhancementLevel || 0) * 10;
+                    
+                    // Advanced upgrade score
+                    score += (item.advancedUpgrades?.totalLevel || 0) * 5;
+                    
+                    // Legendary enhancement score
+                    score += (item.legendaryEnhancement?.level || 0) * 50;
+                    
+                    // Prestige score
+                    score += (item.prestige?.totalLevels || 0) * 100;
+                    
+                    // Specialization score
+                    const specs = item.unlockedSpecializations || [];
+                    score += specs.length * 25;
+                }
+            });
+        });
+
+        return score;
+    }
+
+    /**
+     * NEW: Get prestige benefits preview
+     */
+    getPrestigeBenefits(item) {
+        const currentPrestige = item.prestige?.level || 0;
+        const nextPrestige = currentPrestige + 1;
+        
+        const currentBonuses = this.calculateTranscendentBonuses(currentPrestige);
+        const nextBonuses = this.calculateTranscendentBonuses(nextPrestige);
+        
+        return {
+            current: currentBonuses,
+            next: nextBonuses,
+            improvements: {
+                allStatsMultiplier: nextBonuses.allStatsMultiplier - currentBonuses.allStatsMultiplier,
+                experienceMultiplier: nextBonuses.experienceMultiplier - currentBonuses.experienceMultiplier,
+                rareFishMultiplier: nextBonuses.rareFishMultiplier - currentBonuses.rareFishMultiplier,
+                materialEfficiency: nextBonuses.materialEfficiency - currentBonuses.materialEfficiency
+            }
+        };
     }
 }
 

@@ -16,131 +16,142 @@ export default class BoatMenuScene extends Phaser.Scene {
         super({ key: 'BoatMenuScene' });
     }
 
-    create() {
+    create(data) {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
-
+        
+        console.log('BoatMenuScene: Created with data:', data);
+        
+        // Handle return from fishing session
+        if (data && data.returnedFromFishing) {
+            console.log('BoatMenuScene: Returned from fishing session');
+            
+            // Handle error recovery mode
+            if (data.errorRecovery) {
+                console.log('BoatMenuScene: Running in error recovery mode');
+                this.showErrorMessage('Returned from fishing due to an error. Game state may have been restored.');
+            }
+            
+            // Process fishing session data if available
+            if (data.fishingSessionData) {
+                console.log('BoatMenuScene: Processing fishing session data:', data.fishingSessionData);
+                this.processFishingSessionResults(data.fishingSessionData);
+            }
+        }
+        
+        // Get game state and managers with error handling
         try {
-            // Initialize LoadingStateManager first
-            try {
-                this.loadingStateManager = new LoadingStateManager(this);
-                console.log('BoatMenuScene: LoadingStateManager initialized successfully');
-            } catch (error) {
-                console.error('BoatMenuScene: Error initializing LoadingStateManager:', error);
-                this.loadingStateManager = null;
-            }
-
-            // Get instances
             this.gameState = GameState.getInstance();
-            this.sceneManager = SceneManager.getInstance();
-            this.tournamentManager = new TournamentManager(this.gameState);
-
-            // Initialize player stats to ensure consistency
-            this.initializePlayerStats();
-
-            // Emit tournament manager ready event for enhanced achievement system
-            try {
-                const gameScene = this.scene.get('GameScene');
-                if (gameScene && gameScene.events) {
-                    gameScene.events.emit('tournamentManagerReady', this.tournamentManager);
-                    console.log('BoatMenuScene: Tournament manager ready event emitted to GameScene');
-                } else {
-                    console.log('BoatMenuScene: GameScene not available for tournament manager event');
-                }
-            } catch (error) {
-                console.warn('BoatMenuScene: Error emitting tournament manager event:', error);
+            
+            // Validate game state
+            if (!this.gameState) {
+                throw new Error('Failed to get GameState instance');
             }
-
-            // Initialize audio for this scene
+            
+            console.log('BoatMenuScene: GameState obtained successfully');
+            
+            // Initialize player stats to prevent undefined errors
+            this.initializePlayerStats();
+            
+            // Restart auto-save if it was stopped
+            this.gameState.startAutoSave();
+            
+        } catch (gameStateError) {
+            console.error('BoatMenuScene: Critical error with GameState:', gameStateError);
+            this.showErrorMessage('Game state error: ' + gameStateError.message);
+            
+            // Try to recover by reloading the page as last resort
+            this.time.delayedCall(3000, () => {
+                console.log('BoatMenuScene: Attempting page reload for recovery');
+                window.location.reload();
+            });
+            return;
+        }
+        
+        // Initialize managers with error handling
+        try {
+            this.sceneManager = SceneManager.getInstance();
+            this.sceneManager.setCurrentScene(this);
+            console.log('BoatMenuScene: SceneManager initialized');
+        } catch (sceneManagerError) {
+            console.error('BoatMenuScene: Error initializing SceneManager:', sceneManagerError);
+            this.sceneManager = null;
+        }
+        
+        try {
+            this.gameLoop = new GameLoop(this);
+            console.log('BoatMenuScene: GameLoop initialized');
+        } catch (gameLoopError) {
+            console.error('BoatMenuScene: Error initializing GameLoop:', gameLoopError);
+            this.gameLoop = null;
+        }
+        
+        try {
+            this.tournamentManager = new TournamentManager(this.gameState);
+            console.log('BoatMenuScene: TournamentManager initialized');
+            
+            // Emit tournament manager ready event for achievement system
+            this.events.emit('tournamentManagerReady', this.tournamentManager);
+        } catch (tournamentError) {
+            console.error('BoatMenuScene: Error initializing TournamentManager:', tournamentError);
+            this.tournamentManager = null;
+        }
+        
+        // Initialize audio manager
+        try {
             this.audioManager = this.gameState.getAudioManager(this);
             if (this.audioManager) {
                 this.audioManager.setSceneAudio('BoatMenuScene');
-            } else {
-                console.warn('BoatMenuScene: Audio manager not available');
+                console.log('BoatMenuScene: AudioManager initialized');
             }
-
-            // Background
-            this.createBackground(width, height);
-            
-            // UI Elements
-            this.createStatusDisplay(width, height);
-            this.createActionButtons(width, height);
-            this.createProgressDisplay(width, height);
-            
-            // Create UI components with error handling
-            try {
-                this.playerProgressionUI = new PlayerProgressionUI(this, 50, 50, 900, 700);
-                console.log('BoatMenuScene: PlayerProgressionUI created successfully');
-            } catch (error) {
-                console.error('BoatMenuScene: Error creating PlayerProgressionUI:', error);
-                this.playerProgressionUI = null;
-            }
-            
-            try {
-                this.fishCollectionUI = new FishCollectionUI(this, 50, 50, 900, 650);
-                console.log('BoatMenuScene: FishCollectionUI created successfully');
-            } catch (error) {
-                console.error('BoatMenuScene: Error creating FishCollectionUI:', error);
-                this.fishCollectionUI = null;
-            }
-            
-            try {
-                this.mapSelectionUI = new MapSelectionUI(this, this.gameState.locationManager, this.gameState);
-                console.log('BoatMenuScene: MapSelectionUI created successfully');
-            } catch (error) {
-                console.error('BoatMenuScene: Error creating MapSelectionUI:', error);
-                this.mapSelectionUI = null;
-            }
-            
-            try {
-                this.shopUI = new ShopUI(this, 50, 50, 900, 600);
-                console.log('BoatMenuScene: ShopUI created successfully');
-            } catch (error) {
-                console.error('BoatMenuScene: Error creating ShopUI:', error);
-                this.shopUI = null;
-            }
-            
-            // Create Player button in lower right corner
-            this.createPlayerButton(width, height);
-            
-            // Create Collection button next to Player button
-            this.createCollectionButton(width, height);
-            
-            // Event listeners
-            this.setupEventListeners();
-            
-            // Initialize game loop
-            try {
-                this.gameLoop = new GameLoop(this);
-                if (this.gameLoop) {
-                    this.gameLoop.startGameLoop();
-                    console.log('BoatMenuScene: GameLoop started successfully');
-                } else {
-                    console.error('BoatMenuScene: GameLoop is null after creation');
-                }
-            } catch (error) {
-                console.error('BoatMenuScene: Error creating or starting GameLoop:', error);
-                this.gameLoop = null;
-            }
-            
-            // Initialize UI with current game state
-            this.updateStatus();
-            
-            console.log('BoatMenuScene: Central game loop hub created with audio integration');
-        } catch (error) {
-            console.error('BoatMenuScene: Critical error during scene creation:', error);
-            // Try to show an error message to the user
-            this.add.text(width / 2, height / 2, 'Error loading Boat Menu\nCheck console for details', {
-                fontSize: '24px',
-                fill: '#ff0000',
-                align: 'center',
-                backgroundColor: '#000000',
-                padding: { x: 20, y: 10 }
-            }).setOrigin(0.5);
+        } catch (audioError) {
+            console.error('BoatMenuScene: Error initializing AudioManager:', audioError);
+            this.audioManager = null;
         }
+        
+        // Initialize LoadingStateManager with error handling
+        try {
+            this.loadingStateManager = new LoadingStateManager(this);
+            console.log('BoatMenuScene: LoadingStateManager initialized');
+        } catch (loadingError) {
+            console.error('BoatMenuScene: Error initializing LoadingStateManager:', loadingError);
+            this.loadingStateManager = null;
+        }
+        
+        // Create scene visuals
+        this.createSceneBackground(width, height);
+        
+        // UI Elements
+        this.createStatusDisplay(width, height);
+        this.createActionButtons(width, height);
+        this.createProgressDisplay(width, height);
+        
+        // Create UI components with enhanced error handling
+        this.createUIComponents();
+        
+        // Setup event listeners
+        this.setupEventListeners();
+        
+        // Create action buttons
+        this.createPlayerButton(width, height);
+        this.createCollectionButton(width, height);
+        
+        // Initialize game loop
+        if (this.gameLoop) {
+            this.gameLoop.enterBoatMenu();
+        }
+        
+        // Show welcome back message if returning from fishing
+        if (data && data.returnedFromFishing && !data.errorRecovery) {
+            this.time.delayedCall(1000, () => {
+                this.showSuccessMessage('Welcome back from your fishing trip!');
+            });
+        }
+        
+        console.log('BoatMenuScene: Scene creation completed');
     }
 
-    createBackground(width, height) {
+    createSceneBackground(width, height) {
         // Create a more dynamic ocean background with multiple layers
         // Deep ocean layer
         const deepOcean = this.add.graphics();
@@ -1836,6 +1847,96 @@ export default class BoatMenuScene extends Phaser.Scene {
             
         } catch (error) {
             console.error('BoatMenuScene: Error initializing player stats:', error);
+        }
+    }
+
+    createUIComponents() {
+        console.log('BoatMenuScene: Creating UI components');
+        
+        // Create UI components with error handling
+        try {
+            this.playerProgressionUI = new PlayerProgressionUI(this, 50, 50, 900, 700);
+            console.log('BoatMenuScene: PlayerProgressionUI created successfully');
+        } catch (error) {
+            console.error('BoatMenuScene: Error creating PlayerProgressionUI:', error);
+            this.playerProgressionUI = null;
+        }
+        
+        try {
+            this.fishCollectionUI = new FishCollectionUI(this, 50, 50, 900, 650);
+            console.log('BoatMenuScene: FishCollectionUI created successfully');
+        } catch (error) {
+            console.error('BoatMenuScene: Error creating FishCollectionUI:', error);
+            this.fishCollectionUI = null;
+        }
+        
+        try {
+            this.mapSelectionUI = new MapSelectionUI(this, this.gameState.locationManager, this.gameState);
+            console.log('BoatMenuScene: MapSelectionUI created successfully');
+        } catch (error) {
+            console.error('BoatMenuScene: Error creating MapSelectionUI:', error);
+            this.mapSelectionUI = null;
+        }
+        
+        try {
+            this.shopUI = new ShopUI(this, 50, 50, 900, 600);
+            console.log('BoatMenuScene: ShopUI created successfully');
+        } catch (error) {
+            console.error('BoatMenuScene: Error creating ShopUI:', error);
+            this.shopUI = null;
+        }
+        
+        try {
+            this.inventoryUI = new InventoryUI(this, 100, 50, 800, 600);
+            console.log('BoatMenuScene: InventoryUI created successfully');
+        } catch (error) {
+            console.error('BoatMenuScene: Error creating InventoryUI:', error);
+            this.inventoryUI = null;
+        }
+        
+        try {
+            this.craftingUI = new CraftingUI(this, 50, 50, 900, 600);
+            console.log('BoatMenuScene: CraftingUI created successfully');
+        } catch (error) {
+            console.error('BoatMenuScene: Error creating CraftingUI:', error);
+            this.craftingUI = null;
+        }
+        
+        console.log('BoatMenuScene: UI components creation completed');
+    }
+    
+    processFishingSessionResults(sessionData) {
+        try {
+            console.log('BoatMenuScene: Processing fishing session results:', sessionData);
+            
+            if (!sessionData) {
+                console.warn('BoatMenuScene: No session data to process');
+                return;
+            }
+            
+            // Calculate session duration
+            const duration = sessionData.duration || (sessionData.endTime - sessionData.startTime);
+            const durationMinutes = Math.floor(duration / (1000 * 60));
+            
+            // Show session summary
+            const summaryMessage = `Fishing session completed!\n` +
+                                 `Location: ${sessionData.location}\n` +
+                                 `Duration: ${durationMinutes} minutes\n` +
+                                 `Mode: ${sessionData.mode}`;
+            
+            this.time.delayedCall(1500, () => {
+                this.showInfoMessage(summaryMessage);
+            });
+            
+            // Clear the current fishing session from game state
+            if (this.gameState) {
+                this.gameState.currentFishingSession = null;
+            }
+            
+            console.log('BoatMenuScene: Fishing session results processed successfully');
+            
+        } catch (error) {
+            console.error('BoatMenuScene: Error processing fishing session results:', error);
         }
     }
 }

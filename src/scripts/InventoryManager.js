@@ -6,12 +6,162 @@ export class InventoryManager {
         this.gameState = gameState;
         this.validator = new InventoryValidator();
         this.eventListeners = {};
+        this.equipSlotFixed = false; // Flag to track if equipSlots have been fixed
+        
+        // Initialize inventory structure if needed
+        this.initializeInventory();
         
         // Initialize player stats for consumables if they don't exist
         this.initializePlayerStats();
         
         // Set up periodic cleanup of expired boosts
         this.setupBoostCleanup();
+    }
+
+    /**
+     * Initialize inventory structure with all expected categories
+     */
+    initializeInventory() {
+        try {
+            if (!this.gameState.inventory) {
+                this.gameState.inventory = {};
+            }
+
+            // Ensure all expected categories exist
+            const categories = ['rods', 'lures', 'boats', 'upgrades', 'fish', 'consumables', 'materials', 'clothing', 'bikini_assistants'];
+            
+            categories.forEach(category => {
+                if (!this.gameState.inventory[category]) {
+                    this.gameState.inventory[category] = [];
+                    console.log(`InventoryManager: Created empty category: ${category}`);
+                }
+            });
+
+            // Fix existing items that might be missing equipSlot
+            this.fixMissingEquipSlots();
+
+            // Add sample items if inventory is completely empty
+            const totalItems = Object.values(this.gameState.inventory)
+                .reduce((total, categoryItems) => total + (categoryItems ? categoryItems.length : 0), 0);
+
+            if (totalItems === 0) {
+                console.log('InventoryManager: Inventory is empty, adding sample items');
+                this.addSampleItems();
+            }
+
+            console.log('InventoryManager: Inventory structure initialized');
+        } catch (error) {
+            console.error('InventoryManager: Error initializing inventory:', error);
+        }
+    }
+
+    /**
+     * Fix existing items that may be missing equipSlot property
+     */
+    fixMissingEquipSlots(force = false) {
+        try {
+            // Skip if already fixed to avoid repeated execution (unless forced)
+            if (this.equipSlotFixed && !force) {
+                return;
+            }
+            
+            console.log('InventoryManager: Fixing missing equipSlot properties...');
+
+            // Fix rods
+            if (this.gameState.inventory.rods) {
+                this.gameState.inventory.rods.forEach(item => {
+                    if (!item.equipSlot) {
+                        item.equipSlot = 'rod';
+                        console.log(`InventoryManager: Fixed rod ${item.name} - added equipSlot: rod`);
+                    }
+                });
+            }
+
+            // Fix lures
+            if (this.gameState.inventory.lures) {
+                this.gameState.inventory.lures.forEach(item => {
+                    if (!item.equipSlot) {
+                        item.equipSlot = 'lure';
+                        console.log(`InventoryManager: Fixed lure ${item.name} - added equipSlot: lure`);
+                    }
+                });
+            }
+
+            // Fix boats
+            if (this.gameState.inventory.boats) {
+                this.gameState.inventory.boats.forEach(item => {
+                    if (!item.equipSlot) {
+                        item.equipSlot = 'boat';
+                        console.log(`InventoryManager: Fixed boat ${item.name} - added equipSlot: boat`);
+                    }
+                });
+            }
+
+            // Fix clothing items with comprehensive matching
+            if (this.gameState.inventory.clothing) {
+                this.gameState.inventory.clothing.forEach(item => {
+                    if (!item.equipSlot) {
+                        // Try to determine slot from item name/type
+                        const name = (item.name || '').toLowerCase();
+                        console.log(`InventoryManager: Fixing clothing item: "${item.name}" (lowercase: "${name}")`);
+                        
+                        // Head equipment patterns
+                        if (name.includes('cap') || name.includes('hat') || name.includes('crown') || 
+                            name.includes('sunglass') || name.includes('sunglasses') || name.includes('helmet') || 
+                            name.includes('headband') || name.includes('visor') || name.includes('beanie') ||
+                            name.includes('glasses') || name.includes('goggles')) {
+                            item.equipSlot = 'head';
+                            console.log(`InventoryManager: Fixed head clothing ${item.name} - added equipSlot: head`);
+                        } 
+                        // Upper body equipment patterns
+                        else if (name.includes('vest') || name.includes('shirt') || name.includes('jacket') || 
+                                 name.includes('bikini') || name.includes('top') || name.includes('sweater') ||
+                                 name.includes('hoodie') || name.includes('coat') || name.includes('tank')) {
+                            item.equipSlot = 'upper_body';
+                            console.log(`InventoryManager: Fixed upper_body clothing ${item.name} - added equipSlot: upper_body`);
+                        } 
+                        // Lower body equipment patterns
+                        else if (name.includes('shorts') || name.includes('pants') || name.includes('sandals') || 
+                                 name.includes('waders') || name.includes('shoes') || name.includes('boots') ||
+                                 name.includes('socks') || name.includes('leggings') || name.includes('skirt')) {
+                            item.equipSlot = 'lower_body';
+                            console.log(`InventoryManager: Fixed lower_body clothing ${item.name} - added equipSlot: lower_body`);
+                        } 
+                        // Default fallback for unknown clothing
+                        else {
+                            item.equipSlot = 'upper_body';
+                            console.log(`InventoryManager: Fixed unknown clothing ${item.name} - defaulted to equipSlot: upper_body`);
+                        }
+                    } else {
+                        console.log(`InventoryManager: Clothing item ${item.name} already has equipSlot: ${item.equipSlot}`);
+                    }
+                });
+            }
+
+            // Fix bikini assistants
+            if (this.gameState.inventory.bikini_assistants) {
+                this.gameState.inventory.bikini_assistants.forEach(item => {
+                    if (!item.equipSlot) {
+                        item.equipSlot = 'bikini_assistant';
+                        console.log(`InventoryManager: Fixed assistant ${item.name} - added equipSlot: bikini_assistant`);
+                    }
+                });
+            }
+
+            // Skip fish items - they don't need equipSlot properties
+            // Fish are inventory items, not equipment
+            
+            // Skip consumables, materials, and upgrades - they don't need equipSlot properties either
+            
+            // Mark as fixed to avoid repeated execution (unless this was a forced run)
+            if (!force) {
+                this.equipSlotFixed = true;
+            }
+            console.log('InventoryManager: Finished fixing equipSlot properties');
+            
+        } catch (error) {
+            console.error('InventoryManager: Error fixing equipSlots:', error);
+        }
     }
 
     /**
@@ -290,9 +440,9 @@ export class InventoryManager {
             }
 
             // For clothing, unequip other items in the same slot
-            if (category === 'clothing' && item.slotType) {
+            if (category === 'clothing' && item.equipSlot) {
                 items.forEach(otherItem => {
-                    if (otherItem.equipped && otherItem.slotType === item.slotType && otherItem.id !== itemId) {
+                    if (otherItem.equipped && otherItem.equipSlot === item.equipSlot && otherItem.id !== itemId) {
                         otherItem.equipped = false;
                         this.emit('itemUnequipped', { category, item: otherItem });
                     }
@@ -375,6 +525,11 @@ export class InventoryManager {
      * @returns {object} - Equipped items by category
      */
     getEquippedItems(category = null) {
+        // Ensure equipSlots are fixed before checking equipped items (only once)
+        if (!this.equipSlotFixed) {
+            this.fixMissingEquipSlots();
+        }
+        
         const equipped = {};
         
         const categories = category ? [category] : Object.keys(this.gameState.inventory);
@@ -906,6 +1061,7 @@ export class InventoryManager {
                 id: 'basic_rod',
                 name: 'Basic Fishing Rod',
                 rarity: 1,
+                equipSlot: 'rod',
                 stats: { castAccuracy: 5, tensionStability: 3 },
                 description: 'A simple fishing rod for beginners',
                 unlockLevel: 1
@@ -914,6 +1070,7 @@ export class InventoryManager {
                 id: 'advanced_rod',
                 name: 'Advanced Carbon Rod',
                 rarity: 3,
+                equipSlot: 'rod',
                 stats: { castAccuracy: 15, tensionStability: 12, rareFishChance: 5 },
                 description: 'High-quality carbon fiber rod',
                 unlockLevel: 5
@@ -922,6 +1079,7 @@ export class InventoryManager {
                 id: 'pro_rod',
                 name: 'Professional Rod',
                 rarity: 4,
+                equipSlot: 'rod',
                 stats: { castAccuracy: 25, tensionStability: 20, rareFishChance: 10 },
                 description: 'Professional grade fishing rod with premium components',
                 unlockLevel: 8
@@ -930,6 +1088,7 @@ export class InventoryManager {
                 id: 'master_rod',
                 name: 'Master Angler Rod',
                 rarity: 5,
+                equipSlot: 'rod',
                 stats: { castAccuracy: 35, tensionStability: 30, rareFishChance: 15, criticalCatch: 5 },
                 description: 'The ultimate fishing rod for master anglers',
                 unlockLevel: 12
@@ -946,7 +1105,8 @@ export class InventoryManager {
                 id: 'spinner_lure', 
                 name: 'Spinner Lure', 
                 type: 'spinner',
-                rarity: 2, 
+                rarity: 2,
+                equipSlot: 'lure',
                 description: 'Rotating blade creates vibration and flash',
                 unlockLevel: 2,
                 stats: { attractionRadius: 10, vibration: 5 }
@@ -955,7 +1115,8 @@ export class InventoryManager {
                 id: 'crankbait', 
                 name: 'Crankbait', 
                 type: 'crank',
-                rarity: 3, 
+                rarity: 3,
+                equipSlot: 'lure',
                 description: 'Dives deep and mimics injured fish',
                 unlockLevel: 4,
                 stats: { deepWater: 15, fishAttraction: 8 }
@@ -964,7 +1125,8 @@ export class InventoryManager {
                 id: 'golden_spoon', 
                 name: 'Golden Spoon', 
                 type: 'spoon',
-                rarity: 4, 
+                rarity: 4,
+                equipSlot: 'lure',
                 description: 'Premium gold-plated spoon lure',
                 unlockLevel: 6,
                 stats: { flash: 20, rareFishChance: 8 }
@@ -973,7 +1135,8 @@ export class InventoryManager {
                 id: 'legendary_fly', 
                 name: 'Legendary Fly', 
                 type: 'fly',
-                rarity: 5, 
+                rarity: 5,
+                equipSlot: 'lure',
                 description: 'Hand-crafted fly lure used by legendary anglers',
                 unlockLevel: 10,
                 stats: { precision: 25, rareFishChance: 12, surfaceLure: 30 }
@@ -989,7 +1152,7 @@ export class InventoryManager {
             {
                 id: 'basic_cap',
                 name: 'Basic Cap',
-                slotType: 'head',
+                equipSlot: 'head',
                 rarity: 1,
                 stats: { sunProtection: 5 },
                 description: 'Simple fishing cap for sun protection',
@@ -998,7 +1161,7 @@ export class InventoryManager {
             {
                 id: 'fishing_hat',
                 name: 'Fishing Hat',
-                slotType: 'head',
+                equipSlot: 'head',
                 rarity: 2,
                 stats: { sunProtection: 10, luck: 2 },
                 description: 'Professional fishing hat with lucky charms',
@@ -1007,7 +1170,7 @@ export class InventoryManager {
             {
                 id: 'legendary_crown',
                 name: 'Angler\'s Crown',
-                slotType: 'head',
+                equipSlot: 'head',
                 rarity: 5,
                 stats: { sunProtection: 25, luck: 10, rareFishChance: 15 },
                 description: 'Crown of the legendary master angler',
@@ -1016,7 +1179,7 @@ export class InventoryManager {
             {
                 id: 'casual_shirt',
                 name: 'Casual Shirt',
-                slotType: 'upper_body',
+                equipSlot: 'upper_body',
                 rarity: 1,
                 stats: { comfort: 5 },
                 description: 'Comfortable casual fishing shirt',
@@ -1025,7 +1188,7 @@ export class InventoryManager {
             {
                 id: 'fishing_vest',
                 name: 'Fishing Vest',
-                slotType: 'upper_body',
+                equipSlot: 'upper_body',
                 rarity: 3,
                 stats: { comfort: 15, storage: 20, waterResistant: 10 },
                 description: 'Multi-pocket fishing vest with waterproof coating',
@@ -1034,7 +1197,7 @@ export class InventoryManager {
             {
                 id: 'angler_jacket',
                 name: 'Master Angler Jacket',
-                slotType: 'upper_body',
+                equipSlot: 'upper_body',
                 rarity: 4,
                 stats: { comfort: 25, storage: 35, waterResistant: 20, luck: 5 },
                 description: 'Premium jacket worn by professional anglers',
@@ -1043,7 +1206,7 @@ export class InventoryManager {
             {
                 id: 'shorts',
                 name: 'Fishing Shorts',
-                slotType: 'lower_body',
+                equipSlot: 'lower_body',
                 rarity: 1,
                 stats: { mobility: 10 },
                 description: 'Lightweight shorts for easy movement',
@@ -1052,7 +1215,7 @@ export class InventoryManager {
             {
                 id: 'waders',
                 name: 'Fishing Waders',
-                slotType: 'lower_body',
+                equipSlot: 'lower_body',
                 rarity: 3,
                 stats: { mobility: 5, waterResistant: 30, deepWaterAccess: 20 },
                 description: 'Waterproof waders for deep water fishing',
@@ -1061,7 +1224,7 @@ export class InventoryManager {
             {
                 id: 'pro_pants',
                 name: 'Professional Fishing Pants',
-                slotType: 'lower_body',
+                equipSlot: 'lower_body',
                 rarity: 4,
                 stats: { mobility: 20, waterResistant: 15, storage: 10, comfort: 15 },
                 description: 'High-tech fishing pants with multiple features',
@@ -1079,6 +1242,7 @@ export class InventoryManager {
                 id: 'miku_assistant',
                 name: 'Miku',
                 rarity: 3,
+                equipSlot: 'bikini_assistant',
                 stats: { fishingBonus: 15, luckBonus: 10, experienceBonus: 5 },
                 description: 'Cheerful assistant who loves fishing and helps with catches',
                 unlockLevel: 5,
@@ -1088,6 +1252,7 @@ export class InventoryManager {
                 id: 'luna_assistant', 
                 name: 'Luna',
                 rarity: 4,
+                equipSlot: 'bikini_assistant',
                 stats: { fishingBonus: 25, luckBonus: 15, experienceBonus: 10, nightFishing: 20 },
                 description: 'Mysterious night fishing expert with moon magic',
                 unlockLevel: 8,
@@ -1097,6 +1262,7 @@ export class InventoryManager {
                 id: 'sakura_assistant',
                 name: 'Sakura',
                 rarity: 5,
+                equipSlot: 'bikini_assistant',
                 stats: { fishingBonus: 35, luckBonus: 25, experienceBonus: 20, rareFishChance: 15 },
                 description: 'Legendary fishing master with cherry blossom powers',
                 unlockLevel: 12,
@@ -1474,6 +1640,77 @@ export class InventoryManager {
             }
         } catch (error) {
             console.error('Error cleaning up expired boosts:', error);
+        }
+    }
+
+    /**
+     * Manually refresh and fix all equipment slots
+     * This can be called when items aren't equipping properly
+     */
+    refreshEquipmentSlots() {
+        console.log('InventoryManager: Manually refreshing equipment slots...');
+        
+        // Force fix missing equipment slots (bypass the flag)
+        this.fixMissingEquipSlots(true);
+        
+        // Mark inventory as dirty to trigger UI updates
+        this.gameState.markDirty();
+        
+        // Emit event to update UI
+        this.emit('equipmentSlotsRefreshed', {});
+        
+        console.log('InventoryManager: Equipment slots refresh completed');
+    }
+
+    /**
+     * Manually refresh all inventory items to fix validation issues
+     * This can be called after schema changes to update existing items
+     */
+    refreshAllItems() {
+        try {
+            console.log('InventoryManager: Starting manual refresh of all items...');
+            
+            // Fix equipment slots first
+            this.fixMissingEquipSlots();
+            
+            // Process each category
+            Object.entries(this.gameState.inventory).forEach(([category, items]) => {
+                if (Array.isArray(items)) {
+                    console.log(`InventoryManager: Refreshing ${items.length} items in ${category}`);
+                    
+                    items.forEach((item, index) => {
+                        try {
+                            // Use validator to create a properly structured item
+                            const refreshedItem = this.validator.createItem(category, item);
+                            
+                            // Copy over the refreshed properties
+                            Object.assign(item, refreshedItem);
+                            
+                            // Validate the refreshed item
+                            const validation = this.validator.validateItem(category, item);
+                            if (!validation.valid) {
+                                console.warn(`InventoryManager: Item ${item.name} still has validation issues:`, validation.errors);
+                            } else {
+                                console.log(`InventoryManager: Successfully refreshed ${item.name}`);
+                            }
+                            
+                        } catch (error) {
+                            console.error(`InventoryManager: Error refreshing item ${item.name}:`, error);
+                        }
+                    });
+                }
+            });
+            
+            // Mark inventory as dirty to trigger saves and UI updates
+            this.gameState.markDirty();
+            
+            // Emit refresh event
+            this.emit('allItemsRefreshed', {});
+            
+            console.log('InventoryManager: Manual refresh completed');
+            
+        } catch (error) {
+            console.error('InventoryManager: Error during manual refresh:', error);
         }
     }
 }

@@ -8,6 +8,7 @@ export class LuringMiniGame {
         this.scene = scene;
         this.config = config;
         this.isActive = false;
+        this.isCompleted = false; // Add completion flag to prevent duplicate completions
         this.currentPhase = 0;
         this.maxPhases = 4;
         this.fishShadow = null;
@@ -15,6 +16,10 @@ export class LuringMiniGame {
         this.lureType = null;
         this.inputSequence = [];
         this.requiredInputs = [];
+        
+        // Tutorial state
+        this.tutorialActive = false;
+        this.tutorialContainer = null;
         
         // Initialize audio manager safely
         this.audioManager = scene.audioManager || null;
@@ -39,6 +44,7 @@ export class LuringMiniGame {
         console.log('LuringMiniGame: Starting luring phase with options:', options);
         
         this.isActive = true; // Set active state manually instead of calling super
+        this.isCompleted = false; // Reset completion flag for new session
         
         // Handle different calling patterns for backwards compatibility
         if (typeof options === 'number') {
@@ -107,6 +113,242 @@ export class LuringMiniGame {
         
         // Initialize phaseSuccesses array to match totalPhases
         this.phaseSuccesses = new Array(this.totalPhases).fill(false);
+        
+        // Set up lure pattern first (needed for tutorial display)
+        this.setupLurePattern();
+        
+        // Start the luring minigame immediately
+        this.startLuringMinigame();
+        
+        // Show tutorial as a corner panel (non-blocking)
+        this.showTutorialPanel();
+    }
+
+    showTutorialPanel() {
+        console.log('LuringMiniGame: Showing tutorial panel in bottom right corner');
+        
+        this.tutorialActive = true;
+        
+        // Create tutorial panel in bottom right corner
+        this.createTutorialPanel();
+        
+        // Auto-hide tutorial after 8 seconds
+        this.tutorialTimer = this.scene.time.delayedCall(8000, () => {
+            this.hideTutorialPanel();
+        });
+    }
+
+    createTutorialPanel() {
+        const width = this.scene.cameras.main.width;
+        const height = this.scene.cameras.main.height;
+        
+        // Panel dimensions - compact for corner placement
+        const panelWidth = 320;
+        const panelHeight = 240;
+        
+        // Position in bottom right corner with margin
+        const panelX = width - panelWidth/2 - 20;
+        const panelY = height - panelHeight/2 - 20;
+        
+        // Create tutorial container
+        this.tutorialContainer = this.scene.add.container(panelX, panelY);
+        this.tutorialContainer.setDepth(1500); // Above game elements but not blocking
+        
+        // Panel background - custom graphics for better control
+        const panelBg = this.scene.add.graphics();
+        panelBg.fillStyle(0x1a1a2e, 0.85); // Dark blue-gray, semi-transparent
+        panelBg.lineStyle(2, 0x4a9eff, 0.7); // Light blue border
+        panelBg.fillRoundedRect(-panelWidth/2, -panelHeight/2, panelWidth, panelHeight, 12);
+        panelBg.strokeRoundedRect(-panelWidth/2, -panelHeight/2, panelWidth, panelHeight, 12);
+        this.tutorialContainer.add(panelBg);
+        
+        // Add subtle inner glow effect
+        const innerGlow = this.scene.add.graphics();
+        innerGlow.fillStyle(0x4a9eff, 0.1); // Very subtle inner glow
+        innerGlow.fillRoundedRect(-panelWidth/2 + 2, -panelHeight/2 + 2, panelWidth - 4, panelHeight - 4, 10);
+        this.tutorialContainer.add(innerGlow);
+        
+        // Title
+        const title = UITheme.createText(this.scene, 0, -panelHeight/2 + 25, 'LURE CONTROLS', 'headerSmall');
+        title.setOrigin(0.5);
+        title.setColor('#FFD700'); // Gold color for visibility
+        this.tutorialContainer.add(title);
+        
+        // Get current lure info
+        const currentLure = this.getCurrentLureInfo();
+        
+        // Lure icon and name
+        const iconText = this.scene.add.text(-60, -panelHeight/2 + 55, currentLure.icon, {
+            fontSize: '24px'
+        }).setOrigin(0.5);
+        this.tutorialContainer.add(iconText);
+        
+        const nameText = UITheme.createText(this.scene, 0, -panelHeight/2 + 55, currentLure.name, 'bodyLarge');
+        nameText.setOrigin(0.5);
+        nameText.setColor('#00FF88'); // Bright green for lure name
+        this.tutorialContainer.add(nameText);
+        
+        // Control type
+        const controlText = UITheme.createText(this.scene, 0, -panelHeight/2 + 80, currentLure.control, 'bodyMedium');
+        controlText.setOrigin(0.5);
+        controlText.setColor('#FFA726'); // Orange for control type
+        this.tutorialContainer.add(controlText);
+        
+        // Description
+        const descText = UITheme.createText(this.scene, 0, -panelHeight/2 + 105, currentLure.description, 'bodySmall');
+        descText.setOrigin(0.5);
+        descText.setColor('#FFFFFF'); // White for description
+        descText.setWordWrapWidth(panelWidth - 40);
+        this.tutorialContainer.add(descText);
+        
+        // Instructions - emphasized
+        const instrText = UITheme.createText(this.scene, 0, -panelHeight/2 + 140, currentLure.instructions, 'bodySmall');
+        instrText.setOrigin(0.5);
+        instrText.setColor('#00BFFF'); // Bright blue for instructions
+        instrText.setWordWrapWidth(panelWidth - 40);
+        instrText.setFontStyle('bold');
+        this.tutorialContainer.add(instrText);
+        
+        // Dismiss instruction
+        const dismissText = UITheme.createText(this.scene, 0, panelHeight/2 - 30, 'Press ESC to hide', 'bodySmall');
+        dismissText.setOrigin(0.5);
+        dismissText.setColor('#CCCCCC'); // Light gray
+        dismissText.setAlpha(0.8);
+        this.tutorialContainer.add(dismissText);
+        
+        // Auto-hide timer display
+        this.timerText = UITheme.createText(this.scene, 0, panelHeight/2 - 15, 'Auto-hide in 8s', 'bodySmall');
+        this.timerText.setOrigin(0.5);
+        this.timerText.setColor('#AAAAAA'); // Gray
+        this.timerText.setAlpha(0.6);
+        this.tutorialContainer.add(this.timerText);
+        
+        // Slide in animation from right
+        this.tutorialContainer.setX(width + panelWidth/2);
+        this.scene.tweens.add({
+            targets: this.tutorialContainer,
+            x: panelX,
+            duration: 500,
+            ease: 'Power2.easeOut'
+        });
+        
+        // Set up input handling for manual dismiss
+        this.setupTutorialInput();
+        
+        // Update timer display
+        this.updateTimerDisplay();
+        
+        console.log('LuringMiniGame: Tutorial panel created in bottom right corner');
+    }
+
+    updateTimerDisplay() {
+        if (!this.tutorialActive || !this.timerText || !this.tutorialTimer) return;
+        
+        // Check if timer is still valid
+        if (this.tutorialTimer.hasDispatched || !this.tutorialTimer.delay) {
+            return;
+        }
+        
+        const timeLeft = Math.max(0, Math.ceil((this.tutorialTimer.delay - this.tutorialTimer.elapsed) / 1000));
+        
+        if (timeLeft > 0 && this.timerText && this.timerText.active) {
+            this.timerText.setText(`Auto-hide in ${timeLeft}s`);
+            
+            // Schedule next update only if tutorial is still active
+            if (this.tutorialActive && this.scene && this.scene.time) {
+                this.scene.time.delayedCall(1000, () => {
+                    this.updateTimerDisplay();
+                });
+            }
+        }
+    }
+
+    setupTutorialInput() {
+        // Set up input handling for manual tutorial dismissal
+        this.tutorialKeyHandler = (event) => {
+            if (!this.tutorialActive || !this.scene) return;
+            
+            const key = event.key.toLowerCase();
+            
+            if (key === 'escape') {
+                // Manually hide tutorial
+                this.hideTutorialPanel();
+            }
+        };
+        
+        if (this.scene && this.scene.input && this.scene.input.keyboard) {
+            this.scene.input.keyboard.on('keydown', this.tutorialKeyHandler);
+            console.log('LuringMiniGame: Tutorial input handling setup (ESC to dismiss)');
+        } else {
+            console.warn('LuringMiniGame: Could not setup tutorial input - keyboard not available');
+        }
+    }
+
+    hideTutorialPanel() {
+        if (!this.tutorialActive) return;
+        
+        console.log('LuringMiniGame: Hiding tutorial panel');
+        
+        this.tutorialActive = false;
+        
+        // Clear timer first to prevent updates
+        if (this.tutorialTimer && !this.tutorialTimer.hasDispatched) {
+            try {
+                this.tutorialTimer.destroy();
+            } catch (error) {
+                console.warn('LuringMiniGame: Error destroying tutorial timer:', error);
+            }
+            this.tutorialTimer = null;
+        }
+        
+        // Clear timer text reference
+        if (this.timerText) {
+            this.timerText = null;
+        }
+        
+        // Remove input handler
+        if (this.tutorialKeyHandler) {
+            try {
+                this.scene.input.keyboard.off('keydown', this.tutorialKeyHandler);
+            } catch (error) {
+                console.warn('LuringMiniGame: Error removing tutorial input handler:', error);
+            }
+            this.tutorialKeyHandler = null;
+        }
+        
+        // Slide out animation to right
+        if (this.tutorialContainer && this.tutorialContainer.active) {
+            const width = this.scene.cameras.main.width;
+            const panelWidth = 320;
+            
+            this.scene.tweens.add({
+                targets: this.tutorialContainer,
+                x: width + panelWidth/2,
+                alpha: 0.7,
+                duration: 300,
+                ease: 'Power2.easeIn',
+                onComplete: () => {
+                    try {
+                        if (this.tutorialContainer && this.tutorialContainer.active) {
+                            this.tutorialContainer.destroy();
+                        }
+                    } catch (error) {
+                        console.warn('LuringMiniGame: Error destroying tutorial container:', error);
+                    }
+                    this.tutorialContainer = null;
+                }
+            });
+        } else {
+            // If container is already destroyed or inactive, just clear reference
+            this.tutorialContainer = null;
+        }
+    }
+
+    startLuringMinigame() {
+        console.log('LuringMiniGame: Starting actual luring minigame');
+        
+        // Apply equipment effects
+        this.applyEquipmentEffects();
         
         // Initialize UI elements
         this.createBackground();
@@ -991,6 +1233,12 @@ export class LuringMiniGame {
     }
 
     attemptHook() {
+        // Prevent duplicate hook attempts
+        if (this.isCompleted) {
+            console.log('LuringMiniGame: Already completed, ignoring hook attempt');
+            return;
+        }
+        
         // Final hooking attempt based on accumulated interest
         const hookChance = this.shadowInterest / 100;
         const biteRateBonus = (this.lureStats?.biteRate || 0) / 100;
@@ -1008,6 +1256,13 @@ export class LuringMiniGame {
     }
 
     complete(success, fishHooked) {
+        // Prevent multiple completions
+        if (this.isCompleted) {
+            console.log('LuringMiniGame: Already completed, ignoring duplicate completion call');
+            return;
+        }
+        
+        this.isCompleted = true;
         this.isActive = false;
         
         console.log('LuringMiniGame: Complete called with:', { success, fishHooked });
@@ -1059,30 +1314,99 @@ export class LuringMiniGame {
     }
 
     destroy() {
+        console.log('LuringMiniGame: Starting destroy process');
+        
         this.isActive = false;
+        this.tutorialActive = false;
         
-        // Clean up input handling
-        this.scene.input.keyboard.off('keydown', this.handleLureInput, this);
-        
-        // Clean up timers
-        if (this.phaseTimeout) {
-            this.phaseTimeout.destroy();
+        // Clean up tutorial panel first
+        if (this.tutorialTimer && !this.tutorialTimer.hasDispatched) {
+            try {
+                this.tutorialTimer.destroy();
+            } catch (error) {
+                console.warn('LuringMiniGame: Error destroying tutorial timer:', error);
+            }
+            this.tutorialTimer = null;
         }
         
-        if (this.fishObservationTimer) {
-            this.fishObservationTimer.destroy();
+        // Clear timer text reference
+        if (this.timerText) {
+            this.timerText = null;
+        }
+        
+        if (this.tutorialKeyHandler && this.scene && this.scene.input && this.scene.input.keyboard) {
+            try {
+                this.scene.input.keyboard.off('keydown', this.tutorialKeyHandler);
+            } catch (error) {
+                console.warn('LuringMiniGame: Error removing tutorial key handler:', error);
+            }
+            this.tutorialKeyHandler = null;
+        }
+        
+        if (this.tutorialContainer && this.tutorialContainer.active) {
+            try {
+                this.tutorialContainer.destroy();
+            } catch (error) {
+                console.warn('LuringMiniGame: Error destroying tutorial container:', error);
+            }
+            this.tutorialContainer = null;
+        }
+        
+        // Clean up main game input handling
+        if (this.scene && this.scene.input && this.scene.input.keyboard) {
+            try {
+                this.scene.input.keyboard.off('keydown', this.handleLureInput, this);
+            } catch (error) {
+                console.warn('LuringMiniGame: Error removing lure input handler:', error);
+            }
+        }
+        
+        // Clean up game timers
+        if (this.phaseTimeout && !this.phaseTimeout.hasDispatched) {
+            try {
+                this.phaseTimeout.destroy();
+            } catch (error) {
+                console.warn('LuringMiniGame: Error destroying phase timeout:', error);
+            }
+            this.phaseTimeout = null;
+        }
+        
+        if (this.fishObservationTimer && !this.fishObservationTimer.hasDispatched) {
+            try {
+                this.fishObservationTimer.destroy();
+            } catch (error) {
+                console.warn('LuringMiniGame: Error destroying fish observation timer:', error);
+            }
+            this.fishObservationTimer = null;
         }
         
         // Clean up fish timers
-        this.simulationFish.forEach(fish => {
-            if (fish.moveTimer) fish.moveTimer.destroy();
-            if (fish.directionTimer) fish.directionTimer.destroy();
-        });
+        if (this.simulationFish && Array.isArray(this.simulationFish)) {
+            this.simulationFish.forEach((fish, index) => {
+                try {
+                    if (fish.moveTimer && !fish.moveTimer.hasDispatched) {
+                        fish.moveTimer.destroy();
+                    }
+                    if (fish.directionTimer && !fish.directionTimer.hasDispatched) {
+                        fish.directionTimer.destroy();
+                    }
+                } catch (error) {
+                    console.warn(`LuringMiniGame: Error destroying fish ${index} timers:`, error);
+                }
+            });
+        }
         
         // Clean up UI
-        if (this.simulationContainer) {
-            this.simulationContainer.destroy();
+        if (this.simulationContainer && this.simulationContainer.active) {
+            try {
+                this.simulationContainer.destroy();
+            } catch (error) {
+                console.warn('LuringMiniGame: Error destroying simulation container:', error);
+            }
+            this.simulationContainer = null;
         }
+        
+        console.log('LuringMiniGame: Destroy process completed');
     }
 
     detectCircularPattern() {
@@ -1232,6 +1556,12 @@ export class LuringMiniGame {
     }
 
     hookFish() {
+        // Prevent duplicate hook calls
+        if (this.isCompleted) {
+            console.log('LuringMiniGame: Already completed, ignoring hook fish call');
+            return;
+        }
+        
         console.log('LuringMiniGame: Fish hooked successfully!');
         
         // Create hook animation
@@ -1247,6 +1577,12 @@ export class LuringMiniGame {
         
         // Transition to reeling minigame
         this.scene.time.delayedCall(1500, () => {
+            // Check again before completing to prevent race conditions
+            if (this.isCompleted) {
+                console.log('LuringMiniGame: Completion prevented during delayed call');
+                return;
+            }
+            
             // Ensure we have a valid fish object to pass
             const fishToPass = this.selectedFish || {
                 id: 'fallback_fish',
@@ -1381,5 +1717,57 @@ export class LuringMiniGame {
                 this.handlePhaseSuccess();
             });
         }
+    }
+
+    getCurrentLureInfo() {
+        // Map current lure pattern to display information
+        const lureInfoMap = {
+            'Spinner': {
+                name: 'Spinner',
+                control: 'Pulse Tap',
+                description: 'Press SPACEBAR for quick pulses',
+                instructions: 'TAP SPACEBAR when fish approaches!',
+                color: 0xFFD700,
+                icon: '🎣'
+            },
+            'Soft Plastic': {
+                name: 'Soft Plastic',
+                control: 'Drag and Pause',
+                description: 'Press S to drag down, then pause',
+                instructions: 'DRAG DOWN (S) then PAUSE!',
+                color: 0x8B4513,
+                icon: '🪱'
+            },
+            'Fly': {
+                name: 'Fly',
+                control: 'Swipe Flick Combo',
+                description: 'Use WASD for quick flick movements',
+                instructions: 'FLICK with WASD directions!',
+                color: 0xFF6B6B,
+                icon: '🦋'
+            },
+            'Popper': {
+                name: 'Popper',
+                control: 'Tap and Hold Burst',
+                description: 'SPACEBAR for surface bursts',
+                instructions: 'TAP and HOLD SPACEBAR for bursts!',
+                color: 0x00FF00,
+                icon: '💥'
+            },
+            'Spoon': {
+                name: 'Spoon',
+                control: 'Circular Trace',
+                description: 'Use WASD in circular motions',
+                instructions: 'TRACE CIRCLES with WASD!',
+                color: 0xC0C0C0,
+                icon: '🥄'
+            }
+        };
+        
+        // Get current lure info or fallback to Spinner
+        const currentLureInfo = lureInfoMap[this.lurePattern.name] || lureInfoMap['Spinner'];
+        
+        console.log('LuringMiniGame: Current lure info:', currentLureInfo);
+        return currentLureInfo;
     }
 } 

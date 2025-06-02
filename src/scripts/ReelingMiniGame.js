@@ -72,6 +72,7 @@ export class ReelingMiniGame {
         this.startTime = this.scene.time.now;
         this.gameState = this.scene.gameState;
         this.fishCaughtCalled = false; // Reset the flag for new session
+        this.isCompleted = false; // Add additional completion flag
         
         console.log('ReelingMiniGame: Starting with options:', options);
         
@@ -244,6 +245,9 @@ export class ReelingMiniGame {
         this.fishGraphic.setDepth(200);
         this.drawFish();
         
+        // Create fish name label
+        this.createFishNameLabel();
+        
         console.log('ReelingMiniGame: Fish created');
     }
 
@@ -285,7 +289,7 @@ export class ReelingMiniGame {
         
         // Instructions
         const instructions = this.scene.add.text(width / 2, height - 50, 
-            'Click and Hold to REEL | Release to reduce TENSION | Complete QTEs!', {
+            'Click and Hold to REEL | Release to reduce TENSION | Use WASD for QTEs!', {
             fontSize: '14px',
             fill: '#ffffff',
             fontFamily: 'Arial',
@@ -495,33 +499,100 @@ export class ReelingMiniGame {
         this.updateStaminaBar(); // Initial draw and position update
     }
 
+    createFishNameLabel() {
+        // Get fish name from fishProperties (set in start method)
+        const fishName = this.fishProperties?.name || this.selectedFish?.name || 'Unknown Fish';
+        
+        // Create fish name text with attractive styling
+        this.fishNameText = this.scene.add.text(
+            this.fishPosition.x,
+            this.fishPosition.y - 65, // Position above stamina bar
+            fishName,
+            {
+                fontSize: '16px',
+                fontFamily: 'Arial, sans-serif',
+                fontWeight: 'bold',
+                color: '#ffffff',
+                stroke: '#000000',
+                strokeThickness: 3,
+                shadow: {
+                    offsetX: 2,
+                    offsetY: 2,
+                    color: '#000000',
+                    blur: 4,
+                    fill: true
+                },
+                align: 'center'
+            }
+        );
+        
+        this.fishNameText.setOrigin(0.5);
+        this.fishNameText.setDepth(252); // Above stamina bar
+        
+        // Add to UI container
+        this.uiContainer.add(this.fishNameText);
+        
+        // Add subtle glow effect based on fish rarity
+        const rarity = this.selectedFish?.rarity || 1;
+        let glowColor = '#ffffff';
+        
+        switch (rarity) {
+            case 5: glowColor = '#ff6b6b'; break; // Legendary - Red
+            case 4: glowColor = '#ffd93d'; break; // Epic - Gold
+            case 3: glowColor = '#6bcf7f'; break; // Rare - Green
+            case 2: glowColor = '#4ecdc4'; break; // Uncommon - Cyan
+            default: glowColor = '#ffffff'; break; // Common - White
+        }
+        
+        // Add subtle pulsing animation for higher rarity fish
+        if (rarity >= 3) {
+            this.scene.tweens.add({
+                targets: this.fishNameText,
+                scaleX: 1.05,
+                scaleY: 1.05,
+                duration: 1000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+        }
+        
+        console.log(`ReelingMiniGame: Fish name label created: ${fishName} (Rarity: ${rarity})`);
+    }
+
     updateStaminaBar() {
-        if (!this.staminaBar || !this.staminaBarBg) return;
+        if (!this.staminaBarBg || !this.staminaBar) return;
         
         const barWidth = 100;
         const barHeight = 8;
-        const barX = this.fishPosition.x - barWidth / 2;
-        const barY = this.fishPosition.y - 40;
-
-        // Update background position
+        const currentX = this.fishPosition.x - barWidth / 2;
+        const currentY = this.fishPosition.y - 40;
+        
+        // Update stamina bar background position
         this.staminaBarBg.clear();
         this.staminaBarBg.fillStyle(0x2c3e50);
-        this.staminaBarBg.fillRoundedRect(barX - 2, barY - 2, barWidth + 4, barHeight + 4, 2);
+        this.staminaBarBg.fillRoundedRect(currentX - 2, currentY - 2, barWidth + 4, barHeight + 4, 2);
         
+        // Update stamina bar fill
         this.staminaBar.clear();
+        const staminaPercentage = this.fishStamina / this.maxFishStamina;
+        const fillWidth = barWidth * staminaPercentage;
         
-        const staminaPercent = this.fishStamina / this.maxFishStamina;
-        const currentBarWidth = barWidth * staminaPercent;
-        
-        let barColor = 0x27ae60; // Green (success)
-        if (staminaPercent < 0.3) {
-            barColor = 0xe74c3c; // Red (error)
-        } else if (staminaPercent < 0.6) {
-            barColor = 0xf39c12; // Orange (warning)
+        // Color based on stamina level
+        let staminaColor = 0x27ae60; // Green
+        if (staminaPercentage < 0.3) {
+            staminaColor = 0xe74c3c; // Red
+        } else if (staminaPercentage < 0.6) {
+            staminaColor = 0xf39c12; // Orange
         }
         
-        this.staminaBar.fillStyle(barColor);
-        this.staminaBar.fillRoundedRect(barX, barY, currentBarWidth, barHeight, 2);
+        this.staminaBar.fillStyle(staminaColor);
+        this.staminaBar.fillRoundedRect(currentX, currentY, fillWidth, barHeight, 2);
+        
+        // Update fish name label position
+        if (this.fishNameText) {
+            this.fishNameText.setPosition(this.fishPosition.x, this.fishPosition.y - 65);
+        }
     }
 
     createTensionMeter() {
@@ -669,19 +740,19 @@ export class ReelingMiniGame {
                         this.handleInput('tap');
                     }
                     break;
-                case 'ArrowUp':
+                case 'KeyW':
                     event.preventDefault();
                     this.handleInput('direction', { direction: 'up' });
                     break;
-                case 'ArrowDown':
+                case 'KeyS':
                     event.preventDefault();
                     this.handleInput('direction', { direction: 'down' });
                     break;
-                case 'ArrowLeft':
+                case 'KeyA':
                     event.preventDefault();
                     this.handleInput('direction', { direction: 'left' });
                     break;
-                case 'ArrowRight':
+                case 'KeyD':
                     event.preventDefault();
                     this.handleInput('direction', { direction: 'right' });
                     break;
@@ -1419,7 +1490,7 @@ export class ReelingMiniGame {
     createSequenceQTEVisuals() {
         // Instructions
         this.qteInstructions = this.scene.add.text(0, -50, 
-            'FOLLOW THE SEQUENCE!', {
+            'PRESS THE WASD KEYS IN ORDER!', {
             fontSize: '16px',
             fill: '#ffffff',
             fontFamily: 'Arial',
@@ -1454,6 +1525,11 @@ export class ReelingMiniGame {
             
             this.qteArrows.push(arrow);
             this.qteContainer.add(arrow);
+            
+            // Add the key text to the container as well
+            if (arrow.keyText) {
+                this.qteContainer.add(arrow.keyText);
+            }
         });
         
         // Progress indicator
@@ -1476,7 +1552,7 @@ export class ReelingMiniGame {
         arrow.direction = direction;
         arrow.currentColor = 0xFFFFFF;
         
-        // Draw the arrow
+        // Draw the WASD key
         this.drawArrow(arrow, direction, 0xFFFFFF);
         
         return arrow;
@@ -1484,23 +1560,54 @@ export class ReelingMiniGame {
 
     drawArrow(arrow, direction, color) {
         arrow.clear();
-        arrow.fillStyle(color); // Color is already a UITheme color from the caller
         
+        // Draw WASD key indicators instead of arrows
+        const keySize = 20;
+        const keyRadius = 3;
+        
+        // Draw key background
+        arrow.fillStyle(0x444444);
+        arrow.fillRoundedRect(-keySize/2, -keySize/2, keySize, keySize, keyRadius);
+        
+        // Draw key border
+        arrow.lineStyle(2, color);
+        arrow.strokeRoundedRect(-keySize/2, -keySize/2, keySize, keySize, keyRadius);
+        
+        // Get the letter for this direction
+        let keyLetter = '';
         switch (direction) {
             case 'up':
-                arrow.fillTriangle(0, -10, -8, 5, 8, 5);
+                keyLetter = 'W';
                 break;
             case 'down':
-                arrow.fillTriangle(0, 10, -8, -5, 8, -5);
+                keyLetter = 'S';
                 break;
             case 'left':
-                arrow.fillTriangle(-10, 0, 5, -8, 5, 8);
+                keyLetter = 'A';
                 break;
             case 'right':
-                arrow.fillTriangle(10, 0, -5, -8, -5, 8);
+                keyLetter = 'D';
                 break;
         }
         
+        // Clean up existing text if it exists
+        if (arrow.keyText) {
+            arrow.keyText.destroy();
+        }
+        
+        // Create text object for the letter using relative positioning to the container
+        const colorHex = '#' + color.toString(16).padStart(6, '0');
+        arrow.keyText = arrow.scene.add.text(0, 0, keyLetter, {
+            fontSize: '14px',
+            fill: colorHex,
+            fontFamily: 'Arial',
+            fontWeight: 'bold'
+        });
+        arrow.keyText.setOrigin(0.5);
+        arrow.keyText.setPosition(arrow.x, arrow.y);
+        arrow.keyText.setDepth(arrow.depth + 1);
+        
+        // Store reference for cleanup
         arrow.currentColor = color;
     }
 
@@ -1678,11 +1785,15 @@ export class ReelingMiniGame {
             this.qteTimingIndicator = null;
         }
         
-        // Clean up arrows
+        // Clean up arrows and their text
         if (this.qteArrows) {
             this.qteArrows.forEach(arrow => {
                 if (arrow && arrow.active) {
                     this.scene.tweens.killTweensOf(arrow);
+                    // Clean up the associated key text
+                    if (arrow.keyText && arrow.keyText.active) {
+                        arrow.keyText.destroy();
+                    }
                 }
             });
             this.qteArrows = [];
@@ -2022,6 +2133,14 @@ export class ReelingMiniGame {
     }
 
     complete(success, result, fishData, stats) {
+        // Prevent multiple completions
+        if (this.isCompleted) {
+            console.log('ReelingMiniGame: Already completed, ignoring duplicate completion call');
+            return;
+        }
+        
+        this.isCompleted = true;
+        
         // Clean up timers first to prevent any further calls
         try {
             if (this.reelingTimer) {
@@ -2041,6 +2160,36 @@ export class ReelingMiniGame {
         }
         
         console.log(`ReelingMiniGame: ${success ? 'Success' : 'Failed'} - ${result}`);
+        
+        // Clean up input handlers to prevent interference with main game controls
+        try {
+            if (this.scene.input) {
+                // Remove only our specific handlers instead of all listeners
+                if (this.mouseHandler) {
+                    this.scene.input.off('pointerdown', this.mouseHandler);
+                    this.mouseHandler = null;
+                }
+                
+                if (this.scene.input.keyboard) {
+                    if (this.keyDownHandler) {
+                        this.scene.input.keyboard.off('keydown', this.keyDownHandler);
+                        this.keyDownHandler = null;
+                    }
+                    if (this.keyUpHandler) {
+                        this.scene.input.keyboard.off('keyup', this.keyUpHandler);
+                        this.keyUpHandler = null;
+                    }
+                }
+                
+                // Remove document listener
+                if (this.keyHandler && document) {
+                    document.removeEventListener('keydown', this.keyHandler);
+                    this.keyHandler = null;
+                }
+            }
+        } catch (error) {
+            console.warn('ReelingMiniGame: Error cleaning up input handlers:', error);
+        }
         
         // Prepare the final stats object with safe defaults
         const finalStats = stats || {
@@ -2074,105 +2223,153 @@ export class ReelingMiniGame {
     }
 
     destroy() {
+        console.log('ReelingMiniGame: Destroying minigame');
+        
         this.isActive = false;
         
-        // Clean up timers with error handling
-        try {
-            if (this.reelingTimer) {
-                this.reelingTimer.destroy();
-                this.reelingTimer = null;
-            }
-            if (this.struggleTimer) {
-                this.struggleTimer.destroy();
-                this.struggleTimer = null;
-            }
-            if (this.qteTimer) {
-                this.qteTimer.destroy();
-                this.qteTimer = null;
-            }
-        } catch (error) {
-            console.warn('ReelingMiniGame: Error destroying timers:', error);
+        // Clear all timers
+        if (this.struggleTimer) {
+            this.struggleTimer.destroy();
+            this.struggleTimer = null;
         }
         
-        // Clean up input handling with error handling
-        try {
-            if (this.mouseHandler && this.scene.input) {
+        if (this.qteTimer) {
+            this.qteTimer.destroy();
+            this.qteTimer = null;
+        }
+        
+        if (this.tensionTimer) {
+            this.tensionTimer.destroy();
+            this.tensionTimer = null;
+        }
+        
+        if (this.celebrationCloseTimer) {
+            this.celebrationCloseTimer.destroy();
+            this.celebrationCloseTimer = null;
+        }
+        
+        // Clear input handling more thoroughly but only our own handlers
+        if (this.scene.input) {
+            // Remove only our specific handlers instead of all listeners
+            if (this.mouseHandler) {
                 this.scene.input.off('pointerdown', this.mouseHandler);
+                this.mouseHandler = null;
             }
-            if (this.keyDownHandler && this.scene.input && this.scene.input.keyboard) {
-                this.scene.input.keyboard.off('keydown', this.keyDownHandler);
+            
+            if (this.scene.input.keyboard) {
+                if (this.keyDownHandler) {
+                    this.scene.input.keyboard.off('keydown', this.keyDownHandler);
+                    this.keyDownHandler = null;
+                }
+                if (this.keyUpHandler) {
+                    this.scene.input.keyboard.off('keyup', this.keyUpHandler);
+                    this.keyUpHandler = null;
+                }
             }
-            if (this.keyUpHandler && this.scene.input && this.scene.input.keyboard) {
-                this.scene.input.keyboard.off('keyup', this.keyUpHandler);
-            }
+            
+            // Remove document listener
             if (this.keyHandler && document) {
                 document.removeEventListener('keydown', this.keyHandler);
+                this.keyHandler = null;
             }
-        } catch (error) {
-            console.warn('ReelingMiniGame: Error removing input handlers:', error);
         }
         
-        // Clean up QTE visuals
-        try {
-            this.destroyQTEVisuals();
-        } catch (error) {
-            console.warn('ReelingMiniGame: Error destroying QTE visuals:', error);
-        }
-        
-        // Clean up visual elements with error handling
-        const elementsToDestroy = [
-            'fishGraphic', 'fishNameText', 'fishingLine', 'staminaBar', 'staminaBarBg',
-            'tensionMeter', 'tensionMeterBg', 'tensionIndicator', 'uiContainer'
-        ];
-        
-        elementsToDestroy.forEach(element => {
-            try {
-                if (this[element]) {
-                    this[element].destroy();
-                    this[element] = null;
-                }
-            } catch (error) {
-                console.warn(`ReelingMiniGame: Error destroying ${element}:`, error);
+        // Clear tweens first to prevent issues during destruction
+        if (this.scene.tweens) {
+            this.scene.tweens.killTweensOf(this);
+            if (this.fishNameText) {
+                this.scene.tweens.killTweensOf(this.fishNameText);
             }
-        });
-        
-        // Clean up splash effects with error handling
-        try {
-            if (this.splashEffects && Array.isArray(this.splashEffects)) {
-                this.splashEffects.forEach(splash => {
-                    try {
-                        if (splash && splash.active) {
-                            splash.destroy();
-                        }
-                    } catch (error) {
-                        console.warn('ReelingMiniGame: Error destroying splash effect:', error);
-                    }
-                });
-                this.splashEffects = [];
-            }
-        } catch (error) {
-            console.warn('ReelingMiniGame: Error cleaning up splash effects:', error);
-        }
-        
-        // Clean up celebration container with error handling
-        try {
             if (this.celebrationContainer) {
-                if (this.scene.tweens) {
-                    this.scene.tweens.killTweensOf(this.celebrationContainer);
-                }
+                this.scene.tweens.killTweensOf(this.celebrationContainer);
+                // Kill tweens of all children in celebration container
+                this.celebrationContainer.list.forEach(child => {
+                    this.scene.tweens.killTweensOf(child);
+                });
+            }
+        }
+        
+        // Destroy celebration container first (if it exists)
+        if (this.celebrationContainer) {
+            try {
                 this.celebrationContainer.destroy();
                 this.celebrationContainer = null;
+            } catch (error) {
+                console.warn('ReelingMiniGame: Error destroying celebration container:', error);
             }
-        } catch (error) {
-            console.warn('ReelingMiniGame: Error destroying celebration container:', error);
         }
         
-        console.log('ReelingMiniGame: All visual elements destroyed');
+        // Destroy visual elements
+        if (this.fishGraphic) {
+            this.fishGraphic.destroy();
+            this.fishGraphic = null;
+        }
+        
+        if (this.fishingLine) {
+            this.fishingLine.destroy();
+            this.fishingLine = null;
+        }
+        
+        if (this.progressContainer) {
+            this.progressContainer.destroy();
+            this.progressContainer = null;
+        }
+        
+        if (this.staminaBarBg) {
+            this.staminaBarBg.destroy();
+            this.staminaBarBg = null;
+        }
+        
+        if (this.staminaBar) {
+            this.staminaBar.destroy();
+            this.staminaBar = null;
+        }
+        
+        if (this.fishNameText) {
+            this.fishNameText.destroy();
+            this.fishNameText = null;
+        }
+        
+        if (this.tensionMeterContainer) {
+            this.tensionMeterContainer.destroy();
+            this.tensionMeterContainer = null;
+        }
+        
+        if (this.uiContainer) {
+            this.uiContainer.destroy();
+            this.uiContainer = null;
+        }
+        
+        // Destroy QTE visuals
+        this.destroyQTEVisuals();
+        
+        // Clear particle systems
+        if (this.particleSystems) {
+            this.particleSystems.forEach(system => {
+                if (system && system.destroy) {
+                    system.destroy();
+                }
+            });
+            this.particleSystems = [];
+        }
+        
+        // Clear splash effects
+        if (this.splashEffects) {
+            this.splashEffects.forEach(effect => {
+                if (effect && effect.destroy) {
+                    effect.destroy();
+                }
+            });
+            this.splashEffects = [];
+        }
+        
+        console.log('ReelingMiniGame: Cleanup completed');
     }
 
     fishCaught() {
-        // Prevent multiple calls to fishCaught
-        if (!this.isActive || this.fishCaughtCalled) {
+        // Prevent multiple calls to fishCaught with enhanced checking
+        if (!this.isActive || this.fishCaughtCalled || this.isCompleted) {
+            console.log('ReelingMiniGame: Preventing duplicate fishCaught call - active:', this.isActive, 'fishCaughtCalled:', this.fishCaughtCalled, 'isCompleted:', this.isCompleted);
             return;
         }
         
@@ -2446,7 +2643,7 @@ export class ReelingMiniGame {
             ease: 'Back.easeOut'
         });
         
-        this.scene.tweens.add({
+        const titleTween = this.scene.tweens.add({
             targets: title,
             scaleX: 1.1,
             scaleY: 1.1,
@@ -2454,6 +2651,57 @@ export class ReelingMiniGame {
             yoyo: true,
             repeat: -1,
             ease: 'Sine.easeInOut'
+        });
+        
+        // Auto-close celebration after 4 seconds to prevent getting stuck
+        this.celebrationCloseTimer = this.scene.time.delayedCall(4000, () => {
+            console.log('ReelingMiniGame: Auto-closing celebration dialog');
+            
+            // Stop the title animation
+            if (titleTween) {
+                titleTween.destroy();
+            }
+            
+            // Fade out and destroy celebration
+            if (this.celebrationContainer && this.celebrationContainer.active) {
+                this.scene.tweens.add({
+                    targets: this.celebrationContainer,
+                    alpha: 0,
+                    scaleX: 0.8,
+                    scaleY: 0.8,
+                    duration: 300,
+                    ease: 'Sine.easeIn',
+                    onComplete: () => {
+                        if (this.celebrationContainer) {
+                            this.celebrationContainer.destroy();
+                            this.celebrationContainer = null;
+                        }
+                    }
+                });
+            }
+        });
+        
+        // Make celebration clickable to close early
+        bg.setInteractive();
+        bg.on('pointerdown', () => {
+            console.log('ReelingMiniGame: Celebration clicked, closing early');
+            
+            // Cancel auto-close timer
+            if (this.celebrationCloseTimer) {
+                this.celebrationCloseTimer.destroy();
+                this.celebrationCloseTimer = null;
+            }
+            
+            // Stop the title animation
+            if (titleTween) {
+                titleTween.destroy();
+            }
+            
+            // Immediate close
+            if (this.celebrationContainer && this.celebrationContainer.active) {
+                this.celebrationContainer.destroy();
+                this.celebrationContainer = null;
+            }
         });
     }
 

@@ -132,6 +132,7 @@ class GameState {
                     id: 'rowboat',
                     name: 'Rowboat',
                     rarity: 1,
+                    equipSlot: 'boat',
                     owned: true,
                     equipped: true,
                     condition: 100,

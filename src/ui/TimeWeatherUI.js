@@ -35,7 +35,10 @@ export class TimeWeatherUI {
     createUI() {
         // Main container
         this.container = this.scene.add.container(this.config.x, this.config.y);
-        this.container.setDepth(1500);
+        
+        // Use scene's depth management if available, otherwise use high UI depth
+        const uiDepth = this.scene.getUIDepth ? this.scene.getUIDepth('ui_panels') : 1500;
+        this.container.setDepth(uiDepth);
         this.container.setVisible(false);
         
         // Background panel

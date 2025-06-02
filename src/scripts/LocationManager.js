@@ -95,29 +95,39 @@ export class LocationManager {
     }
     
     checkAndUnlockLocations() {
-        const playerLevel = this.gameState.player.level || 1;
-        const playerProgression = this.gameState.playerProgression;
-        const achievements = playerProgression ? playerProgression.getUnlockedAchievements() : [];
-        
-        const newlyUnlocked = [];
-        
-        getAllLocations().forEach(location => {
-            if (!this.unlockedLocations.has(location.id)) {
-                // Check level requirement
-                if (playerLevel >= location.unlockLevel) {
-                    // Check achievement requirements
-                    const hasRequiredAchievements = location.unlockRequirements.length === 0 || 
-                        location.unlockRequirements.every(req => achievements.includes(req));
-                    
-                    if (hasRequiredAchievements) {
-                        this.unlockLocation(location.id);
-                        newlyUnlocked.push(location);
+        try {
+            const playerLevel = this.gameState.player.level || 1;
+            const playerProgression = this.gameState.playerProgression;
+            const achievements = playerProgression ? playerProgression.getUnlockedAchievements() : [];
+            
+            const newlyUnlocked = [];
+            
+            getAllLocations().forEach(location => {
+                try {
+                    if (!this.unlockedLocations.has(location.id)) {
+                        // Check level requirement
+                        if (playerLevel >= (location.unlockLevel || 1)) {
+                            // Check achievement requirements with null safety
+                            const unlockRequirements = location.unlockRequirements || [];
+                            const hasRequiredAchievements = unlockRequirements.length === 0 || 
+                                unlockRequirements.every(req => achievements.includes(req));
+                            
+                            if (hasRequiredAchievements) {
+                                this.unlockLocation(location.id);
+                                newlyUnlocked.push(location);
+                            }
+                        }
                     }
+                } catch (locationError) {
+                    console.error(`LocationManager: Error checking unlock for location ${location.id}:`, locationError);
                 }
-            }
-        });
-        
-        return newlyUnlocked;
+            });
+            
+            return newlyUnlocked;
+        } catch (error) {
+            console.error('LocationManager: Error in checkAndUnlockLocations:', error);
+            return [];
+        }
     }
     
     unlockLocation(locationId) {

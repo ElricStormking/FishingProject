@@ -198,26 +198,24 @@ export default class PlayerController {
                         console.log('PlayerController: Hit main hotspot (+30% rarity)');
                     }
                     
-                    // Select fish based on cast type and location
-                    const selectedFish = this.selectFishForCast(castType, spotInfo, rarityBonus);
-                    
-                    if (selectedFish) {
-                        console.log('PlayerController: Selected fish for reeling:', selectedFish.name, 'Type:', castType);
-                        
-                        // Start reeling minigame with selected fish and bonus info
-                        this.startReelingMiniGame(selectedFish, {
-                            castType: castType,
-                            rarityBonus: rarityBonus,
-                            spotInfo: spotInfo,
-                            accuracy: data.accuracy
-                        });
-                    } else {
-                        console.error('PlayerController: No fish selected, ending fishing attempt');
-                        this.isFishing = false;
+                    // Clean up casting minigame first
+                    if (this.castMinigame) {
+                        this.castMinigame.destroy();
+                        this.castMinigame = null;
                     }
+                    
+                    // Start luring phase instead of jumping to reeling
+                    console.log('PlayerController: Starting luring phase after successful cast');
+                    this.startLurePhase(data.accuracy, castType, data.hitAccurateSection);
                 } else {
                     console.log('PlayerController: Cast failed, ending fishing attempt');
                     this.isFishing = false;
+                    
+                    // Clean up casting minigame
+                    if (this.castMinigame) {
+                        this.castMinigame.destroy();
+                        this.castMinigame = null;
+                    }
                 }
             });
             
@@ -784,7 +782,18 @@ export default class PlayerController {
     }
 
     startLurePhase(castAccuracy, castType, hitAccurateSection) {
-        console.log(`PlayerController: Starting lure phase... Cast type: ${castType}`);
+        // Prevent multiple luring minigames from starting
+        if (this.lureMinigame && this.lureMinigame.isActive) {
+            console.log('PlayerController: Luring minigame already active, ignoring new start request');
+            return;
+        }
+        
+        console.log(`PlayerController: Starting lure phase with accuracy ${castAccuracy}%...`);
+        
+        // Keep crosshair hidden during lure phase
+        if (this.scene.crosshair) {
+            this.scene.crosshair.setVisible(false);
+        }
         
         // Get available fish based on cast type
         const availableFish = this.getAvailableFish(castType, hitAccurateSection);
@@ -843,6 +852,12 @@ export default class PlayerController {
     }
 
     startReelPhase(fish) {
+        // Prevent multiple reeling minigames from starting
+        if (this.reelMinigame && this.reelMinigame.isActive) {
+            console.log('PlayerController: Reeling minigame already active, ignoring new start request');
+            return;
+        }
+        
         // Validate fish data before starting reel phase
         if (!fish || !fish.name) {
             console.error('PlayerController: Cannot start reel phase - invalid fish data:', fish);
@@ -1032,114 +1047,197 @@ export default class PlayerController {
     finishFishingSuccess(fish) {
         console.log('PlayerController: Fish caught successfully!', fish);
         
-        // Use the catch result from GameState if available, otherwise use passed fish data
-        let catchResult = null;
-        let fishData = fish;
-        
-        // If we have a catch result with fish data, use it
-        if (fish && fish.catchResult && fish.catchResult.fish) {
-            catchResult = fish.catchResult;
-            fishData = catchResult.fish;
-        } else if (fish && fish.fish) {
-            // If fish is wrapped in another object
-            fishData = fish.fish;
-        }
-        
-        // Ensure we have valid fish data
-        if (!fishData || !fishData.name) {
-            console.error('PlayerController: Invalid fish data for finishFishingSuccess:', fish);
-            this.cleanupCast();
-            return;
-        }
-        
-        // Award experience points
-        const baseXp = this.calculateExperienceReward(fishData);
-        
-        // Apply time/weather/location experience bonus
-        const effects = this.getTimeWeatherEffects();
-        const bonusXp = Math.round(baseXp * (effects.experienceBonus - 1.0));
-        const totalXp = baseXp + bonusXp;
-        
-        this.gameState.playerProgression.addExperience(totalXp, 'fish_caught');
-        
-        // Record fish caught in location manager
-        if (this.gameState.locationManager) {
-            this.gameState.locationManager.recordFishCaught(fishData, totalXp);
-        }
-        
-        // Fish should already be added to inventory by GameState.catchFish
-        // But add a fallback just in case
-        if (!catchResult) {
+        try {
+            // Use the catch result from GameState if available, otherwise use passed fish data
+            let catchResult = null;
+            let fishData = fish;
+            
+            // If we have a catch result with fish data, use it
+            if (fish && fish.catchResult && fish.catchResult.fish) {
+                catchResult = fish.catchResult;
+                fishData = catchResult.fish;
+            } else if (fish && fish.fish) {
+                // If fish is wrapped in another object
+                fishData = fish.fish;
+            }
+            
+            // Ensure we have valid fish data
+            if (!fishData || !fishData.name) {
+                console.error('PlayerController: Invalid fish data for finishFishingSuccess:', fish);
+                this.cleanupCast();
+                return;
+            }
+            
+            // Award experience points
+            const baseXp = this.calculateExperienceReward(fishData);
+            
+            // Apply time/weather/location experience bonus
+            const effects = this.getTimeWeatherEffects();
+            const bonusXp = Math.round(baseXp * (effects.experienceBonus - 1.0));
+            const totalXp = baseXp + bonusXp;
+            
+            // Add experience with proper error handling
             try {
-                this.gameState.inventoryManager.addItem('fish', fishData);
+                if (this.gameState.playerProgression && this.gameState.playerProgression.addExperience) {
+                    this.gameState.playerProgression.addExperience(totalXp, 'fish_caught');
+                } else if (this.gameState.addExperience) {
+                    this.gameState.addExperience(totalXp, 'fish_caught');
+                } else {
+                    console.warn('PlayerController: No experience system available');
+                }
+            } catch (expError) {
+                console.error('PlayerController: Error adding experience:', expError);
+            }
+            
+            // Record fish caught in location manager
+            try {
+                if (this.gameState.locationManager && this.gameState.locationManager.recordFishCaught) {
+                    this.gameState.locationManager.recordFishCaught(fishData, totalXp);
+                }
+            } catch (locationError) {
+                console.warn('PlayerController: Error recording fish in location manager:', locationError);
+            }
+            
+            // Fish should already be added to inventory by GameState.catchFish
+            // But add a fallback just in case
+            if (!catchResult) {
+                try {
+                    if (this.gameState.inventoryManager && this.gameState.inventoryManager.addItem) {
+                        this.gameState.inventoryManager.addItem('fish', fishData);
+                    } else if (this.gameState.addItem) {
+                        this.gameState.addItem('fish', fishData);
+                    }
+                } catch (error) {
+                    console.error('PlayerController: Error adding fish to inventory:', error);
+                }
+            }
+            
+            // Update statistics with proper error handling
+            try {
+                if (this.gameState.playerProgression && this.gameState.playerProgression.updateStatistics) {
+                    this.gameState.playerProgression.updateStatistics('fishCaught', 1);
+                }
+            } catch (statError) {
+                console.warn('PlayerController: Error updating fishCaught statistic:', statError);
+            }
+            
+            // Update fish count statistics
+            try {
+                // Ensure player.statistics exists
+                if (!this.gameState.player) {
+                    this.gameState.player = {};
+                }
+                if (!this.gameState.player.statistics) {
+                    this.gameState.player.statistics = {};
+                }
+                
+                // Use fallback methods if the inventory methods don't exist
+                let totalFishCount = 0;
+                let uniqueFishCount = 0;
+                
+                if (this.gameState.inventoryManager) {
+                    if (this.gameState.inventoryManager.getTotalFishCount) {
+                        totalFishCount = this.gameState.inventoryManager.getTotalFishCount();
+                    } else if (this.gameState.inventory && this.gameState.inventory.fish) {
+                        totalFishCount = this.gameState.inventory.fish.length;
+                    }
+                    
+                    if (this.gameState.inventoryManager.getUniqueFishCount) {
+                        uniqueFishCount = this.gameState.inventoryManager.getUniqueFishCount();
+                    } else if (this.gameState.inventory && this.gameState.inventory.fish) {
+                        uniqueFishCount = new Set(this.gameState.inventory.fish.map(f => f.fishId || f.id)).size;
+                    }
+                }
+                
+                if (this.gameState.playerProgression && this.gameState.playerProgression.updateStatistics) {
+                    this.gameState.playerProgression.updateStatistics('totalFish', totalFishCount);
+                    this.gameState.playerProgression.updateStatistics('speciesCaught', uniqueFishCount);
+                }
             } catch (error) {
-                console.error('PlayerController: Error adding fish to inventory:', error);
+                console.warn('PlayerController: Error updating fish statistics:', error);
             }
-        }
-        
-        // Update statistics
-        this.gameState.playerProgression.updateStatistics('fishCaught', 1);
-        
-        try {
-            // Use fallback methods if the inventory methods don't exist
-            const totalFishCount = this.gameState.inventoryManager.getTotalFishCount ? 
-                this.gameState.inventoryManager.getTotalFishCount() : 
-                this.gameState.inventory.fish.length;
-                
-            const uniqueFishCount = this.gameState.inventoryManager.getUniqueFishCount ? 
-                this.gameState.inventoryManager.getUniqueFishCount() : 
-                new Set(this.gameState.inventory.fish.map(f => f.fishId || f.id)).size;
-                
-            this.gameState.playerProgression.updateStatistics('totalFish', totalFishCount);
-            this.gameState.playerProgression.updateStatistics('speciesCaught', uniqueFishCount);
-        } catch (error) {
-            console.warn('PlayerController: Error updating fish statistics:', error);
-        }
-        
-        // Check if this is biggest fish of this species
-        try {
-            if (this.gameState.inventoryManager.isBiggestFish) {
-                if (this.gameState.inventoryManager.isBiggestFish(fishData)) {
-                    this.gameState.playerProgression.updateStatistics('biggestFish', `${fishData.name} (${fishData.weight || fishData.size || 0}kg)`);
+            
+            // Check if this is biggest fish of this species
+            try {
+                if (this.gameState.inventoryManager && this.gameState.inventoryManager.isBiggestFish) {
+                    if (this.gameState.inventoryManager.isBiggestFish(fishData)) {
+                        if (this.gameState.playerProgression && this.gameState.playerProgression.updateStatistics) {
+                            this.gameState.playerProgression.updateStatistics('biggestFish', `${fishData.name} (${fishData.weight || fishData.size || 0}kg)`);
+                        }
+                    }
+                } else if (this.gameState.inventory && this.gameState.inventory.fish) {
+                    // Fallback: check if this fish is heavier than any previous fish of same species
+                    const sameSpeciesFish = this.gameState.inventory.fish.filter(f => 
+                        (f.fishId === fishData.fishId || f.name === fishData.name));
+                    const isLargest = sameSpeciesFish.every(f => (fishData.weight || 0) >= (f.weight || 0));
+                    
+                    if (isLargest && fishData.weight > 0) {
+                        if (this.gameState.playerProgression && this.gameState.playerProgression.updateStatistics) {
+                            this.gameState.playerProgression.updateStatistics('biggestFish', `${fishData.name} (${fishData.weight}kg)`);
+                        }
+                    }
                 }
-            } else {
-                // Fallback: check if this fish is heavier than any previous fish of same species
-                const sameSpeciesFish = this.gameState.inventory.fish.filter(f => 
-                    (f.fishId === fishData.fishId || f.name === fishData.name));
-                const isLargest = sameSpeciesFish.every(f => (fishData.weight || 0) >= (f.weight || 0));
-                
-                if (isLargest && fishData.weight > 0) {
-                    this.gameState.playerProgression.updateStatistics('biggestFish', `${fishData.name} (${fishData.weight}kg)`);
-                }
+            } catch (error) {
+                console.warn('PlayerController: Error checking biggest fish:', error);
             }
+            
+            // Update rarest fish if applicable
+            try {
+                // Ensure statistics object exists
+                if (!this.gameState.player.statistics) {
+                    this.gameState.player.statistics = {};
+                }
+                
+                const currentRarest = this.gameState.player.statistics.rarestFish || { rarity: 0 };
+                if (fishData.rarity > (currentRarest.rarity || 0)) {
+                    if (this.gameState.playerProgression && this.gameState.playerProgression.updateStatistics) {
+                        this.gameState.playerProgression.updateStatistics('rarestFish', fishData.name);
+                    }
+                }
+            } catch (error) {
+                console.warn('PlayerController: Error updating rarest fish:', error);
+            }
+            
+            // Check achievements
+            try {
+                if (this.gameState.playerProgression && this.gameState.playerProgression.checkAchievements) {
+                    this.gameState.playerProgression.checkAchievements();
+                }
+            } catch (error) {
+                console.warn('PlayerController: Error checking achievements:', error);
+            }
+            
+            // Check for location unlocks
+            try {
+                if (this.gameState.locationManager && this.gameState.locationManager.checkAndUnlockLocations) {
+                    this.gameState.locationManager.checkAndUnlockLocations();
+                }
+            } catch (error) {
+                console.warn('PlayerController: Error checking location unlocks:', error);
+            }
+            
+            // Visual celebration
+            this.showFishCaughtCelebration(fishData, catchResult, totalXp, bonusXp);
+            
+            // Audio feedback
+            try {
+                if (this.gameState.audioManager && this.gameState.audioManager.playSFX) {
+                    this.gameState.audioManager.playSFX('fish_caught');
+                } else if (this.audioManager && this.audioManager.playSFX) {
+                    this.audioManager.playSFX('fish_caught');
+                }
+            } catch (error) {
+                console.warn('PlayerController: Error playing fish caught audio:', error);
+            }
+            
+            // Reset state
+            this.resetFishingState();
+            
         } catch (error) {
-            console.warn('PlayerController: Error checking biggest fish:', error);
+            console.error('PlayerController: Critical error in finishFishingSuccess:', error);
+            // Ensure we always clean up even if errors occur
+            this.resetFishingState();
         }
-        
-        // Update rarest fish if applicable
-        const currentRarest = this.gameState.player.statistics.rarestFish || { rarity: 0 };
-        if (fishData.rarity > currentRarest.rarity) {
-            this.gameState.playerProgression.updateStatistics('rarestFish', fishData.name);
-        }
-        
-        // Check achievements
-        this.gameState.playerProgression.checkAchievements();
-        
-        // Check for location unlocks
-        if (this.gameState.locationManager) {
-            this.gameState.locationManager.checkAndUnlockLocations();
-        }
-        
-        // Visual celebration
-        this.showFishCaughtCelebration(fishData, catchResult, totalXp, bonusXp);
-        
-        // Audio feedback
-        if (this.gameState.audioManager) {
-            this.gameState.audioManager.playSFX('fish_caught');
-        }
-        
-        // Reset state
-        this.resetFishingState();
     }
     
     calculateExperienceReward(fish) {
@@ -1390,34 +1488,54 @@ export default class PlayerController {
     }
 
     applyFailureConsequences(reason, fish) {
-        // Different consequences based on failure reason
-        switch (reason) {
-            case 'line_break':
-                // Lose some durability on rod and lure
-                this.damageEquipment('rod', 5);
-                this.damageEquipment('lure', 3);
-                // Small energy penalty
-                this.gameState.spendEnergy(2);
-                break;
-                
-            case 'fish_escape':
-                // Lose some lure durability
-                this.damageEquipment('lure', 2);
-                // Small energy penalty
-                this.gameState.spendEnergy(1);
-                break;
-                
-            default:
-                // General failure - minimal penalty
-                this.gameState.spendEnergy(1);
-                break;
+        try {
+            // Different consequences based on failure reason
+            switch (reason) {
+                case 'line_break':
+                    // Lose some durability on rod and lure
+                    this.damageEquipment('rod', 5);
+                    this.damageEquipment('lure', 3);
+                    // Small energy penalty
+                    if (this.gameState.spendEnergy) {
+                        this.gameState.spendEnergy(2);
+                    }
+                    break;
+                    
+                case 'fish_escape':
+                    // Lose some lure durability
+                    this.damageEquipment('lure', 2);
+                    // Small energy penalty
+                    if (this.gameState.spendEnergy) {
+                        this.gameState.spendEnergy(1);
+                    }
+                    break;
+                    
+                default:
+                    // General failure - minimal penalty
+                    if (this.gameState.spendEnergy) {
+                        this.gameState.spendEnergy(1);
+                    }
+                    break;
+            }
+            
+            // Ensure player.statistics exists before updating
+            if (!this.gameState.player) {
+                this.gameState.player = {};
+            }
+            if (!this.gameState.player.statistics) {
+                this.gameState.player.statistics = {};
+            }
+            
+            // Update failure statistics
+            this.gameState.player.statistics.fishingAttempts = (this.gameState.player.statistics.fishingAttempts || 0) + 1;
+            this.gameState.player.statistics.fishingFailures = (this.gameState.player.statistics.fishingFailures || 0) + 1;
+            
+            if (this.gameState.markDirty) {
+                this.gameState.markDirty();
+            }
+        } catch (error) {
+            console.error('PlayerController: Error in applyFailureConsequences:', error);
         }
-        
-        // Update failure statistics
-        this.gameState.player.statistics.fishingAttempts = (this.gameState.player.statistics.fishingAttempts || 0) + 1;
-        this.gameState.player.statistics.fishingFailures = (this.gameState.player.statistics.fishingFailures || 0) + 1;
-        
-        this.gameState.markDirty();
     }
 
     damageEquipment(equipmentType, damage) {
@@ -1468,29 +1586,63 @@ export default class PlayerController {
     }
 
     showFloatingText(text, color, duration) {
-        // Create floating text at player position
-        const textObj = this.scene.add.text(this.position.x, this.position.y - 50, text, {
-            fontSize: '18px',
-            fill: `#${color.toString(16).padStart(6, '0')}`,
-            backgroundColor: '#000000',
-            padding: { x: 8, y: 4 },
-            align: 'center'
-        });
-        
-        textObj.setOrigin(0.5, 0.5);
-        textObj.setDepth(1000);
-        
-        // Animate floating text
-        this.scene.tweens.add({
-            targets: textObj,
-            y: textObj.y - 100,
-            alpha: 0,
-            duration: duration,
-            ease: 'Power2.easeOut',
-            onComplete: () => {
-                textObj.destroy();
+        try {
+            // Ensure we have a valid scene and position
+            if (!this.scene || !this.scene.add) {
+                console.warn('PlayerController: Scene not available for floating text');
+                return;
             }
-        });
+            
+            // Use safe position values
+            const safeX = this.position?.x || this.scene.cameras.main.width / 2;
+            const safeY = (this.position?.y || this.scene.cameras.main.height - 100) - 50;
+            
+            // Create floating text at safe position
+            const textObj = this.scene.add.text(safeX, safeY, text, {
+                fontSize: '18px',
+                fill: `#${color.toString(16).padStart(6, '0')}`,
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: { x: 8, y: 4 },
+                align: 'center',
+                wordWrap: { width: 300 } // Prevent text from being too wide
+            });
+            
+            textObj.setOrigin(0.5, 0.5);
+            textObj.setDepth(1000);
+            
+            // Animate floating text with error handling
+            if (this.scene.tweens) {
+                this.scene.tweens.add({
+                    targets: textObj,
+                    y: safeY - 100,
+                    alpha: 0,
+                    duration: duration || 2000,
+                    ease: 'Power2.easeOut',
+                    onComplete: () => {
+                        try {
+                            if (textObj && !textObj.destroyed) {
+                                textObj.destroy();
+                            }
+                        } catch (destroyError) {
+                            console.warn('PlayerController: Error destroying floating text:', destroyError);
+                        }
+                    }
+                });
+            } else {
+                // Fallback: destroy after delay without animation
+                this.scene.time.delayedCall(duration || 2000, () => {
+                    try {
+                        if (textObj && !textObj.destroyed) {
+                            textObj.destroy();
+                        }
+                    } catch (destroyError) {
+                        console.warn('PlayerController: Error destroying floating text (fallback):', destroyError);
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('PlayerController: Error in showFloatingText:', error);
+        }
     }
 
     // Cleanup when scene ends

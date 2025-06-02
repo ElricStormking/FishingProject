@@ -46,6 +46,7 @@ export class CraftingManager {
                         id: 'bamboo_rod',
                         name: 'Bamboo Rod',
                         type: 'rod',
+                        equipSlot: 'rod',
                         rarity: 1,
                         description: 'A simple bamboo fishing rod',
                         stats: {
@@ -75,6 +76,7 @@ export class CraftingManager {
                         id: 'fiberglass_rod',
                         name: 'Fiberglass Rod',
                         type: 'rod',
+                        equipSlot: 'rod',
                         rarity: 2,
                         description: 'A durable fiberglass fishing rod',
                         stats: {
@@ -104,6 +106,7 @@ export class CraftingManager {
                         id: 'carbon_rod',
                         name: 'Carbon Rod',
                         type: 'rod',
+                        equipSlot: 'rod',
                         rarity: 3,
                         description: 'A lightweight carbon fiber rod',
                         stats: {
@@ -133,6 +136,7 @@ export class CraftingManager {
                         id: 'steel_rod',
                         name: 'Steel Rod',
                         type: 'rod',
+                        equipSlot: 'rod',
                         rarity: 4,
                         description: 'A strong steel fishing rod',
                         stats: {
@@ -162,6 +166,7 @@ export class CraftingManager {
                         id: 'titanium_rod',
                         name: 'Titanium Rod',
                         type: 'rod',
+                        equipSlot: 'rod',
                         rarity: 5,
                         description: 'A premium titanium fishing rod',
                         stats: {
@@ -192,6 +197,7 @@ export class CraftingManager {
                         id: 'elite_bamboo_rod',
                         name: 'Elite Bamboo Rod',
                         type: 'rod',
+                        equipSlot: 'rod',
                         rarity: 3,
                         description: 'An enhanced bamboo rod',
                         stats: {
@@ -223,7 +229,8 @@ export class CraftingManager {
                     result: {
                         id: 'basic_spinner',
                         name: 'Basic Spinner',
-                        type: 'lure',
+                        type: 'spinner',
+                        equipSlot: 'lure',
                         lureType: 'spinner',
                         rarity: 1,
                         description: 'A simple spinning lure',
@@ -251,7 +258,8 @@ export class CraftingManager {
                     result: {
                         id: 'soft_worm',
                         name: 'Soft Worm',
-                        type: 'lure',
+                        type: 'soft_plastic',
+                        equipSlot: 'lure',
                         lureType: 'soft_plastic',
                         rarity: 2,
                         description: 'A soft plastic worm lure',
@@ -279,7 +287,8 @@ export class CraftingManager {
                     result: {
                         id: 'fly_lure',
                         name: 'Fly Lure',
-                        type: 'lure',
+                        type: 'fly',
+                        equipSlot: 'lure',
                         lureType: 'fly',
                         rarity: 3,
                         description: 'A delicate fly fishing lure',
@@ -307,7 +316,8 @@ export class CraftingManager {
                     result: {
                         id: 'popper_lure',
                         name: 'Popper Lure',
-                        type: 'lure',
+                        type: 'popper',
+                        equipSlot: 'lure',
                         lureType: 'popper',
                         rarity: 4,
                         description: 'A surface popping lure',
@@ -335,7 +345,8 @@ export class CraftingManager {
                     result: {
                         id: 'spoon_lure',
                         name: 'Spoon Lure',
-                        type: 'lure',
+                        type: 'spoon',
+                        equipSlot: 'lure',
                         lureType: 'spoon',
                         rarity: 5,
                         description: 'A metallic spoon lure',
@@ -366,6 +377,7 @@ export class CraftingManager {
                         id: 'rowboat',
                         name: 'Rowboat',
                         type: 'boat',
+                        equipSlot: 'boat',
                         rarity: 1,
                         description: 'A simple wooden rowboat',
                         stats: {
@@ -397,6 +409,7 @@ export class CraftingManager {
                         id: 'skiff',
                         name: 'Skiff',
                         type: 'boat',
+                        equipSlot: 'boat',
                         rarity: 2,
                         description: 'A small motorized skiff',
                         stats: {
@@ -430,7 +443,7 @@ export class CraftingManager {
                         id: 'fishers_cap',
                         name: "Fisher's Cap",
                         type: 'clothing',
-                        slotType: 'head',
+                        equipSlot: 'head',
                         rarity: 1,
                         description: 'A practical fishing cap',
                         stats: {
@@ -457,7 +470,7 @@ export class CraftingManager {
                         id: 'sunglasses',
                         name: 'Sunglasses',
                         type: 'clothing',
-                        slotType: 'eyes',
+                        equipSlot: 'head',
                         rarity: 2,
                         description: 'Stylish fishing sunglasses',
                         stats: {
@@ -595,11 +608,48 @@ export class CraftingManager {
                 return 0;
             }
             
+            console.log(`CraftingManager: Looking for ingredient type: ${ingredient.type}, id: ${ingredient.id}`);
+            
             if (ingredient.type === 'fish') {
                 // Count fish cards in inventory
                 const fishCards = this.gameState.inventory.fish || [];
-                const matchingCards = fishCards.filter(card => card && card.id === ingredient.id);
-                return matchingCards.reduce((total, card) => total + (card.quantity || 1), 0);
+                console.log(`CraftingManager: Fish inventory has ${fishCards.length} cards`);
+                
+                // Try multiple matching strategies for fish
+                const matchingCards = fishCards.filter(card => {
+                    if (!card) return false;
+                    
+                    // Strategy 1: Direct ID match
+                    if (card.id === ingredient.id) {
+                        console.log(`CraftingManager: Direct ID match found: ${card.name}`);
+                        return true;
+                    }
+                    
+                    // Strategy 2: fishId match (for fish cards that have both id and fishId)
+                    if (card.fishId === ingredient.id) {
+                        console.log(`CraftingManager: fishId match found: ${card.name} (fishId: ${card.fishId})`);
+                        return true;
+                    }
+                    
+                    // Strategy 3: Name-based match (case insensitive)
+                    if (card.name && card.name.toLowerCase() === ingredient.id.toLowerCase()) {
+                        console.log(`CraftingManager: Name match found: ${card.name}`);
+                        return true;
+                    }
+                    
+                    // Strategy 4: Name contains the ingredient id
+                    if (card.name && card.name.toLowerCase().includes(ingredient.id.toLowerCase())) {
+                        console.log(`CraftingManager: Name contains match found: ${card.name}`);
+                        return true;
+                    }
+                    
+                    console.log(`CraftingManager: No match for card - id: ${card.id}, fishId: ${card.fishId}, name: ${card.name}`);
+                    return false;
+                });
+                
+                const total = matchingCards.reduce((total, card) => total + (card.quantity || 1), 0);
+                console.log(`CraftingManager: Found ${matchingCards.length} matching cards with total quantity: ${total}`);
+                return total;
             } else if (ingredient.type === 'equipment') {
                 // Count equipment items
                 for (const category of ['rods', 'lures', 'boats', 'clothing']) {
@@ -685,15 +735,41 @@ export class CraftingManager {
             let remaining = ingredient.quantity;
             const fishCards = this.gameState.inventory.fish || [];
             
+            console.log(`CraftingManager: Consuming ${ingredient.quantity} ${ingredient.id} fish`);
+            console.log(`CraftingManager: Fish inventory before consumption:`, fishCards.map(f => ({ id: f.id, fishId: f.fishId, name: f.name, quantity: f.quantity })));
+            
             for (let i = fishCards.length - 1; i >= 0 && remaining > 0; i--) {
                 const card = fishCards[i];
+                
+                // Use the same matching logic as getAvailableIngredient
+                let isMatch = false;
+                
+                // Strategy 1: Direct ID match
                 if (card.id === ingredient.id) {
+                    isMatch = true;
+                }
+                // Strategy 2: fishId match
+                else if (card.fishId === ingredient.id) {
+                    isMatch = true;
+                }
+                // Strategy 3: Name-based match (case insensitive)
+                else if (card.name && card.name.toLowerCase() === ingredient.id.toLowerCase()) {
+                    isMatch = true;
+                }
+                // Strategy 4: Name contains the ingredient id
+                else if (card.name && card.name.toLowerCase().includes(ingredient.id.toLowerCase())) {
+                    isMatch = true;
+                }
+                
+                if (isMatch) {
                     const removeQuantity = Math.min(remaining, card.quantity || 1);
+                    console.log(`CraftingManager: Removing ${removeQuantity} from ${card.name} (had ${card.quantity || 1})`);
                     this.inventoryManager.removeItem('fish', card.id, removeQuantity);
                     remaining -= removeQuantity;
                 }
             }
             
+            console.log(`CraftingManager: Consumption complete, remaining needed: ${remaining}`);
             return remaining === 0;
         } else if (ingredient.type === 'equipment') {
             // Remove equipment items

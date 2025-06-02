@@ -815,9 +815,36 @@ export class CraftingUI {
             console.log('CraftingUI: Fish inventory:', fishCards);
             console.log('CraftingUI: Looking for fish with id:', ingredient.id);
             
+            // Use the same improved matching logic as CraftingManager
             const matchingCards = fishCards.filter(card => {
-                console.log('CraftingUI: Checking fish card:', card, 'id:', card.id, 'matches:', card.id === ingredient.id);
-                return card.id === ingredient.id;
+                if (!card) return false;
+                
+                // Strategy 1: Direct ID match
+                if (card.id === ingredient.id) {
+                    console.log('CraftingUI: Direct ID match found:', card.name);
+                    return true;
+                }
+                
+                // Strategy 2: fishId match (for fish cards that have both id and fishId)
+                if (card.fishId === ingredient.id) {
+                    console.log('CraftingUI: fishId match found:', card.name, '(fishId:', card.fishId + ')');
+                    return true;
+                }
+                
+                // Strategy 3: Name-based match (case insensitive)
+                if (card.name && card.name.toLowerCase() === ingredient.id.toLowerCase()) {
+                    console.log('CraftingUI: Name match found:', card.name);
+                    return true;
+                }
+                
+                // Strategy 4: Name contains the ingredient id
+                if (card.name && card.name.toLowerCase().includes(ingredient.id.toLowerCase())) {
+                    console.log('CraftingUI: Name contains match found:', card.name);
+                    return true;
+                }
+                
+                console.log('CraftingUI: No match for fish card - id:', card.id, 'fishId:', card.fishId, 'name:', card.name);
+                return false;
             });
             console.log('CraftingUI: Matching fish cards found:', matchingCards);
             items.push(...matchingCards);

@@ -316,13 +316,13 @@ export class UITheme {
         },
         
         tab: {
-            fillColor: UITheme.colors.medium,
-            hoverColor: UITheme.colors.primaryLight,
-            pressedColor: UITheme.colors.primaryDark,
+            fillColor: UITheme.colors.darkSecondary,
+            hoverColor: UITheme.colors.medium,
+            pressedColor: UITheme.colors.dark,
             strokeColor: UITheme.colors.light,
             strokeWidth: UITheme.borders.width.thin,
             radius: UITheme.borders.radius.small,
-            textStyle: { ...UITheme.textStyles.button, color: UITheme.colors.textSecondary }
+            textStyle: { ...UITheme.textStyles.button, fontSize: UITheme.fonts.sizes.medium }
         },
 
         tabActive: {
@@ -332,7 +332,7 @@ export class UITheme {
             strokeColor: UITheme.colors.primaryLight,
             strokeWidth: UITheme.borders.width.medium,
             radius: UITheme.borders.radius.small,
-            textStyle: UITheme.textStyles.button
+            textStyle: { ...UITheme.textStyles.button, fontSize: UITheme.fonts.sizes.medium }
         },
 
         keybinding: {
@@ -416,6 +416,11 @@ export class UITheme {
         });
         
         return { button, text: buttonText };
+    }
+    
+    // Get button style by name
+    static getButtonStyle(styleName) {
+        return UITheme.buttonStyles[styleName] || UITheme.buttonStyles.primary;
     }
     
     // Get rarity color

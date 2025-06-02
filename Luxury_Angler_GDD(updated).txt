@@ -377,6 +377,12 @@ Equipment enhances player attributes and is categorized into four types:
 - **Cross-System Integration**: Dialogue choices can influence gameplay (e.g., unlocking new fishing spots or temporary buffs).
 - **Event Quest System UI**: There will be event quests including: main story quests, side event quests, Cabin NPC quests, ..,etc.
 
+8.3 Quest System
+- **Main Story Quest**: These quests are mainly created by Main Story, and are usually important to unlock new Map area, or new equipments, new boat functionalities.
+- **Events Quest**: These events are usually time limited Story Event quests or like Fishing Tournament Challenges.
+- **NPC Quest**: These quests are given out from Bikini Assistant or important Story NPCs that either can increase Romance Meter of that particular Bikini Assistant, or unlock some map area or boat functions.
+- **Fishing Quest**: These quests are usually for players to practice and to challenge some achievements.
+
 9. SHOP SYSTEM
 --------------
 

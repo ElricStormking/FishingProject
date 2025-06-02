@@ -97,24 +97,48 @@ export default class SettingsScene extends Phaser.Scene {
     }
 
     updateTabVisuals() {
-        // Update tab colors/styles based on UITheme properties
-        const activeStyle = UITheme.getButtonStyle('tabActive'); // Assuming a style for active tabs
-        const inactiveStyle = UITheme.getButtonStyle('tab');    // Assuming a style for inactive tabs
+        try {
+            // Update tab colors/styles based on UITheme properties
+            const activeStyle = UITheme.getButtonStyle('tabActive');
+            const inactiveStyle = UITheme.getButtonStyle('tab');
 
-        // Helper to apply style (this is conceptual, actual implementation depends on UITheme.createButton return)
-        const applyStyle = (tabComponent, style) => {
-            if (tabComponent && tabComponent.button && tabComponent.text && style) {
-                tabComponent.button.setFillStyle(style.backgroundColor, style.backgroundAlpha || 1);
-                tabComponent.button.setStrokeStyle(style.borderColor, style.borderAlpha || 1);
-                tabComponent.text.setStyle(style.textStyle);
+            // Helper to apply style - properly redraw graphics objects
+            const applyStyle = (tabComponent, style) => {
+                try {
+                    if (tabComponent && tabComponent.button && tabComponent.text && style) {
+                        // Clear and redraw the button graphics
+                        const button = tabComponent.button;
+                        const text = tabComponent.text;
+                        
+                        // Use fixed dimensions since tabs have standard sizes
+                        const width = 150; // standard tab width
+                        const height = 40; // standard tab height
+                        
+                        // Clear and redraw button
+                        button.clear();
+                        button.fillStyle(style.fillColor);
+                        button.fillRoundedRect(-width/2, -height/2, width, height, style.radius);
+                        button.lineStyle(style.strokeWidth, style.strokeColor);
+                        button.strokeRoundedRect(-width/2, -height/2, width, height, style.radius);
+                        
+                        // Update text style
+                        if (text && style.textStyle) {
+                            text.setStyle(style.textStyle);
+                        }
+                    }
+                } catch (error) {
+                    console.error('SettingsScene: Error applying tab style:', error);
+                }
+            };
+
+            if (this.controlsTab) {
+                applyStyle(this.controlsTab, this.currentTab === 'controls' ? activeStyle : inactiveStyle);
             }
-        };
-
-        if (this.controlsTab) {
-            applyStyle(this.controlsTab, this.currentTab === 'controls' ? activeStyle : inactiveStyle);
-        }
-        if (this.audioTab) {
-            applyStyle(this.audioTab, this.currentTab === 'audio' ? activeStyle : inactiveStyle);
+            if (this.audioTab) {
+                applyStyle(this.audioTab, this.currentTab === 'audio' ? activeStyle : inactiveStyle);
+            }
+        } catch (error) {
+            console.error('SettingsScene: Error in updateTabVisuals:', error);
         }
     }
 
@@ -130,8 +154,34 @@ export default class SettingsScene extends Phaser.Scene {
         this.tabContent.push(instructions);
         y += 50;
 
-        // Get current bindings
-        const bindings = this.inputManager.getBindings();
+        // Get current bindings with error handling
+        let bindings;
+        try {
+            if (!this.inputManager) {
+                console.error('SettingsScene: InputManager not initialized');
+                // Create a fallback to prevent crashes
+                bindings = {
+                    moveUp: ['KeyW'],
+                    moveDown: ['KeyS'],
+                    moveLeft: ['KeyA'],
+                    moveRight: ['KeyD'],
+                    cast: ['Space'],
+                    menu: ['Escape'],
+                    inventory: ['KeyI'],
+                    shop: ['KeyP']
+                };
+            } else {
+                bindings = this.inputManager.getBindings();
+            }
+            
+            if (!bindings) {
+                console.error('SettingsScene: Failed to get bindings from InputManager');
+                return;
+            }
+        } catch (error) {
+            console.error('SettingsScene: Error getting bindings:', error);
+            return;
+        }
 
         // Create binding rows
         const actions = [
@@ -146,9 +196,22 @@ export default class SettingsScene extends Phaser.Scene {
         ];
 
         actions.forEach(action => {
-            const row = this.createBindingRow(action.key, action.label, bindings[action.key], y);
-            this.tabContent.push(...row);
-            y += 40;
+            try {
+                const actionBindings = bindings[action.key];
+                if (actionBindings && Array.isArray(actionBindings)) {
+                    const row = this.createBindingRow(action.key, action.label, actionBindings, y);
+                    this.tabContent.push(...row);
+                } else {
+                    console.warn(`SettingsScene: No bindings found for action ${action.key}`);
+                    // Create a placeholder or empty row
+                    const placeholder = UITheme.createText(this, 100, y, `${action.label}: [Not configured]`, 'bodyMedium');
+                    this.tabContent.push(placeholder);
+                }
+                y += 40;
+            } catch (error) {
+                console.error(`SettingsScene: Error creating row for action ${action.key}:`, error);
+                y += 40; // Still increment y to avoid overlapping
+            }
         });
 
         // Reset button

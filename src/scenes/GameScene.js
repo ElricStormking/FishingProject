@@ -26,6 +26,24 @@ import { RenJsSaveIntegration } from '../scripts/RenJsSaveIntegration.js';
 export default class GameScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GameScene' });
+        
+        // Define depth layers for consistent UI layering
+        this.DEPTH_LAYERS = {
+            BACKGROUND: -100,           // Background elements
+            WATER_EFFECTS: -50,         // Water ripples, effects
+            OVERLAYS: -10,              // Dark overlays, background panels
+            FISHING_SPOTS: 50,          // Fishing spots and hotspots
+            GAME_ELEMENTS: 100,         // Crosshair, fishing rod, lure
+            FISHING_LINE: 190,          // Fishing line
+            FISHING_ROD: 200,           // Fishing rod
+            UI_PANELS: 1000,            // UI panels and containers
+            UI_BUTTONS: 1500,           // UI buttons
+            UI_TEXT: 1501,              // UI button text
+            UI_INTERACTIVE: 1502,       // Interactive areas
+            MODALS: 2000,               // Modal dialogs
+            TOOLTIPS: 2500,             // Tooltips and notifications
+            DEBUG: 3000                 // Debug overlays
+        };
     }
 
     create(data) {
@@ -156,6 +174,7 @@ export default class GameScene extends Phaser.Scene {
             for (let y = height * 0.3; y < height * 0.85; y += 60) {
                 const ripple = this.add.circle(x + Phaser.Math.Between(-20, 20), y + Phaser.Math.Between(-10, 10), 
                     Phaser.Math.Between(2, 8), 0xffffff, 0.1);
+                ripple.setDepth(this.DEPTH_LAYERS.WATER_EFFECTS);
                 
                 // Animate ripples
                 this.tweens.add({
@@ -600,6 +619,55 @@ export default class GameScene extends Phaser.Scene {
         console.log('GameScene: Event listeners setup completed');
     }
 
+    /**
+     * Ensure proper depth ordering for overlays and UI elements
+     * This method can be called by UI components to set overlay depths correctly
+     */
+    setOverlayDepth(overlayElement, type = 'modal') {
+        if (!overlayElement) return;
+        
+        const depthMap = {
+            'background': this.DEPTH_LAYERS.OVERLAYS,
+            'modal': this.DEPTH_LAYERS.MODALS,
+            'tooltip': this.DEPTH_LAYERS.TOOLTIPS,
+            'debug': this.DEPTH_LAYERS.DEBUG
+        };
+        
+        const depth = depthMap[type] || this.DEPTH_LAYERS.OVERLAYS;
+        
+        if (overlayElement.setDepth) {
+            overlayElement.setDepth(depth);
+        }
+        
+        console.log(`GameScene: Set overlay depth to ${depth} for type: ${type}`);
+        return depth;
+    }
+
+    /**
+     * Get the appropriate depth for UI elements
+     * This helps ensure consistent layering across all UI components
+     */
+    getUIDepth(elementType) {
+        const depthMap = {
+            'background': this.DEPTH_LAYERS.BACKGROUND,
+            'water_effects': this.DEPTH_LAYERS.WATER_EFFECTS,
+            'overlay': this.DEPTH_LAYERS.OVERLAYS,
+            'fishing_spots': this.DEPTH_LAYERS.FISHING_SPOTS,
+            'game_elements': this.DEPTH_LAYERS.GAME_ELEMENTS,
+            'fishing_line': this.DEPTH_LAYERS.FISHING_LINE,
+            'fishing_rod': this.DEPTH_LAYERS.FISHING_ROD,
+            'ui_panels': this.DEPTH_LAYERS.UI_PANELS,
+            'ui_buttons': this.DEPTH_LAYERS.UI_BUTTONS,
+            'ui_text': this.DEPTH_LAYERS.UI_TEXT,
+            'ui_interactive': this.DEPTH_LAYERS.UI_INTERACTIVE,
+            'modals': this.DEPTH_LAYERS.MODALS,
+            'tooltips': this.DEPTH_LAYERS.TOOLTIPS,
+            'debug': this.DEPTH_LAYERS.DEBUG
+        };
+        
+        return depthMap[elementType] || this.DEPTH_LAYERS.UI_PANELS;
+    }
+
     createActionButtons(width, height) {
         // Create Player button in lower right corner
         this.createPlayerButton();
@@ -938,7 +1006,7 @@ export default class GameScene extends Phaser.Scene {
         
         // Create a more advanced crosshair with animated elements
         this.crosshair = this.add.container(width / 2, height / 2);
-        this.crosshair.setDepth(100);
+        this.crosshair.setDepth(this.DEPTH_LAYERS.GAME_ELEMENTS);
         
         // Outer ring
         const outerRing = this.add.graphics();
@@ -1066,7 +1134,7 @@ export default class GameScene extends Phaser.Scene {
         
         // Create fishing rod graphics
         this.fishingRod = this.add.graphics();
-        this.fishingRod.setDepth(200);
+        this.fishingRod.setDepth(this.DEPTH_LAYERS.FISHING_ROD);
         
         // Rod appearance based on equipped rod
         let rodColor = 0x404040; // Default gray
@@ -1105,7 +1173,7 @@ export default class GameScene extends Phaser.Scene {
         
         // Create fishing line (initially hanging down)
         this.fishingLine = this.add.graphics();
-        this.fishingLine.setDepth(190);
+        this.fishingLine.setDepth(this.DEPTH_LAYERS.FISHING_LINE);
         
         // Create lure at end of line
         this.createLure(rodTipX, rodTipY + 30, equippedLure);
@@ -1119,7 +1187,7 @@ export default class GameScene extends Phaser.Scene {
     createLure(x, y, equippedLure) {
         // Create lure graphics
         this.lure = this.add.graphics();
-        this.lure.setDepth(180);
+        this.lure.setDepth(this.DEPTH_LAYERS.GAME_ELEMENTS);
         this.lure.setPosition(x, y);
         
         // Lure appearance based on equipped lure
@@ -1211,7 +1279,7 @@ export default class GameScene extends Phaser.Scene {
         
         // Create permanent hotspot area with improved visuals
         this.permanentHotspot = this.add.container(hotspotX, hotspotY);
-        this.permanentHotspot.setDepth(50);
+        this.permanentHotspot.setDepth(this.DEPTH_LAYERS.FISHING_SPOTS);
         
         // Outer glow (larger, more transparent)
         const outerGlow = this.add.graphics();
@@ -1448,7 +1516,7 @@ export default class GameScene extends Phaser.Scene {
         
         // Create main spot visual container
         spot.visual = this.add.container(spot.x, spot.y);
-        spot.visual.setDepth(45); // Below permanent hotspot but above water
+        spot.visual.setDepth(this.DEPTH_LAYERS.FISHING_SPOTS - 5); // Slightly below permanent hotspot
         
         // Outer glow ring
         const outerGlow = this.add.graphics();
@@ -1606,7 +1674,7 @@ export default class GameScene extends Phaser.Scene {
         
         // Create label container
         spot.label = this.add.container(spot.x, spot.y - 100);
-        spot.label.setDepth(46);
+        spot.label.setDepth(this.DEPTH_LAYERS.FISHING_SPOTS - 4);
         
         // Label background
         const labelBg = this.add.graphics();
@@ -1823,8 +1891,8 @@ export default class GameScene extends Phaser.Scene {
         );
         
         // Set depth for proper layering
-        playerBtn.button.setDepth(1500);
-        playerBtn.text.setDepth(1501);
+        playerBtn.button.setDepth(this.DEPTH_LAYERS.UI_BUTTONS);
+        playerBtn.text.setDepth(this.DEPTH_LAYERS.UI_TEXT);
         playerBtn.text.setFontStyle('bold');
         
         // Store references for cleanup
@@ -1861,8 +1929,8 @@ export default class GameScene extends Phaser.Scene {
         );
         
         // Set depth for proper layering
-        collectionBtn.button.setDepth(1500);
-        collectionBtn.text.setDepth(1501);
+        collectionBtn.button.setDepth(this.DEPTH_LAYERS.UI_BUTTONS);
+        collectionBtn.text.setDepth(this.DEPTH_LAYERS.UI_TEXT);
         collectionBtn.text.setFontStyle('bold');
         
         // Store references for cleanup
@@ -1884,7 +1952,7 @@ export default class GameScene extends Phaser.Scene {
         
         // Create button background using UITheme
         this.enhancementButton = this.add.graphics();
-        this.enhancementButton.setDepth(1500);
+        this.enhancementButton.setDepth(this.DEPTH_LAYERS.UI_BUTTONS);
         
         // Button styling using UITheme
         this.enhancementButton.fillStyle(UITheme.colors.primary, 0.9);
@@ -1896,11 +1964,11 @@ export default class GameScene extends Phaser.Scene {
         this.enhancementButtonText = UITheme.createText(this, buttonX + buttonWidth/2, buttonY + buttonHeight/2, '🔧 Enhancement', 'bodyMedium');
         this.enhancementButtonText.setOrigin(0.5);
         this.enhancementButtonText.setFontStyle('bold');
-        this.enhancementButtonText.setDepth(1501);
+        this.enhancementButtonText.setDepth(this.DEPTH_LAYERS.UI_TEXT);
         
         // Make button interactive
         const buttonHitArea = this.add.rectangle(buttonX + buttonWidth/2, buttonY + buttonHeight/2, buttonWidth, buttonHeight, 0x000000, 0);
-        buttonHitArea.setDepth(1502);
+        buttonHitArea.setDepth(this.DEPTH_LAYERS.UI_INTERACTIVE);
         buttonHitArea.setInteractive({ useHandCursor: true });
         
         // Hover effects using UITheme
@@ -1979,8 +2047,8 @@ export default class GameScene extends Phaser.Scene {
         );
         
         // Set depth for proper layering
-        questBtn.button.setDepth(1500);
-        questBtn.text.setDepth(1501);
+        questBtn.button.setDepth(this.DEPTH_LAYERS.UI_BUTTONS);
+        questBtn.text.setDepth(this.DEPTH_LAYERS.UI_TEXT);
         questBtn.text.setFontStyle('bold');
         
         // Store references for cleanup
@@ -2169,8 +2237,8 @@ export default class GameScene extends Phaser.Scene {
         );
         
         // Set depth for proper layering
-        returnBtn.button.setDepth(1500);
-        returnBtn.text.setDepth(1501);
+        returnBtn.button.setDepth(this.DEPTH_LAYERS.UI_BUTTONS);
+        returnBtn.text.setDepth(this.DEPTH_LAYERS.UI_TEXT);
         returnBtn.text.setFontStyle('bold');
         
         // Store references for cleanup
@@ -2185,7 +2253,7 @@ export default class GameScene extends Phaser.Scene {
         if (sessionData) {
             // Create a more attractive fishing session status panel
             const statusContainer = this.add.container(20, this.cameras.main.height - 120);
-            statusContainer.setDepth(1000);
+            statusContainer.setDepth(this.DEPTH_LAYERS.UI_PANELS);
             
             // Background panel
             const statusBg = UITheme.createPanel(this, 0, 0, 200, 100, 'primary');
@@ -2237,80 +2305,286 @@ export default class GameScene extends Phaser.Scene {
         console.log('GameScene: Returning to boat');
         
         try {
+            // Prevent multiple calls
+            if (this.returningToBoat) {
+                console.log('GameScene: Already returning to boat, ignoring duplicate call');
+                return;
+            }
+            this.returningToBoat = true;
+            
             // Play return sound
-            if (this.audioManager?.playSFX) {
-                this.audioManager.playSFX('button');
+            try {
+                if (this.audioManager?.playSFX) {
+                    this.audioManager.playSFX('button');
+                }
+            } catch (audioError) {
+                console.warn('GameScene: Audio error during return:', audioError);
+            }
+            
+            // Stop auto-save to prevent conflicts
+            if (this.gameState) {
+                this.gameState.stopAutoSave();
+            }
+            
+            // Clean up active systems before transition
+            try {
+                // Clean up enhancement system
+                if (this.achievementEnhancer) {
+                    this.achievementEnhancer.cleanup?.();
+                }
+                
+                // Clean up time and weather systems
+                if (this.timeManager) {
+                    this.timeManager.cleanup?.();
+                }
+                if (this.weatherManager) {
+                    this.weatherManager.cleanup?.();
+                }
+                
+                // Clean up audio manager
+                if (this.audioManager) {
+                    this.audioManager.cleanup?.();
+                }
+                
+                // Clean up spot rotation timer
+                if (this.spotRotationTimer) {
+                    this.spotRotationTimer.destroy();
+                    this.spotRotationTimer = null;
+                }
+                
+                // Clean up tweens to prevent errors
+                this.tweens.killAll();
+                
+            } catch (cleanupError) {
+                console.warn('GameScene: Error during system cleanup:', cleanupError);
             }
             
             // Update fishing session data
-            if (this.gameState.currentFishingSession) {
-                this.gameState.currentFishingSession.endTime = Date.now();
-                this.gameState.currentFishingSession.duration = 
-                    this.gameState.currentFishingSession.endTime - this.gameState.currentFishingSession.startTime;
+            try {
+                if (this.gameState && this.gameState.currentFishingSession) {
+                    this.gameState.currentFishingSession.endTime = Date.now();
+                    this.gameState.currentFishingSession.duration = 
+                        this.gameState.currentFishingSession.endTime - this.gameState.currentFishingSession.startTime;
+                    
+                    console.log('GameScene: Fishing session completed:', this.gameState.currentFishingSession);
+                }
                 
-                console.log('GameScene: Fishing session completed:', this.gameState.currentFishingSession);
+                // Update player activity
+                if (this.gameState && this.gameState.player) {
+                    this.gameState.player.currentActivity = 'boat';
+                    this.gameState.player.lastActivity = 'fishing';
+                }
+                
+                // Save game state
+                if (this.gameState) {
+                    this.gameState.save();
+                }
+            } catch (stateError) {
+                console.warn('GameScene: Error updating game state:', stateError);
             }
             
-            // Update player activity
-            this.gameState.player.currentActivity = 'boat';
-            this.gameState.player.lastActivity = 'fishing';
-            
-            // Save game state
-            this.gameState.save();
-            
-            // Return to the calling scene (usually BoatMenuScene)
-            const returnScene = this.callingScene || 'BoatMenuScene';
-            this.scene.start(returnScene, {
-                returnedFromFishing: true,
-                fishingSessionData: this.gameState.currentFishingSession
+            // Short delay to ensure cleanup completes
+            this.time.delayedCall(100, () => {
+                try {
+                    // Return to the calling scene (usually BoatMenuScene)
+                    const returnScene = this.callingScene || 'BoatMenuScene';
+                    
+                    // Use scene.start with proper data
+                    this.scene.start(returnScene, {
+                        returnedFromFishing: true,
+                        fishingSessionData: this.gameState?.currentFishingSession || null
+                    });
+                    
+                    console.log(`GameScene: Returned to ${returnScene}`);
+                    
+                } catch (transitionError) {
+                    console.error('GameScene: Error during scene transition:', transitionError);
+                    
+                    // Emergency fallback - try to go to BoatMenuScene directly
+                    try {
+                        this.scene.start('BoatMenuScene', {
+                            returnedFromFishing: true,
+                            errorRecovery: true
+                        });
+                        console.log('GameScene: Emergency fallback to BoatMenuScene completed');
+                    } catch (fallbackError) {
+                        console.error('GameScene: Emergency fallback also failed:', fallbackError);
+                        // Last resort - restart the game
+                        window.location.reload();
+                    }
+                }
             });
             
-            console.log(`GameScene: Returned to ${returnScene}`);
-            
         } catch (error) {
-            console.error('GameScene: Error returning to boat:', error);
-            // Fallback to BoatMenuScene
-            this.scene.start('BoatMenuScene');
+            console.error('GameScene: Critical error returning to boat:', error);
+            console.error('GameScene: Error stack:', error.stack);
+            
+            // Reset flag
+            this.returningToBoat = false;
+            
+            // Emergency fallback
+            try {
+                this.scene.start('BoatMenuScene', {
+                    returnedFromFishing: true,
+                    errorRecovery: true
+                });
+            } catch (fallbackError) {
+                console.error('GameScene: All fallbacks failed, reloading page');
+                window.location.reload();
+            }
         }
     }
 
     destroy() {
-        // Clean up event listeners
-        if (this.inputManager) {
-            this.inputManager.destroy();
-        }
+        console.log('GameScene: Starting cleanup and destroy process');
         
-        if (this.playerController) {
-            this.playerController.destroy();
-        }
-        
-        // Clean up fishing spots system
-        if (this.fishingSpots) {
-            this.fishingSpots.forEach(spot => {
-                if (spot.visual) spot.visual.destroy();
-                if (spot.label) spot.label.destroy();
-            });
-            this.fishingSpots = [];
-        }
-        
-        // Clean up spot rotation timer
-        if (this.spotRotationTimer) {
-            this.spotRotationTimer.destroy();
-            this.spotRotationTimer = null;
-        }
-        
-        // Clean up fish attraction timers
-        if (this.fishGroup) {
-            this.fishGroup.children.entries.forEach(fish => {
-                if (fish.attractionTimer) {
-                    fish.attractionTimer.destroy();
+        try {
+            // Set flag to prevent new operations
+            this.destroying = true;
+            
+            // Stop auto-save first
+            if (this.gameState) {
+                this.gameState.stopAutoSave();
+            }
+            
+            // Clean up input handling
+            try {
+                if (this.inputManager) {
+                    this.inputManager.destroy();
+                    this.inputManager = null;
                 }
-                if (fish.spotAttractionTimer) {
-                    fish.spotAttractionTimer.destroy();
+                
+                if (this.playerController) {
+                    this.playerController.destroy();
+                    this.playerController = null;
                 }
-            });
+            } catch (inputError) {
+                console.warn('GameScene: Error cleaning up input systems:', inputError);
+            }
+            
+            // Clean up achievement and enhancement systems
+            try {
+                if (this.achievementEnhancer) {
+                    this.achievementEnhancer.cleanup?.();
+                    this.achievementEnhancer = null;
+                }
+                
+                if (this.achievementPopupSystem) {
+                    this.achievementPopupSystem.cleanup?.();
+                    this.achievementPopupSystem = null;
+                }
+            } catch (enhancementError) {
+                console.warn('GameScene: Error cleaning up enhancement systems:', enhancementError);
+            }
+            
+            // Clean up time and weather systems
+            try {
+                if (this.timeManager) {
+                    this.timeManager.cleanup?.();
+                    this.timeManager = null;
+                }
+                
+                if (this.weatherManager) {
+                    this.weatherManager.cleanup?.();
+                    this.weatherManager = null;
+                }
+            } catch (timeWeatherError) {
+                console.warn('GameScene: Error cleaning up time/weather systems:', timeWeatherError);
+            }
+            
+            // Clean up fishing spots system
+            try {
+                if (this.fishingSpots) {
+                    this.fishingSpots.forEach(spot => {
+                        if (spot.visual) spot.visual.destroy();
+                        if (spot.label) spot.label.destroy();
+                        if (spot.timer) spot.timer.destroy();
+                    });
+                    this.fishingSpots = [];
+                }
+            } catch (spotsError) {
+                console.warn('GameScene: Error cleaning up fishing spots:', spotsError);
+            }
+            
+            // Clean up timers
+            try {
+                if (this.spotRotationTimer) {
+                    this.spotRotationTimer.destroy();
+                    this.spotRotationTimer = null;
+                }
+            } catch (timerError) {
+                console.warn('GameScene: Error cleaning up timers:', timerError);
+            }
+            
+            // Clean up fish attraction timers
+            try {
+                if (this.fishGroup) {
+                    this.fishGroup.children.entries.forEach(fish => {
+                        if (fish.attractionTimer) {
+                            fish.attractionTimer.destroy();
+                        }
+                        if (fish.spotAttractionTimer) {
+                            fish.spotAttractionTimer.destroy();
+                        }
+                    });
+                    this.fishGroup.destroy();
+                    this.fishGroup = null;
+                }
+            } catch (fishError) {
+                console.warn('GameScene: Error cleaning up fish systems:', fishError);
+            }
+            
+            // Clean up audio
+            try {
+                if (this.audioManager) {
+                    this.audioManager.cleanup?.();
+                    this.audioManager = null;
+                }
+            } catch (audioError) {
+                console.warn('GameScene: Error cleaning up audio:', audioError);
+            }
+            
+            // Clean up loading manager
+            try {
+                if (this.loadingStateManager) {
+                    this.loadingStateManager.cleanup?.();
+                    this.loadingStateManager = null;
+                }
+            } catch (loadingError) {
+                console.warn('GameScene: Error cleaning up loading manager:', loadingError);
+            }
+            
+            // Kill all tweens
+            try {
+                this.tweens.killAll();
+            } catch (tweenError) {
+                console.warn('GameScene: Error killing tweens:', tweenError);
+            }
+            
+            // Clear scene references from gameState
+            try {
+                if (this.gameState) {
+                    this.gameState.timeManager = null;
+                    this.gameState.weatherManager = null;
+                }
+            } catch (stateError) {
+                console.warn('GameScene: Error clearing gameState references:', stateError);
+            }
+            
+            console.log('GameScene: Cleanup completed successfully');
+            
+        } catch (error) {
+            console.error('GameScene: Error during destroy cleanup:', error);
+            console.error('GameScene: Destroy error stack:', error.stack);
         }
         
-        super.destroy();
+        // Call parent destroy
+        try {
+            super.destroy();
+        } catch (superError) {
+            console.error('GameScene: Error in parent destroy:', superError);
+        }
+        
+        console.log('GameScene: Destroy process completed');
     }
 } 

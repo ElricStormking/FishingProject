@@ -37,7 +37,7 @@
       "stackable": false,
       "equipSlot": "clothing",
       "maxEquipped": 3,
-      "requiredProperties": ["id", "name", "slotType", "rarity", "stats", "description", "unlockLevel"],
+      "requiredProperties": ["id", "name", "equipSlot", "rarity", "stats", "description", "unlockLevel"],
       "optionalProperties": ["cost", "craftingMaterials", "craftingTime", "durability", "condition"]
     },
     "upgrades": {
@@ -71,6 +71,14 @@
       "maxEquipped": 0,
       "requiredProperties": ["id", "name", "rarity", "description"],
       "optionalProperties": ["cost", "quantity", "effect", "successRate", "bonusMultiplier", "preventBreak", "preventDowngrade"]
+    },
+    "bikini_assistants": {
+      "type": "equipment",
+      "stackable": false,
+      "equipSlot": "bikini_assistant",
+      "maxEquipped": 1,
+      "requiredProperties": ["id", "name", "rarity", "stats", "description", "unlockLevel"],
+      "optionalProperties": ["cost", "craftingMaterials", "craftingTime", "specialAbility"]
     }
   },
   "itemProperties": {
@@ -89,9 +97,9 @@
       "description": "Item subtype (e.g., spinner, soft_plastic for lures)",
       "required": false
     },
-    "slotType": {
+    "equipSlot": {
       "type": "string",
-      "description": "Clothing slot type (head, upper_body, lower_body)",
+      "description": "Equipment slot type (rod, lure, boat, head, upper_body, lower_body, bikini_assistant)",
       "required": false
     },
     "rarity": {
@@ -158,7 +166,11 @@
         "storage": {"type": "integer", "min": 0},
         "waterResistant": {"type": "integer", "min": 0},
         "mobility": {"type": "integer", "min": 0},
-        "deepWaterAccess": {"type": "integer", "min": 0}
+        "deepWaterAccess": {"type": "integer", "min": 0},
+        "fishingBonus": {"type": "integer", "min": 0},
+        "luckBonus": {"type": "integer", "min": 0},
+        "experienceBonus": {"type": "integer", "min": 0},
+        "nightFishing": {"type": "integer", "min": 0}
       }
     },
     "craftingMaterials": {
@@ -237,7 +249,8 @@
       "upgrades": 50,
       "fish": 100,
       "consumables": 20,
-      "materials": 50
+      "materials": 50,
+      "bikini_assistants": 10
     }
   }
 } 

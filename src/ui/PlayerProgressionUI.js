@@ -1022,188 +1022,297 @@ export class PlayerProgressionUI {
     }
 
     showUpgradeNotification(treeId, skillId, newLevel) {
-        const skill = this.playerProgression.skillTrees[treeId].skills[skillId];
-        const notification = this.scene.add.text(this.width / 2, this.height / 2, 
-            `${skill.name} upgraded to level ${newLevel}!`, {
-            fontSize: '18px',
-            fontWeight: 'bold',
-            fill: '#4caf50',
-            backgroundColor: '#000000',
-            padding: { x: 20, y: 10 }
-        }).setOrigin(0.5);
-        
-        this.container.add(notification);
-        
-        // Fade out after 2 seconds
-        this.scene.tweens.add({
-            targets: notification,
-            alpha: 0,
-            duration: 2000,
-            onComplete: () => notification.destroy()
-        });
+        try {
+            const skill = this.playerProgression.skillTrees[treeId].skills[skillId];
+            if (!skill) {
+                console.warn('PlayerProgressionUI: Skill not found for upgrade notification');
+                return;
+            }
+            
+            const notification = this.scene.add.text(this.width / 2, this.height / 2, 
+                `${skill.name} upgraded to level ${newLevel}!`, {
+                fontSize: '18px',
+                fontWeight: 'bold',
+                fill: '#4caf50',
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: { x: 20, y: 10 },
+                align: 'center'
+            }).setOrigin(0.5);
+            
+            notification.setDepth(2000);
+            this.container.add(notification);
+            
+            // Fade out after 2 seconds
+            if (this.scene.tweens) {
+                this.scene.tweens.add({
+                    targets: notification,
+                    alpha: 0,
+                    duration: 2000,
+                    onComplete: () => {
+                        try {
+                            if (notification && !notification.destroyed) {
+                                notification.destroy();
+                            }
+                        } catch (destroyError) {
+                            console.warn('PlayerProgressionUI: Error destroying upgrade notification:', destroyError);
+                        }
+                    }
+                });
+            } else {
+                // Fallback: destroy after delay
+                this.scene.time.delayedCall(2000, () => {
+                    try {
+                        if (notification && !notification.destroyed) {
+                            notification.destroy();
+                        }
+                    } catch (destroyError) {
+                        console.warn('PlayerProgressionUI: Error destroying upgrade notification (fallback):', destroyError);
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('PlayerProgressionUI: Error in showUpgradeNotification:', error);
+        }
     }
 
     setupEventListeners() {
-        // Listen for progression events
-        this.playerProgression.on('levelUp', (data) => {
-            this.showLevelUpNotification(data);
-            this.updateDisplay();
-        });
-        
-        this.playerProgression.on('experienceGained', () => {
-            if (this.isVisible) {
-                this.updateDisplay();
-            }
-        });
-        
-        this.playerProgression.on('skillUpgraded', () => {
-            if (this.isVisible) {
-                this.updateDisplay();
-            }
-        });
-        
-        this.playerProgression.on('achievementUnlocked', (data) => {
-            this.showAchievementNotification(data);
-            if (this.isVisible) {
-                this.updateDisplay();
-            }
-        });
+        try {
+            // Listen for progression events with error handling
+            this.playerProgression.on('levelUp', (data) => {
+                try {
+                    this.showLevelUpNotification(data);
+                    this.updateDisplay();
+                } catch (error) {
+                    console.error('PlayerProgressionUI: Error in levelUp event handler:', error);
+                }
+            });
+            
+            this.playerProgression.on('experienceGained', () => {
+                try {
+                    if (this.isVisible) {
+                        this.updateDisplay();
+                    }
+                } catch (error) {
+                    console.error('PlayerProgressionUI: Error in experienceGained event handler:', error);
+                }
+            });
+            
+            this.playerProgression.on('skillUpgraded', () => {
+                try {
+                    if (this.isVisible) {
+                        this.updateDisplay();
+                    }
+                } catch (error) {
+                    console.error('PlayerProgressionUI: Error in skillUpgraded event handler:', error);
+                }
+            });
+            
+            this.playerProgression.on('achievementUnlocked', (data) => {
+                try {
+                    this.showAchievementNotification(data);
+                    if (this.isVisible) {
+                        this.updateDisplay();
+                    }
+                } catch (error) {
+                    console.error('PlayerProgressionUI: Error in achievementUnlocked event handler:', error);
+                }
+            });
+        } catch (error) {
+            console.error('PlayerProgressionUI: Error setting up event listeners:', error);
+        }
     }
 
     showLevelUpNotification(data) {
-        // Create dramatic level up notification
-        const notification = this.scene.add.container(
-            this.scene.cameras.main.width / 2,
-            this.scene.cameras.main.height / 2
-        );
-        notification.setDepth(3000);
-
-        // Background with glow effect
-        const bg = this.scene.add.graphics();
-        bg.fillStyle(0x000000, 0.8);
-        bg.fillRect(-400, -150, 800, 300);
-        
-        // Multiple glow layers for dramatic effect
-        for (let i = 0; i < 3; i++) {
-            const glow = this.scene.add.graphics();
-            glow.fillStyle(0xFFD700, 0.3 - (i * 0.1));
-            glow.fillRoundedRect(-350 + (i * 20), -125 + (i * 15), 700 - (i * 40), 250 - (i * 30), 20);
-            notification.add(glow);
-        }
-        
-        notification.add(bg);
-
-        // Animated "LEVEL UP!" text with multiple effects
-        const levelUpText = this.scene.add.text(0, -50, 'LEVEL UP!', {
-            fontSize: '48px',
-            fontWeight: 'bold',
-            fill: '#FFD700',
-            stroke: '#FF6600',
-            strokeThickness: 4,
-            align: 'center'
-        }).setOrigin(0.5);
-        notification.add(levelUpText);
-
-        // Level number with glow
-        const levelText = this.scene.add.text(0, 10, `LEVEL ${data.newLevel}`, {
-            fontSize: '32px',
-            fontWeight: 'bold',
-            fill: '#FFFFFF',
-            stroke: '#4a90e2',
-            strokeThickness: 3,
-            align: 'center'
-        }).setOrigin(0.5);
-        notification.add(levelText);
-
-        // Rewards text
-        const rewardsText = this.scene.add.text(0, 60, 
-            `+${data.skillPointsAwarded} Skill Points Earned!`, {
-            fontSize: '18px',
-            fill: '#4caf50',
-            fontWeight: 'bold',
-            align: 'center'
-        }).setOrigin(0.5);
-        notification.add(rewardsText);
-
-        // Level rewards if available
-        if (data.rewards) {
-            const rewardDetails = [];
-            if (data.rewards.coins) rewardDetails.push(`+${data.rewards.coins} Coins`);
-            if (data.rewards.item) rewardDetails.push(`New Item: ${data.rewards.item.id}`);
-            if (data.rewards.unlockLocation) rewardDetails.push(`Location Unlocked: ${data.rewards.unlockLocation}`);
-            
-            if (rewardDetails.length > 0) {
-                const extraRewardsText = this.scene.add.text(0, 90, rewardDetails.join(' • '), {
-                    fontSize: '14px',
-                    fill: '#ffeb3b',
-                    align: 'center',
-                    wordWrap: { width: 700 }
-                }).setOrigin(0.5);
-                notification.add(extraRewardsText);
+        try {
+            // Ensure we have a valid scene and camera
+            if (!this.scene || !this.scene.add || !this.scene.cameras || !this.scene.cameras.main) {
+                console.warn('PlayerProgressionUI: Scene not properly initialized for level up notification');
+                return;
             }
-        }
+            
+            // Get safe screen dimensions
+            const screenWidth = this.scene.cameras.main.width || 800;
+            const screenHeight = this.scene.cameras.main.height || 600;
+            
+            // Create dramatic level up notification
+            const notification = this.scene.add.container(
+                screenWidth / 2,
+                screenHeight / 2
+            );
+            notification.setDepth(3000);
 
-        // Create particle effects
-        this.createLevelUpParticles(notification);
+            // Background with glow effect
+            const bg = this.scene.add.graphics();
+            bg.fillStyle(0x000000, 0.8);
+            bg.fillRect(-400, -150, 800, 300);
+            
+            // Multiple glow layers for dramatic effect
+            for (let i = 0; i < 3; i++) {
+                const glow = this.scene.add.graphics();
+                glow.fillStyle(0xFFD700, 0.3 - (i * 0.1));
+                glow.fillRoundedRect(-350 + (i * 20), -125 + (i * 15), 700 - (i * 40), 250 - (i * 30), 20);
+                notification.add(glow);
+            }
+            
+            notification.add(bg);
 
-        // Play level up audio
-        if (this.scene.audioManager) {
-            this.scene.audioManager.playSFX('level_up', { volume: 0.8 });
-        }
+            // Animated "LEVEL UP!" text with multiple effects
+            const levelUpText = this.scene.add.text(0, -50, 'LEVEL UP!', {
+                fontSize: '48px',
+                fontWeight: 'bold',
+                fill: '#FFD700',
+                stroke: '#FF6600',
+                strokeThickness: 4,
+                align: 'center'
+            }).setOrigin(0.5);
+            notification.add(levelUpText);
 
-        // Dramatic animation sequence
-        notification.setScale(0.1);
-        notification.setAlpha(0);
+            // Level number with glow
+            const levelText = this.scene.add.text(0, 10, `LEVEL ${data.newLevel || 'UP'}`, {
+                fontSize: '32px',
+                fontWeight: 'bold',
+                fill: '#FFFFFF',
+                stroke: '#4a90e2',
+                strokeThickness: 3,
+                align: 'center'
+            }).setOrigin(0.5);
+            notification.add(levelText);
 
-        // Scale and fade in with bounce
-        this.scene.tweens.add({
-            targets: notification,
-            scale: 1.2,
-            alpha: 1,
-            duration: 500,
-            ease: 'Back.easeOut'
-        });
+            // Rewards text
+            const skillPointsAwarded = data.skillPointsAwarded || 1;
+            const rewardsText = this.scene.add.text(0, 60, 
+                `+${skillPointsAwarded} Skill Points Earned!`, {
+                fontSize: '18px',
+                fill: '#4caf50',
+                fontWeight: 'bold',
+                align: 'center'
+            }).setOrigin(0.5);
+            notification.add(rewardsText);
 
-        // Text animations
-        this.scene.tweens.add({
-            targets: levelUpText,
-            scaleX: 1.3,
-            scaleY: 1.3,
-            duration: 300,
-            yoyo: true,
-            repeat: 2,
-            ease: 'Power2.easeInOut'
-        });
-
-        // Screen shake effect
-        this.scene.cameras.main.shake(300, 0.01);
-
-        // Color pulse animation
-        let colorIndex = 0;
-        const colors = ['#FFD700', '#FF6600', '#FF0066', '#6600FF', '#0066FF', '#00FFFF'];
-        const colorTimer = this.scene.time.addEvent({
-            delay: 100,
-            callback: () => {
-                levelUpText.setFill(colors[colorIndex % colors.length]);
-                colorIndex++;
-            },
-            repeat: 15
-        });
-
-        // Auto-hide after 4 seconds with fade out
-        this.scene.time.delayedCall(4000, () => {
-            this.scene.tweens.add({
-                targets: notification,
-                scale: 0.8,
-                alpha: 0,
-                duration: 500,
-                ease: 'Power2.easeIn',
-                onComplete: () => {
-                    notification.destroy();
-                    if (colorTimer) colorTimer.destroy();
+            // Level rewards if available
+            if (data.rewards) {
+                const rewardDetails = [];
+                if (data.rewards.coins) rewardDetails.push(`+${data.rewards.coins} Coins`);
+                if (data.rewards.item) rewardDetails.push(`New Item: ${data.rewards.item.id}`);
+                if (data.rewards.unlockLocation) rewardDetails.push(`Location Unlocked: ${data.rewards.unlockLocation}`);
+                
+                if (rewardDetails.length > 0) {
+                    const extraRewardsText = this.scene.add.text(0, 90, rewardDetails.join(' • '), {
+                        fontSize: '14px',
+                        fill: '#ffeb3b',
+                        align: 'center',
+                        wordWrap: { width: 700 }
+                    }).setOrigin(0.5);
+                    notification.add(extraRewardsText);
                 }
-            });
-        });
+            }
+
+            // Create particle effects
+            this.createLevelUpParticles(notification);
+
+            // Play level up audio with error handling
+            try {
+                if (this.scene.audioManager && this.scene.audioManager.playSFX) {
+                    this.scene.audioManager.playSFX('level_up', { volume: 0.8 });
+                }
+            } catch (audioError) {
+                console.warn('PlayerProgressionUI: Error playing level up audio:', audioError);
+            }
+
+            // Dramatic animation sequence
+            notification.setScale(0.1);
+            notification.setAlpha(0);
+
+            // Scale and fade in with bounce
+            if (this.scene.tweens) {
+                this.scene.tweens.add({
+                    targets: notification,
+                    scale: 1.2,
+                    alpha: 1,
+                    duration: 500,
+                    ease: 'Back.easeOut'
+                });
+
+                // Text animations
+                this.scene.tweens.add({
+                    targets: levelUpText,
+                    scaleX: 1.3,
+                    scaleY: 1.3,
+                    duration: 300,
+                    yoyo: true,
+                    repeat: 2,
+                    ease: 'Power2.easeInOut'
+                });
+            }
+
+            // Screen shake effect with error handling
+            try {
+                if (this.scene.cameras && this.scene.cameras.main && this.scene.cameras.main.shake) {
+                    this.scene.cameras.main.shake(300, 0.01);
+                }
+            } catch (shakeError) {
+                console.warn('PlayerProgressionUI: Error creating screen shake:', shakeError);
+            }
+
+            // Color pulse animation
+            let colorIndex = 0;
+            const colors = ['#FFD700', '#FF6600', '#FF0066', '#6600FF', '#0066FF', '#00FFFF'];
+            let colorTimer = null;
+            
+            if (this.scene.time) {
+                colorTimer = this.scene.time.addEvent({
+                    delay: 100,
+                    callback: () => {
+                        if (levelUpText && !levelUpText.destroyed) {
+                            levelUpText.setFill(colors[colorIndex % colors.length]);
+                            colorIndex++;
+                        }
+                    },
+                    repeat: 15
+                });
+            }
+
+            // Auto-hide after 4 seconds with fade out
+            if (this.scene.time) {
+                this.scene.time.delayedCall(4000, () => {
+                    if (this.scene.tweens) {
+                        this.scene.tweens.add({
+                            targets: notification,
+                            scale: 0.8,
+                            alpha: 0,
+                            duration: 500,
+                            ease: 'Power2.easeIn',
+                            onComplete: () => {
+                                try {
+                                    if (notification && !notification.destroyed) {
+                                        notification.destroy();
+                                    }
+                                    if (colorTimer && !colorTimer.destroyed) {
+                                        colorTimer.destroy();
+                                    }
+                                } catch (destroyError) {
+                                    console.warn('PlayerProgressionUI: Error destroying level up notification:', destroyError);
+                                }
+                            }
+                        });
+                    } else {
+                        // Fallback: destroy immediately if no tweens available
+                        try {
+                            if (notification && !notification.destroyed) {
+                                notification.destroy();
+                            }
+                            if (colorTimer && !colorTimer.destroyed) {
+                                colorTimer.destroy();
+                            }
+                        } catch (destroyError) {
+                            console.warn('PlayerProgressionUI: Error destroying level up notification (fallback):', destroyError);
+                        }
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('PlayerProgressionUI: Error in showLevelUpNotification:', error);
+        }
     }
 
     createLevelUpParticles(container) {
@@ -1241,14 +1350,24 @@ export class PlayerProgressionUI {
     }
 
     updateDisplay() {
-        if (!this.isVisible) return;
-        
-        if (this.currentTab === 'overview') {
-            this.updateOverviewContent();
-        } else if (this.currentTab === 'achievements') {
-            this.updateAchievementsContent();
-        } else if (this.skillTreeContents[this.currentTab]) {
-            this.updateSkillTreeContent(this.currentTab);
+        try {
+            if (!this.isVisible) return;
+            
+            // Ensure the scene and required components are available
+            if (!this.scene || !this.scene.add) {
+                console.warn('PlayerProgressionUI: Scene not available for display update');
+                return;
+            }
+            
+            if (this.currentTab === 'overview') {
+                this.updateOverviewContent();
+            } else if (this.currentTab === 'achievements') {
+                this.updateAchievementsContent();
+            } else if (this.skillTreeContents[this.currentTab]) {
+                this.updateSkillTreeContent(this.currentTab);
+            }
+        } catch (error) {
+            console.error('PlayerProgressionUI: Error in updateDisplay:', error);
         }
     }
 
@@ -1387,121 +1506,165 @@ export class PlayerProgressionUI {
     }
 
     showAchievementNotification(data) {
-        const achievement = data.achievement;
-        
-        // Create achievement notification
-        const notification = this.scene.add.container(
-            this.scene.cameras.main.width - 200,
-            100
-        );
-        notification.setDepth(2500);
-
-        // Background with tier-based colors
-        const bg = this.scene.add.graphics();
-        let bgColor = 0x2d5016;
-        let borderColor = 0x4caf50;
-        
-        if (achievement.tier) {
-            switch (achievement.tier) {
-                case 'bronze':
-                    bgColor = 0x4a3728;
-                    borderColor = 0xcd7f32;
-                    break;
-                case 'silver':
-                    bgColor = 0x3c3c3c;
-                    borderColor = 0xc0c0c0;
-                    break;
-                case 'gold':
-                    bgColor = 0x4a4228;
-                    borderColor = 0xffd700;
-                    break;
-                case 'legendary':
-                    bgColor = 0x4a2515;
-                    borderColor = 0xff6b35;
-                    break;
+        try {
+            const achievement = data.achievement;
+            
+            // Ensure we have a valid scene and camera
+            if (!this.scene || !this.scene.add || !this.scene.cameras || !this.scene.cameras.main) {
+                console.warn('PlayerProgressionUI: Scene not properly initialized for achievement notification');
+                return;
             }
-        }
-        
-        bg.fillStyle(bgColor, 0.95);
-        bg.fillRoundedRect(0, 0, 350, 100, 12);
-        bg.lineStyle(3, borderColor, 0.9);
-        bg.strokeRoundedRect(0, 0, 350, 100, 12);
-        notification.add(bg);
+            
+            // Get safe screen dimensions
+            const screenWidth = this.scene.cameras.main.width || 800;
+            const screenHeight = this.scene.cameras.main.height || 600;
+            
+            // Create achievement notification
+            const notification = this.scene.add.container(
+                screenWidth - 200,
+                100
+            );
+            notification.setDepth(2500);
 
-        // Achievement icon
-        const icon = this.scene.add.text(25, 50, achievement.icon, {
-            fontSize: '32px'
-        }).setOrigin(0.5);
-        notification.add(icon);
+            // Background with tier-based colors
+            const bg = this.scene.add.graphics();
+            let bgColor = 0x2d5016;
+            let borderColor = 0x4caf50;
+            
+            if (achievement.tier) {
+                switch (achievement.tier) {
+                    case 'bronze':
+                        bgColor = 0x4a3728;
+                        borderColor = 0xcd7f32;
+                        break;
+                    case 'silver':
+                        bgColor = 0x3c3c3c;
+                        borderColor = 0xc0c0c0;
+                        break;
+                    case 'gold':
+                        bgColor = 0x4a4228;
+                        borderColor = 0xffd700;
+                        break;
+                    case 'legendary':
+                        bgColor = 0x4a2515;
+                        borderColor = 0xff6b35;
+                        break;
+                }
+            }
+            
+            bg.fillStyle(bgColor, 0.95);
+            bg.fillRoundedRect(0, 0, 350, 100, 12);
+            bg.lineStyle(3, borderColor, 0.9);
+            bg.strokeRoundedRect(0, 0, 350, 100, 12);
+            notification.add(bg);
 
-        // "Achievement Unlocked!" text with tier indication
-        const titleText = this.scene.add.text(60, 15, 
-            `🏆 ${achievement.tier ? achievement.tier.toUpperCase() + ' ' : ''}ACHIEVEMENT UNLOCKED!`, {
-            fontSize: '12px',
-            fontWeight: 'bold',
-            fill: borderColor === 0x4caf50 ? '#4caf50' : `#${borderColor.toString(16).padStart(6, '0')}`
-        });
-        notification.add(titleText);
+            // Achievement icon
+            const icon = this.scene.add.text(25, 50, achievement.icon || '🏆', {
+                fontSize: '32px'
+            }).setOrigin(0.5);
+            notification.add(icon);
 
-        // Achievement name
-        const nameText = this.scene.add.text(60, 35, achievement.name, {
-            fontSize: '14px',
-            fontWeight: 'bold',
-            fill: '#ffffff'
-        });
-        notification.add(nameText);
-
-        // Rewards info
-        const rewardParts = [];
-        if (achievement.rewards.experience) rewardParts.push(`${achievement.rewards.experience} XP`);
-        if (achievement.rewards.coins) rewardParts.push(`${achievement.rewards.coins} coins`);
-        if (achievement.rewards.skillPoints) rewardParts.push(`${achievement.rewards.skillPoints} SP`);
-        if (achievement.rewards.title) rewardParts.push(`"${achievement.rewards.title}"`);
-        
-        if (rewardParts.length > 0) {
-            const rewardsText = this.scene.add.text(60, 55, `Rewards: ${rewardParts.join(', ')}`, {
-                fontSize: '10px',
-                fill: '#ffeb3b',
-                wordWrap: { width: 280 }
+            // "Achievement Unlocked!" text with tier indication
+            const tierText = achievement.tier ? achievement.tier.toUpperCase() + ' ' : '';
+            const titleText = this.scene.add.text(60, 15, 
+                `🏆 ${tierText}ACHIEVEMENT UNLOCKED!`, {
+                fontSize: '12px',
+                fontWeight: 'bold',
+                fill: borderColor === 0x4caf50 ? '#4caf50' : `#${borderColor.toString(16).padStart(6, '0')}`
             });
-            notification.add(rewardsText);
-        }
+            notification.add(titleText);
 
-        // Play achievement sound
-        if (this.scene.audioManager) {
-            this.scene.audioManager.playSFX('achievement', { volume: 0.6 });
-        }
-
-        // Slide in animation
-        notification.setX(this.scene.cameras.main.width);
-        this.scene.tweens.add({
-            targets: notification,
-            x: this.scene.cameras.main.width - 200,
-            duration: 500,
-            ease: 'Back.easeOut'
-        });
-
-        // Glow pulse effect
-        this.scene.tweens.add({
-            targets: bg,
-            alpha: 0.7,
-            duration: 800,
-            yoyo: true,
-            repeat: 3,
-            ease: 'Sine.easeInOut'
-        });
-
-        // Auto-hide after 5 seconds
-        this.scene.time.delayedCall(5000, () => {
-            this.scene.tweens.add({
-                targets: notification,
-                x: this.scene.cameras.main.width,
-                alpha: 0,
-                duration: 300,
-                ease: 'Power2.easeIn',
-                onComplete: () => notification.destroy()
+            // Achievement name
+            const nameText = this.scene.add.text(60, 35, achievement.name || 'Achievement', {
+                fontSize: '14px',
+                fontWeight: 'bold',
+                fill: '#ffffff'
             });
-        });
+            notification.add(nameText);
+
+            // Rewards info
+            const rewardParts = [];
+            if (achievement.rewards) {
+                if (achievement.rewards.experience) rewardParts.push(`${achievement.rewards.experience} XP`);
+                if (achievement.rewards.coins) rewardParts.push(`${achievement.rewards.coins} coins`);
+                if (achievement.rewards.skillPoints) rewardParts.push(`${achievement.rewards.skillPoints} SP`);
+                if (achievement.rewards.title) rewardParts.push(`"${achievement.rewards.title}"`);
+            }
+            
+            if (rewardParts.length > 0) {
+                const rewardsText = this.scene.add.text(60, 55, `Rewards: ${rewardParts.join(', ')}`, {
+                    fontSize: '10px',
+                    fill: '#ffeb3b',
+                    wordWrap: { width: 280 }
+                });
+                notification.add(rewardsText);
+            }
+
+            // Play achievement sound with error handling
+            try {
+                if (this.scene.audioManager && this.scene.audioManager.playSFX) {
+                    this.scene.audioManager.playSFX('achievement', { volume: 0.6 });
+                }
+            } catch (audioError) {
+                console.warn('PlayerProgressionUI: Error playing achievement audio:', audioError);
+            }
+
+            // Slide in animation with error handling
+            notification.setX(screenWidth);
+            if (this.scene.tweens) {
+                this.scene.tweens.add({
+                    targets: notification,
+                    x: screenWidth - 200,
+                    duration: 500,
+                    ease: 'Back.easeOut'
+                });
+
+                // Glow pulse effect
+                this.scene.tweens.add({
+                    targets: bg,
+                    alpha: 0.7,
+                    duration: 800,
+                    yoyo: true,
+                    repeat: 3,
+                    ease: 'Sine.easeInOut'
+                });
+            }
+
+            // Auto-hide after 5 seconds with error handling
+            if (this.scene.time) {
+                this.scene.time.delayedCall(5000, () => {
+                    if (this.scene.tweens) {
+                        this.scene.tweens.add({
+                            targets: notification,
+                            x: screenWidth,
+                            alpha: 0,
+                            duration: 300,
+                            ease: 'Power2.easeIn',
+                            onComplete: () => {
+                                try {
+                                    if (notification && !notification.destroyed) {
+                                        notification.destroy();
+                                    }
+                                } catch (destroyError) {
+                                    console.warn('PlayerProgressionUI: Error destroying achievement notification:', destroyError);
+                                }
+                            }
+                        });
+                    } else {
+                        // Fallback: destroy immediately if no tweens available
+                        try {
+                            if (notification && !notification.destroyed) {
+                                notification.destroy();
+                            }
+                        } catch (destroyError) {
+                            console.warn('PlayerProgressionUI: Error destroying achievement notification (fallback):', destroyError);
+                        }
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('PlayerProgressionUI: Error in showAchievementNotification:', error);
+        }
     }
 
     updateCategoryButtonAppearance(category) {

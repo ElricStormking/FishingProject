@@ -274,7 +274,10 @@ export class WeatherManager {
                     this.atmosphereOverlay = this.scene.add.graphics();
                     this.atmosphereOverlay.fillStyle(0x334455, 0.1); // Very subtle dark blue overlay
                     this.atmosphereOverlay.fillRect(0, 0, this.scene.cameras.main.width, this.scene.cameras.main.height);
-                    this.atmosphereOverlay.setDepth(500); // Above background but below UI
+                    
+                    // Use scene's depth management if available, otherwise use low depth
+                    const overlayDepth = this.scene.getUIDepth ? this.scene.getUIDepth('overlay') : -10;
+                    this.atmosphereOverlay.setDepth(overlayDepth); // Behind all UI elements
                     this.atmosphereOverlay.setScrollFactor(0); // Don't scroll with camera
                 }
                 

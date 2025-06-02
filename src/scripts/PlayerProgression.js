@@ -1300,6 +1300,36 @@ export class PlayerProgression extends EventEmitter {
                     if (stats.itemsCrafted !== undefined) stats.itemsCrafted++;
                     break;
                     
+                case 'totalFish':
+                    // Update total fish count directly (used for manual statistics updates)
+                    if (typeof data === 'number') {
+                        stats.totalFishCaught = data;
+                    }
+                    break;
+                    
+                case 'speciesCaught':
+                    // Update species count directly (used for manual statistics updates)
+                    if (typeof data === 'number') {
+                        // This is just updating the count, the actual species tracking happens in 'fishCaught'
+                        // We can track this as a separate stat if needed
+                        stats.uniqueSpeciesCount = data;
+                    }
+                    break;
+                    
+                case 'biggestFish':
+                    // Update biggest fish record
+                    if (typeof data === 'string' && data.trim()) {
+                        stats.biggestFish = data.trim();
+                    }
+                    break;
+                    
+                case 'rarestFish':
+                    // Update rarest fish record
+                    if (typeof data === 'string' && data.trim()) {
+                        stats.rarestFish = data.trim();
+                    }
+                    break;
+                
                 default:
                     console.log(`PlayerProgression: Unknown event type for statistics: ${eventType}`);
                     break;

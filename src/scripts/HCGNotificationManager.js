@@ -300,7 +300,10 @@ export default class HCGNotificationManager {
         
         // Create preview modal
         const preview = this.scene.add.container(400, 300);
-        preview.setDepth(15000);
+        
+        // Use scene's depth management if available, otherwise use high depth for modals
+        const modalDepth = this.scene.getUIDepth ? this.scene.getUIDepth('modals') : 2000;
+        preview.setDepth(modalDepth);
         
         // Background overlay
         const overlay = this.scene.add.rectangle(0, 0, 800, 600, 0x000000, 0.8);

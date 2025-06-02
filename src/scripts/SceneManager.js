@@ -229,7 +229,10 @@ export default class SceneManager {
             0x000000,
             0
         );
-        fadeOverlay.setDepth(1000);
+        
+        // Use scene's depth management if available, otherwise use high depth for transitions
+        const overlayDepth = fromScene.getUIDepth ? fromScene.getUIDepth('modals') : 2000;
+        fadeOverlay.setDepth(overlayDepth);
         
         // Fade out
         fromScene.tweens.add({

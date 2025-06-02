@@ -153,93 +153,112 @@ export class EquipmentEnhancementUI {
         const tabs = [
             { id: 'upgrade', name: 'UPGRADE', icon: '⬆' },
             { id: 'enhance', name: 'ENHANCE', icon: '✨' },
+            { id: 'legendary', name: 'LEGENDARY', icon: '🔥' },
+            { id: 'combination', name: 'COMBINATION', icon: '🔗' },
+            { id: 'prestige', name: 'PRESTIGE', icon: '👑' },
             { id: 'sets', name: 'SETS', icon: '🎯' },
             { id: 'specialization', name: 'SPECIALIZATION', icon: '🏆' }
         ];
 
-        const tabWidth = 150;
-        const startX = (this.width - (tabs.length * tabWidth)) / 2;
+        const tabWidth = 120; // Smaller tabs to fit more
+        const startX = 10; // Start from left edge
+        let currentY = 70;
 
-        tabs.forEach((tab, index) => {
-            const x = startX + index * tabWidth;
-            const y = 70;
+        // Create two rows of tabs
+        const firstRow = tabs.slice(0, 4);
+        const secondRow = tabs.slice(4);
 
-            // Tab background using UITheme
-            const tabBg = this.scene.add.graphics();
-            tabBg.fillStyle(UITheme.colors.darkSecondary, 0.8);
-            tabBg.fillRoundedRect(x, y - 15, tabWidth - 10, 30, UITheme.borders.radius.small);
-            tabBg.lineStyle(UITheme.borders.width.thin, UITheme.colors.medium);
-            tabBg.strokeRoundedRect(x, y - 15, tabWidth - 10, 30, UITheme.borders.radius.small);
+        firstRow.forEach((tab, index) => {
+            this.createTabButton(tab, startX + index * tabWidth, currentY);
+        });
 
-            // Tab text using UITheme
-            const tabText = UITheme.createText(this.scene, x + tabWidth / 2 - 5, y, `${tab.icon} ${tab.name}`, 'bodySmall');
-
-            // Interactive area
-            const tabArea = this.scene.add.rectangle(x + tabWidth / 2 - 5, y, tabWidth - 10, 30)
-                .setInteractive()
-                .setAlpha(0);
-
-            tabArea.on('pointerdown', () => this.showTab(tab.id));
-            tabArea.on('pointerover', () => {
-                tabBg.clear();
-                tabBg.fillStyle(UITheme.colors.primary, 0.3);
-                tabBg.fillRoundedRect(x, y - 15, tabWidth - 10, 30, UITheme.borders.radius.small);
-                tabBg.lineStyle(UITheme.borders.width.thin, UITheme.colors.medium);
-                tabBg.strokeRoundedRect(x, y - 15, tabWidth - 10, 30, UITheme.borders.radius.small);
-            });
-            tabArea.on('pointerout', () => {
-                if (this.currentTab !== tab.id) {
-                    tabBg.clear();
-                    tabBg.fillStyle(UITheme.colors.darkSecondary, 0.8);
-                    tabBg.fillRoundedRect(x, y - 15, tabWidth - 10, 30, UITheme.borders.radius.small);
-                    tabBg.lineStyle(UITheme.borders.width.thin, UITheme.colors.medium);
-                    tabBg.strokeRoundedRect(x, y - 15, tabWidth - 10, 30, UITheme.borders.radius.small);
-                }
-            });
-
-            this.tabButtons[tab.id] = { bg: tabBg, text: tabText, area: tabArea };
-            this.container.add([tabBg, tabText, tabArea]);
+        currentY += 35; // Move to second row
+        secondRow.forEach((tab, index) => {
+            this.createTabButton(tab, startX + index * tabWidth, currentY);
         });
     }
 
-    showTab(tabId) {
-        // Update tab appearance
-        Object.entries(this.tabButtons).forEach(([id, tab]) => {
-            const isActive = id === tabId;
-            tab.bg.clear();
-            
-            if (isActive) {
-                tab.bg.fillStyle(UITheme.colors.primary, 0.6);
-                tab.bg.fillRoundedRect(tab.area.x - tab.area.width/2, tab.area.y - tab.area.height/2, tab.area.width, tab.area.height, UITheme.borders.radius.small);
-                tab.bg.lineStyle(UITheme.borders.width.thin, UITheme.colors.medium);
-                tab.bg.strokeRoundedRect(tab.area.x - tab.area.width/2, tab.area.y - tab.area.height/2, tab.area.width, tab.area.height, UITheme.borders.radius.small);
-                tab.text.setColor(UITheme.colors.text);
-            } else {
-                tab.bg.fillStyle(UITheme.colors.darkSecondary, 0.8);
-                tab.bg.fillRoundedRect(tab.area.x - tab.area.width/2, tab.area.y - tab.area.height/2, tab.area.width, tab.area.height, UITheme.borders.radius.small);
-                tab.bg.lineStyle(UITheme.borders.width.thin, UITheme.colors.medium);
-                tab.bg.strokeRoundedRect(tab.area.x - tab.area.width/2, tab.area.y - tab.area.height/2, tab.area.width, tab.area.height, UITheme.borders.radius.small);
-                tab.text.setColor(UITheme.colors.textSecondary);
+    createTabButton(tab, x, y) {
+        const tabWidth = 115;
+
+        // Tab background using UITheme
+        const tabBg = this.scene.add.graphics();
+        tabBg.fillStyle(UITheme.colors.darkSecondary, 0.8);
+        tabBg.fillRoundedRect(x, y - 15, tabWidth, 30, UITheme.borders.radius.small);
+        tabBg.lineStyle(UITheme.borders.width.thin, UITheme.colors.medium);
+        tabBg.strokeRoundedRect(x, y - 15, tabWidth, 30, UITheme.borders.radius.small);
+
+        // Tab text using UITheme
+        const tabText = UITheme.createText(this.scene, x + tabWidth / 2, y, `${tab.icon} ${tab.name}`, 'bodySmall');
+        tabText.setFontSize('10px'); // Smaller font for more tabs
+
+        // Interactive area
+        const tabArea = this.scene.add.rectangle(x + tabWidth / 2, y, tabWidth, 30)
+            .setInteractive()
+            .setAlpha(0);
+
+        tabArea.on('pointerdown', () => this.showTab(tab.id));
+        tabArea.on('pointerover', () => {
+            tabBg.clear();
+            tabBg.fillStyle(UITheme.colors.primary, 0.3);
+            tabBg.fillRoundedRect(x, y - 15, tabWidth, 30, UITheme.borders.radius.small);
+            tabBg.lineStyle(UITheme.borders.width.thin, UITheme.colors.medium);
+            tabBg.strokeRoundedRect(x, y - 15, tabWidth, 30, UITheme.borders.radius.small);
+        });
+        tabArea.on('pointerout', () => {
+            if (this.currentTab !== tab.id) {
+                tabBg.clear();
+                tabBg.fillStyle(UITheme.colors.darkSecondary, 0.8);
+                tabBg.fillRoundedRect(x, y - 15, tabWidth, 30, UITheme.borders.radius.small);
+                tabBg.lineStyle(UITheme.borders.width.thin, UITheme.colors.medium);
+                tabBg.strokeRoundedRect(x, y - 15, tabWidth, 30, UITheme.borders.radius.small);
             }
         });
 
+        this.tabButtons[tab.id] = { bg: tabBg, text: tabText, area: tabArea };
+        this.container.add([tabBg, tabText, tabArea]);
+    }
+
+    showTab(tabId) {
         this.currentTab = tabId;
+        
+        // Update tab visual states
+        Object.entries(this.tabButtons).forEach(([id, button]) => {
+            const isActive = id === tabId;
+            const color = isActive ? UITheme.colors.primary : UITheme.colors.darkSecondary;
+            const alpha = isActive ? 0.9 : 0.8;
+            
+            button.bg.clear();
+            button.bg.fillStyle(color, alpha);
+            button.bg.fillRoundedRect(button.area.x - button.area.width/2, button.area.y - 15, button.area.width, 30, UITheme.borders.radius.small);
+            button.bg.lineStyle(UITheme.borders.width.thin, UITheme.colors.medium);
+            button.bg.strokeRoundedRect(button.area.x - button.area.width/2, button.area.y - 15, button.area.width, 30, UITheme.borders.radius.small);
+        });
+        
+        // Clear and create new content
         this.refreshContent();
     }
 
     refreshContent() {
-        // Clear current content
+        // Clear existing content
         this.contentContainer.removeAll(true);
-
-        // Add debug information
-        this.debugInventoryState();
-
-        switch(this.currentTab) {
+        
+        // Create content based on current tab
+        switch (this.currentTab) {
             case 'upgrade':
                 this.createUpgradeInterface();
                 break;
             case 'enhance':
                 this.createEnhanceInterface();
+                break;
+            case 'legendary':
+                this.createLegendaryInterface();
+                break;
+            case 'combination':
+                this.createCombinationInterface();
+                break;
+            case 'prestige':
+                this.createPrestigeInterface();
                 break;
             case 'sets':
                 this.createSetsInterface();
@@ -247,39 +266,9 @@ export class EquipmentEnhancementUI {
             case 'specialization':
                 this.createSpecializationInterface();
                 break;
+            default:
+                this.createUpgradeInterface();
         }
-    }
-
-    debugInventoryState() {
-        console.log('=== EquipmentEnhancementUI Debug ===');
-        console.log('Enhancer available:', !!this.enhancer);
-        console.log('Inventory Manager available:', !!this.inventoryManager);
-        console.log('Scene GameState available:', !!this.scene.gameState);
-        console.log('Scene GameState InventoryManager:', !!this.scene.gameState?.inventoryManager);
-        
-        if (this.inventoryManager) {
-            try {
-                const equipped = this.inventoryManager.getEquippedItems();
-                console.log('Equipped items retrieved:', equipped);
-                console.log('Equipped items categories:', Object.keys(equipped));
-                Object.entries(equipped).forEach(([category, items]) => {
-                    console.log(`  ${category}: ${items ? items.length : 0} items`);
-                });
-            } catch (error) {
-                console.error('Error getting equipped items:', error);
-            }
-            
-            try {
-                if (this.inventoryManager.getInventoryStats) {
-                    const stats = this.inventoryManager.getInventoryStats();
-                    console.log('Inventory stats:', stats);
-                }
-            } catch (error) {
-                console.error('Error getting inventory stats:', error);
-            }
-        }
-        
-        console.log('=== End Debug ===');
     }
 
     createUpgradeInterface() {
@@ -1054,6 +1043,327 @@ export class EquipmentEnhancementUI {
     destroy() {
         if (this.container) {
             this.container.destroy();
+        }
+    }
+
+    createLegendaryInterface() {
+        const y = 50;
+        
+        // Title
+        const title = UITheme.createText(this.scene, this.width / 2, y, 'LEGENDARY ENHANCEMENT', 'headerMedium');
+        title.setOrigin(0.5);
+        this.contentContainer.add(title);
+        
+        // Description
+        const desc = UITheme.createText(this.scene, this.width / 2, y + 30, 
+            'Transform equipment beyond mortal limits with legendary abilities', 'bodySmall');
+        desc.setOrigin(0.5);
+        this.contentContainer.add(desc);
+        
+        // Equipment selection
+        this.createEquipmentSelection(50, y + 70);
+        
+        // Legendary enhancement panel
+        if (this.selectedItem) {
+            this.createLegendaryPanel(this.width / 2 + 50, y + 70);
+        }
+    }
+
+    createCombinationInterface() {
+        const y = 50;
+        
+        // Title
+        const title = UITheme.createText(this.scene, this.width / 2, y, 'COMBINATION ENHANCEMENT', 'headerMedium');
+        title.setOrigin(0.5);
+        this.contentContainer.add(title);
+        
+        // Description
+        const desc = UITheme.createText(this.scene, this.width / 2, y + 30, 
+            'Combine multiple items for synergistic bonuses', 'bodySmall');
+        desc.setOrigin(0.5);
+        this.contentContainer.add(desc);
+        
+        // Available recipes
+        this.createCombinationRecipes(50, y + 70);
+        
+        // Selected items for combination
+        this.createCombinationSelection(this.width / 2 + 50, y + 70);
+    }
+
+    createPrestigeInterface() {
+        const y = 50;
+        
+        // Title
+        const title = UITheme.createText(this.scene, this.width / 2, y, 'PRESTIGE SYSTEM', 'headerMedium');
+        title.setOrigin(0.5);
+        this.contentContainer.add(title);
+        
+        // Description
+        const desc = UITheme.createText(this.scene, this.width / 2, y + 30, 
+            'Reset equipment levels for transcendent bonuses', 'bodySmall');
+        desc.setOrigin(0.5);
+        this.contentContainer.add(desc);
+        
+        // Equipment selection
+        this.createEquipmentSelection(50, y + 70);
+        
+        // Prestige panel
+        if (this.selectedItem) {
+            this.createPrestigePanel(this.width / 2 + 50, y + 70);
+        }
+    }
+
+    createLegendaryPanel(x, y) {
+        if (!this.selectedItem || !this.enhancer) return;
+
+        const panelBg = this.scene.add.graphics();
+        panelBg.fillStyle(UITheme.colors.darkSecondary, 0.8);
+        panelBg.fillRoundedRect(x, y, 400, 350, UITheme.borders.radius.medium);
+        panelBg.lineStyle(UITheme.borders.width.medium, UITheme.colors.accent);
+        panelBg.strokeRoundedRect(x, y, 400, 350, UITheme.borders.radius.medium);
+        this.contentContainer.add(panelBg);
+
+        let currentY = y + 20;
+
+        // Title
+        const title = UITheme.createText(this.scene, x + 200, currentY, 'Legendary Enhancement', 'headerSmall');
+        title.setOrigin(0.5);
+        this.contentContainer.add(title);
+        currentY += 40;
+
+        // Current legendary level
+        const legendaryLevel = this.selectedItem.legendaryEnhancement?.level || 0;
+        const levelText = UITheme.createText(this.scene, x + 20, currentY, 
+            `Legendary Level: ${legendaryLevel}`, 'bodyMedium');
+        this.contentContainer.add(levelText);
+        currentY += 30;
+
+        // Requirements
+        const baseLevel = this.selectedItem.enhancementLevel || 0;
+        const upgradeLevel = this.selectedItem.advancedUpgrades?.totalLevel || 0;
+        
+        const reqText = UITheme.createText(this.scene, x + 20, currentY, 
+            `Requirements: Enhancement Lv.15+ (${baseLevel}), Upgrade Lv.20+ (${upgradeLevel})`, 'bodySmall');
+        reqText.setFill(baseLevel >= 15 && upgradeLevel >= 20 ? UITheme.colors.success : UITheme.colors.error);
+        this.contentContainer.add(reqText);
+        currentY += 30;
+
+        // Legendary abilities
+        if (this.selectedItem.legendaryEnhancement?.abilities) {
+            const abilitiesText = UITheme.createText(this.scene, x + 20, currentY, 'Legendary Abilities:', 'bodyMedium');
+            this.contentContainer.add(abilitiesText);
+            currentY += 25;
+
+            this.selectedItem.legendaryEnhancement.abilities.forEach((ability, index) => {
+                const abilityText = UITheme.createText(this.scene, x + 30, currentY, 
+                    `• ${ability.name}: ${ability.description}`, 'bodySmall');
+                abilityText.setFill(UITheme.colors.legendary);
+                this.contentContainer.add(abilityText);
+                currentY += 20;
+            });
+        }
+
+        // Legendary enhancement button
+        if (baseLevel >= 15 && upgradeLevel >= 20) {
+            const enhanceBtn = this.createButton(x + 150, currentY + 20, 100, 35, 'LEGENDARY+', () => {
+                this.performLegendaryEnhancement();
+            });
+            enhanceBtn.bg.setFillStyle(UITheme.colors.legendary);
+            this.contentContainer.add([enhanceBtn.bg, enhanceBtn.text]);
+        }
+    }
+
+    createCombinationRecipes(x, y) {
+        if (!this.enhancer) return;
+
+        const recipes = this.enhancer.getAvailableCombinationRecipes();
+        let currentY = y;
+
+        const title = UITheme.createText(this.scene, x, currentY, 'Available Recipes:', 'headerSmall');
+        this.contentContainer.add(title);
+        currentY += 30;
+
+        Object.entries(recipes).forEach(([id, recipe]) => {
+            const recipeBg = this.scene.add.graphics();
+            recipeBg.fillStyle(UITheme.colors.darkSecondary, 0.6);
+            recipeBg.fillRoundedRect(x, currentY, 350, 80, UITheme.borders.radius.small);
+            recipeBg.lineStyle(UITheme.borders.width.thin, UITheme.colors.medium);
+            recipeBg.strokeRoundedRect(x, currentY, 350, 80, UITheme.borders.radius.small);
+            this.contentContainer.add(recipeBg);
+
+            const recipeTitle = UITheme.createText(this.scene, x + 10, currentY + 10, recipe.name, 'bodyMedium');
+            recipeTitle.setFill(UITheme.colors.accent);
+            this.contentContainer.add(recipeTitle);
+
+            const recipeDesc = UITheme.createText(this.scene, x + 10, currentY + 30, recipe.description, 'bodySmall');
+            this.contentContainer.add(recipeDesc);
+
+            const reqItems = UITheme.createText(this.scene, x + 10, currentY + 50, 
+                `Required: ${recipe.requiredItemTypes.join(', ')}`, 'bodySmall');
+            this.contentContainer.add(reqItems);
+
+            // Select button
+            const selectBtn = this.createButton(x + 280, currentY + 25, 60, 30, 'SELECT', () => {
+                this.selectedRecipe = recipe;
+                this.refreshContent();
+            });
+            this.contentContainer.add([selectBtn.bg, selectBtn.text]);
+
+            currentY += 90;
+        });
+    }
+
+    createCombinationSelection(x, y) {
+        if (!this.selectedRecipe) return;
+
+        const panelBg = this.scene.add.graphics();
+        panelBg.fillStyle(UITheme.colors.darkSecondary, 0.8);
+        panelBg.fillRoundedRect(x, y, 400, 350, UITheme.borders.radius.medium);
+        panelBg.lineStyle(UITheme.borders.width.medium, UITheme.colors.accent);
+        panelBg.strokeRoundedRect(x, y, 400, 350, UITheme.borders.radius.medium);
+        this.contentContainer.add(panelBg);
+
+        let currentY = y + 20;
+
+        // Title
+        const title = UITheme.createText(this.scene, x + 200, currentY, this.selectedRecipe.name, 'headerSmall');
+        title.setOrigin(0.5);
+        this.contentContainer.add(title);
+        currentY += 40;
+
+        // Effect description
+        const effectText = UITheme.createText(this.scene, x + 20, currentY, 
+            `Effect: ${this.selectedRecipe.effect}`, 'bodyMedium');
+        this.contentContainer.add(effectText);
+        currentY += 30;
+
+        // Required items
+        const reqText = UITheme.createText(this.scene, x + 20, currentY, 'Required Items:', 'bodyMedium');
+        this.contentContainer.add(reqText);
+        currentY += 30;
+
+        this.selectedRecipe.requiredItemTypes.forEach(type => {
+            const typeText = UITheme.createText(this.scene, x + 30, currentY, `• ${type.toUpperCase()}`, 'bodySmall');
+            this.contentContainer.add(typeText);
+            currentY += 20;
+        });
+
+        // Combination button
+        const combineBtn = this.createButton(x + 150, currentY + 20, 100, 35, 'COMBINE', () => {
+            this.performCombination();
+        });
+        combineBtn.bg.setFillStyle(UITheme.colors.accent);
+        this.contentContainer.add([combineBtn.bg, combineBtn.text]);
+    }
+
+    createPrestigePanel(x, y) {
+        if (!this.selectedItem || !this.enhancer) return;
+
+        const panelBg = this.scene.add.graphics();
+        panelBg.fillStyle(UITheme.colors.darkSecondary, 0.8);
+        panelBg.fillRoundedRect(x, y, 400, 350, UITheme.borders.radius.medium);
+        panelBg.lineStyle(UITheme.borders.width.medium, UITheme.colors.legendary);
+        panelBg.strokeRoundedRect(x, y, 400, 350, UITheme.borders.radius.medium);
+        this.contentContainer.add(panelBg);
+
+        let currentY = y + 20;
+
+        // Title
+        const title = UITheme.createText(this.scene, x + 200, currentY, 'Prestige Enhancement', 'headerSmall');
+        title.setOrigin(0.5);
+        this.contentContainer.add(title);
+        currentY += 40;
+
+        // Current prestige level
+        const prestigeLevel = this.selectedItem.prestige?.level || 0;
+        const levelText = UITheme.createText(this.scene, x + 20, currentY, 
+            `Prestige Level: ${prestigeLevel}`, 'bodyMedium');
+        levelText.setFill(UITheme.colors.legendary);
+        this.contentContainer.add(levelText);
+        currentY += 30;
+
+        // Requirements check
+        const canPrestige = this.enhancer.checkPrestigeRequirements(this.selectedItem);
+        const reqText = UITheme.createText(this.scene, x + 20, currentY, 
+            canPrestige ? 'Requirements: MET' : 'Requirements: NOT MET', 'bodyMedium');
+        reqText.setFill(canPrestige ? UITheme.colors.success : UITheme.colors.error);
+        this.contentContainer.add(reqText);
+        currentY += 30;
+
+        // Benefits preview
+        if (canPrestige) {
+            const benefits = this.enhancer.getPrestigeBenefits(this.selectedItem);
+            
+            const benefitsText = UITheme.createText(this.scene, x + 20, currentY, 'Next Prestige Benefits:', 'bodyMedium');
+            this.contentContainer.add(benefitsText);
+            currentY += 25;
+
+            Object.entries(benefits.improvements).forEach(([stat, improvement]) => {
+                if (improvement > 0) {
+                    const statText = UITheme.createText(this.scene, x + 30, currentY, 
+                        `• ${stat}: +${improvement.toFixed(2)}`, 'bodySmall');
+                    statText.setFill(UITheme.colors.success);
+                    this.contentContainer.add(statText);
+                    currentY += 20;
+                }
+            });
+
+            // Prestige button
+            const prestigeBtn = this.createButton(x + 150, currentY + 20, 100, 35, 'PRESTIGE', () => {
+                this.performPrestige();
+            });
+            prestigeBtn.bg.setFillStyle(UITheme.colors.legendary);
+            this.contentContainer.add([prestigeBtn.bg, prestigeBtn.text]);
+        }
+    }
+
+    performLegendaryEnhancement() {
+        if (!this.selectedItem || !this.enhancer) return;
+
+        const result = this.enhancer.performLegendaryEnhancement(
+            this.selectedItem.category, 
+            this.selectedItem.id, 
+            ['divine_essence', 'cosmic_fragment'] // Mock materials
+        );
+
+        if (result.success) {
+            this.showMessage(`Legendary enhancement successful! New ability: ${result.newAbility.name}`, UITheme.colors.legendary);
+            this.refreshContent();
+        } else {
+            this.showMessage(`Legendary enhancement failed: ${result.error}`, UITheme.colors.error);
+        }
+    }
+
+    performCombination() {
+        if (!this.selectedRecipe || !this.enhancer) return;
+
+        // Mock selected items based on recipe requirements
+        const mockItems = this.selectedRecipe.requiredItemTypes.map(type => ({
+            category: type,
+            id: `mock_${type}`,
+            name: `Mock ${type}`
+        }));
+
+        const result = this.enhancer.performCombinationEnhancement(mockItems, this.selectedRecipe);
+
+        if (result.success) {
+            this.showMessage(`Combination enhancement successful! ${result.result.name} applied.`, UITheme.colors.accent);
+            this.refreshContent();
+        } else {
+            this.showMessage(`Combination enhancement failed: ${result.error}`, UITheme.colors.error);
+        }
+    }
+
+    performPrestige() {
+        if (!this.selectedItem || !this.enhancer) return;
+
+        const result = this.enhancer.performPrestige(this.selectedItem.category, this.selectedItem.id);
+
+        if (result.success) {
+            this.showMessage(`Prestige successful! Now at prestige level ${result.prestigeLevel}`, UITheme.colors.legendary);
+            this.refreshContent();
+        } else {
+            this.showMessage(`Prestige failed: ${result.error}`, UITheme.colors.error);
         }
     }
 } 
