@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fish Database Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .location { border: 1px solid #ccc; margin: 10px 0; padding: 15px; }
+        .fish-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+        .fish-card { border: 1px solid #ddd; padding: 8px; margin: 5px 0; }
+        .rarity-1 { background-color: #f0f0f0; }
+        .rarity-2 { background-color: #e8f4e8; }
+        .rarity-3 { background-color: #e8e8f4; }
+        .rarity-4 { background-color: #f4e8f4; }
+        .rarity-5 { background-color: #f4f4e8; }
+        .rarity-6 { background-color: #ffe8e8; }
+        .rarity-7 { background-color: #e8f8ff; }
+        .rarity-8 { background-color: #fff8e8; }
+        .rarity-9 { background-color: #ffe8f8; }
+        .rarity-10 { background-color: #f8e8ff; }
+        .stats { display: flex; gap: 10px; margin: 20px 0; }
+        .stat-box { border: 1px solid #999; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🐟 Fish Database Test - 50 Species</h1>
+    
+    <div class="stats">
+        <div class="stat-box">
+            <strong>Total Fish:</strong> <span id="totalFish">0</span>
+        </div>
+        <div class="stat-box">
+            <strong>Struggle Styles:</strong> <span id="totalStyles">0</span>
+        </div>
+        <div class="stat-box">
+            <strong>Rarity Distribution:</strong> <span id="rarityDist">-</span>
+        </div>
+    </div>
+
+    <div id="locations"></div>
+
+    <script type="module">
+        import fishData from './src/data/fish.json' assert { type: 'json' };
+        import { LOCATION_DATA } from './src/data/LocationData.js';
+
+        // Display statistics
+        document.getElementById('totalFish').textContent = fishData.fishSpecies.length;
+        document.getElementById('totalStyles').textContent = fishData.struggleStyles.length;
+        
+        // Calculate rarity distribution
+        const rarityCount = {};
+        fishData.fishSpecies.forEach(fish => {
+            rarityCount[fish.rarity] = (rarityCount[fish.rarity] || 0) + 1;
+        });
+        document.getElementById('rarityDist').textContent = Object.entries(rarityCount)
+            .map(([r, c]) => `R${r}: ${c}`)
+            .join(', ');
+
+        // Display fish by location
+        const locationsDiv = document.getElementById('locations');
+        
+        Object.entries(LOCATION_DATA).forEach(([locationId, locationData]) => {
+            const locationDiv = document.createElement('div');
+            locationDiv.className = 'location';
+            
+            const title = document.createElement('h2');
+            title.textContent = `${locationData.name} (${locationData.fishPopulation.length} species)`;
+            locationDiv.appendChild(title);
+            
+            const fishList = document.createElement('div');
+            fishList.className = 'fish-list';
+            
+            locationData.fishPopulation.forEach(fishId => {
+                const fish = fishData.fishSpecies.find(f => f.id === fishId);
+                if (fish) {
+                    const fishCard = document.createElement('div');
+                    fishCard.className = `fish-card rarity-${fish.rarity}`;
+                    fishCard.innerHTML = `
+                        <strong>${fish.name}</strong> (${fish.id})<br>
+                        Rarity: ${fish.rarity} | Weight: ${fish.weight}kg<br>
+                        Value: ${fish.coinValue} coins | XP: ${fish.experienceValue}<br>
+                        <em>${fish.description}</em>
+                    `;
+                    fishList.appendChild(fishCard);
+                } else {
+                    const errorCard = document.createElement('div');
+                    errorCard.className = 'fish-card';
+                    errorCard.style.backgroundColor = '#ffcccc';
+                    errorCard.innerHTML = `<strong>ERROR:</strong> Fish "${fishId}" not found!`;
+                    fishList.appendChild(errorCard);
+                }
+            });
+            
+            locationDiv.appendChild(fishList);
+            locationsDiv.appendChild(locationDiv);
+        });
+
+        console.log('Fish Database Test Results:');
+        console.log('Total Fish Species:', fishData.fishSpecies.length);
+        console.log('Total Struggle Styles:', fishData.struggleStyles.length);
+        console.log('Rarity Distribution:', rarityCount);
+        
+        // Test fish availability for each location
+        Object.entries(LOCATION_DATA).forEach(([locationId, locationData]) => {
+            console.log(`\n${locationData.name}:`);
+            console.log('Fish Population:', locationData.fishPopulation.length);
+            
+            const validFish = locationData.fishPopulation.filter(fishId => 
+                fishData.fishSpecies.find(f => f.id === fishId)
+            );
+            const invalidFish = locationData.fishPopulation.filter(fishId => 
+                !fishData.fishSpecies.find(f => f.id === fishId)
+            );
+            
+            console.log('Valid Fish:', validFish.length);
+            if (invalidFish.length > 0) {
+                console.error('Invalid Fish IDs:', invalidFish);
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cabin Dialog Fix Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #001122;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        .info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+        #game-container {
+            margin-top: 60px;
+        }
+    </style>
+</head>
+<body>
+    <div class="info">
+        <h3>🛠️ Cabin Dialog Fix Test</h3>
+        <p><strong>Test Scenario:</strong> CabinScene → DialogScene Integration</p>
+        <p><strong>Expected:</strong> No "DialogManager not found" errors</p>
+        <p><strong>How to test:</strong></p>
+        <ol>
+            <li>Click "CABIN" button in Boat Menu</li>
+            <li>Click "Full Dialog" button in Cabin</li>
+            <li>Dialog should open without errors</li>
+        </ol>
+        <p><strong>Check console for:</strong> ✅ DialogManager initialization messages</p>
+    </div>
+
+    <div id="game-container"></div>
+
+    <script type="module">
+        import Phaser from './node_modules/phaser/dist/phaser.esm.js';
+        import BootScene from './src/scenes/BootScene.js';
+        import PreloadScene from './src/scenes/PreloadScene.js';
+        import MenuScene from './src/scenes/MenuScene.js';
+        import BoatMenuScene from './src/scenes/BoatMenuScene.js';
+        import GameScene from './src/scenes/GameScene.js';
+        import HUDScene from './src/scenes/HUDScene.js';
+        import DialogScene from './src/scenes/DialogScene.js';
+        import CabinScene from './src/scenes/CabinScene.js';
+
+        const config = {
+            type: Phaser.AUTO,
+            width: 1280,
+            height: 720,
+            backgroundColor: '#2c3e50',
+            parent: 'game-container',
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },
+                    debug: false
+                }
+            },
+            scene: [
+                BootScene,
+                PreloadScene,
+                MenuScene,
+                BoatMenuScene,
+                GameScene,
+                HUDScene,
+                DialogScene,
+                CabinScene
+            ],
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH
+            }
+        };
+
+        const game = new Phaser.Game(config);
+
+        // Test logging
+        console.log('🧪 Cabin Dialog Fix Test Started');
+        console.log('📝 Watch for:');
+        console.log('  - CabinScene: DialogManager initialization');
+        console.log('  - DialogScene: DialogManager source (external vs GameScene)');
+        console.log('  - No "DialogManager not found" errors');
+
+        // Monitor scene transitions
+        game.events.on('step', () => {
+            const activeScenes = game.scene.getScenes(true);
+            if (activeScenes.some(scene => scene.scene.key === 'CabinScene')) {
+                console.log('🏠 CabinScene is active');
+            }
+            if (activeScenes.some(scene => scene.scene.key === 'DialogScene')) {
+                console.log('💬 DialogScene is active');
+            }
+        });
+
+        // Expose game for debugging
+        window.testGame = game;
+    </script>
+</body>
+</html> 

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cabin Audio Fix Test - Luxury Angler</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+        
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .test-info {
+            background: rgba(0, 100, 200, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #0066cc;
+        }
+        
+        .test-instructions {
+            background: rgba(0, 150, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #00aa00;
+        }
+        
+        .fix-list {
+            background: rgba(200, 100, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #cc6600;
+        }
+        
+        #gameContainer {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #0066cc;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        li {
+            margin: 5px 0;
+        }
+        
+        .highlight {
+            color: #ffdd00;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎵 Cabin Audio Continuity Fix Test - Luxury Angler</h1>
+        
+        <div class="test-info">
+            <h3>🔧 Fixed Issues</h3>
+            <p>This test verifies that the following audio continuity issues have been resolved:</p>
+            <ul>
+                <li><span class="highlight">Music continuity</span> - Background music continues when entering/exiting cabin</li>
+                <li><span class="highlight">Scene preservation</span> - Using pause/resume instead of start/stop for scene transitions</li>
+                <li><span class="highlight">Audio manager preservation</span> - AudioManager instance is not destroyed during transitions</li>
+                <li><span class="highlight">CabinScene audio config</span> - Added proper audio configuration for CabinScene</li>
+                <li><span class="highlight">Smart music handling</span> - Same music tracks don't restart when already playing</li>
+            </ul>
+        </div>
+        
+        <div class="test-instructions">
+            <h3>📋 Test Instructions</h3>
+            <ol>
+                <li>Click <span class="highlight">BOAT MENU</span> to enter the main game scene</li>
+                <li>Notice the <span class="highlight">background music</span> playing in Boat Menu</li>
+                <li>Click <span class="highlight">CABIN</span> button to enter the cabin</li>
+                <li><span class="highlight">🎵 VERIFY:</span> Music should <strong>continue playing</strong> smoothly</li>
+                <li>Explore the cabin interface and NPCs</li>
+                <li>Click <span class="highlight">← Back</span> to return to Boat Menu</li>
+                <li><span class="highlight">🎵 VERIFY:</span> Music should <strong>still be playing</strong> continuously</li>
+                <li>Repeat steps 3-6 multiple times to test consistency</li>
+                <li>Check browser console - should see <span class="highlight">audio continuity</span> messages</li>
+            </ol>
+        </div>
+        
+        <div class="fix-list">
+            <h3>🛠️ Applied Audio Fixes</h3>
+            <ul>
+                <li><strong>AudioManager.js:</strong> Added CabinScene to audio configuration</li>
+                <li><strong>AudioManager.js:</strong> Smart music handling - don't restart same music tracks</li>
+                <li><strong>CabinScene.js:</strong> Added audio manager initialization</li>
+                <li><strong>CabinScene.js:</strong> Fixed exitCabin() to use stop/resume pattern</li>
+                <li><strong>BoatMenuScene.js:</strong> Fixed openCabin() to use pause/launch pattern</li>
+                <li><strong>Scene Transitions:</strong> Preserve scene state and audio manager instances</li>
+            </ul>
+        </div>
+        
+        <div id="gameContainer">
+            <!-- Game will load here -->
+        </div>
+    </div>
+
+    <script type="module">
+        import Phaser from './node_modules/phaser/dist/phaser.esm.js';
+        import MenuScene from './src/scenes/MenuScene.js';
+        import BoatMenuScene from './src/scenes/BoatMenuScene.js';
+        import CabinScene from './src/scenes/CabinScene.js';
+        import GameScene from './src/scenes/GameScene.js';
+        import HUDScene from './src/scenes/HUDScene.js';
+
+        // Game configuration
+        const config = {
+            type: Phaser.AUTO,
+            width: 1200,
+            height: 600,
+            parent: 'gameContainer',
+            backgroundColor: '#001133',
+            scene: [MenuScene, BoatMenuScene, CabinScene, GameScene, HUDScene],
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },
+                    debug: false
+                }
+            },
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH
+            }
+        };
+
+        // Create and start the game
+        const game = new Phaser.Game(config);
+        
+        // Add console logging to monitor audio events
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            // Highlight audio-related logs
+            if (args.some(arg => typeof arg === 'string' && 
+                (arg.includes('Audio') || arg.includes('music') || arg.includes('scene')))) {
+                console.log('%c🎵 AUDIO EVENT:', 'color: cyan; font-weight: bold;', ...args);
+            }
+        };
+        
+        console.log('%c🎮 Cabin Audio Continuity Test Started', 'color: green; font-size: 16px; font-weight: bold;');
+        console.log('Listen for music continuity when entering/exiting the cabin.');
+    </script>
+</body>
+</html> 

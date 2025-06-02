@@ -1,0 +1,152 @@
+# Sample RenJs Dialog Script with Quest Integration
+# This demonstrates how to use the QuestManager and DialogManager integration
+
+setup:
+  - "Setup the quest system for this dialog"
+  - "{{LuxuryAnglerGame.executeCommand('startQuest', 'npc_mia_001')}}"
+  - "{{LuxuryAnglerGame.getQuestState('tutorial_completed') ? 'Tutorial completed!' : 'Tutorial not done yet'}}"
+
+scenes:
+  # Main dialog scene with Mia
+  mia_first_meeting:
+    text: "Hello there! I'm Mia, your fishing assistant. Welcome to Luxury Angling!"
+    
+    choices:
+      - text: "Nice to meet you, Mia!"
+        id: "mia_friendly_greeting"
+        action: "{{LuxuryAnglerGame.processChoice('mia_first_meeting', 'mia_friendly_greeting', 'mia', {romanceBonus: 3})}}"
+        jump: "mia_friendly_response"
+        
+      - text: "Tell me about fishing here."
+        id: "mia_fishing_tips"
+        action: "{{LuxuryAnglerGame.executeCommand('updateQuestObjective', 'npc_mia_001', 'teach_mia_casting')}}"
+        jump: "mia_fishing_tutorial"
+        
+      - text: "I'd like to give you this fish."
+        id: "mia_gift_fish"
+        condition: "{{LuxuryAnglerGame.getQuestState('tutorial_completed')}}"
+        action: "{{LuxuryAnglerGame.executeCommand('updateQuestObjective', 'npc_mia_001', 'gift_fish_to_mia')}}"
+        jump: "mia_receives_gift"
+
+  mia_friendly_response:
+    text: "Aww, thank you! I can tell we're going to be great friends."
+    action: "{{LuxuryAnglerGame.executeCommand('unlockAchievement', 'first_conversation')}}"
+    jump: "mia_fishing_tutorial"
+
+  mia_fishing_tutorial:
+    text: "Let me teach you some advanced casting techniques that will help you catch better fish!"
+    action: "{{LuxuryAnglerGame.executeCommand('giveQuestReward', 'npc_mia_001', 'experience', 50)}}"
+    
+    choices:
+      - text: "That sounds wonderful!"
+        id: "mia_accept_tutorial"
+        action: "{{LuxuryAnglerGame.increaseRomance('mia', 5)}}"
+        jump: "mia_tutorial_complete"
+        
+      - text: "Maybe later."
+        id: "mia_decline_tutorial"
+        jump: "mia_tutorial_declined"
+
+  mia_tutorial_complete:
+    text: "Perfect! You're a natural at this. I think our friendship is really blossoming!"
+    action: "{{LuxuryAnglerGame.executeCommand('updateQuestObjective', 'story_002_first_companion', 'increase_romance_meter')}}"
+    condition: "{{LuxuryAnglerGame.getRomanceLevel('mia') >= 10}}"
+    jump: "quest_completion_check"
+
+  mia_receives_gift:
+    text: "Oh wow, this is a beautiful fish! Thank you so much!"
+    action: "{{LuxuryAnglerGame.executeCommand('giveQuestReward', 'npc_mia_001', 'romance', {npc: 'mia', points: 10})}}"
+    jump: "mia_gift_reaction"
+
+  mia_gift_reaction:
+    text: "This means so much to me. I'll treasure it always!"
+    action: "{{LuxuryAnglerGame.executeCommand('unlockAchievement', 'mia_gift_given')}}"
+    jump: "quest_completion_check"
+
+  quest_completion_check:
+    text: "I feel like we've really connected today. Our adventure is just beginning!"
+    condition: "{{LuxuryAnglerGame.isQuestCompleted('npc_mia_001')}}"
+    action: "{{LuxuryAnglerGame.executeCommand('unlockAchievement', 'mias_friend')}}"
+    jump: "dialog_end"
+
+  mia_tutorial_declined:
+    text: "No problem! Come find me when you're ready to learn more."
+    jump: "dialog_end"
+
+  dialog_end:
+    text: "See you around the docks!"
+    action: "{{LuxuryAnglerGame.executeCommand('completeQuest', 'story_002_first_companion')}}"
+
+# Conditional scenes based on quest states
+quest_dependent_scenes:
+  # Only available if tutorial is completed
+  advanced_dialog:
+    condition: "{{LuxuryAnglerGame.getQuestState('tutorial_completed')}}"
+    text: "Since you've completed the tutorial, let's talk about advanced techniques!"
+    
+  # Only available if Mia's quest is active
+  mia_quest_dialog:
+    condition: "{{LuxuryAnglerGame.getQuestState('mia_quest_active')}}"
+    text: "How's your progress on the tasks I gave you?"
+    
+  # Romance-level dependent dialog
+  romantic_dialog:
+    condition: "{{LuxuryAnglerGame.getRomanceLevel('mia') >= 50}}"
+    text: "I've really enjoyed getting to know you better..."
+    action: "{{LuxuryAnglerGame.executeCommand('unlockAchievement', 'mia_romantic_interest')}}"
+
+# Achievement unlocking examples
+achievement_triggers:
+  first_conversation:
+    trigger: "on_dialog_start"
+    action: "{{LuxuryAnglerGame.executeCommand('unlockAchievement', 'first_conversation')}}"
+    
+  fishing_mentor:
+    trigger: "on_choice_fishing_tips"
+    action: "{{LuxuryAnglerGame.executeCommand('unlockAchievement', 'fishing_mentor')}}"
+    
+  romance_milestone:
+    trigger: "romance_level_25"
+    action: "{{LuxuryAnglerGame.executeCommand('unlockAchievement', 'mia_romance_25')}}"
+
+# Quest command examples
+quest_commands:
+  # Start a new quest
+  start_sophie_quest:
+    command: "{{LuxuryAnglerGame.executeCommand('startQuest', 'npc_sophie_001')}}"
+    
+  # Update quest progress
+  update_fishing_progress:
+    command: "{{LuxuryAnglerGame.executeCommand('updateQuestObjective', 'fishing_001_species_collector', 'catch_10_species', 1)}}"
+    
+  # Complete quest objective
+  complete_tutorial:
+    command: "{{LuxuryAnglerGame.executeCommand('updateQuestObjective', 'story_001_tutorial', 'cast_first_time')}}"
+    
+  # Fail a quest
+  fail_quest:
+    command: "{{LuxuryAnglerGame.executeCommand('failQuest', 'side_001_master_angler')}}"
+    
+  # Check quest states
+  check_quest_active:
+    query: "{{LuxuryAnglerGame.isQuestActive('npc_mia_001')}}"
+    
+  check_quest_completed:
+    query: "{{LuxuryAnglerGame.isQuestCompleted('story_001_tutorial')}}"
+    
+  get_quest_progress:
+    query: "{{LuxuryAnglerGame.getQuestProgress('fishing_001_species_collector', 'catch_10_species')}}"
+
+# State-dependent content
+dynamic_content:
+  # Show different text based on quest completion
+  greeting_text:
+    default: "Hello there!"
+    tutorial_completed: "Welcome back, experienced angler!"
+    first_companion_met: "Great to see you again!"
+    
+  # Show different choices based on romance level
+  conversation_options:
+    low_romance: ["Tell me about fishing", "See you later"]
+    medium_romance: ["Tell me about fishing", "How are you feeling?", "See you later"]
+    high_romance: ["Tell me about fishing", "How are you feeling?", "I've been thinking about you", "See you later"] 

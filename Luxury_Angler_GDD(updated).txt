@@ -24,7 +24,7 @@ TABLE OF CONTENTS
    7.1 Inventory System
    7.2 Equipment System
 8. Social System
-   8.1 Cruise Chatroom
+   8.1 Cruise Cabin
    8.2 Story and Dialog System (RenJS)
 9. Shop System
 10. Achievement System
@@ -69,12 +69,12 @@ The gameplay loop starts at the Title Screen and centers on the Boat Menu, where
 Flowchart (simplified):
 Title Screen -> Boat Menu (Time, Weather, Location Display)
   -> Travel -> Select Map (1 of 5) -> Select Spot (1 of 10) -> Arrive (Time +1h, Energy -2)
-  -> Go Fishing -> Choose Mode: Story Mode or Practice Mode
-    -> Select Map (Story Mode: Story maps; Practice Mode: Practice maps, excluding story basic fish map)
+  -> Go Fishing -> Choose Mode: Story Mode or Quest Mode
+    -> Select Map (Story Mode: Story maps; Quest Mode: Quest maps, excluding story basic fish map)
     -> Fishing (Cast, Lure, Reel; Time +30m, Energy -5)
       -> Success -> Collect Fish Card (if fishtank not full) -> Return to Boat Menu
       -> Fail -> Return to Boat Menu
-  -> Go Chatroom -> Cruise Chatroom (Social Interactions) -> Return to Boat Menu
+  -> Go Cabin -> Cruise Cabin (Social Interactions) -> Return to Boat Menu
   -> Go Shop (Only at Starting Port) -> Shop Menu (Purchase Items) -> Return to Boat Menu
   -> Go Inventory -> Inventory (Manage Cards, Gear) -> Return to Boat Menu
   -> Return to Port (Time +1h, Energy -2) -> Sell Fish Cards -> Access Shop
@@ -82,9 +82,9 @@ Title Screen -> Boat Menu (Time, Weather, Location Display)
 2.2 Gameplay Loop Description
 Players begin at the Title Screen, entering the Boat Menu after a tutorial or save load. The Boat Menu displays time (e.g., Dawn), weather (e.g., Sunny), and the boat’s current location (e.g., Starting Port or Map 3, Spot 7). From here, players can:
 - **Travel**: Move between the starting port and 5 fishing maps, each with 10 unique spots (e.g., Coral Reef, Deep Trench). Travel takes 1 hour and 2 Energy.
-- **Fish**: Choose between **Story Mode** or **Practice Mode**:
+- **Fish**: Choose between **Story Mode** or **Quest Mode**:
   - **Story Mode**: Access story-related maps with unique fish and challenges tied to the narrative.
-  - **Practice Mode**: Access practice maps (excluding the story's basic fish map) for skill honing or catching specific fish without impacting story progression.
+  - **Quest Mode**: Access Quest maps (excluding the story's basic fish map) for skill honing or catching specific fish without impacting story progression.
 - **Chat**: Interact socially with companions.
 - **Shop**: Purchase items, but only when docked at the starting port.
 - **Manage Inventory**: Craft or equip items.
@@ -124,7 +124,7 @@ Player attributes enhance fishing, crafting, and social interactions. They are i
 
 3.1.4 Bikini Assistant Attributes (6)
 - Romance Effectiveness: Increases romance points. Improved by skills.
-- Chatroom Affinity: Boosts chatroom interactions. Improved by boats.
+- Cabin Affinity: Boosts Boat cabin interactions. Improved by boats.
 - Entertainment Mood Boost: Enhances companion mood. Improved by boats.
 - Fish Detection: Spots high-value fish. Improved by companions.
 - Energy: Boosted by companions. Improved by clothing.
@@ -238,8 +238,14 @@ Regular Lure Control: If a player presses up(W in WASD control), the lure is swi
 - **Cycle**: Changes every 2 in-game hours.
 
 4.4 Map Selection
+- **Map locations**: There are 5 maps and each has 10 fishing spots
 - **Story Mode Maps**: These maps are tied to the main storyline, featuring unique fish, challenges, and narrative progression. Examples include Coral Cove and Deep Abyss.
-- **Practice Mode Maps**: Separate from the story, these maps (excluding the story's basic fish map) allow players to practice skills or target specific fish without affecting story progression. Examples include Training Lagoon and Open Waters.
+- **Quest Mode Maps**: Separate from the story, these maps (excluding the story's basic fish map) allow players to train skills or target specific fish without affecting story progression. Examples include Training Lagoon and Open Waters.
+
+4.5 Fishes
+- **Fish Types**: There are 10 fish types(different shapes and looks) and each type has 5 fishes. There are 50 fishes(50 fish cards) in this game in total.
+- **Fish Bosses**: There are 10 fish bosses.
+- **Fishes locations**: The 50 fishes will spread and live in the 10 different fishing spots in 5 maps, Each spots should have 5 types of different fishes.
 
 5. CRAFTING SYSTEM
 ------------------
@@ -327,7 +333,8 @@ Clothing (15):
 - Boss Fights: Every 5 levels (e.g., Level 5: Giant Bass, Level 50: Kraken).
 - Scaling: Fish attributes increase (e.g., Weight: 0.1 kg at Level 1 to 500 kg at Level 50).
 - **Story Mode Maps**: Integrated into the narrative, these maps unlock as players progress through the story, offering unique fish and challenges.
-- **Practice Mode Maps**: Available for skill improvement or specific fish hunting, these maps are separate from the story and exclude the basic fish map used in Story Mode.
+- **Quest Mode Maps**: Similar to story mode maps, new quests will become available in story mode maps after unlocked.
+- **Tournament Mode Maps**: Available for specific fish hunting, these maps use the same fish map used in Story Mode, but with extra special fish types.
 
 7. INVENTORY AND EQUIPMENT
 --------------------------
@@ -356,16 +363,19 @@ Equipment enhances player attributes and is categorized into four types:
 8. SOCIAL SYSTEM
 ----------------
 
-8.1 Cruise Chatroom
+8.1 Cruise Cabin
 - **Companions**: 10 unique bikini girl companions (e.g., Mia, Luna), each with distinct personalities and storylines.
 - **Interactions**: Gift (using Fish Cards or crafted items), Chat (dialogue choices), Task (e.g., auto-fishing assignments).
 - **Romance Meter**: 0-100 points, increased by interactions. Milestones (e.g., 50, 100) unlock rewards like HCG scenes.
+- **Album**: All the reward HCG images will be available here for reviewing after player collected them in Cruise Cabin. All images will need to be unlocked first depending on Bikini assistant's romance meter or specific achievement.
+
 
 8.2 Story and Dialog System (RenJS)
 - **RenJS**: A visual novel engine used for creating and managing storylines, character interactions, and dialogue.
 - **Integration**: RenJS handles all narrative content, including companion backstories, romance arcs, and event dialogues.
 - **Features**: Branching dialogue choices, affection-based responses, and scripted events tied to player progression.
 - **Cross-System Integration**: Dialogue choices can influence gameplay (e.g., unlocking new fishing spots or temporary buffs).
+- **Event Quest System UI**: There will be event quests including: main story quests, side event quests, Cabin NPC quests, ..,etc.
 
 9. SHOP SYSTEM
 --------------
@@ -378,7 +388,7 @@ Equipment enhances player attributes and is categorized into four types:
 ----------------------
 
 - Types: Story (e.g., "Catch Kraken"), Progression (e.g., "Reach Level 50"), Daily/Weekly Quests.
-- Rewards: Coins (e.g., 500), Gems (e.g., 10), Fish Cards (e.g., 1-Star).
+- Rewards: Coins (e.g., 500), Gems (e.g., 10), Fish Cards (e.g., 1-Star), HCGs for certain Bikini Assistant
 
 11. ECONOMY SYSTEM
 ------------------

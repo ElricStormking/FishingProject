@@ -7,6 +7,10 @@ import GameScene from './scenes/GameScene.js';
 import HUDScene from './scenes/HUDScene.js';
 import ShopScene from './scenes/ShopScene.js';
 import SettingsScene from './scenes/SettingsScene.js';
+import DialogScene from './scenes/DialogScene.js';
+import QuestScene from './scenes/QuestScene.js';
+import CabinScene from './scenes/CabinScene.js';
+import AlbumScene from './scenes/AlbumScene.js';
 
 const config = {
     type: Phaser.AUTO,
@@ -28,7 +32,11 @@ const config = {
         GameScene,
         HUDScene,
         ShopScene,
-        SettingsScene
+        SettingsScene,
+        DialogScene,
+        QuestScene,
+        CabinScene,
+        AlbumScene
     ],
     scale: {
         mode: Phaser.Scale.FIT,

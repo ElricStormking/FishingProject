@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory System Fix Test - Luxury Angler</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+        
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .test-info {
+            background: rgba(0, 100, 200, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #0066cc;
+        }
+        
+        .test-instructions {
+            background: rgba(0, 150, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #00aa00;
+        }
+        
+        .fix-list {
+            background: rgba(200, 100, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #cc6600;
+        }
+        
+        #gameContainer {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #0066cc;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        li {
+            margin: 5px 0;
+        }
+        
+        .highlight {
+            color: #ffdd00;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎮 Inventory System Fix Test - Luxury Angler</h1>
+        
+        <div class="test-info">
+            <h3>🔧 Fixed Issues</h3>
+            <p>This test verifies that the following inventory system errors have been resolved:</p>
+            <ul>
+                <li><span class="highlight">Event listener cleanup</span> - Proper removal of event listeners when UI is destroyed</li>
+                <li><span class="highlight">Double-hiding prevention</span> - Prevents errors from hiding UI multiple times</li>
+                <li><span class="highlight">Null reference errors</span> - Added null checks for destroyed UI elements</li>
+                <li><span class="highlight">Error handling</span> - Try-catch blocks around critical operations</li>
+                <li><span class="highlight">UI state management</span> - Proper tracking of destroyed/visible states</li>
+            </ul>
+        </div>
+        
+        <div class="test-instructions">
+            <h3>📋 Test Instructions</h3>
+            <ol>
+                <li>Click <span class="highlight">BOAT MENU</span> to enter the main game scene</li>
+                <li>Click <span class="highlight">INVENTORY</span> button to open the inventory system</li>
+                <li>Try switching between different <span class="highlight">categories</span> (Rods, Lures, Bait, etc.)</li>
+                <li>Click the <span class="highlight">CRAFTING</span> button to test UI transitions</li>
+                <li>Click the <span class="highlight">← INVENTORY</span> button to return</li>
+                <li>Click the <span class="highlight">EQUIPMENT</span> button to test enhancement UI</li>
+                <li>Use the <span class="highlight">× Close</span> button multiple times rapidly</li>
+                <li>Open and close the inventory multiple times quickly</li>
+                <li>Check browser console - should see <span class="highlight">no errors</span></li>
+            </ol>
+        </div>
+        
+        <div class="fix-list">
+            <h3>🛠️ Applied Fixes</h3>
+            <ul>
+                <li><strong>InventoryUI.js:</strong> Added isDestroyed flag and proper cleanup</li>
+                <li><strong>InventoryUI.js:</strong> Event listener references stored for proper removal</li>
+                <li><strong>InventoryUI.js:</strong> Improved hide() method with null checks</li>
+                <li><strong>InventoryUI.js:</strong> Enhanced close button error handling</li>
+                <li><strong>BoatMenuScene.js:</strong> Better openInventory() error handling</li>
+                <li><strong>BoatMenuScene.js:</strong> Improved ensureUIsCreated() method</li>
+                <li><strong>InventoryManager.js:</strong> Enhanced event system reliability</li>
+            </ul>
+        </div>
+        
+        <div id="gameContainer">
+            <!-- Game will load here -->
+        </div>
+    </div>
+
+    <script type="module">
+        import Phaser from './node_modules/phaser/dist/phaser.esm.js';
+        import MenuScene from './src/scenes/MenuScene.js';
+        import BoatMenuScene from './src/scenes/BoatMenuScene.js';
+        import GameScene from './src/scenes/GameScene.js';
+        import HUDScene from './src/scenes/HUDScene.js';
+
+        // Game configuration
+        const config = {
+            type: Phaser.AUTO,
+            width: 1200,
+            height: 600,
+            parent: 'gameContainer',
+            backgroundColor: '#001133',
+            scene: [MenuScene, BoatMenuScene, GameScene, HUDScene],
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },
+                    debug: false
+                }
+            },
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH
+            }
+        };
+
+        // Create and start the game
+        const game = new Phaser.Game(config);
+        
+        // Add console logging to monitor errors
+        const originalError = console.error;
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            // Add visual indicator for errors in the test
+            if (args.some(arg => typeof arg === 'string' && arg.includes('InventoryUI'))) {
+                console.log('%c❌ INVENTORY ERROR DETECTED!', 'color: red; font-size: 16px; font-weight: bold;');
+            }
+        };
+        
+        console.log('%c🎮 Inventory System Fix Test Started', 'color: green; font-size: 16px; font-weight: bold;');
+        console.log('Monitor this console for any errors while testing the inventory system.');
+    </script>
+</body>
+</html> 

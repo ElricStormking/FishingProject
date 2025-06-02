@@ -32,6 +32,14 @@
       "requiredProperties": ["id", "name", "rarity", "stats", "description", "unlockLevel"],
       "optionalProperties": ["cost", "craftingMaterials", "craftingTime", "durability", "condition"]
     },
+    "clothing": {
+      "type": "equipment",
+      "stackable": false,
+      "equipSlot": "clothing",
+      "maxEquipped": 3,
+      "requiredProperties": ["id", "name", "slotType", "rarity", "stats", "description", "unlockLevel"],
+      "optionalProperties": ["cost", "craftingMaterials", "craftingTime", "durability", "condition"]
+    },
     "upgrades": {
       "type": "upgrade",
       "stackable": false,
@@ -62,7 +70,7 @@
       "equipSlot": "none",
       "maxEquipped": 0,
       "requiredProperties": ["id", "name", "rarity", "description"],
-      "optionalProperties": ["cost", "quantity", "source"]
+      "optionalProperties": ["cost", "quantity", "effect", "successRate", "bonusMultiplier", "preventBreak", "preventDowngrade"]
     }
   },
   "itemProperties": {
@@ -79,6 +87,11 @@
     "type": {
       "type": "string",
       "description": "Item subtype (e.g., spinner, soft_plastic for lures)",
+      "required": false
+    },
+    "slotType": {
+      "type": "string",
+      "description": "Clothing slot type (head, upper_body, lower_body)",
       "required": false
     },
     "rarity": {
@@ -138,7 +151,14 @@
         "biteRate": {"type": "integer", "min": 0},
         "lureSuccess": {"type": "integer", "min": 0},
         "lureDurability": {"type": "integer", "min": 0},
-        "lurePrecision": {"type": "integer", "min": 0}
+        "lurePrecision": {"type": "integer", "min": 0},
+        "sunProtection": {"type": "integer", "min": 0},
+        "luck": {"type": "integer", "min": 0},
+        "comfort": {"type": "integer", "min": 0},
+        "storage": {"type": "integer", "min": 0},
+        "waterResistant": {"type": "integer", "min": 0},
+        "mobility": {"type": "integer", "min": 0},
+        "deepWaterAccess": {"type": "integer", "min": 0}
       }
     },
     "craftingMaterials": {
@@ -213,6 +233,7 @@
       "lures": 30,
       "bait": 10,
       "boats": 5,
+      "clothing": 15,
       "upgrades": 50,
       "fish": 100,
       "consumables": 20,

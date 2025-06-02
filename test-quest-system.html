@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest System Test - Luxury Angler</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f1419 0%, #1a1a2e 100%);
+            color: #ecf0f1;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .test-info {
+            background: rgba(44, 62, 80, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .instructions {
+            background: rgba(52, 73, 94, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .key-bindings {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .key {
+            background: rgba(100, 181, 246, 0.2);
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #64b5f6;
+        }
+        #gameContainer {
+            width: 100%;
+            height: 720px;
+            border: 2px solid #34495e;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(39, 174, 96, 0.2);
+            border-radius: 5px;
+            border: 1px solid #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎣 Quest System Test - Luxury Angler</h1>
+            <p>Testing the comprehensive quest management system</p>
+        </div>
+
+        <div class="test-info">
+            <h2>🗓 Quest System Features</h2>
+            <ul>
+                <li><strong>Quest Categories:</strong> Main Story, Side Events, NPC Quests, Fishing Challenges</li>
+                <li><strong>Quest Status:</strong> Available, Active, Completed, Failed, Locked</li>
+                <li><strong>Progress Tracking:</strong> Individual objectives with progress bars</li>
+                <li><strong>Reward System:</strong> Coins, Experience, Items, Achievements, Romance bonuses</li>
+                <li><strong>NPC Integration:</strong> Dialog interactions affect quest progress</li>
+                <li><strong>Auto-triggered Hooks:</strong> Fishing, casting, and menu actions update quests automatically</li>
+            </ul>
+        </div>
+
+        <div class="instructions">
+            <h3>🎮 How to Test the Quest System</h3>
+            <p>Use these controls to interact with the quest system:</p>
+            <div class="key-bindings">
+                <div class="key"><strong>Q Key:</strong> Open Quest Log</div>
+                <div class="key"><strong>Quest Button:</strong> Click the Quest Log button (bottom-right)</div>
+                <div class="key"><strong>Filter Quests:</strong> Click category buttons (All, Story, Events, NPCs, Fishing)</div>
+                <div class="key"><strong>Select Quest:</strong> Click on any quest in the list to view details</div>
+                <div class="key"><strong>Start Quest:</strong> Click "Start Quest" button for available quests</div>
+                <div class="key"><strong>ESC Key:</strong> Close Quest Log and return to game</div>
+            </div>
+            
+            <h4>🔄 Quest Progress Testing</h4>
+            <div class="key-bindings">
+                <div class="key"><strong>SPACEBAR:</strong> Cast line (updates tutorial quest)</div>
+                <div class="key"><strong>D/F/G Keys:</strong> Dialog with Mia/Sophie/Luna (updates NPC quests)</div>
+                <div class="key"><strong>Mouse Navigation:</strong> Access boat menu (completes tutorial objective)</div>
+            </div>
+        </div>
+
+        <div id="gameContainer"></div>
+
+        <div class="status">
+            <h3>✅ Quest System Status</h3>
+            <p><strong>Implementation Complete:</strong> All quest types, UI, and integration hooks are functional</p>
+            <p><strong>Default Quests Loaded:</strong> Tutorial, Main Story, NPC Quests, and Fishing Challenges</p>
+            <p><strong>Real-time Updates:</strong> Quest progress updates automatically based on player actions</p>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html> 

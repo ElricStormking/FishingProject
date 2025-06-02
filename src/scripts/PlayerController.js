@@ -172,8 +172,53 @@ export default class PlayerController {
             this.castMinigame.start(playerStats, waterArea);
             
             // Listen for cast completion
-            this.scene.events.once('fishing:castComplete', (data) => {
-                this.onCastComplete(data.success, data.accuracy, data.hitAccurateSection, data.castType);
+            this.scene.events.on('fishing:castComplete', (data) => {
+                console.log('PlayerController: Cast completed with data:', data);
+                
+                if (data.success) {
+                    // Check if cast hit any fishing spots first
+                    const spotHit = this.scene.checkFishingSpotHit ? 
+                        this.scene.checkFishingSpotHit(this.scene.lure.x, this.scene.lure.y) : 
+                        { hit: false };
+                    
+                    let castType = 'normal';
+                    let rarityBonus = 0;
+                    let spotInfo = null;
+                    
+                    if (spotHit.hit) {
+                        // Hit a fishing spot
+                        castType = 'spot';
+                        rarityBonus = spotHit.rarityBonus;
+                        spotInfo = spotHit.spot;
+                        console.log(`PlayerController: Hit fishing spot: ${spotInfo.config.name} (+${rarityBonus}% rarity)`);
+                    } else if (data.hitAccurateSection) {
+                        // Hit the main hotspot
+                        castType = 'hotspot';
+                        rarityBonus = 30; // Main hotspot bonus
+                        console.log('PlayerController: Hit main hotspot (+30% rarity)');
+                    }
+                    
+                    // Select fish based on cast type and location
+                    const selectedFish = this.selectFishForCast(castType, spotInfo, rarityBonus);
+                    
+                    if (selectedFish) {
+                        console.log('PlayerController: Selected fish for reeling:', selectedFish.name, 'Type:', castType);
+                        
+                        // Start reeling minigame with selected fish and bonus info
+                        this.startReelingMiniGame(selectedFish, {
+                            castType: castType,
+                            rarityBonus: rarityBonus,
+                            spotInfo: spotInfo,
+                            accuracy: data.accuracy
+                        });
+                    } else {
+                        console.error('PlayerController: No fish selected, ending fishing attempt');
+                        this.isFishing = false;
+                    }
+                } else {
+                    console.log('PlayerController: Cast failed, ending fishing attempt');
+                    this.isFishing = false;
+                }
             });
             
             // Update statistics
@@ -212,37 +257,45 @@ export default class PlayerController {
         // Get all equipped items and their combined effects
         const equipmentEffects = this.getEquipmentEffects();
         
+        // Get Time & Weather effects (Priority 1.4 integration)
+        const timeWeatherEffects = this.getTimeWeatherEffects();
+        
         return {
             // Casting stats
-            castAccuracy: (baseStats.castAccuracy || 5) + equipmentEffects.castAccuracy,
-            castDistance: (baseStats.castDistance || 5) + equipmentEffects.castDistance,
-            castPower: (baseStats.castPower || 5) + equipmentEffects.castPower,
+            castAccuracy: (baseStats.castAccuracy || 5) + equipmentEffects.castAccuracy + timeWeatherEffects.castAccuracy,
+            castDistance: (baseStats.castDistance || 5) + equipmentEffects.castDistance + timeWeatherEffects.castDistance,
+            castPower: (baseStats.castPower || 5) + equipmentEffects.castPower + timeWeatherEffects.castPower,
             
             // Detection and attraction stats
-            fishDetection: (baseStats.fishDetection || 5) + equipmentEffects.fishDetection,
-            attractionRadius: (baseStats.attractionRadius || 5) + equipmentEffects.attractionRadius,
-            biteRate: (baseStats.biteRate || 5) + equipmentEffects.biteRate,
-            rareFishChance: (baseStats.rareFishChance || 5) + equipmentEffects.rareFishChance,
+            fishDetection: (baseStats.fishDetection || 5) + equipmentEffects.fishDetection + timeWeatherEffects.fishDetection,
+            attractionRadius: (baseStats.attractionRadius || 5) + equipmentEffects.attractionRadius + timeWeatherEffects.attractionRadius,
+            biteRate: (baseStats.biteRate || 5) + equipmentEffects.biteRate + timeWeatherEffects.biteRate,
+            rareFishChance: (baseStats.rareFishChance || 5) + equipmentEffects.rareFishChance + timeWeatherEffects.rareFishChance,
             
             // Luring stats
-            lureSuccess: (baseStats.lureSuccess || 5) + equipmentEffects.lureSuccess,
-            lureControl: (baseStats.lureControl || 5) + equipmentEffects.lureControl,
-            lureDurability: (baseStats.lureDurability || 5) + equipmentEffects.lureDurability,
+            lureSuccess: (baseStats.lureSuccess || 5) + equipmentEffects.lureSuccess + timeWeatherEffects.lureSuccess,
+            lureControl: (baseStats.lureControl || 5) + equipmentEffects.lureControl + timeWeatherEffects.lureControl,
+            lureDurability: (baseStats.lureDurability || 5) + equipmentEffects.lureDurability + timeWeatherEffects.lureDurability,
             
             // Reeling stats
-            reelSpeed: (baseStats.reelSpeed || 5) + equipmentEffects.reelSpeed,
-            lineStrength: (baseStats.lineStrength || 5) + equipmentEffects.lineStrength,
-            tensionControl: (baseStats.tensionControl || 5) + equipmentEffects.tensionControl,
-            staminaDrain: (baseStats.staminaDrain || 5) + equipmentEffects.staminaDrain,
+            reelSpeed: (baseStats.reelSpeed || 5) + equipmentEffects.reelSpeed + timeWeatherEffects.reelSpeed,
+            lineStrength: (baseStats.lineStrength || 5) + equipmentEffects.lineStrength + timeWeatherEffects.lineStrength,
+            tensionControl: (baseStats.tensionControl || 5) + equipmentEffects.tensionControl + timeWeatherEffects.tensionControl,
+            staminaDrain: (baseStats.staminaDrain || 5) + equipmentEffects.staminaDrain + timeWeatherEffects.staminaDrain,
             
             // QTE stats
-            qteWindow: (baseStats.qteWindow || 5) + equipmentEffects.qteWindow,
-            qtePrecision: (baseStats.qtePrecision || 5) + equipmentEffects.qtePrecision,
+            qteWindow: (baseStats.qteWindow || 5) + equipmentEffects.qteWindow + timeWeatherEffects.qteWindow,
+            qtePrecision: (baseStats.qtePrecision || 5) + equipmentEffects.qtePrecision + timeWeatherEffects.qtePrecision,
             
             // Special effects
-            criticalChance: (baseStats.criticalChance || 0) + equipmentEffects.criticalChance,
-            experienceBonus: (baseStats.experienceBonus || 0) + equipmentEffects.experienceBonus,
-            durabilityLoss: Math.max(0.1, (baseStats.durabilityLoss || 1) + equipmentEffects.durabilityLoss)
+            criticalChance: (baseStats.criticalChance || 0) + equipmentEffects.criticalChance + timeWeatherEffects.criticalChance,
+            experienceBonus: (baseStats.experienceBonus || 0) + equipmentEffects.experienceBonus + timeWeatherEffects.experienceBonus,
+            durabilityLoss: Math.max(0.1, (baseStats.durabilityLoss || 1) + equipmentEffects.durabilityLoss + timeWeatherEffects.durabilityLoss),
+            
+            // Time & Weather specific effects
+            fishActivity: timeWeatherEffects.fishActivity,
+            lineVisibility: timeWeatherEffects.lineVisibility,
+            playerVisibility: timeWeatherEffects.playerVisibility
         };
     }
 
@@ -264,38 +317,210 @@ export default class PlayerController {
         }
 
         const equippedItems = this.gameState.inventoryManager.getEquippedItems();
-        
+
         // Process each category of equipped items
         Object.entries(equippedItems).forEach(([category, items]) => {
             items.forEach(item => {
+                // Base equipment stats
                 if (item.stats) {
-                    // Add item stats to effects
-                    Object.entries(item.stats).forEach(([statName, value]) => {
-                        if (effects.hasOwnProperty(statName)) {
-                            effects[statName] += value;
+                    Object.entries(item.stats).forEach(([stat, value]) => {
+                        if (effects.hasOwnProperty(stat)) {
+                            effects[stat] += value;
                         }
                     });
                 }
-                
-                // Process special effects
-                if (item.effects) {
-                    Object.entries(item.effects).forEach(([effectName, value]) => {
-                        if (effects.hasOwnProperty(effectName)) {
-                            effects[effectName] += value;
+
+                // Enhancement bonuses (Priority 1.7)
+                if (item.enhancementBonuses) {
+                    Object.entries(item.enhancementBonuses).forEach(([stat, value]) => {
+                        if (effects.hasOwnProperty(stat)) {
+                            effects[stat] += value;
                         }
                     });
-                }
-                
-                // Apply rarity bonuses
-                if (item.rarity && item.rarity > 5) {
-                    const rarityBonus = (item.rarity - 5) * 0.1; // 10% bonus per rarity level above 5
-                    effects.experienceBonus += rarityBonus;
-                    effects.criticalChance += rarityBonus;
                 }
             });
         });
 
-        console.log('PlayerController: Equipment effects calculated:', effects);
+        // Add Equipment Enhancement system bonuses (Priority 1.7)
+        if (this.gameState.equipmentEnhancer) {
+            try {
+                // Set bonuses
+                const { setBonuses } = this.gameState.equipmentEnhancer.getActiveSetBonuses();
+                Object.entries(setBonuses).forEach(([stat, value]) => {
+                    if (effects.hasOwnProperty(stat)) {
+                        effects[stat] += value;
+                    }
+                });
+
+                // Specialization bonuses (based on current fishing context)
+                const fishingContext = {
+                    location: this.gameState.currentLocation?.id,
+                    time: this.gameState.timeManager?.getCurrentPeriod(),
+                    weather: this.gameState.weatherManager?.getCurrentWeather()?.type,
+                    targetFish: this.getCurrentTargetFish() // Get currently targeted fish if any
+                };
+
+                const specializationBonuses = this.gameState.equipmentEnhancer.getSpecializationBonuses(fishingContext);
+                Object.entries(specializationBonuses).forEach(([specId, bonus]) => {
+                    // Apply specialization bonus to relevant stats
+                    effects.biteRate += bonus;
+                    effects.rareFishChance += bonus;
+                    effects.experienceBonus += Math.floor(bonus / 2);
+                });
+
+                console.log('PlayerController: Applied enhancement bonuses', { setBonuses, specializationBonuses });
+            } catch (error) {
+                console.error('PlayerController: Error applying enhancement bonuses:', error);
+            }
+        }
+
+        console.log('PlayerController: Final equipment effects calculated', effects);
+        return effects;
+    }
+
+    /**
+     * Get currently targeted fish for specialization bonuses
+     * @returns {string|null} - Target fish ID or null
+     */
+    getCurrentTargetFish() {
+        // This could be enhanced based on current fishing state
+        // For now, return null (could be set when player starts fishing)
+        return this.targetFish || null;
+    }
+
+    /**
+     * Set target fish for specialization bonuses
+     * @param {string} fishId - Fish ID to target
+     */
+    setTargetFish(fishId) {
+        this.targetFish = fishId;
+        console.log(`PlayerController: Target fish set to ${fishId}`);
+    }
+
+    getTimeWeatherEffects() {
+        let effects = {
+            // Base fishing attributes
+            castAccuracy: 1.0,
+            castDistance: 1.0,
+            biteRate: 1.0,
+            biteSpeed: 1.0,
+            lureSuccess: 1.0,
+            lureControl: 1.0,
+            lureMovement: 1.0,
+            lineStrength: 1.0,
+            reelingPower: 1.0,
+            tensionControl: 1.0,
+            qtePrecision: 1.0,
+            qteWindow: 1.0,
+            rareFishChance: 1.0,
+            fishDetection: 1.0,
+            fishAwareness: 1.0,
+            experienceBonus: 1.0,
+            visibility: 1.0,
+            focusLevel: 1.0,
+            reactionTime: 1.0,
+            equipmentDurability: 1.0
+        };
+        
+        // Apply time period effects
+        if (this.gameState.timeManager) {
+            const periodEffects = this.gameState.timeManager.getFishActivityModifiers();
+            const currentPeriod = this.gameState.timeManager.getCurrentPeriod();
+            
+            // Apply period-specific bonuses
+            switch (currentPeriod) {
+                case 'DAWN':
+                case 'DUSK':
+                    effects.rareFishChance += 0.2; // +20% rare fish chance
+                    effects.fishDetection += 0.15; // +15% fish detection
+                    break;
+                case 'MORNING':
+                case 'EVENING':
+                    effects.biteRate += 0.1; // +10% bite rate
+                    effects.fishAwareness -= 0.05; // -5% fish awareness (less cautious)
+                    break;
+                case 'MIDDAY':
+                    effects.castAccuracy += 0.1; // +10% cast accuracy (good visibility)
+                    effects.visibility += 0.2; // +20% visibility
+                    break;
+                case 'NIGHT':
+                case 'LATE_NIGHT':
+                    effects.rareFishChance += 0.3; // +30% rare fish chance
+                    effects.castAccuracy -= 0.2; // -20% cast accuracy (dark)
+                    effects.fishAwareness -= 0.1; // -10% fish awareness (fish less cautious at night)
+                    effects.visibility -= 0.3; // -30% visibility
+                    break;
+            }
+            
+            // Apply base time effects
+            if (periodEffects) {
+                effects.biteRate *= periodEffects.biteRate || 1.0;
+                effects.biteSpeed *= periodEffects.biteFast || 1.0;
+                effects.rareFishChance *= periodEffects.rareChance || 1.0;
+            }
+        }
+        
+        // Apply weather effects
+        if (this.gameState.weatherManager) {
+            const weatherEffects = this.gameState.weatherManager.getLocationWeatherEffects();
+            const currentWeather = this.gameState.weatherManager.getCurrentWeather();
+            
+            if (currentWeather === 'RAINY') {
+                effects.biteRate *= 1.3; // +30% bite rate in rain
+                effects.lureSuccess += 0.2; // +20% lure success
+                effects.castAccuracy -= 0.05; // -5% cast accuracy
+                effects.fishDetection += 0.25; // +25% fish detection
+                effects.visibility -= 0.2; // -20% visibility in rain
+                effects.lineStrength -= 0.1; // -10% line strength (wet conditions)
+            }
+            
+            // Apply weather modifier effects
+            if (weatherEffects) {
+                effects.biteRate *= weatherEffects.fishActivity || 1.0;
+                effects.visibility *= weatherEffects.visibility || 1.0;
+                effects.castAccuracy *= weatherEffects.castAccuracy || 1.0;
+            }
+        }
+        
+        // Apply location-specific fishing modifiers
+        if (this.gameState.locationManager) {
+            const locationModifiers = this.gameState.locationManager.getLocationFishingModifiers();
+            
+            if (locationModifiers) {
+                effects.biteRate *= locationModifiers.biteRate || 1.0;
+                effects.lineStrength *= locationModifiers.lineStrength || 1.0;
+                effects.castDistance *= locationModifiers.castDistance || 1.0;
+                effects.lureSuccess *= locationModifiers.lureEffectiveness || 1.0;
+                effects.experienceBonus *= locationModifiers.experienceBonus || 1.0;
+            }
+            
+            // Apply location-specific special effects
+            const currentLocation = this.gameState.locationManager.getCurrentLocation();
+            if (currentLocation) {
+                switch (currentLocation.id) {
+                    case 'ocean_harbor':
+                        effects.castDistance += 0.2; // Can cast further in ocean
+                        effects.fishDetection += 0.1; // Seagulls help detect fish
+                        break;
+                    case 'mountain_stream':
+                        effects.castDistance -= 0.3; // Limited casting space
+                        effects.lureControl += 0.2; // Better lure control in current
+                        effects.rareFishChance += 0.15; // More rare mountain fish
+                        break;
+                    case 'midnight_pond':
+                        effects.rareFishChance += 0.4; // Many rare nocturnal fish
+                        effects.castAccuracy -= 0.2; // Harder to see in darkness
+                        effects.lureSuccess += 0.3; // Lures glow in mystical water
+                        break;
+                    case 'champions_cove':
+                        effects.experienceBonus += 1.0; // 100% XP bonus
+                        effects.rareFishChance += 0.5; // Tournament fish
+                        effects.equipmentDurability += 0.2; // Premium facilities
+                        break;
+                }
+            }
+        }
+        
         return effects;
     }
 
@@ -466,6 +691,52 @@ export default class PlayerController {
             // Normal cast - common fish
             return allFish.filter(fish => fish.rarity <= 6);
         }
+    }
+
+    selectFishForCast(castType, spotInfo = null, rarityBonus = 0) {
+        const allFish = gameDataLoader.getAllFish();
+        if (allFish.length === 0) {
+            return { id: 'default_fish', name: 'Default Fish', rarity: 1 };
+        }
+        
+        let availableFish = allFish;
+        
+        // Filter fish based on cast type and spot
+        if (castType === 'spot' && spotInfo) {
+            // For fishing spots, try to match spot-specific fish types first
+            const spotSpecificFish = allFish.filter(fish => 
+                spotInfo.config.fishTypes.some(type => 
+                    fish.id.includes(type) || fish.name.toLowerCase().includes(type)
+                )
+            );
+            
+            // If we have spot-specific fish, use them, otherwise use all fish
+            if (spotSpecificFish.length > 0) {
+                availableFish = spotSpecificFish;
+                console.log(`PlayerController: Using ${spotSpecificFish.length} spot-specific fish for ${spotInfo.config.name}`);
+            }
+        } else if (castType === 'hotspot') {
+            // Main hotspot prefers rare fish
+            const rareFish = allFish.filter(fish => fish.rarity >= 4);
+            if (rareFish.length > 0) {
+                availableFish = rareFish;
+            }
+        }
+        
+        // Apply rarity bonus by potentially upgrading to higher rarity fish
+        if (rarityBonus > 0 && Math.random() * 100 < rarityBonus) {
+            const higherRarityFish = availableFish.filter(fish => fish.rarity >= 5);
+            if (higherRarityFish.length > 0) {
+                availableFish = higherRarityFish;
+                console.log(`PlayerController: Rarity bonus (+${rarityBonus}%) triggered, using higher rarity fish`);
+            }
+        }
+        
+        // Select random fish from available pool
+        const selectedFish = Phaser.Utils.Array.GetRandom(availableFish);
+        
+        console.log(`PlayerController: Selected ${selectedFish.name} (rarity: ${selectedFish.rarity}) from ${availableFish.length} available fish`);
+        return selectedFish;
     }
 
     getWaterArea() {
@@ -742,49 +1013,192 @@ export default class PlayerController {
         }
         
         if (success) {
-            console.log(`PlayerController: Successfully caught ${fish.name}!`);
-            this.onFishCaught(fish);
+            console.log(`PlayerController: Successfully caught fish!`, fish);
+            
+            // Extract catch result from finalStats if available
+            const catchResult = finalStats?.catchResult || null;
+            
+            // Pass both fish data and catch result to finishFishingSuccess
+            this.finishFishingSuccess({
+                fish: fish,
+                catchResult: catchResult
+            });
         } else {
             console.log(`PlayerController: Failed to catch fish - ${reason}`);
             this.onFishingFailed(reason, fish, finalStats);
         }
     }
 
-    onFishCaught(fish) {
-        console.log(`PlayerController: Fish caught: ${fish.name}`);
+    finishFishingSuccess(fish) {
+        console.log('PlayerController: Fish caught successfully!', fish);
         
-        // Play catch success audio based on fish rarity
-        if (fish.rarity >= 8) {
-            this.audioManager?.playSFX('catch_legendary');
-        } else if (fish.rarity >= 6) {
-            this.audioManager?.playSFX('catch_rare');
-        } else {
-            this.audioManager?.playSFX('catch');
+        // Use the catch result from GameState if available, otherwise use passed fish data
+        let catchResult = null;
+        let fishData = fish;
+        
+        // If we have a catch result with fish data, use it
+        if (fish && fish.catchResult && fish.catchResult.fish) {
+            catchResult = fish.catchResult;
+            fishData = catchResult.fish;
+        } else if (fish && fish.fish) {
+            // If fish is wrapped in another object
+            fishData = fish.fish;
         }
         
-        // Process fish catch through GameState (handles inventory, stats, progression)
-        this.gameState.catchFish(fish);
-        
-        // Calculate rewards and bonuses
-        const rewards = this.calculateCatchRewards(fish);
-        
-        // Play coin collection sound for rewards
-        if (rewards.coins > 0) {
-            this.audioManager?.playSFX('coin');
+        // Ensure we have valid fish data
+        if (!fishData || !fishData.name) {
+            console.error('PlayerController: Invalid fish data for finishFishingSuccess:', fish);
+            this.cleanupCast();
+            return;
         }
         
-        // Show success feedback with rewards
-        this.showCatchSuccessFeedback(fish, rewards);
+        // Award experience points
+        const baseXp = this.calculateExperienceReward(fishData);
         
-        // Clean up
-        this.cleanupCast();
+        // Apply time/weather/location experience bonus
+        const effects = this.getTimeWeatherEffects();
+        const bonusXp = Math.round(baseXp * (effects.experienceBonus - 1.0));
+        const totalXp = baseXp + bonusXp;
         
-        // Trigger events with detailed data
-        this.scene.events.emit('player:fishCaught', { 
+        this.gameState.playerProgression.addExperience(totalXp, 'fish_caught');
+        
+        // Record fish caught in location manager
+        if (this.gameState.locationManager) {
+            this.gameState.locationManager.recordFishCaught(fishData, totalXp);
+        }
+        
+        // Fish should already be added to inventory by GameState.catchFish
+        // But add a fallback just in case
+        if (!catchResult) {
+            try {
+                this.gameState.inventoryManager.addItem('fish', fishData);
+            } catch (error) {
+                console.error('PlayerController: Error adding fish to inventory:', error);
+            }
+        }
+        
+        // Update statistics
+        this.gameState.playerProgression.updateStatistics('fishCaught', 1);
+        
+        try {
+            // Use fallback methods if the inventory methods don't exist
+            const totalFishCount = this.gameState.inventoryManager.getTotalFishCount ? 
+                this.gameState.inventoryManager.getTotalFishCount() : 
+                this.gameState.inventory.fish.length;
+                
+            const uniqueFishCount = this.gameState.inventoryManager.getUniqueFishCount ? 
+                this.gameState.inventoryManager.getUniqueFishCount() : 
+                new Set(this.gameState.inventory.fish.map(f => f.fishId || f.id)).size;
+                
+            this.gameState.playerProgression.updateStatistics('totalFish', totalFishCount);
+            this.gameState.playerProgression.updateStatistics('speciesCaught', uniqueFishCount);
+        } catch (error) {
+            console.warn('PlayerController: Error updating fish statistics:', error);
+        }
+        
+        // Check if this is biggest fish of this species
+        try {
+            if (this.gameState.inventoryManager.isBiggestFish) {
+                if (this.gameState.inventoryManager.isBiggestFish(fishData)) {
+                    this.gameState.playerProgression.updateStatistics('biggestFish', `${fishData.name} (${fishData.weight || fishData.size || 0}kg)`);
+                }
+            } else {
+                // Fallback: check if this fish is heavier than any previous fish of same species
+                const sameSpeciesFish = this.gameState.inventory.fish.filter(f => 
+                    (f.fishId === fishData.fishId || f.name === fishData.name));
+                const isLargest = sameSpeciesFish.every(f => (fishData.weight || 0) >= (f.weight || 0));
+                
+                if (isLargest && fishData.weight > 0) {
+                    this.gameState.playerProgression.updateStatistics('biggestFish', `${fishData.name} (${fishData.weight}kg)`);
+                }
+            }
+        } catch (error) {
+            console.warn('PlayerController: Error checking biggest fish:', error);
+        }
+        
+        // Update rarest fish if applicable
+        const currentRarest = this.gameState.player.statistics.rarestFish || { rarity: 0 };
+        if (fishData.rarity > currentRarest.rarity) {
+            this.gameState.playerProgression.updateStatistics('rarestFish', fishData.name);
+        }
+        
+        // Check achievements
+        this.gameState.playerProgression.checkAchievements();
+        
+        // Check for location unlocks
+        if (this.gameState.locationManager) {
+            this.gameState.locationManager.checkAndUnlockLocations();
+        }
+        
+        // Visual celebration
+        this.showFishCaughtCelebration(fishData, catchResult, totalXp, bonusXp);
+        
+        // Audio feedback
+        if (this.gameState.audioManager) {
+            this.gameState.audioManager.playSFX('fish_caught');
+        }
+        
+        // Reset state
+        this.resetFishingState();
+    }
+    
+    calculateExperienceReward(fish) {
+        // Calculate base experience based on fish properties
+        const baseExp = (fish.experienceValue || fish.rarity || 1) * 10;
+        const rarityBonus = (fish.rarity || 1) * 5;
+        const weightBonus = Math.floor((fish.weight || 1) * 2);
+        
+        return baseExp + rarityBonus + weightBonus;
+    }
+    
+    showFishCaughtCelebration(fish, catchResult, totalXp, bonusXp) {
+        // Create celebration message
+        let message = `🎣 Caught ${fish.name}!`;
+        if (fish.weight) {
+            message += `\nWeight: ${fish.weight}kg`;
+        }
+        message += `\n⭐ +${totalXp} XP`;
+        
+        if (bonusXp > 0) {
+            message += ` (+${bonusXp} bonus)`;
+        }
+        
+        // Add special messages
+        if (catchResult) {
+            if (catchResult.isFirstCatch) {
+                message += '\n🌟 First time catching this species!';
+            }
+            if (catchResult.isRecord) {
+                message += '\n🏆 New personal record!';
+            }
+            if (catchResult.isPerfectCatch) {
+                message += '\n✨ Perfect catch!';
+            }
+            if (catchResult.rewards) {
+                message += `\n💰 +${catchResult.rewards.coins} coins`;
+            }
+        }
+        
+        // Show floating text animation
+        this.showFloatingText(message, 0x00FF00, 4000);
+        
+        // Emit success event for UI updates
+        this.scene.events.emit('fishing:catchSuccess', {
             fish: fish,
-            rewards: rewards,
-            playerStats: this.gameState.player.statistics
+            catchResult: catchResult,
+            totalXp: totalXp,
+            bonusXp: bonusXp,
+            message: message
         });
+        
+        console.log(`PlayerController: Catch celebration - ${fish.name}, +${totalXp} XP`);
+    }
+    
+    resetFishingState() {
+        this.isReeling = false;
+        this.selectedFish = null;
+        this.targetFish = null;
+        this.cleanupCast();
     }
 
     reelLine() {
@@ -922,46 +1336,6 @@ export default class PlayerController {
         if (this.isReeling) {
             // Handle reeling input and mechanics
         }
-    }
-
-    calculateCatchRewards(fish) {
-        // Base rewards from fish data
-        const baseCoins = fish.coinValue || 50;
-        const baseExperience = fish.experienceValue || 10;
-        
-        // Apply equipment bonuses
-        const equippedItems = this.gameState.inventoryManager?.getEquippedItems() || {};
-        let coinMultiplier = 1;
-        let experienceMultiplier = 1;
-        
-        // Rod bonuses
-        if (equippedItems.rod && equippedItems.rod[0]) {
-            const rod = equippedItems.rod[0];
-            coinMultiplier += (rod.stats?.coinBonus || 0) / 100;
-            experienceMultiplier += (rod.stats?.experienceBonus || 0) / 100;
-        }
-        
-        // Clothing bonuses
-        if (equippedItems.clothing) {
-            equippedItems.clothing.forEach(item => {
-                if (item.stats?.coinBonus) coinMultiplier += item.stats.coinBonus / 100;
-                if (item.stats?.experienceBonus) experienceMultiplier += item.stats.experienceBonus / 100;
-            });
-        }
-        
-        // Rarity bonus
-        const rarityMultiplier = 1 + (fish.rarity - 1) * 0.2; // 20% bonus per rarity level
-        
-        const finalCoins = Math.floor(baseCoins * coinMultiplier * rarityMultiplier);
-        const finalExperience = Math.floor(baseExperience * experienceMultiplier * rarityMultiplier);
-        
-        return {
-            coins: finalCoins,
-            experience: finalExperience,
-            coinMultiplier: coinMultiplier,
-            experienceMultiplier: experienceMultiplier,
-            rarityMultiplier: rarityMultiplier
-        };
     }
 
     showCatchSuccessFeedback(fish, rewards) {
@@ -1144,5 +1518,211 @@ export default class PlayerController {
         }
         
         console.log('PlayerController destroyed');
+    }
+
+    handleCasting() {
+        if (this.scene.input.keyboard.checkDown(this.cursors.space)) {
+            if (!this.isCasting && !this.isLuring && !this.isReeling) {
+                this.startCasting();
+            } else if (this.isCasting && !this.castCompleted && this.castPower >= 0.1) {
+                this.completeCasting();
+            }
+        }
+    }
+    
+    completeCasting() {
+        this.isCasting = false;
+        this.castCompleted = true;
+        
+        // Calculate accuracy based on power (between 0.3 and 0.8 is good)
+        let accuracy = 1.0;
+        if (this.castPower < 0.3) {
+            accuracy = this.castPower / 0.3; // Poor accuracy for weak casts
+        } else if (this.castPower > 0.8) {
+            accuracy = Math.max(0.2, 1.0 - ((this.castPower - 0.8) / 0.2)); // Poor accuracy for overpowered casts
+        }
+        
+        const isPerfect = this.castPower >= 0.5 && this.castPower <= 0.7; // Perfect zone
+        
+        // Record casting stats in location manager
+        if (this.gameState.locationManager) {
+            this.gameState.locationManager.recordCastingStats(accuracy, isPerfect);
+        }
+        
+        // Apply time/weather/location effects to casting
+        const effects = this.getTimeWeatherEffects();
+        accuracy *= effects.castAccuracy || 1.0;
+        
+        // Clamp accuracy between 0 and 1
+        accuracy = Math.max(0, Math.min(1, accuracy));
+        
+        this.castAccuracy = accuracy;
+        
+        console.log(`PlayerController: Cast completed - Power: ${this.castPower.toFixed(2)}, Accuracy: ${accuracy.toFixed(2)}, Perfect: ${isPerfect}`);
+        
+        // Audio feedback
+        if (this.gameState.audioManager) {
+            this.gameState.audioManager.playSFX('cast');
+        }
+        
+        // Visual feedback
+        this.showCastFeedback(accuracy, isPerfect);
+        
+        // Proceed to luring after short delay
+        this.scene.time.delayedCall(1000, () => {
+            this.startLuring();
+        });
+    }
+
+    startReelingMiniGame(selectedFish, castInfo = {}) {
+        console.log('PlayerController: Starting reeling minigame with fish:', selectedFish.name);
+        
+        try {
+            // Create reeling minigame configuration
+            const reelingConfig = {
+                fishData: selectedFish,
+                castType: castInfo.castType || 'normal',
+                rarityBonus: castInfo.rarityBonus || 0,
+                spotInfo: castInfo.spotInfo || null,
+                accuracy: castInfo.accuracy || 0,
+                difficulty: this.calculateReelingDifficulty(selectedFish, castInfo.castType),
+                catchBonus: this.calculateCatchBonus(castInfo.castType, castInfo.rarityBonus)
+            };
+            
+            // Create and start the reeling minigame
+            this.reelingMiniGame = new ReelingMiniGame(this.scene, reelingConfig);
+            this.reelingMiniGame.start();
+            
+            // Listen for reeling completion
+            this.scene.events.once('fishing:reelingComplete', (result) => {
+                this.onReelingComplete(result, castInfo);
+            });
+            
+        } catch (error) {
+            console.error('PlayerController: Error starting reeling minigame:', error);
+            this.isFishing = false;
+        }
+    }
+
+    calculateReelingDifficulty(fishData, castType) {
+        let baseDifficulty = fishData.rarity || 1;
+        
+        // Fishing spots provide more active fish (higher difficulty)
+        if (castType === 'spot') {
+            baseDifficulty += 1;
+        } else if (castType === 'hotspot') {
+            baseDifficulty += 2;
+        }
+        
+        return Math.max(1, Math.min(10, baseDifficulty));
+    }
+
+    calculateCatchBonus(castType, rarityBonus) {
+        let bonus = 1.0;
+        
+        if (castType === 'spot') {
+            bonus += 0.2; // 20% bonus for hitting fishing spots
+        } else if (castType === 'hotspot') {
+            bonus += 0.3; // 30% bonus for hitting main hotspot
+        }
+        
+        // Additional bonus from rarity percentage
+        bonus += (rarityBonus / 100) * 0.5;
+        
+        return bonus;
+    }
+
+    onReelingComplete(result, castInfo) {
+        console.log('PlayerController: Reeling completed with result:', result);
+        
+        try {
+            if (result.success && result.fishCaught) {
+                // Apply fishing spot bonuses to the caught fish
+                if (castInfo.spotInfo) {
+                    console.log(`PlayerController: Fish caught from ${castInfo.spotInfo.config.name} spot!`);
+                    
+                    // Add spot information to fish data for display
+                    result.fishCaught.caughtFrom = castInfo.spotInfo.config.name;
+                    result.fishCaught.spotBonus = castInfo.rarityBonus;
+                }
+                
+                // Process the caught fish through game systems
+                this.processCaughtFish(result.fishCaught, castInfo);
+            } else {
+                console.log('PlayerController: Fish escaped or reeling failed');
+            }
+        } catch (error) {
+            console.error('PlayerController: Error processing reeling completion:', error);
+        } finally {
+            // Clean up and reset fishing state
+            this.isFishing = false;
+            if (this.reelingMiniGame) {
+                this.reelingMiniGame.destroy();
+                this.reelingMiniGame = null;
+            }
+        }
+    }
+
+    processCaughtFish(fishData, castInfo) {
+        try {
+            // Calculate final experience and coin bonuses
+            let expMultiplier = castInfo.rarityBonus ? 1 + (castInfo.rarityBonus / 100) : 1;
+            let coinMultiplier = castInfo.rarityBonus ? 1 + (castInfo.rarityBonus / 200) : 1;
+            
+            // Add to inventory and process rewards
+            const catchResult = this.gameState.catchFish(fishData, false);
+            
+            if (catchResult.success) {
+                // Apply spot bonuses to rewards
+                catchResult.rewards.experience = Math.floor(catchResult.rewards.experience * expMultiplier);
+                catchResult.rewards.coins = Math.floor(catchResult.rewards.coins * coinMultiplier);
+                
+                console.log(`PlayerController: Fish caught successfully! Experience: ${catchResult.rewards.experience}, Coins: ${catchResult.rewards.coins}`);
+                
+                // Show success feedback
+                this.showCatchSuccess(catchResult, castInfo);
+            } else {
+                console.error('PlayerController: Failed to process caught fish:', catchResult.error);
+            }
+        } catch (error) {
+            console.error('PlayerController: Error processing caught fish:', error);
+        }
+    }
+
+    showCatchSuccess(catchResult, castInfo) {
+        // Show notification with spot bonus information
+        let message = `Caught ${catchResult.fish.name}!`;
+        
+        if (castInfo.spotInfo) {
+            message += `\nFrom: ${castInfo.spotInfo.config.name}`;
+            if (castInfo.rarityBonus > 0) {
+                message += `\n+${castInfo.rarityBonus}% Rarity Bonus!`;
+            }
+        }
+        
+        message += `\n+${catchResult.rewards.experience} XP, +${catchResult.rewards.coins} coins`;
+        
+        // Show temporary success message (you could enhance this with better UI)
+        const successText = this.scene.add.text(
+            this.scene.cameras.main.width / 2,
+            this.scene.cameras.main.height / 2,
+            message,
+            {
+                fontSize: '24px',
+                fill: '#00ff00',
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: { x: 20, y: 10 },
+                align: 'center'
+            }
+        ).setOrigin(0.5).setDepth(2000);
+        
+        // Fade out after 3 seconds
+        this.scene.tweens.add({
+            targets: successText,
+            alpha: 0,
+            duration: 1000,
+            delay: 2000,
+            onComplete: () => successText.destroy()
+        });
     }
 } 

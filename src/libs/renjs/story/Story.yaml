@@ -1,0 +1,9 @@
+# Basic story for fishing game
+start:
+  - text: Welcome to the fishing game dialog system!
+  - text: This is a simple test dialog.
+  - scene: end
+
+end:
+  - text: Dialog complete!
+  - return

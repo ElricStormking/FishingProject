@@ -2,10 +2,14 @@ import Phaser from 'phaser';
 import GameState from '../scripts/GameState.js';
 import GameLoop from '../scripts/GameLoop.js';
 import SceneManager from '../scripts/SceneManager.js';
+import TournamentManager from '../scripts/TournamentManager.js';
 import { InventoryUI } from '../ui/InventoryUI.js';
 import { CraftingUI } from '../ui/CraftingUI.js';
 import { PlayerProgressionUI } from '../ui/PlayerProgressionUI.js';
 import { FishCollectionUI } from '../ui/FishCollectionUI.js';
+import { MapSelectionUI } from '../ui/MapSelectionUI.js';
+import { ShopUI } from '../ui/ShopUI.js';
+import { LoadingStateManager } from '../ui/LoadingStateManager.js';
 
 export default class BoatMenuScene extends Phaser.Scene {
     constructor() {
@@ -17,10 +21,35 @@ export default class BoatMenuScene extends Phaser.Scene {
         const height = this.cameras.main.height;
 
         try {
+            // Initialize LoadingStateManager first
+            try {
+                this.loadingStateManager = new LoadingStateManager(this);
+                console.log('BoatMenuScene: LoadingStateManager initialized successfully');
+            } catch (error) {
+                console.error('BoatMenuScene: Error initializing LoadingStateManager:', error);
+                this.loadingStateManager = null;
+            }
+
             // Get instances
             this.gameState = GameState.getInstance();
-            this.gameLoop = new GameLoop(this);
             this.sceneManager = SceneManager.getInstance();
+            this.tournamentManager = new TournamentManager(this.gameState);
+
+            // Initialize player stats to ensure consistency
+            this.initializePlayerStats();
+
+            // Emit tournament manager ready event for enhanced achievement system
+            try {
+                const gameScene = this.scene.get('GameScene');
+                if (gameScene && gameScene.events) {
+                    gameScene.events.emit('tournamentManagerReady', this.tournamentManager);
+                    console.log('BoatMenuScene: Tournament manager ready event emitted to GameScene');
+                } else {
+                    console.log('BoatMenuScene: GameScene not available for tournament manager event');
+                }
+            } catch (error) {
+                console.warn('BoatMenuScene: Error emitting tournament manager event:', error);
+            }
 
             // Initialize audio for this scene
             this.audioManager = this.gameState.getAudioManager(this);
@@ -55,6 +84,22 @@ export default class BoatMenuScene extends Phaser.Scene {
                 this.fishCollectionUI = null;
             }
             
+            try {
+                this.mapSelectionUI = new MapSelectionUI(this, this.gameState.locationManager, this.gameState);
+                console.log('BoatMenuScene: MapSelectionUI created successfully');
+            } catch (error) {
+                console.error('BoatMenuScene: Error creating MapSelectionUI:', error);
+                this.mapSelectionUI = null;
+            }
+            
+            try {
+                this.shopUI = new ShopUI(this, 50, 50, 900, 600);
+                console.log('BoatMenuScene: ShopUI created successfully');
+            } catch (error) {
+                console.error('BoatMenuScene: Error creating ShopUI:', error);
+                this.shopUI = null;
+            }
+            
             // Create Player button in lower right corner
             this.createPlayerButton(width, height);
             
@@ -65,11 +110,17 @@ export default class BoatMenuScene extends Phaser.Scene {
             this.setupEventListeners();
             
             // Initialize game loop
-            if (this.gameLoop) {
-                this.gameLoop.startGameLoop();
-                console.log('BoatMenuScene: GameLoop started successfully');
-            } else {
-                console.error('BoatMenuScene: GameLoop is null, cannot start');
+            try {
+                this.gameLoop = new GameLoop(this);
+                if (this.gameLoop) {
+                    this.gameLoop.startGameLoop();
+                    console.log('BoatMenuScene: GameLoop started successfully');
+                } else {
+                    console.error('BoatMenuScene: GameLoop is null after creation');
+                }
+            } catch (error) {
+                console.error('BoatMenuScene: Error creating or starting GameLoop:', error);
+                this.gameLoop = null;
             }
             
             // Initialize UI with current game state
@@ -309,7 +360,7 @@ export default class BoatMenuScene extends Phaser.Scene {
 
     createActionButtons(width, height) {
         const buttonY = height * 0.75;
-        const buttonSpacing = (width - 100) / 5;
+        const buttonSpacing = (width - 100) / 6;
         
         // Create a button container for visual grouping
         const buttonContainer = this.add.graphics();
@@ -318,7 +369,7 @@ export default class BoatMenuScene extends Phaser.Scene {
         buttonContainer.lineStyle(2, 0x00aaff);
         buttonContainer.strokeRoundedRect(20, buttonY - 30, width - 40, 70, 15);
         
-        // Action buttons with improved styling
+        // Action buttons with improved styling - 6 main action buttons including quest
         this.buttons = {};
         
         // Travel button
@@ -331,62 +382,76 @@ export default class BoatMenuScene extends Phaser.Scene {
             this.startFishing();
         }, 0x00cc66);
         
-        // Chatroom button
-        this.buttons.chatroom = this.createActionButton(50 + buttonSpacing * 2, buttonY, 'CHAT', () => {
-            this.openChatroom();
+        // Cabin button
+        this.buttons.cabin = this.createActionButton(50 + buttonSpacing * 2, buttonY, 'CABIN', () => {
+            this.openCabin();
         }, 0xff9900);
         
+        // Quest button - NEW
+        this.buttons.quest = this.createActionButton(50 + buttonSpacing * 3, buttonY, 'QUEST', () => {
+            this.openQuest();
+        }, 0x9933ff);
+        
         // Inventory button
-        this.buttons.inventory = this.createActionButton(50 + buttonSpacing * 3, buttonY, 'INVENTORY', () => {
+        this.buttons.inventory = this.createActionButton(50 + buttonSpacing * 4, buttonY, 'INVENTORY', () => {
             this.openInventory();
         }, 0xcc66ff);
         
-        // Crafting button - Now accessed through Inventory UI
-        /* this.buttons.crafting = this.createActionButton(50 + buttonSpacing * 4, buttonY, 'CRAFT', () => {
-            this.openCrafting();
-        }, 0xff6666); */
-        
         // Shop button
-        this.buttons.shop = this.createActionButton(50 + buttonSpacing * 4, buttonY, 'SHOP', () => {
+        this.buttons.shop = this.createActionButton(50 + buttonSpacing * 5, buttonY, 'SHOP', () => {
             this.openShop();
         }, 0xffcc00);
         
-        // Mode toggle button with improved styling
-        this.modeButton = this.createActionButton(width / 2, buttonY + 60, 'STORY MODE', () => {
+        // Tournament button (positioned to avoid overlap, only visible in tournament mode)
+        this.buttons.tournament = this.createActionButton(width - 140, buttonY - 60, 'TOURNAMENT', () => {
+            this.openTournamentMenu();
+        }, 0xff6600);
+        
+        // Mode toggle button - positioned below main buttons with proper spacing
+        this.modeButton = this.createActionButton(width / 2, buttonY + 80, 'STORY MODE', () => {
             this.toggleMode();
         }, 0x9933cc);
         
-        // Return to port button (conditional)
-        this.returnButton = this.createActionButton(width / 2, buttonY + 100, 'RETURN TO PORT', () => {
+        // Return to port button (conditional) - positioned below mode button
+        this.returnButton = this.createActionButton(width / 2, buttonY + 130, 'RETURN TO PORT', () => {
             this.returnToPort();
         }, 0xff3333);
         this.returnButton.button.setVisible(false);
         this.returnButton.text.setVisible(false);
+        
+        // Hide tournament button initially (shown only in tournament mode)
+        this.buttons.tournament.button.setVisible(false);
+        this.buttons.tournament.text.setVisible(false);
     }
 
     createProgressDisplay(width, height) {
-        // Progress panel with improved styling
+        // Progress panel with improved styling - positioned at left bottom corner to avoid button conflicts
+        const panelWidth = 300; // Smaller width to avoid blocking buttons
+        const panelHeight = 80;
+        const panelX = 20; // Left side of screen
+        const panelY = height - panelHeight - 20; // Bottom of screen with margin
+        
         const progressPanel = this.add.graphics();
         progressPanel.fillStyle(0x001a33, 0.8);
-        progressPanel.fillRoundedRect(20, height - 150, width - 40, 80, 15);
+        progressPanel.fillRoundedRect(panelX, panelY, panelWidth, panelHeight, 15);
         progressPanel.lineStyle(3, 0x00cc66);
-        progressPanel.strokeRoundedRect(20, height - 150, width - 40, 80, 15);
+        progressPanel.strokeRoundedRect(panelX, panelY, panelWidth, panelHeight, 15);
         
         // Add panel header
         const progressHeader = this.add.graphics();
         progressHeader.fillStyle(0x00cc66, 0.8);
-        progressHeader.fillRoundedRect(20, height - 150, width - 40, 25, { tl: 15, tr: 15, bl: 0, br: 0 });
+        progressHeader.fillRoundedRect(panelX, panelY, panelWidth, 25, { tl: 15, tr: 15, bl: 0, br: 0 });
         
-        this.add.text(width / 2, height - 138, 'PROGRESSION STATUS', {
+        this.add.text(panelX + panelWidth / 2, panelY + 12, 'PROGRESSION STATUS', {
             fontSize: '16px',
             fill: '#ffffff',
             fontFamily: 'Arial',
             fontStyle: 'bold'
         }).setOrigin(0.5);
         
-        // Progress bars with improved styling
-        this.levelProgressBar = this.createProgressBar(40, height - 115, width - 80, 'Level Progress', 0x00aaff);
-        this.collectionProgressBar = this.createProgressBar(40, height - 95, width - 80, 'Fish Collection', 0xff9900);
+        // Progress bars with improved styling - positioned within the left panel
+        this.levelProgressBar = this.createProgressBar(panelX + 10, panelY + 35, panelWidth - 20, 'Level Progress', 0x00aaff);
+        this.collectionProgressBar = this.createProgressBar(panelX + 10, panelY + 55, panelWidth - 20, 'Fish Collection', 0xff9900);
     }
 
     createActionButton(x, y, text, callback, color = 0x3498db) {
@@ -592,48 +657,260 @@ export default class BoatMenuScene extends Phaser.Scene {
         console.log('BoatMenuScene: Opening travel menu');
         this.audioManager?.playSFX('button');
         
-        // Create travel selection overlay
-        this.createTravelOverlay();
+        if (this.mapSelectionUI) {
+            this.mapSelectionUI.show();
+            console.log('BoatMenuScene: MapSelectionUI opened successfully');
+        } else {
+            console.error('BoatMenuScene: MapSelectionUI not available');
+            this.showErrorMessage('Map selection not available - MapSelectionUI failed to initialize');
+        }
     }
 
     startFishing() {
         console.log('BoatMenuScene: Starting fishing');
         this.audioManager?.playSFX('button');
         
-        if (this.gameLoop.initiateFishing(this.gameLoop.currentMode)) {
-            // Switch to game scene for fishing
-            this.scene.start('GameScene');
-        } else {
+        try {
+            // Show loading for fishing preparation
+            if (this.loadingStateManager) {
+                this.loadingStateManager.showFishingLoading('Preparing fishing equipment...');
+            }
+            
+            // Validate player can fish
+            const canFish = this.validateFishingConditions();
+            if (!canFish.canFish) {
+                // Hide loading on error
+                if (this.loadingStateManager) {
+                    this.loadingStateManager.hideLoading('fishing_operation');
+                }
+                
+                this.audioManager?.playSFX('fail');
+                this.showErrorMessage(canFish.reason);
+                return;
+            }
+            
+            // Update loading progress
+            if (this.loadingStateManager) {
+                this.loadingStateManager.updateProgress('fishing_operation', 50, 'Validating equipment...');
+            }
+            
+            // Update game state for fishing session
+            this.prepareFishingSession();
+            
+            // Show transition message
+            this.showSuccessMessage('Preparing fishing equipment...');
+            
+            // Final loading update
+            if (this.loadingStateManager) {
+                this.loadingStateManager.updateProgress('fishing_operation', 100, 'Starting fishing session...');
+            }
+            
+            // Transition to GameScene for fishing with proper data
+            this.time.delayedCall(1000, () => {
+                // Hide loading before scene transition
+                if (this.loadingStateManager) {
+                    this.loadingStateManager.hideLoading('fishing_operation');
+                }
+                
+                this.scene.start('GameScene', {
+                    callingScene: 'BoatMenuScene',
+                    mode: this.gameLoop?.currentMode || 'story',
+                    location: this.gameState.player.currentLocation,
+                    fishingSession: true
+                });
+                console.log('BoatMenuScene: Transitioned to GameScene for fishing');
+            });
+            
+        } catch (error) {
+            console.error('BoatMenuScene: Error starting fishing:', error);
+            
+            // Hide loading on error
+            if (this.loadingStateManager) {
+                this.loadingStateManager.hideLoading('fishing_operation');
+            }
+            
             this.audioManager?.playSFX('fail');
-            this.showErrorMessage('Cannot fish: Check energy, location, or fishtank capacity');
+            this.showErrorMessage('Failed to start fishing: ' + error.message);
         }
     }
 
-    openChatroom() {
-        console.log('BoatMenuScene: Opening chatroom');
+    validateFishingConditions() {
+        try {
+            // Validate gameState exists
+            if (!this.gameState || !this.gameState.player) {
+                return { canFish: false, reason: 'Game state not properly initialized' };
+            }
+            
+            // Initialize player energy if it doesn't exist
+            if (typeof this.gameState.player.energy === 'undefined' || this.gameState.player.energy === null) {
+                console.log('BoatMenuScene: Initializing player energy to 100');
+                this.gameState.player.energy = 100;
+            }
+            
+            // Check energy
+            const playerEnergy = this.gameState.player.energy;
+            console.log('BoatMenuScene: Checking player energy:', playerEnergy);
+            if (playerEnergy < 10) {
+                return { canFish: false, reason: `Not enough energy to fish! Energy: ${playerEnergy}/100` };
+            }
+            
+            // Check fishtank capacity
+            const fishtankCount = this.gameState.inventory?.fish?.length || 0;
+            const fishtankMax = (typeof this.gameState.getBoatAttribute === 'function') 
+                ? this.gameState.getBoatAttribute('fishtankStorage') || 10 
+                : 10;
+            if (fishtankCount >= fishtankMax) {
+                return { canFish: false, reason: 'Fishtank is full! Return to port to sell fish.' };
+            }
+            
+            // Check location allows fishing
+            const currentLocation = this.gameState.player.currentLocation || 'Unknown';
+            const fishableLocations = ['Beginner Lake', 'Ocean Harbor', 'Mountain Stream', 'Midnight Pond', 'Champion\'s Cove', 'Starting Port'];
+            if (!fishableLocations.includes(currentLocation)) {
+                return { canFish: false, reason: 'Cannot fish at this location: ' + currentLocation };
+            }
+            
+            // Check if player has fishing equipment (optional check since equipment might not be implemented)
+            if (typeof this.gameState.getEquippedItem === 'function') {
+                const equippedRod = this.gameState.getEquippedItem('rods');
+                if (!equippedRod) {
+                    console.warn('BoatMenuScene: No fishing rod equipped, but allowing fishing to continue');
+                    // Don't block fishing if equipment system isn't fully implemented
+                }
+            } else {
+                console.warn('BoatMenuScene: Equipment system not available, skipping rod check');
+            }
+            
+            return { canFish: true };
+            
+        } catch (error) {
+            console.error('BoatMenuScene: Error validating fishing conditions:', error);
+            return { canFish: false, reason: 'Error checking fishing conditions: ' + error.message };
+        }
+    }
+
+    prepareFishingSession() {
+        try {
+            // Validate gameState exists
+            if (!this.gameState) {
+                throw new Error('GameState not available');
+            }
+            
+            // Validate player exists
+            if (!this.gameState.player) {
+                throw new Error('Player data not available');
+            }
+            
+            // Update player status with safety checks
+            this.gameState.player.lastActivity = 'fishing';
+            this.gameState.player.currentActivity = 'fishing';
+            
+            // Save current state before fishing (check if method exists)
+            if (typeof this.gameState.save === 'function') {
+                this.gameState.save();
+                console.log('BoatMenuScene: Game state saved before fishing');
+            } else {
+                console.warn('BoatMenuScene: save method not available, skipping save');
+            }
+            
+            // Set up fishing session data with safe property access
+            const fishingData = {
+                startTime: Date.now(),
+                location: this.gameState.player.currentLocation || 'Unknown Location',
+                mode: this.gameLoop?.currentMode || 'story',
+                weather: this.gameState.weather || 'sunny',
+                timeOfDay: this.gameState.timeOfDay || 'morning'
+            };
+            
+            // Store fishing session data
+            this.gameState.currentFishingSession = fishingData;
+            
+            console.log('BoatMenuScene: Fishing session prepared successfully:', fishingData);
+            
+        } catch (error) {
+            console.error('BoatMenuScene: Error preparing fishing session:', error);
+            throw new Error('Failed to prepare fishing session: ' + error.message);
+        }
+    }
+
+    openCabin() {
+        console.log('BoatMenuScene: Opening cabin');
         this.audioManager?.playSFX('button');
-        this.gameLoop.enterChatroom();
-        // TODO: Implement chatroom scene or overlay
-        this.showInfoMessage('Chatroom feature coming soon!');
+        
+        try {
+            // Pause current scene and launch Cabin scene to preserve audio state
+            // This prevents the audio manager from being destroyed and recreated
+            this.scene.pause('BoatMenuScene');
+            this.scene.launch('CabinScene', {
+                callingScene: 'BoatMenuScene'
+            });
+            console.log('BoatMenuScene: CabinScene launched (scene paused)');
+        } catch (error) {
+            console.error('BoatMenuScene: Error launching CabinScene:', error);
+            this.showErrorMessage('Failed to open cabin. Check console for details.');
+        }
     }
 
     openInventory() {
         console.log('BoatMenuScene: Opening inventory');
-        this.audioManager?.playSFX('button');
-        this.gameLoop.enterInventory();
         
-        // Add sample items for testing (only if inventory is mostly empty)
-        const totalItems = Object.values(this.gameState.inventory).reduce((sum, items) => sum + items.length, 0);
-        if (totalItems < 10) {
-            console.log('BoatMenuScene: Adding sample items for testing');
-            this.gameState.inventoryManager.addSampleItems();
+        try {
+            // Play sound safely
+            if (this.audioManager && typeof this.audioManager.playSFX === 'function') {
+                this.audioManager.playSFX('button');
+            }
+            
+            // Ensure game loop is properly set up
+            if (this.gameLoop && typeof this.gameLoop.enterInventory === 'function') {
+                this.gameLoop.enterInventory();
+            } else {
+                console.warn('BoatMenuScene: GameLoop not available or enterInventory method missing');
+            }
+            
+            // Add sample items for testing (only if inventory is mostly empty)
+            try {
+                const totalItems = Object.values(this.gameState.inventory || {}).reduce((sum, items) => sum + (items?.length || 0), 0);
+                if (totalItems < 10 && this.gameState.inventoryManager && typeof this.gameState.inventoryManager.addSampleItems === 'function') {
+                    console.log('BoatMenuScene: Adding sample items for testing');
+                    this.gameState.inventoryManager.addSampleItems();
+                }
+            } catch (sampleError) {
+                console.warn('BoatMenuScene: Error adding sample items:', sampleError);
+            }
+            
+            // Ensure both UIs are created and cross-referenced
+            this.ensureUIsCreated();
+            
+            // Show the inventory UI with error handling
+            if (this.inventoryUI && typeof this.inventoryUI.show === 'function') {
+                // Check if UI is not destroyed before showing
+                if (!this.inventoryUI.isDestroyed) {
+                    this.inventoryUI.show();
+                    console.log('BoatMenuScene: Inventory UI shown successfully');
+                } else {
+                    console.warn('BoatMenuScene: Inventory UI is destroyed, recreating...');
+                    // Recreate the inventory UI
+                    this.inventoryUI = null;
+                    this.ensureUIsCreated();
+                    if (this.inventoryUI && !this.inventoryUI.isDestroyed) {
+                        this.inventoryUI.show();
+                    } else {
+                        throw new Error('Failed to recreate inventory UI');
+                    }
+                }
+            } else {
+                throw new Error('Inventory UI not available or show method missing');
+            }
+            
+        } catch (error) {
+            console.error('BoatMenuScene: Error opening inventory:', error);
+            this.showErrorMessage('Failed to open inventory: ' + error.message);
+            
+            // Play error sound if available
+            if (this.audioManager && typeof this.audioManager.playSFX === 'function') {
+                this.audioManager.playSFX('fail');
+            }
         }
-        
-        // Ensure both UIs are created and cross-referenced
-        this.ensureUIsCreated();
-        
-        // Show the inventory UI
-        this.inventoryUI.show();
     }
 
     openCrafting() {
@@ -651,19 +928,44 @@ export default class BoatMenuScene extends Phaser.Scene {
         console.log('BoatMenuScene: Opening shop');
         this.audioManager?.playSFX('button');
         
-        if (this.gameLoop.enterShop()) {
-            this.scene.start('ShopScene');
+        if (this.shopUI) {
+            this.shopUI.show();
+            console.log('BoatMenuScene: ShopUI opened successfully');
         } else {
+            console.error('BoatMenuScene: ShopUI not available');
+            this.showErrorMessage('Shop interface not available - ShopUI failed to initialize');
+        }
+    }
+
+    openQuest() {
+        console.log('BoatMenuScene: Opening quest log');
+        this.audioManager?.playSFX('button');
+        
+        try {
+            // Pause current scene and launch quest scene
+            this.scene.pause('BoatMenuScene');
+            this.scene.launch('QuestScene', { fromScene: 'BoatMenuScene' });
+            console.log('BoatMenuScene: Quest log opened successfully');
+        } catch (error) {
+            console.error('BoatMenuScene: Error opening quest log:', error);
             this.audioManager?.playSFX('fail');
-            this.showErrorMessage('Shop only available at Starting Port');
+            this.showErrorMessage('Failed to open quest log');
         }
     }
 
     toggleMode() {
         this.audioManager?.playSFX('button');
-        this.gameLoop.currentMode = this.gameLoop.currentMode === 'story' ? 'practice' : 'story';
+        this.gameLoop.currentMode = this.gameLoop.currentMode === 'story' ? 'tournament' : 'story';
         this.modeButton.text.setText(this.gameLoop.currentMode.toUpperCase() + ' MODE');
         this.modeText.setText(`Mode: ${this.gameLoop.currentMode.charAt(0).toUpperCase() + this.gameLoop.currentMode.slice(1)}`);
+        
+        // Update button states to show/hide tournament button
+        this.updateButtonStates({});
+        
+        // Show tournament status if in tournament mode
+        if (this.gameLoop.currentMode === 'tournament') {
+            this.showTournamentStatus();
+        }
         
         console.log(`BoatMenuScene: Switched to ${this.gameLoop.currentMode} mode`);
     }
@@ -674,23 +976,324 @@ export default class BoatMenuScene extends Phaser.Scene {
         this.gameLoop.initiateTravel('Starting', 'Port');
     }
 
+    openTournamentMenu() {
+        console.log('BoatMenuScene: Opening tournament menu');
+        this.audioManager?.playSFX('button');
+        
+        // Check if tournament is available
+        if (!this.isTournamentAvailable()) {
+            this.showErrorMessage('Tournament only available at Champion\'s Cove!');
+            return;
+        }
+        
+        // Show tournament selection overlay
+        this.showTournamentSelectionOverlay();
+    }
+
+    showTournamentStatus() {
+        // Get current tournament information from TournamentManager
+        const currentTournament = this.tournamentManager.getCurrentTournament();
+        
+        if (currentTournament.active) {
+            this.showInfoMessage(`Active Tournament: ${currentTournament.tournament.name}\nTime Remaining: ${currentTournament.timeRemaining}`);
+        } else {
+            const nextTournament = this.tournamentManager.getNextTournament();
+            this.showInfoMessage(`Next Tournament: ${nextTournament.tournament.name}\nStarts in: ${nextTournament.startsIn}`);
+        }
+    }
+
+    isTournamentAvailable() {
+        // Tournament only available at Champion's Cove
+        const currentLocation = this.gameState.player.currentLocation;
+        return currentLocation === 'Champion\'s Cove' || currentLocation === 'Champions Cove';
+    }
+
+    getTournamentInfo() {
+        const currentTournament = this.tournamentManager.getCurrentTournament();
+        
+        if (currentTournament.active) {
+            return {
+                active: true,
+                name: currentTournament.tournament.name,
+                timeRemaining: currentTournament.timeRemaining,
+                type: currentTournament.tournament.type,
+                tournament: currentTournament.tournament
+            };
+        } else {
+            const nextTournament = this.tournamentManager.getNextTournament();
+            return {
+                active: false,
+                next: nextTournament.tournament.name,
+                startsIn: nextTournament.startsIn,
+                tournament: nextTournament.tournament
+            };
+        }
+    }
+
+    showTournamentSelectionOverlay() {
+        // Create tournament overlay background
+        const overlay = this.add.graphics();
+        overlay.fillStyle(0x000000, 0.8);
+        overlay.fillRect(0, 0, this.cameras.main.width, this.cameras.main.height);
+        overlay.setDepth(2000);
+        
+        // Tournament panel
+        const panelWidth = 600;
+        const panelHeight = 500;
+        const panelX = (this.cameras.main.width - panelWidth) / 2;
+        const panelY = (this.cameras.main.height - panelHeight) / 2;
+        
+        const panel = this.add.graphics();
+        panel.fillStyle(0x1a1a2e, 0.95);
+        panel.fillRoundedRect(panelX, panelY, panelWidth, panelHeight, 20);
+        panel.lineStyle(3, 0xff6600);
+        panel.strokeRoundedRect(panelX, panelY, panelWidth, panelHeight, 20);
+        panel.setDepth(2001);
+        
+        // Title
+        const title = this.add.text(panelX + panelWidth/2, panelY + 40, '🏆 TOURNAMENT CENTER', {
+            fontSize: '28px',
+            fontFamily: 'Arial',
+            fontStyle: 'bold',
+            fill: '#ff6600',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5);
+        title.setDepth(2002);
+        
+        // Tournament info
+        const tournamentInfo = this.getTournamentInfo();
+        let infoText = '';
+        
+        if (tournamentInfo.active) {
+            infoText = `🔥 ACTIVE TOURNAMENT 🔥\n\n${tournamentInfo.name}\nTime Remaining: ${tournamentInfo.timeRemaining}\n\nClick ENTER TOURNAMENT to compete!`;
+        } else {
+            infoText = `⏰ UPCOMING TOURNAMENT ⏰\n\n${tournamentInfo.next}\nStarts in: ${tournamentInfo.startsIn}\n\nCheck back when tournament begins!`;
+        }
+        
+        const info = this.add.text(panelX + panelWidth/2, panelY + 150, infoText, {
+            fontSize: '16px',
+            fontFamily: 'Arial',
+            fill: '#ffffff',
+            align: 'center',
+            lineSpacing: 10
+        }).setOrigin(0.5);
+        info.setDepth(2002);
+        
+        // Buttons
+        const buttonY = panelY + panelHeight - 80;
+        
+        // Enter Tournament button (only if tournament is active)
+        if (tournamentInfo.active) {
+            const enterButton = this.createTournamentButton(panelX + 150, buttonY, 'ENTER TOURNAMENT', () => {
+                this.enterTournament(tournamentInfo);
+                this.closeTournamentOverlay();
+            }, 0x00aa00);
+            enterButton.setDepth(2002);
+        }
+        
+        // Leaderboard button
+        const leaderboardButton = this.createTournamentButton(panelX + 300, buttonY, 'LEADERBOARD', () => {
+            this.showTournamentLeaderboard();
+        }, 0x0066aa);
+        leaderboardButton.setDepth(2002);
+        
+        // Close button
+        const closeButton = this.createTournamentButton(panelX + 450, buttonY, 'CLOSE', () => {
+            this.closeTournamentOverlay();
+        }, 0xaa0000);
+        closeButton.setDepth(2002);
+        
+        // Store overlay elements for cleanup
+        this.tournamentOverlay = { overlay, panel, title, info, buttons: [closeButton] };
+        if (tournamentInfo.active) {
+            this.tournamentOverlay.buttons.push(enterButton);
+        }
+        this.tournamentOverlay.buttons.push(leaderboardButton);
+    }
+
+    createTournamentButton(x, y, text, callback, color) {
+        const button = this.add.graphics();
+        button.fillStyle(color);
+        button.fillRoundedRect(-60, -20, 120, 40, 10);
+        button.lineStyle(2, 0xffffff, 0.5);
+        button.strokeRoundedRect(-60, -20, 120, 40, 10);
+        button.setPosition(x, y);
+        
+        const buttonText = this.add.text(x, y, text, {
+            fontSize: '12px',
+            fontFamily: 'Arial',
+            fontStyle: 'bold',
+            fill: '#ffffff'
+        }).setOrigin(0.5);
+        
+        button.setInteractive(new Phaser.Geom.Rectangle(-60, -20, 120, 40), Phaser.Geom.Rectangle.Contains);
+        button.on('pointerdown', callback);
+        
+        // Hover effects
+        button.on('pointerover', () => {
+            button.setScale(1.05);
+            buttonText.setScale(1.05);
+        });
+        
+        button.on('pointerout', () => {
+            button.setScale(1);
+            buttonText.setScale(1);
+        });
+        
+        return { button, text: buttonText };
+    }
+
+    enterTournament(tournamentInfo) {
+        console.log('BoatMenuScene: Entering tournament:', tournamentInfo.name);
+        
+        const tournament = tournamentInfo.tournament;
+        const result = this.tournamentManager.enterTournament(tournament);
+        
+        if (!result.success) {
+            this.showErrorMessage('Cannot enter tournament:\n' + result.errors.join('\n'));
+            return;
+        }
+        
+        this.showSuccessMessage(`Entered ${tournamentInfo.name}!\nEntry fee: ${tournament.entryFee} coins\nGood luck, angler!`);
+        
+        // Start fishing automatically
+        this.time.delayedCall(1500, () => {
+            this.startFishing();
+        });
+    }
+
+    checkTournamentEntry() {
+        // This method is now handled by TournamentManager.canEnterTournament()
+        // Keeping for backwards compatibility
+        const currentTournament = this.tournamentManager.getCurrentTournament();
+        if (!currentTournament.active) {
+            return false;
+        }
+        
+        const canEnter = this.tournamentManager.canEnterTournament(currentTournament.tournament);
+        return canEnter.canEnter;
+    }
+
+    showTournamentLeaderboard() {
+        console.log('BoatMenuScene: Showing tournament leaderboard');
+        
+        // Close current overlay
+        this.closeTournamentOverlay();
+        
+        // Create leaderboard overlay
+        const overlay = this.add.graphics();
+        overlay.fillStyle(0x000000, 0.8);
+        overlay.fillRect(0, 0, this.cameras.main.width, this.cameras.main.height);
+        overlay.setDepth(2000);
+        
+        const panelWidth = 500;
+        const panelHeight = 600;
+        const panelX = (this.cameras.main.width - panelWidth) / 2;
+        const panelY = (this.cameras.main.height - panelHeight) / 2;
+        
+        const panel = this.add.graphics();
+        panel.fillStyle(0x1a1a2e, 0.95);
+        panel.fillRoundedRect(panelX, panelY, panelWidth, panelHeight, 20);
+        panel.lineStyle(3, 0x0066aa);
+        panel.strokeRoundedRect(panelX, panelY, panelWidth, panelHeight, 20);
+        panel.setDepth(2001);
+        
+        // Title
+        const title = this.add.text(panelX + panelWidth/2, panelY + 40, '🏆 TOURNAMENT LEADERBOARD', {
+            fontSize: '24px',
+            fontFamily: 'Arial',
+            fontStyle: 'bold',
+            fill: '#0066aa'
+        }).setOrigin(0.5);
+        title.setDepth(2002);
+        
+        // Get leaderboard data from TournamentManager
+        const currentTournament = this.tournamentManager.getCurrentTournament();
+        const leaderboardType = currentTournament.active ? currentTournament.tournament.type : 'current';
+        const leaderboard = this.tournamentManager.getLeaderboard(leaderboardType);
+        
+        let leaderboardText = '';
+        leaderboard.forEach(entry => {
+            const medal = entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : '  ';
+            leaderboardText += `${medal} ${entry.rank}. ${entry.name}\n    Score: ${entry.score} | Best: ${entry.fish}\n\n`;
+        });
+        
+        const leaderboardDisplay = this.add.text(panelX + 30, panelY + 100, leaderboardText, {
+            fontSize: '14px',
+            fontFamily: 'Arial',
+            fill: '#ffffff',
+            lineSpacing: 5
+        });
+        leaderboardDisplay.setDepth(2002);
+        
+        // Close button
+        const closeButton = this.createTournamentButton(panelX + panelWidth/2, panelY + panelHeight - 50, 'CLOSE', () => {
+            this.closeLeaderboardOverlay();
+        }, 0xaa0000);
+        closeButton.button.setDepth(2002);
+        closeButton.text.setDepth(2002);
+        
+        // Store for cleanup
+        this.leaderboardOverlay = { overlay, panel, title, leaderboardDisplay, closeButton };
+    }
+
+    closeTournamentOverlay() {
+        if (this.tournamentOverlay) {
+            this.tournamentOverlay.overlay.destroy();
+            this.tournamentOverlay.panel.destroy();
+            this.tournamentOverlay.title.destroy();
+            this.tournamentOverlay.info.destroy();
+            this.tournamentOverlay.buttons.forEach(btn => {
+                btn.button.destroy();
+                btn.text.destroy();
+            });
+            this.tournamentOverlay = null;
+        }
+    }
+
+    closeLeaderboardOverlay() {
+        if (this.leaderboardOverlay) {
+            this.leaderboardOverlay.overlay.destroy();
+            this.leaderboardOverlay.panel.destroy();
+            this.leaderboardOverlay.title.destroy();
+            this.leaderboardOverlay.leaderboardDisplay.destroy();
+            this.leaderboardOverlay.closeButton.button.destroy();
+            this.leaderboardOverlay.closeButton.text.destroy();
+            this.leaderboardOverlay = null;
+        }
+    }
+
     // UI update methods
     updateStatus(data) {
         // Provide default values if data is missing
         const statusData = data || {};
         
-        this.locationText.setText(`Location: ${statusData.location || 'Starting Port'}`);
+        // Initialize player energy if it doesn't exist (ensure consistency)
+        if (this.gameState && this.gameState.player && 
+            (typeof this.gameState.player.energy === 'undefined' || this.gameState.player.energy === null)) {
+            this.gameState.player.energy = 100;
+        }
+        
+        this.locationText.setText(`Location: ${statusData.location || this.gameState?.player?.currentLocation || 'Starting Port'}`);
         this.timeText.setText(`Time: ${statusData.time || 'Dawn'}`);
         this.weatherText.setText(`Weather: ${statusData.weather || 'Sunny'}`);
-        const maxEnergy = this.gameState.getPlayerAttribute('energy') || 100; // Use player attribute or default
-        this.energyText.setText(`Energy: ${statusData.energy || this.gameState.player.energy || 100}/${maxEnergy}`);
         
-        const fishtankCount = this.gameState.inventory.fish.length;
-        const fishtankMax = this.gameState.getBoatAttribute('fishtankStorage') || 10;
+        // Use actual player energy value (no fallbacks to avoid UI/validation mismatch)
+        const playerEnergy = this.gameState?.player?.energy || 0;
+        const maxEnergy = (typeof this.gameState?.getPlayerAttribute === 'function') 
+            ? this.gameState.getPlayerAttribute('energy') || 100 
+            : 100;
+        this.energyText.setText(`Energy: ${playerEnergy}/${maxEnergy}`);
+        
+        const fishtankCount = this.gameState.inventory?.fish?.length || 0;
+        const fishtankMax = (typeof this.gameState?.getBoatAttribute === 'function')
+            ? this.gameState.getBoatAttribute('fishtankStorage') || 10
+            : 10;
         this.fishtankText.setText(`Fishtank: ${fishtankCount}/${fishtankMax}`);
         
-        this.levelText.setText(`Level: ${this.gameState.player.level}`);
-        this.moneyText.setText(`Coins: ${this.gameState.player.money}`);
+        this.levelText.setText(`Level: ${this.gameState?.player?.level || 1}`);
+        this.moneyText.setText(`Coins: ${this.gameState?.player?.money || 0}`);
         
         // Update button availability
         this.updateButtonStates(statusData);
@@ -701,11 +1304,16 @@ export default class BoatMenuScene extends Phaser.Scene {
 
     updateButtonStates(data) {
         // Enable/disable buttons based on available actions
-        const actions = data.availableActions || ['travel', 'fish', 'chatroom', 'inventory', 'shop']; // Default to all actions available
+        const actions = data.availableActions || ['travel', 'fish', 'cabin', 'inventory', 'shop']; // Default to all actions available
         
         this.buttons.travel.button.setAlpha(actions.includes('travel') ? 1 : 0.5);
         this.buttons.fish.button.setAlpha(actions.includes('fish') ? 1 : 0.5);
         this.buttons.shop.button.setAlpha(actions.includes('shop') ? 1 : 0.5);
+        
+        // Show/hide tournament button based on mode
+        const inTournamentMode = this.gameLoop.currentMode === 'tournament';
+        this.buttons.tournament.button.setVisible(inTournamentMode);
+        this.buttons.tournament.text.setVisible(inTournamentMode);
         
         // Show/hide return button
         const canShop = data.canShop !== undefined ? data.canShop : true; // Default to can shop
@@ -885,66 +1493,12 @@ export default class BoatMenuScene extends Phaser.Scene {
         });
     }
 
-    createTravelOverlay() {
-        // Create travel destination selection overlay
-        const overlay = this.add.graphics();
-        overlay.fillStyle(0x000000, 0.8);
-        overlay.fillRect(0, 0, this.cameras.main.width, this.cameras.main.height);
-        
-        const panel = this.add.graphics();
-        panel.fillStyle(0x2c3e50);
-        panel.fillRect(100, 100, this.cameras.main.width - 200, this.cameras.main.height - 200);
-        panel.lineStyle(2, 0x3498db);
-        panel.strokeRect(100, 100, this.cameras.main.width - 200, this.cameras.main.height - 200);
-        
-        this.add.text(this.cameras.main.width / 2, 150, 'SELECT DESTINATION', {
-            fontSize: '24px',
-            fill: '#ffffff',
-            fontFamily: 'Arial',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-        
-        // Travel destinations
-        const destinations = [
-            'Starting Port',
-            'Coral Cove, Spot 1',
-            'Deep Abyss, Spot 1',
-            'Tropical Lagoon, Spot 1',
-            'Training Lagoon, Spot 1'
-        ];
-        
-        destinations.forEach((dest, index) => {
-            const button = this.createActionButton(
-                this.cameras.main.width / 2,
-                200 + index * 50,
-                dest,
-                () => {
-                    const [map, spot] = dest.split(', ');
-                    this.gameLoop.initiateTravel(map, spot || 'Port');
-                    overlay.destroy();
-                    panel.destroy();
-                }
-            );
-        });
-        
-        // Close button
-        this.createActionButton(
-            this.cameras.main.width / 2,
-            this.cameras.main.height - 150,
-            'CLOSE',
-            () => {
-                overlay.destroy();
-                panel.destroy();
-            }
-        );
-    }
-
     createPlayerButton(width, height) {
-        // Button dimensions and position
+        // Button dimensions and position - adjusted to avoid conflicts
         const buttonWidth = 80;
         const buttonHeight = 40;
         const buttonX = width - buttonWidth - 20;
-        const buttonY = height - buttonHeight - 20;
+        const buttonY = height - buttonHeight - 40; // Moved up to avoid progress panel conflict
         
         // Create button background
         this.playerButton = this.add.graphics();
@@ -1030,11 +1584,11 @@ export default class BoatMenuScene extends Phaser.Scene {
     }
 
     createCollectionButton(width, height) {
-        // Button dimensions and position (next to Player button)
+        // Button dimensions and position (next to Player button) - adjusted spacing
         const buttonWidth = 90;
         const buttonHeight = 40;
         const buttonX = width - buttonWidth - 110; // 110 = 80 (player button width) + 20 (margin) + 10 (spacing)
-        const buttonY = height - buttonHeight - 20;
+        const buttonY = height - buttonHeight - 40; // Moved up to match Player button
         
         // Create button background
         this.collectionButton = this.add.graphics();
@@ -1139,30 +1693,149 @@ export default class BoatMenuScene extends Phaser.Scene {
         if (this.fishCollectionUI) {
             this.fishCollectionUI.destroy();
         }
+        if (this.mapSelectionUI) {
+            this.mapSelectionUI.destroy();
+        }
         if (this.gameLoop) {
             this.gameLoop.destroy();
+        }
+        if (this.shopUI) {
+            this.shopUI.destroy();
         }
         super.destroy();
     }
 
     ensureUIsCreated() {
-        // Create inventory UI if it doesn't exist
-        if (!this.inventoryUI) {
-            this.inventoryUI = new InventoryUI(this, 100, 50, 800, 600);
-        }
+        console.log('BoatMenuScene: Ensuring UIs are created');
         
-        // Create crafting UI if it doesn't exist
-        if (!this.craftingUI) {
-            this.craftingUI = new CraftingUI(this, 50, 50, 900, 600);
+        try {
+            // Create inventory UI if it doesn't exist or is destroyed
+            if (!this.inventoryUI || this.inventoryUI.isDestroyed) {
+                try {
+                    console.log('BoatMenuScene: Creating InventoryUI');
+                    this.inventoryUI = new InventoryUI(this, 100, 50, 800, 600);
+                    console.log('BoatMenuScene: InventoryUI created successfully');
+                } catch (error) {
+                    console.error('BoatMenuScene: Error creating InventoryUI:', error);
+                    this.inventoryUI = null;
+                }
+            }
+            
+            // Create crafting UI if it doesn't exist or is destroyed
+            if (!this.craftingUI || this.craftingUI.isDestroyed) {
+                try {
+                    console.log('BoatMenuScene: Creating CraftingUI');
+                    this.craftingUI = new CraftingUI(this, 50, 50, 900, 600);
+                    console.log('BoatMenuScene: CraftingUI created successfully');
+                } catch (error) {
+                    console.error('BoatMenuScene: Error creating CraftingUI:', error);
+                    this.craftingUI = null;
+                }
+            }
+            
+            // Create fish collection UI if it doesn't exist or is destroyed
+            if (!this.fishCollectionUI || this.fishCollectionUI.isDestroyed) {
+                try {
+                    console.log('BoatMenuScene: Creating FishCollectionUI');
+                    this.fishCollectionUI = new FishCollectionUI(this, 50, 50, 900, 650);
+                    console.log('BoatMenuScene: FishCollectionUI created successfully');
+                } catch (error) {
+                    console.error('BoatMenuScene: Error creating FishCollectionUI:', error);
+                    this.fishCollectionUI = null;
+                }
+            }
+            
+            // Create map selection UI if it doesn't exist or is destroyed
+            if (!this.mapSelectionUI || this.mapSelectionUI.isDestroyed) {
+                try {
+                    console.log('BoatMenuScene: Creating MapSelectionUI');
+                    this.mapSelectionUI = new MapSelectionUI(this, this.gameState.locationManager, this.gameState);
+                    console.log('BoatMenuScene: MapSelectionUI created successfully');
+                } catch (error) {
+                    console.error('BoatMenuScene: Error creating MapSelectionUI:', error);
+                    this.mapSelectionUI = null;
+                }
+            }
+            
+            // Create shop UI if it doesn't exist or is destroyed
+            if (!this.shopUI || this.shopUI.isDestroyed) {
+                try {
+                    console.log('BoatMenuScene: Creating ShopUI');
+                    this.shopUI = new ShopUI(this, 50, 50, 900, 600);
+                    console.log('BoatMenuScene: ShopUI created successfully');
+                } catch (error) {
+                    console.error('BoatMenuScene: Error creating ShopUI:', error);
+                    this.shopUI = null;
+                }
+            }
+            
+            // Establish cross-references so UIs can access each other
+            // This allows the inventory UI to open crafting UI and vice versa
+            console.log('BoatMenuScene: Establishing UI cross-references');
+            
+            // Set up cross-references with error handling
+            try {
+                if (this.inventoryUI && this.craftingUI) {
+                    // Allow inventory to access crafting
+                    this.inventoryUI.craftingUI = this.craftingUI;
+                    this.craftingUI.inventoryUI = this.inventoryUI;
+                    console.log('BoatMenuScene: Inventory-Crafting cross-reference established');
+                }
+            } catch (crossRefError) {
+                console.error('BoatMenuScene: Error establishing cross-references:', crossRefError);
+            }
+            
+            console.log('BoatMenuScene: UI creation process completed');
+            
+        } catch (error) {
+            console.error('BoatMenuScene: Critical error in ensureUIsCreated:', error);
         }
-        
-        // Create fish collection UI if it doesn't exist
-        if (!this.fishCollectionUI) {
-            this.fishCollectionUI = new FishCollectionUI(this, 50, 50, 900, 650);
+    }
+
+    initializePlayerStats() {
+        try {
+            if (!this.gameState || !this.gameState.player) {
+                console.warn('BoatMenuScene: Cannot initialize player stats - gameState or player not available');
+                return;
+            }
+
+            // Initialize energy if not set
+            if (typeof this.gameState.player.energy === 'undefined' || this.gameState.player.energy === null) {
+                this.gameState.player.energy = 100;
+                console.log('BoatMenuScene: Initialized player energy to 100');
+            }
+
+            // Initialize other essential stats if not set
+            if (typeof this.gameState.player.level === 'undefined' || this.gameState.player.level === null) {
+                this.gameState.player.level = 1;
+                console.log('BoatMenuScene: Initialized player level to 1');
+            }
+
+            if (typeof this.gameState.player.money === 'undefined' || this.gameState.player.money === null) {
+                this.gameState.player.money = 100;
+                console.log('BoatMenuScene: Initialized player money to 100');
+            }
+
+            if (typeof this.gameState.player.currentLocation === 'undefined' || this.gameState.player.currentLocation === null) {
+                this.gameState.player.currentLocation = 'Starting Port';
+                console.log('BoatMenuScene: Initialized player location to Starting Port');
+            }
+
+            // Initialize inventory if not set
+            if (!this.gameState.inventory) {
+                this.gameState.inventory = {
+                    fish: [],
+                    rods: [],
+                    lures: [],
+                    items: []
+                };
+                console.log('BoatMenuScene: Initialized player inventory');
+            }
+
+            console.log('BoatMenuScene: Player stats initialized successfully');
+            
+        } catch (error) {
+            console.error('BoatMenuScene: Error initializing player stats:', error);
         }
-        
-        // Establish cross-references so UIs can access each other
-        // This allows the inventory UI to open crafting UI and vice versa
-        console.log('BoatMenuScene: Establishing UI cross-references');
     }
 }

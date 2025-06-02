@@ -121,6 +121,13 @@ export class FishDatabase {
     isLocationCompatible(location, habitat) {
         // Location to habitat mapping
         const locationHabitats = {
+            'beginner_lake': ['shallow_water', 'mid_water', 'lake', 'stream', 'muddy_bottom', 'deep_water'],
+            'ocean_harbor': ['saltwater', 'open_ocean', 'deep_ocean', 'river_mouth'],
+            'mountain_stream': ['mountain_stream', 'stream', 'shallow_water'],
+            'midnight_pond': ['mystical_pond', 'shallow_water', 'mid_water', 'lake'],
+            'champions_cove': ['tournament_waters', 'saltwater', 'open_ocean', 'deep_ocean'],
+            
+            // Legacy compatibility
             'Starting Port': ['shallow_water', 'mid_water'],
             'Coral Cove': ['shallow_water', 'mid_water', 'stream'],
             'Deep Abyss': ['deep_water', 'deep_abyss', 'abyss', 'ocean_trench'],

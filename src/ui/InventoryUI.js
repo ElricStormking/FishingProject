@@ -1,3 +1,5 @@
+import UITheme from './UITheme.js';
+
 export class InventoryUI {
     constructor(scene, x, y, width, height) {
         console.log('InventoryUI: Constructor called', { scene: scene.scene.key, x, y, width, height });
@@ -20,6 +22,7 @@ export class InventoryUI {
         
         // UI state
         this.isVisible = false;
+        this.isDestroyed = false;
         this.currentCategory = 'rods';
         this.selectedItem = null;
         this.draggedItem = null;
@@ -79,12 +82,8 @@ export class InventoryUI {
         this.container.setVisible(false);
         this.container.setDepth(10000); // Maximum depth to be above everything
 
-        // Background
-        this.background = this.scene.add.graphics();
-        this.background.fillStyle(0x2a2a2a, 0.95);
-        this.background.fillRoundedRect(0, 0, this.width, this.height, 10);
-        this.background.lineStyle(2, 0x4a4a4a);
-        this.background.strokeRoundedRect(0, 0, this.width, this.height, 10);
+        // Background using UITheme
+        this.background = UITheme.createPanel(this.scene, 0, 0, this.width, this.height, 'primary');
         
         // Make the background itself interactive to block clicks
         this.background.setInteractive(new Phaser.Geom.Rectangle(0, 0, this.width, this.height), Phaser.Geom.Rectangle.Contains);
@@ -98,34 +97,73 @@ export class InventoryUI {
         
         this.container.add(this.background);
 
-        // Title
-        const title = this.scene.add.text(this.width / 2, 30, 'INVENTORY', {
-            fontSize: '24px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
+        // Title using UITheme
+        const title = UITheme.createText(this.scene, this.width / 2, 30, 'INVENTORY', 'headerLarge');
+        title.setOrigin(0.5);
         this.container.add(title);
 
-        // Close button
-        const closeButton = this.scene.add.text(this.width - 30, 30, '×', {
-            fontSize: '32px',
-            fontFamily: 'Arial',
-            color: '#ff6666',
-            fontStyle: 'bold'
-        }).setOrigin(0.5).setInteractive();
+        // Close button using UITheme
+        const closeButton = UITheme.createText(this.scene, this.width - 30, 30, '×', 'error');
+        closeButton.setOrigin(0.5).setInteractive();
+        closeButton.setFontSize('32px');
         
         closeButton.on('pointerdown', () => {
-            console.log('InventoryUI: Close button clicked!');
-            this.audioManager?.playSFX('button');
-            this.hide();
+            try {
+                console.log('InventoryUI: Close button clicked!');
+                
+                // Prevent multiple clicks or clicks on destroyed UI
+                if (this.isDestroyed || !this.isVisible) {
+                    console.log('InventoryUI: Close button clicked but UI already destroyed or hidden');
+                    return;
+                }
+                
+                // Play sound safely
+                if (this.audioManager && typeof this.audioManager.playSFX === 'function') {
+                    this.audioManager.playSFX('button');
+                }
+                
+                this.hide();
+            } catch (error) {
+                console.error('InventoryUI: Error in close button handler:', error);
+                // Try to hide anyway
+                try {
+                    this.isVisible = false;
+                    if (this.container && !this.container.destroyed) {
+                        this.container.setVisible(false);
+                    }
+                } catch (fallbackError) {
+                    console.error('InventoryUI: Fallback close also failed:', fallbackError);
+                }
+            }
         });
-        closeButton.on('pointerover', () => closeButton.setColor('#ff9999'));
-        closeButton.on('pointerout', () => closeButton.setColor('#ff6666'));
+        
+        closeButton.on('pointerover', () => {
+            try {
+                if (!this.isDestroyed) {
+                    closeButton.setColor('#ff9999');
+                }
+            } catch (error) {
+                console.error('InventoryUI: Error in close button hover:', error);
+            }
+        });
+        
+        closeButton.on('pointerout', () => {
+            try {
+                if (!this.isDestroyed) {
+                    closeButton.setColor('#ff6666');
+                }
+            } catch (error) {
+                console.error('InventoryUI: Error in close button out:', error);
+            }
+        });
+        
         this.container.add(closeButton);
 
         // Crafting button
         this.createCraftingButton();
+        
+        // Equipment button
+        this.createEquipmentButton();
 
         // Category tabs
         this.createCategoryTabs();
@@ -150,7 +188,7 @@ export class InventoryUI {
     }
 
     createCategoryTabs() {
-        const categories = ['rods', 'lures', 'bait', 'boats', 'upgrades', 'fish', 'consumables', 'materials'];
+        const categories = ['rods', 'lures', 'boats', 'upgrades', 'fish', 'consumables', 'materials', 'clothing', 'bikini_assistants'];
         const tabWidth = 80;
         const tabHeight = 30;
         const startX = 20;
@@ -164,21 +202,23 @@ export class InventoryUI {
 
             console.log(`InventoryUI: Tab ${index} (${category}): x=${x}, y=${y}`);
 
-            // Tab background
+            // Tab background using UITheme
             const tabBg = this.scene.add.graphics();
             const isActive = category === this.currentCategory;
-            tabBg.fillStyle(isActive ? 0x4a90e2 : 0x3a3a3a);
-            tabBg.fillRoundedRect(x, y, tabWidth, tabHeight, 5);
-            tabBg.lineStyle(1, isActive ? 0x6bb6ff : 0x5a5a5a);
-            tabBg.strokeRoundedRect(x, y, tabWidth, tabHeight, 5);
+            const bgColor = isActive ? UITheme.colors.primary : UITheme.colors.darkSecondary;
+            const borderColor = isActive ? UITheme.colors.primaryLight : UITheme.colors.medium;
+            
+            tabBg.fillStyle(bgColor);
+            tabBg.fillRoundedRect(x, y, tabWidth, tabHeight, UITheme.borders.radius.small);
+            tabBg.lineStyle(UITheme.borders.width.thin, borderColor);
+            tabBg.strokeRoundedRect(x, y, tabWidth, tabHeight, UITheme.borders.radius.small);
 
-            // Tab text
-            const tabText = this.scene.add.text(x + tabWidth/2, y + tabHeight/2, 
-                category.charAt(0).toUpperCase() + category.slice(1), {
-                fontSize: '12px',
-                fontFamily: 'Arial',
-                color: isActive ? '#ffffff' : '#cccccc'
-            }).setOrigin(0.5);
+            // Tab text using UITheme
+            const textColor = isActive ? UITheme.colors.text : UITheme.colors.textSecondary;
+            const tabText = UITheme.createText(this.scene, x + tabWidth/2, y + tabHeight/2, 
+                category.charAt(0).toUpperCase() + category.slice(1), 'bodySmall');
+            tabText.setOrigin(0.5);
+            tabText.setColor(textColor);
 
             // Create a working interactive area (like the Fish test area)
             const tabArea = this.scene.add.rectangle(x + tabWidth/2, y + tabHeight/2, tabWidth, tabHeight)
@@ -277,51 +317,19 @@ export class InventoryUI {
         const buttonWidth = 100;
         const buttonHeight = 30;
 
-        // Button background
-        const craftingBg = this.scene.add.graphics();
-        craftingBg.fillStyle(0x4a90e2);
-        craftingBg.fillRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
-        craftingBg.lineStyle(2, 0x6bb6ff);
-        craftingBg.strokeRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
-
-        // Button text
-        const craftingText = this.scene.add.text(buttonX + buttonWidth/2, buttonY, 'CRAFTING', {
-            fontSize: '14px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-
-        // Make button interactive
-        const craftingButton = this.scene.add.rectangle(
+        // Use UITheme button creator
+        const craftingBtn = UITheme.createButton(
+            this.scene, 
             buttonX + buttonWidth/2, 
             buttonY, 
             buttonWidth, 
-            buttonHeight
-        ).setInteractive().setAlpha(0);
+            buttonHeight, 
+            'CRAFTING', 
+            () => this.openCraftingUI(),
+            'primary'
+        );
 
-        craftingButton.on('pointerdown', () => {
-            console.log('InventoryUI: Crafting button clicked');
-            this.openCraftingUI();
-        });
-
-        craftingButton.on('pointerover', () => {
-            craftingBg.clear();
-            craftingBg.fillStyle(0x6bb6ff);
-            craftingBg.fillRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
-            craftingBg.lineStyle(2, 0x4a90e2);
-            craftingBg.strokeRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
-        });
-
-        craftingButton.on('pointerout', () => {
-            craftingBg.clear();
-            craftingBg.fillStyle(0x4a90e2);
-            craftingBg.fillRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
-            craftingBg.lineStyle(2, 0x6bb6ff);
-            craftingBg.strokeRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
-        });
-
-        this.container.add([craftingBg, craftingText, craftingButton]);
+        this.container.add([craftingBtn.button, craftingBtn.text]);
 
         // Working interactive area for crafting button
         const workingCraftingButton = this.scene.add.rectangle(
@@ -338,25 +346,46 @@ export class InventoryUI {
             this.openCraftingUI();
         });
 
-        workingCraftingButton.on('pointerover', () => {
-            workingCraftingButton.setAlpha(0.02);
-            craftingBg.clear();
-            craftingBg.fillStyle(0x6bb6ff);
-            craftingBg.fillRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
-            craftingBg.lineStyle(2, 0x4a90e2);
-            craftingBg.strokeRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
-        });
-
-        workingCraftingButton.on('pointerout', () => {
-            workingCraftingButton.setAlpha(0.01);
-            craftingBg.clear();
-            craftingBg.fillStyle(0x4a90e2);
-            craftingBg.fillRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
-            craftingBg.lineStyle(2, 0x6bb6ff);
-            craftingBg.strokeRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
-        });
-
         this.craftingButtonArea = workingCraftingButton;
+    }
+
+    createEquipmentButton() {
+        // Create equipment button next to crafting button
+        const buttonX = this.width - 270; // Position to the left of crafting button
+        const buttonY = 30;
+        const buttonWidth = 100;
+        const buttonHeight = 30;
+
+        // Use UITheme button creator with secondary style
+        const equipmentBtn = UITheme.createButton(
+            this.scene, 
+            buttonX + buttonWidth/2, 
+            buttonY, 
+            buttonWidth, 
+            buttonHeight, 
+            'EQUIPMENT', 
+            () => this.openEquipmentUI(),
+            'secondary'
+        );
+
+        this.container.add([equipmentBtn.button, equipmentBtn.text]);
+
+        // Working interactive area for equipment button
+        const workingEquipmentButton = this.scene.add.rectangle(
+            this.x + buttonX + buttonWidth/2,
+            this.y + buttonY,
+            buttonWidth + 5,
+            buttonHeight + 5
+        ).setInteractive()
+        .setAlpha(0.01)
+        .setFillStyle(0x000000)
+        .setDepth(10002);
+
+        workingEquipmentButton.on('pointerdown', () => {
+            this.openEquipmentUI();
+        });
+
+        this.equipmentButtonArea = workingEquipmentButton;
     }
 
     openCraftingUI() {
@@ -377,44 +406,129 @@ export class InventoryUI {
         }
     }
 
+    openEquipmentUI() {
+        console.log('InventoryUI: Opening Equipment Enhancement UI');
+        console.log('InventoryUI: Checking scene properties...');
+        console.log('InventoryUI: scene.equipmentEnhancementUI exists:', !!this.scene.equipmentEnhancementUI);
+        console.log('InventoryUI: scene.equipmentEnhancer exists:', !!this.scene.equipmentEnhancer);
+        console.log('InventoryUI: Available scene properties:', Object.keys(this.scene));
+        
+        this.audioManager?.playSFX('button');
+        
+        // Check if Equipment Enhancement UI exists
+        if (this.scene.equipmentEnhancementUI) {
+            // Validate that the UI is properly initialized
+            if (!this.scene.equipmentEnhancementUI.container) {
+                console.warn('InventoryUI: Equipment Enhancement UI exists but container not initialized');
+                this.showMessage('Equipment Enhancement UI is still loading...', '#ffaa00');
+                
+                // Try again in a moment
+                this.scene.time.delayedCall(1000, () => {
+                    if (this.scene.equipmentEnhancementUI?.container) {
+                        this.openEquipmentUI();
+                    } else {
+                        this.showMessage('Failed to initialize Equipment Enhancement UI', '#ff6666');
+                    }
+                });
+                return;
+            }
+            
+            try {
+                // Hide inventory UI
+                this.hide();
+                
+                this.scene.equipmentEnhancementUI.show();
+                
+                // Store reference that equipment UI was opened from inventory
+                this.scene.equipmentEnhancementUI.openedFromInventory = true;
+                console.log('InventoryUI: Equipment Enhancement UI opened successfully');
+            } catch (error) {
+                console.error('InventoryUI: Error opening Equipment Enhancement UI:', error);
+                // Show inventory again since equipment UI failed
+                this.show();
+                this.showMessage('Equipment Enhancement UI error: ' + error.message, '#ff6666');
+            }
+        } else {
+            console.warn('InventoryUI: Equipment Enhancement UI not found, attempting to create it');
+            
+            // Try to create the Equipment Enhancement UI if it doesn't exist
+            this.createEquipmentEnhancementUI().then(() => {
+                // Try again after creation
+                if (this.scene.equipmentEnhancementUI) {
+                    this.openEquipmentUI();
+                } else {
+                    this.showMessage('Failed to create Equipment Enhancement UI', '#ff6666');
+                }
+            }).catch(error => {
+                console.error('InventoryUI: Failed to create Equipment Enhancement UI:', error);
+                this.showMessage('Equipment Enhancement System unavailable', '#ff6666');
+            });
+        }
+    }
+
+    async createEquipmentEnhancementUI() {
+        try {
+            console.log('InventoryUI: Creating Equipment Enhancement UI...');
+            
+            // Import the EquipmentEnhancementUI class
+            const { EquipmentEnhancementUI } = await import('./EquipmentEnhancementUI.js');
+            
+            // Create the UI with reasonable defaults
+            const uiWidth = Math.min(800, this.scene.sys.game.config.width - 100);
+            const uiHeight = Math.min(600, this.scene.sys.game.config.height - 100);
+            const uiX = (this.scene.sys.game.config.width - uiWidth) / 2;
+            const uiY = (this.scene.sys.game.config.height - uiHeight) / 2;
+            
+            this.scene.equipmentEnhancementUI = new EquipmentEnhancementUI(
+                this.scene, 
+                uiX, 
+                uiY, 
+                uiWidth, 
+                uiHeight
+            );
+            
+            console.log('InventoryUI: Equipment Enhancement UI created successfully');
+            
+            // Give it a moment to fully initialize
+            return new Promise(resolve => {
+                this.scene.time.delayedCall(100, () => {
+                    resolve();
+                });
+            });
+            
+        } catch (error) {
+            console.error('InventoryUI: Error creating Equipment Enhancement UI:', error);
+            throw error;
+        }
+    }
+
     createControls() {
         const controlsY = 140;
 
-        // Search box background
-        const searchBg = this.scene.add.graphics();
-        searchBg.fillStyle(0x1a1a1a);
-        searchBg.fillRoundedRect(20, controlsY, 200, 30, 5);
-        searchBg.lineStyle(1, 0x4a4a4a);
-        searchBg.strokeRoundedRect(20, controlsY, 200, 30, 5);
+        // Search box background using UITheme
+        const searchBg = UITheme.createPanel(this.scene, 20, controlsY, 200, 30, 'secondary');
         this.container.add(searchBg);
 
-        // Search placeholder text
-        this.searchBox = this.scene.add.text(25, controlsY + 15, 'Search items...', {
-            fontSize: '14px',
-            fontFamily: 'Arial',
-            color: '#888888'
-        }).setOrigin(0, 0.5);
+        // Search placeholder text using UITheme
+        this.searchBox = UITheme.createText(this.scene, 25, controlsY + 15, 'Search items...', 'bodyMedium');
+        this.searchBox.setOrigin(0, 0.5);
+        this.searchBox.setColor(UITheme.colors.light);
         this.container.add(this.searchBox);
 
-        // Sort button
-        const sortBg = this.scene.add.graphics();
-        sortBg.fillStyle(0x3a3a3a);
-        sortBg.fillRoundedRect(240, controlsY, 100, 30, 5);
-        sortBg.lineStyle(1, 0x5a5a5a);
-        sortBg.strokeRoundedRect(240, controlsY, 100, 30, 5);
+        // Sort button using UITheme
+        const sortBtn = UITheme.createButton(
+            this.scene, 
+            290, 
+            controlsY + 15, 
+            100, 
+            30, 
+            'Sort: Name ↑', 
+            () => this.cycleSortMode(),
+            'secondary'
+        );
 
-        this.sortButton = this.scene.add.text(290, controlsY + 15, 'Sort: Name ↑', {
-            fontSize: '12px',
-            fontFamily: 'Arial',
-            color: '#cccccc'
-        }).setOrigin(0.5);
-
-        const sortArea = this.scene.add.rectangle(290, controlsY + 15, 100, 30)
-            .setInteractive()
-            .setAlpha(0);
-
-        sortArea.on('pointerdown', () => this.cycleSortMode());
-        this.container.add([sortBg, this.sortButton, sortArea]);
+        this.sortButton = sortBtn.text;
+        this.container.add([sortBtn.button, sortBtn.text]);
 
         // Stats panel
         this.createStatsPanel();
@@ -424,30 +538,19 @@ export class InventoryUI {
         const statsX = this.width - 200;
         const statsY = 140;
 
-        // Stats background
-        const statsBg = this.scene.add.graphics();
-        statsBg.fillStyle(0x2a2a2a, 0.8);
-        statsBg.fillRoundedRect(statsX, statsY, 180, 100, 5);
-        statsBg.lineStyle(1, 0x4a4a4a);
-        statsBg.strokeRoundedRect(statsX, statsY, 180, 100, 5);
+        // Stats background using UITheme
+        const statsBg = UITheme.createPanel(this.scene, statsX, statsY, 180, 100, 'secondary');
         this.container.add(statsBg);
 
-        // Stats title
-        const statsTitle = this.scene.add.text(statsX + 90, statsY + 15, 'INVENTORY STATS', {
-            fontSize: '12px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
+        // Stats title using UITheme
+        const statsTitle = UITheme.createText(this.scene, statsX + 90, statsY + 15, 'INVENTORY STATS', 'headerSmall');
+        statsTitle.setOrigin(0.5);
         this.container.add(statsTitle);
 
-        // Stats text (will be updated dynamically)
-        this.statsText = this.scene.add.text(statsX + 10, statsY + 35, '', {
-            fontSize: '10px',
-            fontFamily: 'Arial',
-            color: '#cccccc',
-            lineSpacing: 2
-        });
+        // Stats text (will be updated dynamically) using UITheme
+        this.statsText = UITheme.createText(this.scene, statsX + 10, statsY + 35, '', 'bodySmall');
+        this.statsText.setColor(UITheme.colors.textSecondary);
+        this.statsText.setLineSpacing(2);
         this.container.add(this.statsText);
     }
 
@@ -501,12 +604,12 @@ export class InventoryUI {
     }
 
     createItemSlot(x, y, index) {
-        // Slot background
+        // Slot background using UITheme
         const slotBg = this.scene.add.graphics();
-        slotBg.fillStyle(0x1a1a1a);
-        slotBg.fillRoundedRect(x, y, this.slotSize, this.slotSize, 3);
-        slotBg.lineStyle(1, 0x3a3a3a);
-        slotBg.strokeRoundedRect(x, y, this.slotSize, this.slotSize, 3);
+        slotBg.fillStyle(UITheme.colors.darkPrimary);
+        slotBg.fillRoundedRect(x, y, this.slotSize, this.slotSize, UITheme.borders.radius.small);
+        slotBg.lineStyle(UITheme.borders.width.thin, UITheme.colors.medium);
+        slotBg.strokeRoundedRect(x, y, this.slotSize, this.slotSize, UITheme.borders.radius.small);
 
         // Interactive area - make it more reliable like the working tab areas
         const slotArea = this.scene.add.rectangle(
@@ -549,30 +652,35 @@ export class InventoryUI {
         const panelX = this.width - 200;
         const panelY = 260;
 
-        // Equipment panel background
-        const equipBg = this.scene.add.graphics();
-        equipBg.fillStyle(0x2a2a2a, 0.8);
-        equipBg.fillRoundedRect(panelX, panelY, 180, 200, 5);
-        equipBg.lineStyle(1, 0x4a4a4a);
-        equipBg.strokeRoundedRect(panelX, panelY, 180, 200, 5);
+        // Equipment panel background using UITheme
+        const equipBg = UITheme.createPanel(this.scene, panelX, panelY, 180, 300, 'secondary'); // Increased height for more slots
         this.container.add(equipBg);
 
-        // Equipment title
-        const equipTitle = this.scene.add.text(panelX + 90, panelY + 15, 'EQUIPPED', {
-            fontSize: '12px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
+        // Equipment title using UITheme
+        const equipTitle = UITheme.createText(this.scene, panelX + 90, panelY + 15, 'EQUIPPED', 'headerSmall');
+        equipTitle.setOrigin(0.5);
         this.container.add(equipTitle);
 
-        // Equipment slots
+        // Equipment slots - updated layout
         this.equipmentSlots = {};
-        const equipSlots = ['rod', 'lure', 'bait', 'boat'];
+        const equipSlots = ['rod', 'lure', 'boat', 'head', 'upper_body', 'lower_body', 'bikini_assistant'];
         
         equipSlots.forEach((slotType, index) => {
-            const slotX = panelX + 10 + (index % 2) * 80;
-            const slotY = panelY + 40 + Math.floor(index / 2) * 70;
+            let slotX, slotY;
+            
+            if (index < 3) {
+                // First row: rod, lure, boat
+                slotX = panelX + 10 + (index % 3) * 55;
+                slotY = panelY + 40;
+            } else if (index < 6) {
+                // Second row: head, upper_body, lower_body
+                slotX = panelX + 10 + ((index - 3) % 3) * 55;
+                slotY = panelY + 120;
+            } else {
+                // Third row: bikini_assistant (centered)
+                slotX = panelX + 65; // Centered
+                slotY = panelY + 200;
+            }
             
             const slot = this.createEquipmentSlot(slotX, slotY, slotType);
             this.equipmentSlots[slotType] = slot;
@@ -581,35 +689,83 @@ export class InventoryUI {
     }
 
     createEquipmentSlot(x, y, slotType) {
-        // Slot background
+        // Smaller slot size to fit more slots
+        const slotSize = 50;
+        
+        // Slot background using UITheme
         const slotBg = this.scene.add.graphics();
-        slotBg.fillStyle(0x1a1a1a);
-        slotBg.fillRoundedRect(x, y, 60, 60, 3);
-        slotBg.lineStyle(2, 0x4a90e2);
-        slotBg.strokeRoundedRect(x, y, 60, 60, 3);
+        slotBg.fillStyle(UITheme.colors.darkPrimary);
+        slotBg.fillRoundedRect(x, y, slotSize, slotSize, UITheme.borders.radius.small);
+        slotBg.lineStyle(UITheme.borders.width.medium, UITheme.colors.primary);
+        slotBg.strokeRoundedRect(x, y, slotSize, slotSize, UITheme.borders.radius.small);
 
-        // Slot label
-        const label = this.scene.add.text(x + 30, y - 10, slotType.toUpperCase(), {
-            fontSize: '10px',
-            fontFamily: 'Arial',
-            color: '#cccccc'
-        }).setOrigin(0.5);
+        // Slot label using UITheme - shorter labels for space
+        const labelMap = {
+            'rod': 'ROD',
+            'lure': 'LURE', 
+            'boat': 'BOAT',
+            'head': 'HEAD',
+            'upper_body': 'UPPER',
+            'lower_body': 'LOWER',
+            'bikini_assistant': 'ASSISTANT'
+        };
+        
+        const label = UITheme.createText(this.scene, x + slotSize/2, y - 8, labelMap[slotType] || slotType.toUpperCase(), 'bodySmall');
+        label.setOrigin(0.5);
+        label.setColor(UITheme.colors.textSecondary);
+        label.setFontSize('9px'); // Smaller font for better fit
 
         // Interactive area
-        const slotArea = this.scene.add.rectangle(x + 30, y + 30, 60, 60)
+        const slotArea = this.scene.add.rectangle(x + slotSize/2, y + slotSize/2, slotSize, slotSize)
             .setInteractive()
             .setAlpha(0);
 
         slotArea.on('pointerdown', () => this.onEquipmentSlotClick(slotType));
+        
+        // Add working interactive area (like other UI elements)
+        const workingSlotArea = this.scene.add.rectangle(
+            this.x + x + slotSize/2,
+            this.y + y + slotSize/2,
+            slotSize + 5,
+            slotSize + 5
+        ).setInteractive()
+        .setAlpha(0.01)
+        .setFillStyle(0x000000)
+        .setDepth(10002);
+        
+        workingSlotArea.on('pointerdown', () => {
+            console.log('InventoryUI: Working equipment slot clicked:', slotType);
+            this.onEquipmentSlotClick(slotType);
+        });
+        
+        workingSlotArea.on('pointerover', () => {
+            // Highlight the slot on hover
+            slotBg.clear();
+            slotBg.fillStyle(UITheme.colors.darkSecondary);
+            slotBg.fillRoundedRect(x, y, slotSize, slotSize, UITheme.borders.radius.small);
+            slotBg.lineStyle(UITheme.borders.width.medium, UITheme.colors.primaryLight);
+            slotBg.strokeRoundedRect(x, y, slotSize, slotSize, UITheme.borders.radius.small);
+        });
+        
+        workingSlotArea.on('pointerout', () => {
+            // Reset slot appearance
+            slotBg.clear();
+            slotBg.fillStyle(UITheme.colors.darkPrimary);
+            slotBg.fillRoundedRect(x, y, slotSize, slotSize, UITheme.borders.radius.small);
+            slotBg.lineStyle(UITheme.borders.width.medium, UITheme.colors.primary);
+            slotBg.strokeRoundedRect(x, y, slotSize, slotSize, UITheme.borders.radius.small);
+        });
 
         return {
             bg: slotBg,
             label: label,
             area: slotArea,
+            workingArea: workingSlotArea,
             x: x,
             y: y,
             slotType: slotType,
-            itemSprite: null
+            itemSprite: null,
+            slotSize: slotSize
         };
     }
 
@@ -618,16 +774,12 @@ export class InventoryUI {
         this.tooltip.setVisible(false);
         this.tooltip.setDepth(3000);
 
-        // Tooltip background
+        // Tooltip background using UITheme
         this.tooltipBg = this.scene.add.graphics();
-        this.tooltipText = this.scene.add.text(0, 0, '', {
-            fontSize: '12px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            backgroundColor: '#000000',
-            padding: { x: 8, y: 6 },
-            wordWrap: { width: 200 }
-        });
+        this.tooltipText = UITheme.createText(this.scene, 0, 0, '', 'bodySmall');
+        this.tooltipText.setPadding(8, 6);
+        this.tooltipText.setWordWrapWidth(200);
+        this.tooltipText.setBackgroundColor(UITheme.colors.darkPrimary);
 
         this.tooltip.add([this.tooltipBg, this.tooltipText]);
     }
@@ -638,12 +790,12 @@ export class InventoryUI {
         if (slot.item) {
             this.showTooltip(slot.item, this.scene.input.activePointer.x, this.scene.input.activePointer.y);
             
-            // Highlight slot
+            // Highlight slot using UITheme
             slot.bg.clear();
-            slot.bg.fillStyle(0x2a2a2a);
-            slot.bg.fillRoundedRect(slot.x, slot.y, this.slotSize, this.slotSize, 3);
-            slot.bg.lineStyle(2, 0x4a90e2);
-            slot.bg.strokeRoundedRect(slot.x, slot.y, this.slotSize, this.slotSize, 3);
+            slot.bg.fillStyle(UITheme.colors.darkSecondary);
+            slot.bg.fillRoundedRect(slot.x, slot.y, this.slotSize, this.slotSize, UITheme.borders.radius.small);
+            slot.bg.lineStyle(UITheme.borders.width.medium, UITheme.colors.primary);
+            slot.bg.strokeRoundedRect(slot.x, slot.y, this.slotSize, this.slotSize, UITheme.borders.radius.small);
         }
     }
 
@@ -651,12 +803,12 @@ export class InventoryUI {
         const slot = this.itemSlots[index];
         this.hideTooltip();
         
-        // Reset slot appearance
+        // Reset slot appearance using UITheme
         slot.bg.clear();
-        slot.bg.fillStyle(0x1a1a1a);
-        slot.bg.fillRoundedRect(slot.x, slot.y, this.slotSize, this.slotSize, 3);
-        slot.bg.lineStyle(1, 0x3a3a3a);
-        slot.bg.strokeRoundedRect(slot.x, slot.y, this.slotSize, this.slotSize, 3);
+        slot.bg.fillStyle(UITheme.colors.darkPrimary);
+        slot.bg.fillRoundedRect(slot.x, slot.y, this.slotSize, this.slotSize, UITheme.borders.radius.small);
+        slot.bg.lineStyle(UITheme.borders.width.thin, UITheme.colors.medium);
+        slot.bg.strokeRoundedRect(slot.x, slot.y, this.slotSize, this.slotSize, UITheme.borders.radius.small);
     }
 
     onSlotClick(index) {
@@ -668,12 +820,12 @@ export class InventoryUI {
             this.selectedItem = slot.item;
             console.log(`InventoryUI: Selected item: ${slot.item.name}`);
             
-            // Add visual feedback for selected item
+            // Add visual feedback for selected item using UITheme
             slot.bg.clear();
-            slot.bg.fillStyle(0x2a2a2a);
-            slot.bg.fillRoundedRect(slot.x, slot.y, this.slotSize, this.slotSize, 3);
-            slot.bg.lineStyle(3, 0xffff00); // Yellow border for selection
-            slot.bg.strokeRoundedRect(slot.x, slot.y, this.slotSize, this.slotSize, 3);
+            slot.bg.fillStyle(UITheme.colors.darkSecondary);
+            slot.bg.fillRoundedRect(slot.x, slot.y, this.slotSize, this.slotSize, UITheme.borders.radius.small);
+            slot.bg.lineStyle(UITheme.borders.width.thick, UITheme.colors.gold); // Gold border for selection
+            slot.bg.strokeRoundedRect(slot.x, slot.y, this.slotSize, this.slotSize, UITheme.borders.radius.small);
             
             // Show item actions menu
             this.showItemActions(slot.item, slot.x + this.slotSize/2, slot.y + this.slotSize/2);
@@ -683,17 +835,359 @@ export class InventoryUI {
     }
 
     onEquipmentSlotClick(slotType) {
-        // Switch to appropriate category and highlight equipped item
+        console.log('InventoryUI: Equipment slot clicked:', slotType);
+        
+        // Play sound
+        this.audioManager?.playSFX('button');
+        
+        // Get the category for this slot type
         const categoryMap = {
             'rod': 'rods',
             'lure': 'lures', 
-            'bait': 'bait',
-            'boat': 'boats'
+            'boat': 'boats',
+            'head': 'clothing',
+            'upper_body': 'clothing',
+            'lower_body': 'clothing',
+            'bikini_assistant': 'bikini_assistants'
         };
         
-        if (categoryMap[slotType]) {
-            this.switchCategory(categoryMap[slotType]);
+        const category = categoryMap[slotType];
+        if (!category) {
+            console.error('InventoryUI: Invalid slot type:', slotType);
+            return;
         }
+        
+        // Get currently equipped item for this slot
+        const equipped = this.inventoryManager.getEquippedItems(category);
+        
+        let currentItem = null;
+        if (equipped && equipped.length > 0) {
+            if (category === 'clothing') {
+                // For clothing, find by slotType
+                currentItem = equipped.find(item => item.slotType === slotType);
+            } else {
+                // For other categories, take the first equipped item
+                currentItem = equipped[0];
+            }
+        }
+        
+        console.log('InventoryUI: Currently equipped in', slotType, ':', currentItem?.name || 'none');
+        
+        // Get all available items for this category
+        const availableItems = this.gameState.inventory[category] || [];
+        
+        // For clothing, filter by slotType
+        let filteredItems;
+        if (category === 'clothing') {
+            filteredItems = availableItems.filter(item => item.slotType === slotType);
+        } else {
+            filteredItems = availableItems;
+        }
+        
+        console.log('InventoryUI: Available items for', category, ':', filteredItems.length);
+        
+        if (filteredItems.length === 0) {
+            this.showMessage(`No ${category} available to equip for ${slotType}`, '#ffaa00');
+            return;
+        }
+        
+        // Show equipment selection menu
+        this.showEquipmentSelectionMenu(slotType, category, currentItem, filteredItems);
+    }
+
+    showEquipmentSelectionMenu(slotType, category, currentItem, availableItems) {
+        console.log('InventoryUI: Showing equipment selection menu for', slotType);
+        console.log('InventoryUI: Available items:', availableItems.length, availableItems.map(item => item.name));
+        
+        // Temporarily disable inventory click blockers to prevent interference
+        if (this.clickBlocker) this.clickBlocker.setInteractive(false);
+        if (this.backgroundBlocker) this.backgroundBlocker.setInteractive(false);
+        
+        // Add sample items if there aren't enough to test with
+        if (availableItems.length <= 1 && category === 'rods') {
+            console.log('InventoryUI: Adding sample rods for testing');
+            this.inventoryManager.addSampleItems();
+            // Refresh available items
+            const allItems = this.gameState.inventory[category] || [];
+            if (category === 'clothing') {
+                availableItems = allItems.filter(item => item.slotType === slotType);
+            } else {
+                availableItems = allItems;
+            }
+            console.log('InventoryUI: After adding samples, available items:', availableItems.length);
+        }
+        
+        if (availableItems.length === 0) {
+            this.showMessage(`No ${category} available to equip for ${slotType}`, '#ffaa00');
+            // Re-enable click blockers
+            if (this.clickBlocker) this.clickBlocker.setInteractive(true);
+            if (this.backgroundBlocker) this.backgroundBlocker.setInteractive(true);
+            return;
+        }
+        
+        // Helper function to clean up and re-enable blockers
+        const cleanup = () => {
+            if (this.clickBlocker) this.clickBlocker.setInteractive(true);
+            if (this.backgroundBlocker) this.backgroundBlocker.setInteractive(true);
+        };
+        
+        // Create backdrop first at lower depth to catch outside clicks
+        const backdrop = this.scene.add.rectangle(
+            this.scene.sys.game.config.width / 2, 
+            this.scene.sys.game.config.height / 2, 
+            this.scene.sys.game.config.width, 
+            this.scene.sys.game.config.height,
+            0x000000,
+            0.5
+        ).setInteractive()
+        .setDepth(14900); // Much lower depth
+        
+        // Create selection menu container at very high depth
+        const menuWidth = 320;
+        const menuHeight = Math.min(450, 120 + availableItems.length * 45 + (currentItem ? 45 : 0));
+        const menuX = this.scene.sys.game.config.width / 2;
+        const menuY = this.scene.sys.game.config.height / 2;
+        
+        const selectionMenu = this.scene.add.container(menuX, menuY);
+        selectionMenu.setDepth(16000); // Very high depth to ensure it's on top
+        
+        // Menu background with stronger visual
+        const menuBg = this.scene.add.graphics();
+        menuBg.fillStyle(0x1a1a1a, 0.98); // More opaque
+        menuBg.fillRoundedRect(-menuWidth/2, -menuHeight/2, menuWidth, menuHeight, 12);
+        menuBg.lineStyle(4, 0x4a90e2, 1); // Thicker border
+        menuBg.strokeRoundedRect(-menuWidth/2, -menuHeight/2, menuWidth, menuHeight, 12);
+        
+        // Add shadow effect
+        const shadowBg = this.scene.add.graphics();
+        shadowBg.fillStyle(0x000000, 0.6);
+        shadowBg.fillRoundedRect(-menuWidth/2 + 4, -menuHeight/2 + 4, menuWidth, menuHeight, 12);
+        
+        // Menu title with better visibility
+        const title = this.scene.add.text(0, -menuHeight/2 + 25, `SELECT ${slotType.toUpperCase()}`, {
+            fontSize: '18px',
+            fontFamily: 'Arial',
+            color: '#ffffff',
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5);
+        
+        selectionMenu.add([shadowBg, menuBg, title]);
+        
+        let yOffset = -menuHeight/2 + 70;
+        
+        // Add "None" option to unequip
+        if (currentItem) {
+            const unequipOption = this.createEquipmentOption(
+                0, yOffset, 
+                null, 
+                false, // Not currently equipped (this is the unequip option)
+                () => {
+                    console.log('InventoryUI: Unequipping', currentItem.name);
+                    this.inventoryManager.unequipItem(category, currentItem.id);
+                    selectionMenu.destroy();
+                    backdrop.destroy();
+                    cleanup();
+                    this.updateEquipmentSlots();
+                    this.refreshItems();
+                    this.showMessage(`Unequipped ${currentItem.name}`, '#00ff00');
+                }
+            );
+            selectionMenu.add(unequipOption);
+            yOffset += 45;
+        }
+        
+        // Add available items
+        availableItems.forEach((item, index) => {
+            const isCurrentlyEquipped = currentItem && currentItem.id === item.id;
+            
+            if (yOffset > menuHeight/2 - 50) return; // Skip if outside menu bounds
+            
+            const itemOption = this.createEquipmentOption(
+                0, yOffset,
+                item,
+                isCurrentlyEquipped,
+                () => {
+                    if (!isCurrentlyEquipped) {
+                        console.log('InventoryUI: Equipping', item.name);
+                        const success = this.inventoryManager.equipItem(category, item.id);
+                        if (success) {
+                            selectionMenu.destroy();
+                            backdrop.destroy();
+                            cleanup();
+                            this.updateEquipmentSlots();
+                            this.refreshItems();
+                            this.showMessage(`Equipped ${item.name}`, '#00ff00');
+                        } else {
+                            this.showMessage(`Failed to equip ${item.name}`, '#ff6666');
+                        }
+                    } else {
+                        this.showMessage(`${item.name} is already equipped`, '#ffaa00');
+                    }
+                }
+            );
+            selectionMenu.add(itemOption);
+            yOffset += 45;
+        });
+        
+        // Close button with better positioning
+        const closeButton = this.scene.add.text(menuWidth/2 - 25, -menuHeight/2 + 25, '×', {
+            fontSize: '24px',
+            fontFamily: 'Arial',
+            color: '#ff6666',
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5).setInteractive();
+        
+        closeButton.on('pointerdown', () => {
+            console.log('InventoryUI: Closing equipment selection menu via close button');
+            selectionMenu.destroy();
+            backdrop.destroy();
+            cleanup();
+        });
+        
+        closeButton.on('pointerover', () => {
+            closeButton.setColor('#ff9999');
+            closeButton.setScale(1.1);
+        });
+        closeButton.on('pointerout', () => {
+            closeButton.setColor('#ff6666');
+            closeButton.setScale(1.0);
+        });
+        
+        selectionMenu.add(closeButton);
+        
+        // Backdrop click to close
+        backdrop.on('pointerdown', () => {
+            console.log('InventoryUI: Clicked outside equipment menu, closing');
+            selectionMenu.destroy();
+            backdrop.destroy();
+            cleanup();
+        });
+        
+        console.log('InventoryUI: Equipment selection menu created at depth', selectionMenu.depth);
+        console.log('InventoryUI: Backdrop created at depth', backdrop.depth);
+        console.log('InventoryUI: Menu items:', availableItems.length, 'Unequip option:', !!currentItem);
+        console.log('InventoryUI: Click blockers disabled during equipment selection');
+    }
+
+    createEquipmentOption(x, y, item, isCurrentlyEquipped, onClickCallback) {
+        const optionContainer = this.scene.add.container(x, y);
+        
+        // Option background
+        const bgColor = isCurrentlyEquipped ? 0x2a5a2a : 0x2a2a2a;
+        const borderColor = isCurrentlyEquipped ? 0x00ff00 : 0x666666;
+        
+        const optionBg = this.scene.add.graphics();
+        optionBg.fillStyle(bgColor);
+        optionBg.fillRoundedRect(-150, -18, 300, 36, 8);
+        optionBg.lineStyle(2, borderColor);
+        optionBg.strokeRoundedRect(-150, -18, 300, 36, 8);
+        
+        // Option text
+        const displayText = item ? item.name : '[Unequip]';
+        const textColor = isCurrentlyEquipped ? '#00ff00' : '#ffffff';
+        const statusText = isCurrentlyEquipped ? ' (equipped)' : '';
+        
+        const optionText = this.scene.add.text(0, -5, displayText + statusText, {
+            fontSize: '14px',
+            fontFamily: 'Arial',
+            color: textColor,
+            fontStyle: isCurrentlyEquipped ? 'bold' : 'normal',
+            stroke: '#000000',
+            strokeThickness: 1
+        }).setOrigin(0.5);
+        
+        // Interactive area - make it larger and ensure it's on top
+        const interactiveArea = this.scene.add.rectangle(0, 0, 300, 36)
+            .setInteractive()
+            .setAlpha(0.01) // Very slightly visible for debugging
+            .setDepth(1); // High local depth within container
+        
+        console.log('InventoryUI: Creating equipment option:', displayText, 'at y:', y);
+        
+        // Store original style for reset
+        const originalBgColor = bgColor;
+        const originalBorderColor = borderColor;
+        const originalTextColor = textColor;
+        
+        // Hover effects with stronger visual feedback
+        interactiveArea.on('pointerover', () => {
+            console.log('InventoryUI: Equipment option hover:', displayText);
+            // Change background to bright blue for better visibility
+            optionBg.clear();
+            optionBg.fillStyle(isCurrentlyEquipped ? 0x3a7a3a : 0x4a90e2);
+            optionBg.fillRoundedRect(-150, -18, 300, 36, 8);
+            optionBg.lineStyle(3, 0x6bb6ff);
+            optionBg.strokeRoundedRect(-150, -18, 300, 36, 8);
+            
+            // Make text brighter
+            optionText.setColor('#ffffff');
+            optionText.setScale(1.05);
+            
+            // Make interactive area slightly visible to confirm hover
+            interactiveArea.setAlpha(0.05);
+        });
+        
+        interactiveArea.on('pointerout', () => {
+            console.log('InventoryUI: Equipment option hover out:', displayText);
+            // Reset to original style
+            optionBg.clear();
+            optionBg.fillStyle(originalBgColor);
+            optionBg.fillRoundedRect(-150, -18, 300, 36, 8);
+            optionBg.lineStyle(2, originalBorderColor);
+            optionBg.strokeRoundedRect(-150, -18, 300, 36, 8);
+            
+            // Reset text
+            optionText.setColor(originalTextColor);
+            optionText.setScale(1.0);
+            
+            // Reset interactive area alpha
+            interactiveArea.setAlpha(0.01);
+        });
+        
+        interactiveArea.on('pointerdown', () => {
+            console.log('InventoryUI: Equipment option clicked:', displayText);
+            
+            // Visual click feedback
+            optionBg.clear();
+            optionBg.fillStyle(0x6bb6ff);
+            optionBg.fillRoundedRect(-150, -18, 300, 36, 8);
+            optionBg.lineStyle(3, 0xffffff);
+            optionBg.strokeRoundedRect(-150, -18, 300, 36, 8);
+            
+            this.audioManager?.playSFX('button');
+            
+            // Slight delay for visual feedback then execute callback
+            this.scene.time.delayedCall(100, () => {
+                onClickCallback();
+            });
+        });
+        
+        // Add elements in correct order (background first, then text, then interactive area on top)
+        optionContainer.add([optionBg, optionText, interactiveArea]);
+        
+        // Add item stats if available
+        if (item && item.stats) {
+            const statsText = Object.entries(item.stats)
+                .map(([stat, value]) => `${stat}: +${value}`)
+                .slice(0, 3) // Limit to 3 stats to avoid clutter
+                .join(', ');
+            
+            const itemStats = this.scene.add.text(0, 15, statsText, {
+                fontSize: '10px',
+                fontFamily: 'Arial',
+                color: '#cccccc',
+                stroke: '#000000',
+                strokeThickness: 1
+            }).setOrigin(0.5);
+            
+            optionContainer.add(itemStats);
+        }
+        
+        return optionContainer;
     }
 
     // UI Management
@@ -702,6 +1196,16 @@ export class InventoryUI {
         console.log('InventoryUI: Container position:', this.container.x, this.container.y);
         console.log('InventoryUI: Container visible:', this.container.visible);
         console.log('InventoryUI: Current inventory state:', this.gameState.inventory);
+        
+        // Add sample items if inventory is empty for testing
+        const rodsCount = (this.gameState.inventory.rods || []).length;
+        const luresCount = (this.gameState.inventory.lures || []).length;
+        console.log('InventoryUI: Current item counts - Rods:', rodsCount, 'Lures:', luresCount);
+        
+        if (rodsCount <= 1 || luresCount <= 1) {
+            console.log('InventoryUI: Adding sample items for testing equipment switching');
+            this.inventoryManager.addSampleItems();
+        }
         
         // Debug: Check all display objects and their depths
         console.log('InventoryUI: Checking scene display objects...');
@@ -732,9 +1236,23 @@ export class InventoryUI {
             }
         });
         
+        // Show equipment slot areas
+        if (this.equipmentSlots) {
+            Object.values(this.equipmentSlots).forEach(slot => {
+                if (slot.workingArea) {
+                    slot.workingArea.setVisible(true);
+                }
+            });
+        }
+        
         // Show crafting button area
         if (this.craftingButtonArea) {
             this.craftingButtonArea.setVisible(true);
+        }
+        
+        // Show equipment button area
+        if (this.equipmentButtonArea) {
+            this.equipmentButtonArea.setVisible(true);
         }
         
         // Force refresh all categories to see what's available
@@ -754,28 +1272,72 @@ export class InventoryUI {
     }
 
     hide() {
-        this.isVisible = false;
-        this.clickBlocker.setVisible(false);
-        this.backgroundBlocker.setVisible(false);
-        this.container.setVisible(false);
-        this.hideTooltip();
+        console.log('InventoryUI: Hiding inventory UI');
         
-        // Hide working areas
-        Object.values(this.categoryTabs).forEach(tab => {
-            if (tab.workingArea) {
-                tab.workingArea.setVisible(false);
+        // Prevent double-hiding or hiding already destroyed UI
+        if (!this.isVisible || this.isDestroyed) {
+            console.log('InventoryUI: Already hidden or destroyed, skipping hide');
+            return;
+        }
+        
+        try {
+            this.isVisible = false;
+            
+            // Hide main UI elements with null checks
+            if (this.clickBlocker && !this.clickBlocker.destroyed) {
+                this.clickBlocker.setVisible(false);
             }
-        });
-        
-        this.itemSlots.forEach(slot => {
-            if (slot.workingArea) {
-                slot.workingArea.setVisible(false);
+            
+            if (this.backgroundBlocker && !this.backgroundBlocker.destroyed) {
+                this.backgroundBlocker.setVisible(false);
             }
-        });
-        
-        // Hide crafting button area
-        if (this.craftingButtonArea) {
-            this.craftingButtonArea.setVisible(false);
+            
+            if (this.container && !this.container.destroyed) {
+                this.container.setVisible(false);
+            }
+            
+            // Hide tooltip safely
+            this.hideTooltip();
+            
+            // Hide working areas with null checks
+            if (this.categoryTabs) {
+                Object.values(this.categoryTabs).forEach(tab => {
+                    if (tab && tab.workingArea && !tab.workingArea.destroyed) {
+                        tab.workingArea.setVisible(false);
+                    }
+                });
+            }
+            
+            if (this.itemSlots) {
+                this.itemSlots.forEach(slot => {
+                    if (slot && slot.workingArea && !slot.workingArea.destroyed) {
+                        slot.workingArea.setVisible(false);
+                    }
+                });
+            }
+            
+            // Hide equipment slot areas with null checks
+            if (this.equipmentSlots) {
+                Object.values(this.equipmentSlots).forEach(slot => {
+                    if (slot && slot.workingArea && !slot.workingArea.destroyed) {
+                        slot.workingArea.setVisible(false);
+                    }
+                });
+            }
+            
+            // Hide button areas with null checks
+            if (this.craftingButtonArea && !this.craftingButtonArea.destroyed) {
+                this.craftingButtonArea.setVisible(false);
+            }
+            
+            if (this.equipmentButtonArea && !this.equipmentButtonArea.destroyed) {
+                this.equipmentButtonArea.setVisible(false);
+            }
+            
+            console.log('InventoryUI: Inventory UI hidden successfully');
+            
+        } catch (error) {
+            console.error('InventoryUI: Error hiding inventory UI:', error);
         }
     }
 
@@ -1015,17 +1577,9 @@ export class InventoryUI {
         
         slot.item = item;
 
-        // Create item sprite (placeholder colored rectangle for now)
+        // Create item sprite (placeholder colored rectangle for now) - FIXED
         let rarity = item.rarity || 1; // Default to rarity 1 if undefined
-        let rarityColor = '#8C7853'; // Default color
-        
-        try {
-            if (this.inventoryManager && this.inventoryManager.validator) {
-                rarityColor = this.inventoryManager.validator.getRarityColor(rarity);
-            }
-        } catch (error) {
-            console.log('InventoryUI: Error getting rarity color, using default:', error);
-        }
+        let rarityColor = UITheme.getRarityColor(rarity); // Use UITheme instead of validator
         
         console.log('InventoryUI: Item rarity color:', rarityColor, 'for rarity:', rarity);
         
@@ -1033,17 +1587,8 @@ export class InventoryUI {
         try {
             slot.itemSprite = this.scene.add.graphics();
             
-            // Convert color string to hex number
-            let colorHex = 0x8C7853; // Default
-            try {
-                if (rarityColor.startsWith('#')) {
-                    colorHex = parseInt(rarityColor.replace('#', '0x'));
-                } else if (rarityColor.startsWith('0x')) {
-                    colorHex = parseInt(rarityColor);
-                }
-            } catch (error) {
-                console.log('InventoryUI: Error parsing color, using default');
-            }
+            // Color is already a hex number from UITheme.getRarityColor()
+            let colorHex = rarityColor; // No conversion needed
             
             slot.itemSprite.fillStyle(colorHex);
             slot.itemSprite.fillRoundedRect(
@@ -1147,35 +1692,46 @@ export class InventoryUI {
             const categoryMap = {
                 'rod': 'rods',
                 'lure': 'lures',
-                'bait': 'bait', 
-                'boat': 'boats'
+                'boat': 'boats',
+                'head': 'clothing',
+                'upper_body': 'clothing', 
+                'lower_body': 'clothing',
+                'bikini_assistant': 'bikini_assistants'
             };
             
             const category = categoryMap[slotType];
             if (category && equipped[category] && equipped[category].length > 0) {
-                const item = equipped[category][0];
+                // For clothing, find the specific slot type
+                let item;
+                if (category === 'clothing') {
+                    item = equipped[category].find(equippedItem => equippedItem.slotType === slotType);
+                } else {
+                    item = equipped[category][0];
+                }
                 
-                // Create item display
+                if (item) {
+                // Create item display - FIXED to use UITheme
                 const rarity = item.rarity || 1; // Default to rarity 1 if undefined
-                const rarityColor = this.inventoryManager.validator.getRarityColor(rarity);
+                const rarityColor = UITheme.getRarityColor(rarity); // Use UITheme
                 slot.itemSprite = this.scene.add.graphics();
-                slot.itemSprite.fillStyle(parseInt(rarityColor.replace('#', '0x')));
+                slot.itemSprite.fillStyle(rarityColor); // Color is already a hex number
                 slot.itemSprite.fillRoundedRect(
                     slot.x + 5, slot.y + 5, 
-                    50, 50, 
+                        slot.slotSize - 10, slot.slotSize - 10, 
                     3
                 );
 
                 const itemText = this.scene.add.text(
-                    slot.x + 30, slot.y + 30, 
+                        slot.x + slot.slotSize/2, slot.y + slot.slotSize/2, 
                     item.name.substring(0, 2).toUpperCase(), {
-                    fontSize: '12px',
+                        fontSize: '10px',
                     fontFamily: 'Arial',
                     color: '#ffffff',
                     fontStyle: 'bold'
                 }).setOrigin(0.5);
 
                 this.container.add([slot.itemSprite, itemText]);
+                }
             }
         });
     }
@@ -1216,11 +1772,11 @@ export class InventoryUI {
 
     showTooltip(item, x, y) {
         const rarity = item.rarity || 1; // Default to rarity 1 if undefined
-        const rarityName = this.inventoryManager.validator.getRarityName(rarity);
-        const rarityColor = this.inventoryManager.validator.getRarityColor(rarity);
+        // Use UITheme for consistency - FIXED
+        const rarityColorHex = UITheme.getRarityColorHex(rarity); // Get hex string version
         
         let tooltipText = `${item.name}\n`;
-        tooltipText += `${rarityName} ${item.type || ''}\n`;
+        tooltipText += `Rarity ${rarity} ${item.type || ''}\n`;
         tooltipText += `${item.description}\n`;
         
         if (item.stats) {
@@ -1240,7 +1796,7 @@ export class InventoryUI {
         }
 
         this.tooltipText.setText(tooltipText);
-        this.tooltipText.setColor(rarityColor);
+        this.tooltipText.setColor(rarityColorHex); // Use hex string for text color
         
         // Position tooltip
         this.tooltip.setPosition(x + 10, y - 50);
@@ -1248,132 +1804,562 @@ export class InventoryUI {
     }
 
     hideTooltip() {
-        this.tooltip.setVisible(false);
+        try {
+            if (this.tooltip && !this.tooltip.destroyed) {
+                this.tooltip.setVisible(false);
+            }
+        } catch (error) {
+            console.error('InventoryUI: Error hiding tooltip:', error);
+        }
     }
 
     showItemActions(item, x, y) {
         // Create context menu for item actions
-        console.log('InventoryUI: Showing item actions for:', item.name);
+        console.log('InventoryUI: Showing item actions for:', item.name, 'Category:', this.currentCategory);
         
-        // Create a simple popup showing item info
+        // Determine if this is a consumable
+        const isConsumable = this.currentCategory === 'consumables' && item.effect;
+        
+        // Create a more comprehensive action popup
         const actionPopup = this.scene.add.container(x, y);
         actionPopup.setDepth(11000); // Above inventory
         
+        // Calculate popup size based on content
+        const popupWidth = isConsumable ? 180 : 120;
+        const popupHeight = isConsumable ? 120 : 80;
+        
         // Popup background
         const popupBg = this.scene.add.graphics();
-        popupBg.fillStyle(0x000000, 0.9);
-        popupBg.fillRoundedRect(-60, -40, 120, 80, 5);
-        popupBg.lineStyle(2, 0xffffff);
-        popupBg.strokeRoundedRect(-60, -40, 120, 80, 5);
+        popupBg.fillStyle(0x000000, 0.95);
+        popupBg.fillRoundedRect(-popupWidth/2, -popupHeight/2, popupWidth, popupHeight, 8);
+        popupBg.lineStyle(2, 0x4a90e2);
+        popupBg.strokeRoundedRect(-popupWidth/2, -popupHeight/2, popupWidth, popupHeight, 8);
         
         // Item name
-        const itemName = this.scene.add.text(0, -20, item.name, {
-            fontSize: '12px',
+        const itemName = this.scene.add.text(0, -popupHeight/2 + 15, item.name, {
+            fontSize: '14px',
             fontFamily: 'Arial',
             color: '#ffffff',
             fontStyle: 'bold'
         }).setOrigin(0.5);
         
         // Item info
-        const itemInfo = this.scene.add.text(0, 0, `Value: ${item.value || 0}`, {
+        let infoText = `Rarity: ${item.rarity || 1}`;
+        if (item.quantity && item.quantity > 1) {
+            infoText += `\nQuantity: ${item.quantity}`;
+        }
+        if (item.effect) {
+            infoText += `\nEffect: ${item.effect.type}`;
+        }
+        
+        const itemInfo = this.scene.add.text(0, -popupHeight/2 + 40, infoText, {
             fontSize: '10px',
             fontFamily: 'Arial',
-            color: '#cccccc'
+            color: '#cccccc',
+            align: 'center'
         }).setOrigin(0.5);
         
+        actionPopup.add([popupBg, itemName, itemInfo]);
+        
+        // Add USE button for consumables
+        if (isConsumable) {
+            console.log('InventoryUI: Adding USE button for consumable:', item.name);
+            
+            // Use button background
+            const useButtonBg = this.scene.add.graphics();
+            useButtonBg.fillStyle(0x27ae60, 0.9); // Green for use button
+            useButtonBg.fillRoundedRect(-60, 15, 120, 25, 5);
+            useButtonBg.lineStyle(2, 0x2ecc71);
+            useButtonBg.strokeRoundedRect(-60, 15, 120, 25, 5);
+            
+            // Use button text
+            const useButtonText = this.scene.add.text(0, 27, 'USE', {
+                fontSize: '12px',
+                fontFamily: 'Arial',
+                color: '#ffffff',
+                fontStyle: 'bold'
+            }).setOrigin(0.5);
+            
+            // Interactive area for use button (inside popup)
+            const useButtonArea = this.scene.add.rectangle(0, 27, 120, 25)
+                .setInteractive()
+                .setAlpha(0);
+            
+            // Create working interactive area outside container at absolute position
+            const absoluteX = x; // x is already the absolute position from showItemActions call
+            const absoluteY = y + 27; // y position + button offset
+            
+            const workingUseButton = this.scene.add.rectangle(
+                absoluteX,
+                absoluteY,
+                120,
+                25
+            ).setInteractive()
+            .setAlpha(0.01) // Barely visible but functional
+            .setFillStyle(0x27ae60) // Green fill for functionality  
+            .setDepth(11001); // Above the popup
+            
+            console.log(`InventoryUI: Creating working USE button at absolute position: x=${absoluteX}, y=${absoluteY}`);
+            
+            // Use button effects for both areas
+            const onHover = () => {
+                useButtonBg.clear();
+                useButtonBg.fillStyle(0x2ecc71, 1); // Brighter green on hover
+                useButtonBg.fillRoundedRect(-60, 15, 120, 25, 5);
+                useButtonBg.lineStyle(2, 0x27ae60);
+                useButtonBg.strokeRoundedRect(-60, 15, 120, 25, 5);
+                useButtonText.setScale(1.05);
+                workingUseButton.setAlpha(0.05); // Slightly more visible on hover
+            };
+            
+            const onOut = () => {
+                useButtonBg.clear();
+                useButtonBg.fillStyle(0x27ae60, 0.9);
+                useButtonBg.fillRoundedRect(-60, 15, 120, 25, 5);
+                useButtonBg.lineStyle(2, 0x2ecc71);
+                useButtonBg.strokeRoundedRect(-60, 15, 120, 25, 5);
+                useButtonText.setScale(1.0);
+                workingUseButton.setAlpha(0.01); // Back to barely visible
+            };
+            
+            const onClick = () => {
+                console.log('InventoryUI: USE button clicked for:', item.name);
+                this.audioManager?.playSFX('button');
+                
+                // Visual feedback
+                useButtonBg.clear();
+                useButtonBg.fillStyle(0x1e8449, 1); // Darker green when clicked
+                useButtonBg.fillRoundedRect(-60, 15, 120, 25, 5);
+                useButtonBg.lineStyle(2, 0x239b56);
+                useButtonBg.strokeRoundedRect(-60, 15, 120, 25, 5);
+                
+                // Use the consumable
+                this.useConsumable(item);
+                
+                // Clean up the working button
+                if (workingUseButton && workingUseButton.active) {
+                    workingUseButton.destroy();
+                }
+                
+                // Close the popup after a brief delay
+                this.scene.time.delayedCall(200, () => {
+                    if (actionPopup && actionPopup.active) {
+                        actionPopup.destroy();
+                    }
+                });
+            };
+            
+            // Apply events to both areas
+            useButtonArea.on('pointerover', onHover);
+            useButtonArea.on('pointerout', onOut);
+            useButtonArea.on('pointerdown', onClick);
+            
+            workingUseButton.on('pointerover', onHover);
+            workingUseButton.on('pointerout', onOut);
+            workingUseButton.on('pointerdown', onClick);
+            
+            actionPopup.add([useButtonBg, useButtonText, useButtonArea]);
+            
+            // Store working button reference for cleanup
+            actionPopup.workingUseButton = workingUseButton;
+        }
+        
         // Close instruction
-        const closeText = this.scene.add.text(0, 20, 'Click anywhere to close', {
+        const closeText = this.scene.add.text(0, popupHeight/2 - 10, 'Click anywhere else to close', {
             fontSize: '8px',
             fontFamily: 'Arial',
             color: '#888888'
         }).setOrigin(0.5);
         
-        actionPopup.add([popupBg, itemName, itemInfo, closeText]);
+        actionPopup.add(closeText);
         
-        // Make popup interactive to close it
-        const popupArea = this.scene.add.rectangle(0, 0, 120, 80)
-            .setInteractive()
-            .setAlpha(0);
+        // Make popup interactive to close it when clicking outside
+        const outsideClickArea = this.scene.add.rectangle(
+            this.scene.sys.game.config.width / 2, 
+            this.scene.sys.game.config.height / 2, 
+            this.scene.sys.game.config.width, 
+            this.scene.sys.game.config.height
+        ).setInteractive()
+        .setAlpha(0)
+        .setDepth(10999); // Just below the popup
         
-        popupArea.on('pointerdown', () => {
-            console.log('InventoryUI: Closing item actions popup');
-            actionPopup.destroy();
+        outsideClickArea.on('pointerdown', () => {
+            console.log('InventoryUI: Closing item actions popup (outside click)');
+            
+            // Clean up working USE button if it exists
+            if (actionPopup.workingUseButton && actionPopup.workingUseButton.active) {
+                actionPopup.workingUseButton.destroy();
+            }
+            
+            if (actionPopup && actionPopup.active) actionPopup.destroy();
+            if (outsideClickArea && outsideClickArea.active) outsideClickArea.destroy();
         });
         
-        actionPopup.add(popupArea);
-        
-        // Auto-close after 3 seconds
-        this.scene.time.delayedCall(3000, () => {
-            if (actionPopup) actionPopup.destroy();
+        // Auto-close after 10 seconds
+        this.scene.time.delayedCall(10000, () => {
+            // Clean up working USE button if it exists
+            if (actionPopup && actionPopup.workingUseButton && actionPopup.workingUseButton.active) {
+                actionPopup.workingUseButton.destroy();
+            }
+            
+            if (actionPopup && actionPopup.active) actionPopup.destroy();
+            if (outsideClickArea && outsideClickArea.active) outsideClickArea.destroy();
         });
+    }
+
+    /**
+     * Use a consumable item
+     * @param {object} item - The consumable item to use
+     */
+    useConsumable(item) {
+        console.log('InventoryUI: Starting useConsumable method for:', item.name);
+        console.log('InventoryUI: Item details:', item);
+        console.log('InventoryUI: InventoryManager available:', !!this.inventoryManager);
+        
+        try {
+            // Validate that we have the inventory manager
+            if (!this.inventoryManager) {
+                console.error('InventoryUI: InventoryManager not available');
+                this.showMessage('❌ Inventory system not available', '#e74c3c');
+                return;
+            }
+
+            // Validate that the item has the required properties
+            if (!item.id) {
+                console.error('InventoryUI: Item missing ID property:', item);
+                this.showMessage('❌ Invalid item data', '#e74c3c');
+                return;
+            }
+
+            // Check if item has effect
+            if (!item.effect) {
+                console.error('InventoryUI: Item has no effect:', item);
+                this.showMessage('❌ Item has no usable effect', '#e74c3c');
+                return;
+            }
+
+            console.log('InventoryUI: Calling inventoryManager.useConsumable with ID:', item.id);
+            
+            // Use the consumable through inventory manager
+            const result = this.inventoryManager.useConsumable(item.id, 1);
+            
+            console.log('InventoryUI: UseConsumable result:', result);
+            
+            if (result.success) {
+                console.log('InventoryUI: Consumable used successfully:', result.message);
+                
+                // Show success message with effects
+                let message = result.message;
+                if (result.effects && result.effects.length > 0) {
+                    const effectMessages = result.effects.map(effect => effect.message).join('\n');
+                    message += `\n\n✨ Effects:\n${effectMessages}`;
+                }
+                
+                this.showMessage(message, '#27ae60'); // Green for success
+                
+                // Update inventory display
+                console.log('InventoryUI: Refreshing items after successful use');
+                this.refreshItems();
+                this.updateStats();
+                
+                // Show floating effect text
+                this.showFloatingEffects(result.effects);
+                
+            } else {
+                console.error('InventoryUI: Failed to use consumable:', result.message);
+                this.showMessage(`❌ ${result.message}`, '#e74c3c'); // Red for error
+            }
+            
+        } catch (error) {
+            console.error('InventoryUI: Error using consumable:', error);
+            console.error('InventoryUI: Error stack:', error.stack);
+            this.showMessage('❌ Error using item: ' + error.message, '#e74c3c');
+        }
+    }
+
+    /**
+     * Show floating effects when consumable is used
+     * @param {array} effects - Array of effect objects
+     */
+    showFloatingEffects(effects) {
+        if (!effects || effects.length === 0) return;
+        
+        try {
+            const centerX = this.width / 2;
+            const startY = this.height / 2 - 50;
+            
+            effects.forEach((effect, index) => {
+                // Create floating text for each effect
+                const effectText = this.scene.add.text(
+                    centerX,
+                    startY + (index * 30),
+                    `+${effect.message}`,
+                    {
+                        fontSize: '16px',
+                        fontFamily: 'Arial',
+                        color: this.getEffectColor(effect.type),
+                        fontStyle: 'bold',
+                        stroke: '#000000',
+                        strokeThickness: 2
+                    }
+                ).setOrigin(0.5);
+                
+                // Add to container so it appears above inventory
+                this.container.add(effectText);
+                
+                // Animate the floating text
+                this.scene.tweens.add({
+                    targets: effectText,
+                    y: effectText.y - 60,
+                    alpha: 0,
+                    scale: 1.2,
+                    duration: 2000,
+                    ease: 'Power2.easeOut',
+                    onComplete: () => {
+                        if (effectText && effectText.active) {
+                            effectText.destroy();
+                        }
+                    }
+                });
+            });
+            
+        } catch (error) {
+            console.error('InventoryUI: Error showing floating effects:', error);
+        }
+    }
+
+    /**
+     * Get color for effect type
+     * @param {string} effectType - Type of effect
+     * @returns {string} - Color hex code
+     */
+    getEffectColor(effectType) {
+        switch (effectType) {
+            case 'energy': return '#3498db'; // Blue
+            case 'health': return '#e74c3c'; // Red
+            case 'rareFishChance': return '#9b59b6'; // Purple
+            case 'experienceMultiplier': return '#f39c12'; // Orange
+            case 'luck': return '#2ecc71'; // Green
+            case 'repair': return '#95a5a6'; // Gray
+            case 'money': return '#f1c40f'; // Gold
+            default: return '#ffffff'; // White
+        }
     }
 
     setupEventListeners() {
-        // Listen for inventory changes
-        this.inventoryManager.on('itemAdded', () => {
-            if (this.isVisible) {
+        // Listen for inventory changes - store references for cleanup
+        this.itemAddedHandler = () => {
+            if (this.isVisible && !this.isDestroyed) {
                 this.refreshItems();
                 this.updateStats();
                 this.updateEquipmentSlots();
             }
-        });
+        };
 
-        this.inventoryManager.on('itemRemoved', () => {
-            if (this.isVisible) {
+        this.itemRemovedHandler = () => {
+            if (this.isVisible && !this.isDestroyed) {
                 this.refreshItems();
                 this.updateStats();
                 this.updateEquipmentSlots();
             }
-        });
+        };
 
-        this.inventoryManager.on('itemEquipped', () => {
-            if (this.isVisible) {
+        this.itemEquippedHandler = () => {
+            if (this.isVisible && !this.isDestroyed) {
                 this.refreshItems();
                 this.updateEquipmentSlots();
             }
-        });
+        };
 
-        this.inventoryManager.on('itemUnequipped', () => {
-            if (this.isVisible) {
+        this.itemUnequippedHandler = () => {
+            if (this.isVisible && !this.isDestroyed) {
                 this.refreshItems();
                 this.updateEquipmentSlots();
             }
-        });
+        };
+
+        // Consumable usage handlers
+        this.consumableUsedHandler = (data) => {
+            if (this.isVisible && !this.isDestroyed) {
+                console.log('InventoryUI: Consumable used event received:', data);
+                
+                // Show notification in HUD scene if available
+                const hudScene = this.scene.scene.get('HUDScene');
+                if (hudScene && hudScene.showNotification) {
+                    let message = `Used ${data.item.name}`;
+                    if (data.effects && data.effects.length > 0) {
+                        const effectSummary = data.effects.map(effect => effect.message).join(', ');
+                        message += `\n${effectSummary}`;
+                    }
+                    hudScene.showNotification(message, 'success');
+                }
+
+                // Refresh inventory to show updated quantities
+                this.refreshItems();
+                this.updateStats();
+            }
+        };
+
+        this.temporaryBoostAppliedHandler = (data) => {
+            console.log('InventoryUI: Temporary boost applied:', data);
+            
+            // Show boost notification in HUD
+            const hudScene = this.scene.scene.get('HUDScene');
+            if (hudScene && hudScene.showNotification) {
+                const minutes = Math.floor(data.duration / 60000);
+                const seconds = Math.floor((data.duration % 60000) / 1000);
+                const timeText = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+                
+                hudScene.showNotification(
+                    `🔮 Boost Applied!\n${data.boostType}: +${data.value} for ${timeText}`,
+                    'info'
+                );
+            }
+        };
+
+        this.temporaryBoostExpiredHandler = (data) => {
+            console.log('InventoryUI: Temporary boost expired:', data);
+            
+            // Show expiration notification
+            const hudScene = this.scene.scene.get('HUDScene');
+            if (hudScene && hudScene.showNotification) {
+                hudScene.showNotification(
+                    `⏰ Boost Expired: ${data.boostType}`,
+                    'warning'
+                );
+            }
+        };
+
+        // Add event listeners with error handling
+        try {
+            if (this.inventoryManager) {
+                this.inventoryManager.on('itemAdded', this.itemAddedHandler);
+                this.inventoryManager.on('itemRemoved', this.itemRemovedHandler);
+                this.inventoryManager.on('itemEquipped', this.itemEquippedHandler);
+                this.inventoryManager.on('itemUnequipped', this.itemUnequippedHandler);
+                this.inventoryManager.on('consumableUsed', this.consumableUsedHandler);
+                this.inventoryManager.on('temporaryBoostApplied', this.temporaryBoostAppliedHandler);
+                this.inventoryManager.on('temporaryBoostExpired', this.temporaryBoostExpiredHandler);
+                console.log('InventoryUI: Event listeners set up successfully');
+            } else {
+                console.warn('InventoryUI: InventoryManager not available, skipping event listeners');
+            }
+        } catch (error) {
+            console.error('InventoryUI: Error setting up event listeners:', error);
+        }
     }
 
     destroy() {
-        // Clean up working areas
-        Object.values(this.categoryTabs).forEach(tab => {
-            if (tab.workingArea) {
-                tab.workingArea.destroy();
+        console.log('InventoryUI: Starting destroy process');
+        
+        // Mark as destroyed to prevent operations during cleanup
+        this.isDestroyed = true;
+        
+        try {
+            // Remove event listeners first to prevent callbacks during cleanup
+            if (this.inventoryManager) {
+                this.inventoryManager.off('itemAdded', this.itemAddedHandler);
+                this.inventoryManager.off('itemRemoved', this.itemRemovedHandler);
+                this.inventoryManager.off('itemEquipped', this.itemEquippedHandler);
+                this.inventoryManager.off('itemUnequipped', this.itemUnequippedHandler);
+                this.inventoryManager.off('consumableUsed', this.consumableUsedHandler);
+                this.inventoryManager.off('temporaryBoostApplied', this.temporaryBoostAppliedHandler);
+                this.inventoryManager.off('temporaryBoostExpired', this.temporaryBoostExpiredHandler);
+                console.log('InventoryUI: Event listeners removed successfully');
             }
-        });
-        
-        this.itemSlots.forEach(slot => {
-            if (slot.workingArea) {
-                slot.workingArea.destroy();
+        } catch (error) {
+            console.error('InventoryUI: Error removing event listeners:', error);
+        }
+
+        try {
+            // Clean up working areas with null checks
+            if (this.categoryTabs) {
+                Object.values(this.categoryTabs).forEach(tab => {
+                    if (tab && tab.workingArea && !tab.workingArea.destroyed) {
+                        tab.workingArea.destroy();
+                    }
+                });
             }
+            
+            if (this.itemSlots) {
+                this.itemSlots.forEach(slot => {
+                    if (slot && slot.workingArea && !slot.workingArea.destroyed) {
+                        slot.workingArea.destroy();
+                    }
+                });
+            }
+            
+            // Clean up equipment slot areas with null checks
+            if (this.equipmentSlots) {
+                Object.values(this.equipmentSlots).forEach(slot => {
+                    if (slot && slot.workingArea && !slot.workingArea.destroyed) {
+                        slot.workingArea.destroy();
+                    }
+                });
+            }
+            
+            // Clean up button areas with null checks
+            if (this.craftingButtonArea && !this.craftingButtonArea.destroyed) {
+                this.craftingButtonArea.destroy();
+            }
+            
+            if (this.equipmentButtonArea && !this.equipmentButtonArea.destroyed) {
+                this.equipmentButtonArea.destroy();
+            }
+            
+            // Clean up blockers with null checks
+            if (this.clickBlocker && !this.clickBlocker.destroyed) {
+                this.clickBlocker.destroy();
+            }
+            
+            if (this.backgroundBlocker && !this.backgroundBlocker.destroyed) {
+                this.backgroundBlocker.destroy();
+            }
+            
+            // Clean up main UI elements with null checks
+            if (this.container && !this.container.destroyed) {
+                this.container.destroy();
+            }
+            
+            if (this.tooltip && !this.tooltip.destroyed) {
+                this.tooltip.destroy();
+            }
+            
+            console.log('InventoryUI: Cleanup completed successfully');
+            
+        } catch (error) {
+            console.error('InventoryUI: Error during cleanup:', error);
+        }
+        
+        // Clear references
+        this.container = null;
+        this.clickBlocker = null;
+        this.backgroundBlocker = null;
+        this.tooltip = null;
+        this.categoryTabs = {};
+        this.itemSlots = [];
+    }
+
+    showMessage(text, color = '#ffffff') {
+        // Create a temporary message
+        const message = this.scene.add.text(this.width / 2, 50, text, {
+            fontSize: '16px',
+            fontFamily: 'Arial',
+            color: color,
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5);
+        
+        this.container.add(message);
+        
+        // Fade out and remove after 3 seconds
+        this.scene.tweens.add({
+            targets: message,
+            alpha: 0,
+            duration: 3000,
+            onComplete: () => message.destroy()
         });
-        
-        // Clean up crafting button area
-        if (this.craftingButtonArea) {
-            this.craftingButtonArea.destroy();
-        }
-        
-        // Clean up blockers
-        if (this.clickBlocker) {
-            this.clickBlocker.destroy();
-        }
-        if (this.backgroundBlocker) {
-            this.backgroundBlocker.destroy();
-        }
-        
-        if (this.container) {
-            this.container.destroy();
-        }
-        if (this.tooltip) {
-            this.tooltip.destroy();
-        }
     }
 }
 

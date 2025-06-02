@@ -1,3 +1,5 @@
+import UITheme from './UITheme.js';
+
 export class CraftingUI {
     constructor(scene, x, y, width, height) {
         console.log('CraftingUI: Constructor called', { scene: scene.scene.key, x, y, width, height });
@@ -64,30 +66,19 @@ export class CraftingUI {
         });
         this.container.add(this.interactiveBackground);
 
-        // Background
-        this.background = this.scene.add.graphics();
-        this.background.fillStyle(0x2a2a2a, 0.95);
-        this.background.fillRoundedRect(0, 0, this.width, this.height, 10);
-        this.background.lineStyle(2, 0x4a4a4a);
-        this.background.strokeRoundedRect(0, 0, this.width, this.height, 10);
+        // Background using UITheme
+        this.background = UITheme.createPanel(this.scene, 0, 0, this.width, this.height, 'primary');
         this.container.add(this.background);
 
-        // Title
-        const title = this.scene.add.text(this.width / 2, 30, 'BOAT WORKSHOP', {
-            fontSize: '24px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
+        // Title using UITheme
+        const title = UITheme.createText(this.scene, this.width / 2, 30, 'BOAT WORKSHOP', 'headerLarge');
+        title.setOrigin(0.5);
         this.container.add(title);
 
-        // Close button
-        const closeButton = this.scene.add.text(this.width - 30, 30, '×', {
-            fontSize: '32px',
-            fontFamily: 'Arial',
-            color: '#ff6666',
-            fontStyle: 'bold'
-        }).setOrigin(0.5).setInteractive();
+        // Close button using UITheme
+        const closeButton = UITheme.createText(this.scene, this.width - 30, 30, '×', 'error');
+        closeButton.setOrigin(0.5).setInteractive();
+        closeButton.setFontSize('32px');
         
         closeButton.on('pointerdown', () => {
             this.audioManager?.playSFX('button');
@@ -127,21 +118,23 @@ export class CraftingUI {
             const x = startX + index * (tabWidth + 5);
             const y = startY;
 
-            // Tab background
+            // Tab background using UITheme
             const tabBg = this.scene.add.graphics();
             const isActive = category === this.currentCategory;
-            tabBg.fillStyle(isActive ? 0x4a90e2 : 0x3a3a3a);
-            tabBg.fillRoundedRect(x, y, tabWidth, tabHeight, 5);
-            tabBg.lineStyle(1, isActive ? 0x6bb6ff : 0x5a5a5a);
-            tabBg.strokeRoundedRect(x, y, tabWidth, tabHeight, 5);
+            const bgColor = isActive ? UITheme.colors.primary : UITheme.colors.darkSecondary;
+            const borderColor = isActive ? UITheme.colors.primaryLight : UITheme.colors.medium;
+            
+            tabBg.fillStyle(bgColor);
+            tabBg.fillRoundedRect(x, y, tabWidth, tabHeight, UITheme.borders.radius.small);
+            tabBg.lineStyle(UITheme.borders.width.thin, borderColor);
+            tabBg.strokeRoundedRect(x, y, tabWidth, tabHeight, UITheme.borders.radius.small);
 
-            // Tab text
-            const tabText = this.scene.add.text(x + tabWidth/2, y + tabHeight/2, 
-                category.charAt(0).toUpperCase() + category.slice(1), {
-                fontSize: '12px',
-                fontFamily: 'Arial',
-                color: isActive ? '#ffffff' : '#cccccc'
-            }).setOrigin(0.5);
+            // Tab text using UITheme
+            const textColor = isActive ? UITheme.colors.text : UITheme.colors.textSecondary;
+            const tabText = UITheme.createText(this.scene, x + tabWidth/2, y + tabHeight/2, 
+                category.charAt(0).toUpperCase() + category.slice(1), 'bodySmall');
+            tabText.setOrigin(0.5);
+            tabText.setColor(textColor);
 
             // Original interactive area (keep for reference but won't work)
             const tabArea = this.scene.add.rectangle(x + tabWidth/2, y + tabHeight/2, tabWidth, tabHeight)
@@ -171,10 +164,10 @@ export class CraftingUI {
                 workingTabArea.setAlpha(0.1); // More visible on hover
                 if (category !== this.currentCategory) {
                     tabBg.clear();
-                    tabBg.fillStyle(0x4a4a4a);
-                    tabBg.fillRoundedRect(x, y, tabWidth, tabHeight, 5);
-                    tabBg.lineStyle(1, 0x6a6a6a);
-                    tabBg.strokeRoundedRect(x, y, tabWidth, tabHeight, 5);
+                    tabBg.fillStyle(UITheme.colors.darkSecondary);
+                    tabBg.fillRoundedRect(x, y, tabWidth, tabHeight, UITheme.borders.radius.small);
+                    tabBg.lineStyle(UITheme.borders.width.thin, UITheme.colors.medium);
+                    tabBg.strokeRoundedRect(x, y, tabWidth, tabHeight, UITheme.borders.radius.small);
                 }
             });
             
@@ -182,10 +175,10 @@ export class CraftingUI {
                 workingTabArea.setAlpha(0.01); // Back to minimal
                 if (category !== this.currentCategory) {
                     tabBg.clear();
-                    tabBg.fillStyle(0x3a3a3a);
-                    tabBg.fillRoundedRect(x, y, tabWidth, tabHeight, 5);
-                    tabBg.lineStyle(1, 0x5a5a5a);
-                    tabBg.strokeRoundedRect(x, y, tabWidth, tabHeight, 5);
+                    tabBg.fillStyle(UITheme.colors.darkSecondary);
+                    tabBg.fillRoundedRect(x, y, tabWidth, tabHeight, UITheme.borders.radius.small);
+                    tabBg.lineStyle(UITheme.borders.width.thin, UITheme.colors.medium);
+                    tabBg.strokeRoundedRect(x, y, tabWidth, tabHeight, UITheme.borders.radius.small);
                 }
             });
 
@@ -198,58 +191,29 @@ export class CraftingUI {
 
     createBackToInventoryButton() {
         // Create back button in the top left area
-        const buttonX = 20;
+        const buttonX = 30;
         const buttonY = 30;
         const buttonWidth = 120;
         const buttonHeight = 30;
 
-        // Button background
-        this.backButtonBg = this.scene.add.graphics();
-        this.backButtonBg.fillStyle(0x4a90e2);
-        this.backButtonBg.fillRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
-        this.backButtonBg.lineStyle(2, 0x6bb6ff);
-        this.backButtonBg.strokeRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
-
-        // Button text
-        this.backButtonText = this.scene.add.text(buttonX + buttonWidth/2, buttonY, '← INVENTORY', {
-            fontSize: '14px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-
-        // Make button interactive
-        this.backButton = this.scene.add.rectangle(
+        // Use UITheme button creator
+        const backBtn = UITheme.createButton(
+            this.scene, 
             buttonX + buttonWidth/2, 
             buttonY, 
             buttonWidth, 
-            buttonHeight
-        ).setInteractive().setAlpha(0);
+            buttonHeight, 
+            '← INVENTORY', 
+            () => this.backToInventory(),
+            'secondary'
+        );
 
-        this.backButton.on('pointerdown', () => {
-            console.log('CraftingUI: Back to Inventory button clicked');
-            this.backToInventory();
-        });
+        this.backButtonBg = backBtn.button;
+        this.backButtonText = backBtn.text;
+        this.backButton = backBtn.button; // For reference
+        this.container.add([this.backButtonBg, this.backButtonText]);
 
-        this.backButton.on('pointerover', () => {
-            this.backButtonBg.clear();
-            this.backButtonBg.fillStyle(0x6bb6ff);
-            this.backButtonBg.fillRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
-            this.backButtonBg.lineStyle(2, 0x4a90e2);
-            this.backButtonBg.strokeRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
-        });
-
-        this.backButton.on('pointerout', () => {
-            this.backButtonBg.clear();
-            this.backButtonBg.fillStyle(0x4a90e2);
-            this.backButtonBg.fillRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
-            this.backButtonBg.lineStyle(2, 0x6bb6ff);
-            this.backButtonBg.strokeRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
-        });
-
-        this.container.add([this.backButtonBg, this.backButtonText, this.backButton]);
-
-        // Working interactive area for back button
+        // Working interactive area
         this.workingBackButton = this.scene.add.rectangle(
             this.x + buttonX + buttonWidth/2,
             this.y + buttonY,
@@ -262,24 +226,6 @@ export class CraftingUI {
 
         this.workingBackButton.on('pointerdown', () => {
             this.backToInventory();
-        });
-
-        this.workingBackButton.on('pointerover', () => {
-            this.workingBackButton.setAlpha(0.02);
-            this.backButtonBg.clear();
-            this.backButtonBg.fillStyle(0x6bb6ff);
-            this.backButtonBg.fillRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
-            this.backButtonBg.lineStyle(2, 0x4a90e2);
-            this.backButtonBg.strokeRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
-        });
-
-        this.workingBackButton.on('pointerout', () => {
-            this.workingBackButton.setAlpha(0.01);
-            this.backButtonBg.clear();
-            this.backButtonBg.fillStyle(0x4a90e2);
-            this.backButtonBg.fillRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
-            this.backButtonBg.lineStyle(2, 0x6bb6ff);
-            this.backButtonBg.strokeRoundedRect(buttonX, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
         });
 
         // Initially hide the back button
@@ -313,21 +259,13 @@ export class CraftingUI {
         const panelWidth = 300;
         const panelHeight = 400;
 
-        // Panel background
-        const panelBg = this.scene.add.graphics();
-        panelBg.fillStyle(0x1a1a1a, 0.8);
-        panelBg.fillRoundedRect(panelX, panelY, panelWidth, panelHeight, 5);
-        panelBg.lineStyle(1, 0x4a4a4a);
-        panelBg.strokeRoundedRect(panelX, panelY, panelWidth, panelHeight, 5);
+        // Panel background using UITheme
+        const panelBg = UITheme.createPanel(this.scene, panelX, panelY, panelWidth, panelHeight, 'secondary');
         this.container.add(panelBg);
 
-        // Panel title
-        const panelTitle = this.scene.add.text(panelX + panelWidth/2, panelY + 15, 'RECIPES', {
-            fontSize: '14px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
+        // Panel title using UITheme
+        const panelTitle = UITheme.createText(this.scene, panelX + panelWidth/2, panelY + 15, 'RECIPES', 'headerSmall');
+        panelTitle.setOrigin(0.5);
         this.container.add(panelTitle);
 
         // Recipe list container
@@ -348,21 +286,13 @@ export class CraftingUI {
         const panelWidth = 300;
         const panelHeight = 400;
 
-        // Panel background
-        const panelBg = this.scene.add.graphics();
-        panelBg.fillStyle(0x1a1a1a, 0.8);
-        panelBg.fillRoundedRect(panelX, panelY, panelWidth, panelHeight, 5);
-        panelBg.lineStyle(1, 0x4a4a4a);
-        panelBg.strokeRoundedRect(panelX, panelY, panelWidth, panelHeight, 5);
+        // Panel background using UITheme
+        const panelBg = UITheme.createPanel(this.scene, panelX, panelY, panelWidth, panelHeight, 'secondary');
         this.container.add(panelBg);
 
-        // Panel title
-        const panelTitle = this.scene.add.text(panelX + panelWidth/2, panelY + 15, 'CRAFTING', {
-            fontSize: '14px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
+        // Panel title using UITheme
+        const panelTitle = UITheme.createText(this.scene, panelX + panelWidth/2, panelY + 15, 'CRAFTING', 'headerSmall');
+        panelTitle.setOrigin(0.5);
         this.container.add(panelTitle);
 
         // Recipe details area
@@ -372,10 +302,17 @@ export class CraftingUI {
         // Ingredient slots - moved much lower to avoid overlap with recipe details
         this.createIngredientSlots(panelX + 10, panelY + 300);
 
-        // Craft button
-        this.craftButton = this.createButton(panelX + panelWidth/2, panelY + panelHeight - 40, 'CRAFT', () => {
-            this.startCrafting();
-        });
+        // Craft button using UITheme
+        this.craftButton = UITheme.createButton(
+            this.scene, 
+            panelX + panelWidth/2, 
+            panelY + panelHeight - 40, 
+            120, 
+            35, 
+            'CRAFT', 
+            () => this.startCrafting(),
+            'success'
+        );
         this.craftButton.button.setAlpha(0.5);
         this.container.add([this.craftButton.button, this.craftButton.text]);
     }
@@ -386,21 +323,13 @@ export class CraftingUI {
         const panelWidth = 200;
         const panelHeight = 400;
 
-        // Panel background
-        const panelBg = this.scene.add.graphics();
-        panelBg.fillStyle(0x1a1a1a, 0.8);
-        panelBg.fillRoundedRect(panelX, panelY, panelWidth, panelHeight, 5);
-        panelBg.lineStyle(1, 0x4a4a4a);
-        panelBg.strokeRoundedRect(panelX, panelY, panelWidth, panelHeight, 5);
+        // Panel background using UITheme
+        const panelBg = UITheme.createPanel(this.scene, panelX, panelY, panelWidth, panelHeight, 'secondary');
         this.container.add(panelBg);
 
-        // Panel title
-        const panelTitle = this.scene.add.text(panelX + panelWidth/2, panelY + 15, 'CRAFTING QUEUE', {
-            fontSize: '12px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
+        // Panel title using UITheme
+        const panelTitle = UITheme.createText(this.scene, panelX + panelWidth/2, panelY + 15, 'CRAFTING QUEUE', 'headerSmall');
+        panelTitle.setOrigin(0.5);
         this.container.add(panelTitle);
 
         // Queue container
@@ -434,12 +363,12 @@ export class CraftingUI {
     createIngredientSlot(x, y, index) {
         const slotSize = 45; // Match the smaller size
 
-        // Slot background
+        // Slot background using UITheme
         const slotBg = this.scene.add.graphics();
-        slotBg.fillStyle(0x2a2a2a);
-        slotBg.fillRoundedRect(x, y, slotSize, slotSize, 3);
-        slotBg.lineStyle(2, 0x4a4a4a);
-        slotBg.strokeRoundedRect(x, y, slotSize, slotSize, 3);
+        slotBg.fillStyle(UITheme.colors.darkSecondary);
+        slotBg.fillRoundedRect(x, y, slotSize, slotSize, UITheme.borders.radius.small);
+        slotBg.lineStyle(UITheme.borders.width.medium, UITheme.colors.medium);
+        slotBg.strokeRoundedRect(x, y, slotSize, slotSize, UITheme.borders.radius.small);
 
         // Interactive area
         const slotArea = this.scene.add.rectangle(x + slotSize/2, y + slotSize/2, slotSize, slotSize)
@@ -500,17 +429,14 @@ export class CraftingUI {
     createTooltip() {
         this.tooltip = this.scene.add.container(0, 0);
         this.tooltip.setVisible(false);
-        this.tooltip.setDepth(2000);
+        this.tooltip.setDepth(3000);
 
+        // Tooltip background using UITheme
         this.tooltipBg = this.scene.add.graphics();
-        this.tooltipText = this.scene.add.text(0, 0, '', {
-            fontSize: '12px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            backgroundColor: '#000000',
-            padding: { x: 8, y: 6 },
-            wordWrap: { width: 200 }
-        });
+        this.tooltipText = UITheme.createText(this.scene, 0, 0, '', 'bodySmall');
+        this.tooltipText.setPadding(8, 6);
+        this.tooltipText.setWordWrapWidth(200);
+        this.tooltipText.setBackgroundColor(UITheme.colors.darkPrimary);
 
         this.tooltip.add([this.tooltipBg, this.tooltipText]);
     }
@@ -581,13 +507,13 @@ export class CraftingUI {
         Object.entries(this.categoryTabs).forEach(([cat, tab]) => {
             const isActive = cat === category;
             tab.bg.clear();
-            tab.bg.fillStyle(isActive ? 0x4a90e2 : 0x3a3a3a);
+            tab.bg.fillStyle(isActive ? UITheme.colors.primary : UITheme.colors.darkSecondary);
             tab.bg.fillRoundedRect(tab.area.x - tab.area.width/2, tab.area.y - tab.area.height/2, 
-                                   tab.area.width, tab.area.height, 5);
-            tab.bg.lineStyle(1, isActive ? 0x6bb6ff : 0x5a5a5a);
+                                   tab.area.width, tab.area.height, UITheme.borders.radius.small);
+            tab.bg.lineStyle(UITheme.borders.width.thin, isActive ? UITheme.colors.primaryLight : UITheme.colors.medium);
             tab.bg.strokeRoundedRect(tab.area.x - tab.area.width/2, tab.area.y - tab.area.height/2, 
-                                     tab.area.width, tab.area.height, 5);
-            tab.text.setColor(isActive ? '#ffffff' : '#cccccc');
+                                     tab.area.width, tab.area.height, UITheme.borders.radius.small);
+            tab.text.setColor(isActive ? UITheme.colors.text : UITheme.colors.textSecondary);
         });
 
         this.currentCategory = category;
@@ -627,61 +553,55 @@ export class CraftingUI {
         const elements = [];
         const itemHeight = 55;
 
-        // Background
+        // Background using UITheme
         const bg = this.scene.add.graphics();
-        bg.fillStyle(0x2a2a2a);
-        bg.fillRoundedRect(x, y, this.recipeListBounds.width - 10, itemHeight, 3);
-        bg.lineStyle(1, 0x4a4a4a);
-        bg.strokeRoundedRect(x, y, this.recipeListBounds.width - 10, itemHeight, 3);
+        bg.fillStyle(UITheme.colors.darkSecondary);
+        bg.fillRoundedRect(x, y, this.recipeListBounds.width - 10, itemHeight, UITheme.borders.radius.small);
+        bg.lineStyle(UITheme.borders.width.thin, UITheme.colors.medium);
+        bg.strokeRoundedRect(x, y, this.recipeListBounds.width - 10, itemHeight, UITheme.borders.radius.small);
         elements.push(bg);
 
-        // Recipe icon (placeholder)
+        // Recipe icon (placeholder) using UITheme rarity colors - FIXED
         const icon = this.scene.add.graphics();
-        icon.fillStyle(this.getRarityColor(recipe.result.rarity));
-        icon.fillRoundedRect(x + 5, y + 5, 45, 45, 3);
+        const rarityColor = UITheme.getRarityColor(recipe.result.rarity);
+        // Handle both string and number color formats
+        let colorValue;
+        if (typeof rarityColor === 'string') {
+            colorValue = parseInt(rarityColor.replace('#', '0x'));
+        } else {
+            colorValue = rarityColor; // Already a number
+        }
+        icon.fillStyle(colorValue);
+        icon.fillRoundedRect(x + 5, y + 5, 45, 45, UITheme.borders.radius.small);
         elements.push(icon);
 
-        // Recipe name
-        const nameText = this.scene.add.text(x + 60, y + 8, recipe.name, {
-            fontSize: '12px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        });
+        // Recipe name using UITheme
+        const nameText = UITheme.createText(this.scene, x + 60, y + 8, recipe.name, 'bodyMedium');
+        nameText.setColor(UITheme.colors.text);
         elements.push(nameText);
 
-        // Level requirement - prominently displayed
+        // Level requirement - prominently displayed using UITheme
         const requiredLevel = recipe.result.unlockLevel || 1;
         const playerLevel = this.gameState.player.level;
         const hasRequiredLevel = playerLevel >= requiredLevel;
         
-        const levelText = this.scene.add.text(x + 60, y + 22, `Level ${requiredLevel}`, {
-            fontSize: '10px',
-            fontFamily: 'Arial',
-            color: hasRequiredLevel ? '#44ff44' : '#ff4444',
-            fontStyle: 'bold'
-        });
+        const levelText = UITheme.createText(this.scene, x + 60, y + 22, `Level ${requiredLevel}`, 'bodySmall');
+        levelText.setColor(hasRequiredLevel ? UITheme.colors.success : UITheme.colors.error);
         elements.push(levelText);
 
-        // Cost and time - moved down to accommodate level requirement
-        const costText = this.scene.add.text(x + 60, y + 35, `${recipe.cost} coins`, {
-            fontSize: '10px',
-            fontFamily: 'Arial',
-            color: '#ffdd44'
-        });
+        // Cost and time using UITheme colors
+        const costText = UITheme.createText(this.scene, x + 60, y + 35, `${recipe.cost} coins`, 'bodySmall');
+        costText.setColor(UITheme.colors.gold);
         elements.push(costText);
 
-        const timeText = this.scene.add.text(x + 60, y + 47, `${recipe.craftTime}m`, {
-            fontSize: '10px',
-            fontFamily: 'Arial',
-            color: '#44ddff'
-        });
+        const timeText = UITheme.createText(this.scene, x + 60, y + 47, `${recipe.craftTime}m`, 'bodySmall');
+        timeText.setColor(UITheme.colors.info);
         elements.push(timeText);
 
-        // Can craft indicator - updated to consider level requirement
+        // Can craft indicator using UITheme colors
         const canCraft = this.craftingManager.canCraft(recipe.id);
         const statusIcon = this.scene.add.graphics();
-        statusIcon.fillStyle(canCraft.canCraft ? 0x44ff44 : 0xff4444);
+        statusIcon.fillStyle(canCraft.canCraft ? UITheme.colors.success : UITheme.colors.error);
         statusIcon.fillCircle(x + this.recipeListBounds.width - 25, y + itemHeight/2, 8);
         elements.push(statusIcon);
 
@@ -705,7 +625,7 @@ export class CraftingUI {
         workingArea.setDepth(10002);
         workingArea.setAlpha(0.01);
 
-        // Working area events
+        // Working area events using UITheme colors
         workingArea.on('pointerdown', () => {
             console.log('CraftingUI: Recipe clicked:', recipe.name);
             this.selectRecipe(recipe);
@@ -714,19 +634,19 @@ export class CraftingUI {
         workingArea.on('pointerover', () => {
             workingArea.setAlpha(0.1); // More visible on hover
             bg.clear();
-            bg.fillStyle(0x3a3a3a);
-            bg.fillRoundedRect(x, y, this.recipeListBounds.width - 10, itemHeight, 3);
-            bg.lineStyle(1, 0x5a5a5a);
-            bg.strokeRoundedRect(x, y, this.recipeListBounds.width - 10, itemHeight, 3);
+            bg.fillStyle(UITheme.colors.darkPrimary);
+            bg.fillRoundedRect(x, y, this.recipeListBounds.width - 10, itemHeight, UITheme.borders.radius.small);
+            bg.lineStyle(UITheme.borders.width.thin, UITheme.colors.primary);
+            bg.strokeRoundedRect(x, y, this.recipeListBounds.width - 10, itemHeight, UITheme.borders.radius.small);
         });
         
         workingArea.on('pointerout', () => {
             workingArea.setAlpha(0.01); // Back to minimal
             bg.clear();
-            bg.fillStyle(0x2a2a2a);
-            bg.fillRoundedRect(x, y, this.recipeListBounds.width - 10, itemHeight, 3);
-            bg.lineStyle(1, 0x4a4a4a);
-            bg.strokeRoundedRect(x, y, this.recipeListBounds.width - 10, itemHeight, 3);
+            bg.fillStyle(UITheme.colors.darkSecondary);
+            bg.fillRoundedRect(x, y, this.recipeListBounds.width - 10, itemHeight, UITheme.borders.radius.small);
+            bg.lineStyle(UITheme.borders.width.thin, UITheme.colors.medium);
+            bg.strokeRoundedRect(x, y, this.recipeListBounds.width - 10, itemHeight, UITheme.borders.radius.small);
         });
 
         elements.push(area);
@@ -923,14 +843,22 @@ export class CraftingUI {
         slot.ingredient = ingredient;
         slot.item = item;
         
-        // Create item sprite (colored rectangle based on rarity)
+        // Create item sprite (colored rectangle based on rarity) - FIXED
         const rarity = item.rarity || 1;
-        const rarityColor = this.getRarityColor(rarity);
+        let rarityColor = UITheme.getRarityColor ? UITheme.getRarityColor(rarity) : this.getRarityColor(rarity);
         
         console.log('CraftingUI: Creating sprite with rarity:', rarity, 'color:', rarityColor);
         
+        // Handle both string and number color formats
+        let colorValue;
+        if (typeof rarityColor === 'string') {
+            colorValue = parseInt(rarityColor.replace('#', '0x'));
+        } else {
+            colorValue = rarityColor; // Already a number
+        }
+        
         slot.sprite = this.scene.add.graphics();
-        slot.sprite.fillStyle(rarityColor);
+        slot.sprite.fillStyle(colorValue);
         slot.sprite.fillRoundedRect(slot.x + 2, slot.y + 2, 41, 41, 3);
         slot.sprite.lineStyle(2, 0xffffff, 0.8);
         slot.sprite.strokeRoundedRect(slot.x + 2, slot.y + 2, 41, 41, 3);
@@ -1064,29 +992,28 @@ export class CraftingUI {
         const timeRemaining = Math.max(0, craftingItem.endTime - now);
         const isCompleted = timeRemaining === 0 || craftingItem.completed;
 
-        // Background
+        // Background using UITheme
         const bg = this.scene.add.graphics();
-        bg.fillStyle(isCompleted ? 0x2a4a2a : 0x2a2a2a);
-        bg.fillRoundedRect(x, y, this.queueBounds.width - 10, itemHeight, 3);
-        bg.lineStyle(1, isCompleted ? 0x44aa44 : 0x4a4a4a);
-        bg.strokeRoundedRect(x, y, this.queueBounds.width - 10, itemHeight, 3);
+        const bgColor = isCompleted ? UITheme.colors.darkSuccess : UITheme.colors.darkSecondary;
+        const borderColor = isCompleted ? UITheme.colors.success : UITheme.colors.medium;
+        
+        bg.fillStyle(bgColor);
+        bg.fillRoundedRect(x, y, this.queueBounds.width - 10, itemHeight, UITheme.borders.radius.small);
+        bg.lineStyle(UITheme.borders.width.thin, borderColor);
+        bg.strokeRoundedRect(x, y, this.queueBounds.width - 10, itemHeight, UITheme.borders.radius.small);
         elements.push(bg);
 
-        // Recipe name
-        const nameText = this.scene.add.text(x + 5, y + 5, craftingItem.recipe.name, {
-            fontSize: '11px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            fontStyle: 'bold',
-            wordWrap: { width: this.queueBounds.width - 20 }
-        });
+        // Recipe name using UITheme
+        const nameText = UITheme.createText(this.scene, x + 5, y + 5, craftingItem.recipe.name, 'bodySmall');
+        nameText.setWordWrapWidth(this.queueBounds.width - 20);
+        nameText.setColor(UITheme.colors.text);
         elements.push(nameText);
 
-        // Progress bar
+        // Progress bar using UITheme
         const progressBg = this.scene.add.graphics();
-        progressBg.fillStyle(0x1a1a1a);
+        progressBg.fillStyle(UITheme.colors.darkPrimary);
         progressBg.fillRect(x + 5, y + 25, this.queueBounds.width - 20, 8);
-        progressBg.lineStyle(1, 0x4a4a4a);
+        progressBg.lineStyle(UITheme.borders.width.thin, UITheme.colors.medium);
         progressBg.strokeRect(x + 5, y + 25, this.queueBounds.width - 20, 8);
         elements.push(progressBg);
 
@@ -1095,24 +1022,28 @@ export class CraftingUI {
         const progress = Math.min(elapsed / totalTime, 1);
 
         const progressFill = this.scene.add.graphics();
-        progressFill.fillStyle(isCompleted ? 0x44aa44 : 0x4a90e2);
+        progressFill.fillStyle(isCompleted ? UITheme.colors.success : UITheme.colors.primary);
         progressFill.fillRect(x + 5, y + 25, (this.queueBounds.width - 20) * progress, 8);
         elements.push(progressFill);
 
-        // Time text
-        const timeText = this.scene.add.text(x + 5, y + 40, 
-            isCompleted ? 'READY!' : this.formatTime(timeRemaining), {
-            fontSize: '10px',
-            fontFamily: 'Arial',
-            color: isCompleted ? '#44ff44' : '#cccccc'
-        });
+        // Time text using UITheme
+        const timeText = UITheme.createText(this.scene, x + 5, y + 40, 
+            isCompleted ? 'READY!' : this.formatTime(timeRemaining), 'bodySmall');
+        timeText.setColor(isCompleted ? UITheme.colors.success : UITheme.colors.textSecondary);
         elements.push(timeText);
 
-        // Collect button (if completed)
+        // Collect button (if completed) using UITheme
         if (isCompleted) {
-            const collectBtn = this.createButton(x + this.queueBounds.width - 50, y + 55, 'COLLECT', () => {
-                this.collectCraftedItem(craftingItem.id);
-            });
+            const collectBtn = UITheme.createButton(
+                this.scene, 
+                x + this.queueBounds.width - 50, 
+                y + 55, 
+                70, 
+                25, 
+                'COLLECT', 
+                () => this.collectCraftedItem(craftingItem.id),
+                'success'
+            );
             collectBtn.button.setScale(0.7);
             collectBtn.text.setScale(0.7);
             elements.push(collectBtn.button, collectBtn.text);
@@ -1152,21 +1083,20 @@ export class CraftingUI {
         return colors[rarity] || 0x888888;
     }
 
-    showMessage(text, color) {
-        const message = this.scene.add.text(
+    showMessage(text, color = UITheme.colors.info) {
+        // Create message using UITheme
+        const message = UITheme.createText(
+            this.scene,
             this.scene.cameras.main.width / 2,
             this.scene.cameras.main.height / 2,
             text,
-            {
-                fontSize: '18px',
-                fill: '#ffffff',
-                fontFamily: 'Arial',
-                backgroundColor: Phaser.Display.Color.IntegerToColor(color).rgba,
-                padding: { x: 16, y: 8 }
-            }
+            'bodyLarge'
         );
         message.setOrigin(0.5);
         message.setDepth(3000);
+        message.setColor(typeof color === 'string' ? color : `#${color.toString(16).padStart(6, '0')}`);
+        message.setBackgroundColor(UITheme.colors.darkPrimary);
+        message.setPadding(16, 8);
 
         this.scene.tweens.add({
             targets: message,
@@ -1180,6 +1110,7 @@ export class CraftingUI {
 
     showTooltip(text, x, y) {
         this.tooltipText.setText(text);
+        this.tooltipText.setColor(UITheme.colors.text);
         this.tooltip.setPosition(x + 10, y - 50);
         this.tooltip.setVisible(true);
     }

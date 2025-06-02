@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { gameDataLoader } from './DataLoader.js';
+import UITheme from '../ui/UITheme.js';
 
 // Lure Minigame - Enhanced rhythm-based fish attraction
 export class LuringMiniGame {
@@ -191,33 +192,26 @@ export class LuringMiniGame {
         const width = this.scene.cameras.main.width;
         const height = this.scene.cameras.main.height;
         
-        // UI dimensions and position (upper right corner)
         const uiWidth = 300;
         const uiHeight = 200;
         const uiX = width - uiWidth - 20;
         const uiY = 20;
         
-        // Create main container
         this.simulationContainer = this.scene.add.container(uiX, uiY);
         this.simulationContainer.setDepth(1000);
         
-        // Background panel
-        const background = this.scene.add.graphics();
-        background.fillStyle(0x001122, 0.9);
-        background.lineStyle(3, 0x00aaff, 1);
-        background.fillRoundedRect(0, 0, uiWidth, uiHeight, 10);
-        background.strokeRoundedRect(0, 0, uiWidth, uiHeight, 10);
+        // Background panel using UITheme
+        // Assuming a style like 'simulationPanel' or adapt 'panelStyles.primary' or 'secondary'
+        const background = UITheme.createPanel(this.scene, 0, 0, uiWidth, uiHeight, 'primary'); 
         this.simulationContainer.add(background);
         
-        // Title
-        const title = this.scene.add.text(uiWidth / 2, 15, 'LURE SIMULATION', {
-            fontSize: '16px',
-            fill: '#00aaff',
-            fontWeight: 'bold'
-        }).setOrigin(0.5, 0);
+        // Title using UITheme
+        const title = UITheme.createText(this.scene, uiWidth / 2, 15, 'LURE SIMULATION', 'headerSmall');
+        title.setOrigin(0.5, 0);
+        // title.setColor(UITheme.colors.info); // headerSmall style might already define this or use a specific color
         this.simulationContainer.add(title);
         
-        // Water area within the UI
+        // Water area within the UI (keep as graphics for specific look)
         const waterArea = this.scene.add.graphics();
         waterArea.fillStyle(0x004466, 0.8);
         waterArea.fillRoundedRect(10, 35, uiWidth - 20, uiHeight - 45, 5);
@@ -448,39 +442,44 @@ export class LuringMiniGame {
     createInterestIndicator(fish) {
         // Create interest level indicator
         if (!fish.interestIndicator) {
-            fish.interestIndicator = this.scene.add.graphics();
-            fish.interestIndicator.setDepth(1004);
-            this.simulationContainer.add(fish.interestIndicator);
+            // Using a Phaser Container for the indicator to group elements
+            fish.interestIndicatorContainer = this.scene.add.container(fish.x, fish.y - 25);
+            fish.interestIndicatorContainer.setDepth(1004);
+            this.simulationContainer.add(fish.interestIndicatorContainer);
+
+            // Interest meter background using UITheme
+            const barBg = UITheme.createPanel(this.scene, -15, -3, 30, 6, 'secondary'); // Small, dark panel
+            fish.interestIndicatorContainer.add(barBg);
+            fish.interestIndicatorBg = barBg; // Store if needed for direct manipulation
+
+            // Interest level bar (graphics for dynamic fill)
+            fish.interestIndicatorFill = this.scene.add.graphics();
+            fish.interestIndicatorContainer.add(fish.interestIndicatorFill);
+        
+            // Interest percentage text using UITheme
+            const interestText = UITheme.createText(this.scene, 0, -15, `0%`, 'tiny'); // Using 'tiny' or a custom small style
+            interestText.setOrigin(0.5);
+            fish.interestIndicatorContainer.add(interestText);
+            fish.interestIndicatorText = interestText; // Store for updates
         }
         
-        fish.interestIndicator.clear();
-        fish.interestIndicator.setPosition(fish.x, fish.y - 25);
+        // Update position of the container
+        fish.interestIndicatorContainer.setPosition(fish.x, fish.y - 25);
         
-        // Interest meter background
-        fish.interestIndicator.fillStyle(0x000000, 0.7);
-        fish.interestIndicator.fillRoundedRect(-15, -3, 30, 6, 2);
-        
-        // Interest level bar
+        // Clear and redraw fill
+        fish.interestIndicatorFill.clear();
         const interestLevel = this.shadowInterest / 100;
-        const barWidth = 26 * interestLevel;
+        const barWidth = 26 * interestLevel; // Max width 26 (inside a 30 wide bg)
         
-        let barColor = 0xff0000; // Red for low interest
-        if (interestLevel > 0.3) barColor = 0xffaa00; // Orange for medium
-        if (interestLevel > 0.7) barColor = 0x00ff00; // Green for high
+        let barColor = UITheme.colors.error; // Use UITheme color
+        if (interestLevel > 0.7) barColor = UITheme.colors.success;
+        else if (interestLevel > 0.3) barColor = UITheme.colors.warning;
         
-        fish.interestIndicator.fillStyle(barColor);
-        fish.interestIndicator.fillRoundedRect(-13, -2, barWidth, 4, 1);
+        fish.interestIndicatorFill.fillStyle(barColor);
+        fish.interestIndicatorFill.fillRoundedRect(-13, -2, barWidth, 4, 1); // Position relative to container
         
-        // Interest percentage text
-        const interestText = this.scene.add.text(0, -15, `${Math.round(this.shadowInterest)}%`, {
-            fontSize: '10px',
-            fill: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 1
-        }).setOrigin(0.5);
-        
-        fish.interestIndicator.add ? fish.interestIndicator.add(interestText) : 
-            this.simulationContainer.add(interestText);
+        // Update text
+        fish.interestIndicatorText.setText(`${Math.round(this.shadowInterest)}%`);
     }
 
     startFishApproach() {
@@ -779,55 +778,52 @@ export class LuringMiniGame {
     }
 
     updatePhaseProgress() {
-        // Create or update phase progress indicator
         if (!this.phaseProgressContainer) {
-            this.phaseProgressContainer = this.scene.add.container(150, 40);
+            this.phaseProgressContainer = this.scene.add.container(150, 40); // Position relative to simulationContainer top-left
             this.phaseProgressContainer.setDepth(1005);
+            // Ensure this container is added to simulationContainer IF it's part of that UI block
+            // If it's a global UI element, it might be added directly to the scene or another main UI container.
+            // Assuming it's part of the simulationContainer based on context:
+            if (this.simulationContainer) {
             this.simulationContainer.add(this.phaseProgressContainer);
+            } else {
+                this.scene.add.existing(this.phaseProgressContainer); // Fallback if no simulationContainer
+            }
         }
         
         this.phaseProgressContainer.removeAll(true);
         
-        // Create phase dots
         for (let i = 0; i < this.maxPhases; i++) {
             const dot = this.scene.add.graphics();
             const x = i * 20;
             const y = 0;
             
             if (i < this.currentPhase) {
-                // Completed phase - green
-                dot.fillStyle(0x00ff00);
+                dot.fillStyle(UITheme.colors.success); // Use UITheme color
                 dot.fillCircle(x, y, 6);
             } else if (i === this.currentPhase) {
-                // Current phase - pulsing yellow
-                dot.fillStyle(0xffff00);
+                dot.fillStyle(UITheme.colors.warning); // Use UITheme color (e.g., yellow/orange)
                 dot.fillCircle(x, y, 8);
-                
-                // Add pulsing animation
                 this.scene.tweens.add({
                     targets: dot,
                     scaleX: 1.3,
                     scaleY: 1.3,
-                    duration: 500,
+                    duration: UITheme.animations.medium, // Use themed duration
                     yoyo: true,
                     repeat: -1,
-                    ease: 'Sine.easeInOut'
+                    ease: UITheme.animations.easing.easeInOut // Use themed easing
                 });
             } else {
-                // Future phase - gray
-                dot.fillStyle(0x666666);
+                dot.fillStyle(UITheme.colors.medium); // Use UITheme color (e.g., gray)
                 dot.fillCircle(x, y, 5);
             }
-            
             this.phaseProgressContainer.add(dot);
         }
         
-        // Phase label
-        const phaseLabel = this.scene.add.text(0, -20, `Phase ${this.currentPhase + 1}/${this.maxPhases}`, {
-            fontSize: '12px',
-            fill: '#ffffff',
-            fontWeight: 'bold'
-        }).setOrigin(0, 0.5);
+        // Phase label using UITheme
+        const phaseLabel = UITheme.createText(this.scene, 0, -20, `Phase ${this.currentPhase + 1}/${this.maxPhases}`, 'bodySmall');
+        phaseLabel.setOrigin(0, 0.5);
+        // phaseLabel.setColor(UITheme.colors.text); // bodySmall might define this
         this.phaseProgressContainer.add(phaseLabel);
     }
 
@@ -1174,13 +1170,13 @@ export class LuringMiniGame {
         
         this.phaseInstructionText.setText(instruction);
         
-        // Add color coding based on phase
+        // Use UITheme colors
         if (currentPhase === 0) {
-            this.phaseInstructionText.setFill('#00ff88'); // Green for first phase
+            this.phaseInstructionText.setColor(UITheme.colors.success); // Green for first phase
         } else if (currentPhase === this.maxPhases - 1) {
-            this.phaseInstructionText.setFill('#ff6600'); // Orange for final phase
+            this.phaseInstructionText.setColor(UITheme.colors.warning); // Orange for final phase
         } else {
-            this.phaseInstructionText.setFill('#ffff00'); // Yellow for middle phases
+            this.phaseInstructionText.setColor(UITheme.colors.info);    // Yellow/Info for middle phases
         }
     }
 
@@ -1213,13 +1209,9 @@ export class LuringMiniGame {
     }
 
     createSuccessFeedback() {
-        // Visual feedback for successful phase completion
-        console.log('LuringMiniGame: Creating success feedback');
-        
-        // Simple success indication - could be enhanced with visual effects
         if (this.phaseInstructionText) {
             this.phaseInstructionText.setText('✅ SUCCESS! Fish is interested!');
-            this.phaseInstructionText.setFill('#00ff88');
+            this.phaseInstructionText.setColor(UITheme.colors.success); // Use UITheme color
         }
     }
 
@@ -1233,12 +1225,9 @@ export class LuringMiniGame {
     }
 
     createHookAnimation() {
-        console.log('LuringMiniGame: Creating hook animation');
-        
-        // Simple hook animation - could be enhanced with visual effects
         if (this.phaseInstructionText) {
             this.phaseInstructionText.setText('🎣 FISH HOOKED! Transitioning to reeling...');
-            this.phaseInstructionText.setFill('#FFD700');
+            this.phaseInstructionText.setColor(UITheme.colors.gold); // Use UITheme color (gold for hook)
         }
     }
 
@@ -1290,23 +1279,20 @@ export class LuringMiniGame {
     }
 
     createUI() {
-        // Create main UI elements
         const width = this.scene.cameras.main.width;
         const height = this.scene.cameras.main.height;
         
-        // Instructions text
-        this.phaseInstructionText = this.scene.add.text(
+        // Instructions text using UITheme
+        // Assuming a style like 'overlayNotification' or a new 'lureInstruction' style from UITheme
+        this.phaseInstructionText = UITheme.createText(
+            this.scene, 
             width / 2, 
             height - 100, 
             'Get ready to lure the fish...', 
-            {
-                fontSize: '20px',
-                fill: '#ffffff',
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                padding: { x: 15, y: 10 },
-                align: 'center'
-            }
-        ).setOrigin(0.5).setDepth(1005);
+            'overlayNotification' // This style should handle background, padding, alignment
+        );
+        this.phaseInstructionText.setOrigin(0.5).setDepth(1005);
+        // Color will be set dynamically by updatePhaseInstructions
         
         console.log('LuringMiniGame: UI created');
     }
@@ -1353,21 +1339,24 @@ export class LuringMiniGame {
     }
 
     createControlInstructions(uiWidth, uiHeight) {
-        // Create control instructions at the bottom of the simulation
         const instructionY = uiHeight - 15;
         
-        const instructions = this.scene.add.text(
+        // Control instructions text using UITheme
+        const instructions = UITheme.createText(
+            this.scene, 
             uiWidth / 2, 
             instructionY, 
             'Use WASD or SPACEBAR to control lure', 
-            {
-                fontSize: '10px',
-                fill: '#cccccc',
-                align: 'center'
-            }
-        ).setOrigin(0.5);
+            'tiny' // Using 'tiny' or 'caption' style
+        );
+        instructions.setOrigin(0.5);
+        // instructions.setColor(UITheme.colors.textSecondary); // If tiny style doesn't set a muted color
         
+        if (this.simulationContainer) {
         this.simulationContainer.add(instructions);
+        } else {
+            this.scene.add.existing(instructions); // Fallback if no simulationContainer
+        }
     }
 
     updatePhaseDisplay() {

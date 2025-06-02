@@ -31,6 +31,7 @@ export default class InputManager {
             menu: ['Escape'],
             inventory: ['KeyI'],
             shop: ['KeyP'],
+            questLog: ['KeyQ'],
             confirm: ['Enter'],
             cancel: ['Escape'],
             

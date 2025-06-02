@@ -260,11 +260,11 @@ export class ReelingMiniGame {
         
         // Progress bar background
         const progressBg = this.scene.add.graphics();
-        progressBg.setDepth(1001);
-        progressBg.fillStyle(0x333333, 0.8);
+        progressBg.fillStyle(0x2c3e50);
         progressBg.fillRoundedRect(progressBarX - progressBarWidth/2, progressBarY - progressBarHeight/2, progressBarWidth, progressBarHeight, 5);
-        progressBg.lineStyle(2, 0x666666, 1);
+        progressBg.lineStyle(2, 0x34495e);
         progressBg.strokeRoundedRect(progressBarX - progressBarWidth/2, progressBarY - progressBarHeight/2, progressBarWidth, progressBarHeight, 5);
+        progressBg.setDepth(1001);
         this.uiContainer.add(progressBg);
         
         // Progress bar fill
@@ -274,23 +274,25 @@ export class ReelingMiniGame {
         
         // Progress text
         this.progressText = this.scene.add.text(progressBarX, progressBarY, '0%', {
-            fontSize: '14px',
+            fontSize: '16px',
             fill: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 2,
+            fontFamily: 'Arial',
             fontWeight: 'bold'
-        }).setOrigin(0.5);
+        });
+        this.progressText.setOrigin(0.5);
         this.progressText.setDepth(1003);
         this.uiContainer.add(this.progressText);
         
         // Instructions
         const instructions = this.scene.add.text(width / 2, height - 50, 
             'Click and Hold to REEL | Release to reduce TENSION | Complete QTEs!', {
-            fontSize: '16px',
+            fontSize: '14px',
             fill: '#ffffff',
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            padding: { x: 10, y: 5 }
-        }).setOrigin(0.5);
+            fontFamily: 'Arial',
+            align: 'center'
+        });
+        instructions.setOrigin(0.5);
+        instructions.setDepth(1005);
         this.uiContainer.add(instructions);
         
         this.updateProgressBar();
@@ -352,6 +354,30 @@ export class ReelingMiniGame {
         this.fishGraphic.setDepth(200);
         this.drawFish();
         
+        // Create fish name text above the fish
+        const fishName = this.selectedFish?.name || 'Unknown Fish';
+        this.fishNameText = this.scene.add.text(
+            this.fishPosition.x, 
+            this.fishPosition.y - 40, // Position above the fish
+            fishName,
+            {
+                fontSize: '18px',
+                fill: '#ffffff',
+                fontWeight: 'bold',
+                stroke: '#000000',
+                strokeThickness: 3,
+                shadow: {
+                    offsetX: 2,
+                    offsetY: 2,
+                    color: '#000000',
+                    blur: 4,
+                    fill: true
+                }
+            }
+        );
+        this.fishNameText.setOrigin(0.5);
+        this.fishNameText.setDepth(210); // Above the fish graphic
+        
         // Create fishing line from rod tip to fish
         this.fishingLine = this.scene.add.graphics();
         this.fishingLine.setDepth(190);
@@ -360,7 +386,7 @@ export class ReelingMiniGame {
         // Create fish stamina bar
         this.createStaminaBar();
         
-        console.log('ReelingMiniGame: Fish visuals created');
+        console.log('ReelingMiniGame: Fish visuals created with name:', fishName);
     }
 
     drawFish() {
@@ -449,104 +475,86 @@ export class ReelingMiniGame {
     createStaminaBar() {
         const barWidth = 100;
         const barHeight = 8;
-        const barX = this.fishPosition.x - barWidth / 2;
-        const barY = this.fishPosition.y - 40;
+        // Position will be updated in updateStaminaBar to follow the fish
+        const initialX = this.fishPosition.x - barWidth / 2;
+        const initialY = this.fishPosition.y - 40;
         
         // Stamina bar background
         this.staminaBarBg = this.scene.add.graphics();
+        this.staminaBarBg.fillStyle(0x2c3e50);
+        this.staminaBarBg.fillRoundedRect(initialX - 2, initialY - 2, barWidth + 4, barHeight + 4, 2);
         this.staminaBarBg.setDepth(250);
-        this.staminaBarBg.fillStyle(0x000000, 0.7);
-        this.staminaBarBg.fillRoundedRect(barX - 2, barY - 2, barWidth + 4, barHeight + 4, 2);
         
-        // Stamina bar
+        // Stamina bar fill
         this.staminaBar = this.scene.add.graphics();
         this.staminaBar.setDepth(251);
-        this.updateStaminaBar();
         
         this.uiContainer.add(this.staminaBarBg);
         this.uiContainer.add(this.staminaBar);
+        
+        this.updateStaminaBar(); // Initial draw and position update
     }
 
     updateStaminaBar() {
-        if (!this.staminaBar) return;
+        if (!this.staminaBar || !this.staminaBarBg) return;
         
         const barWidth = 100;
         const barHeight = 8;
         const barX = this.fishPosition.x - barWidth / 2;
         const barY = this.fishPosition.y - 40;
+
+        // Update background position
+        this.staminaBarBg.clear();
+        this.staminaBarBg.fillStyle(0x2c3e50);
+        this.staminaBarBg.fillRoundedRect(barX - 2, barY - 2, barWidth + 4, barHeight + 4, 2);
         
         this.staminaBar.clear();
         
-        // Calculate stamina percentage
         const staminaPercent = this.fishStamina / this.maxFishStamina;
         const currentBarWidth = barWidth * staminaPercent;
         
-        // Color based on stamina level
-        let barColor = 0x00FF00; // Green
+        let barColor = 0x27ae60; // Green (success)
         if (staminaPercent < 0.3) {
-            barColor = 0xFF0000; // Red
+            barColor = 0xe74c3c; // Red (error)
         } else if (staminaPercent < 0.6) {
-            barColor = 0xFFFF00; // Yellow
+            barColor = 0xf39c12; // Orange (warning)
         }
         
         this.staminaBar.fillStyle(barColor);
         this.staminaBar.fillRoundedRect(barX, barY, currentBarWidth, barHeight, 2);
-        
-        // Update position to follow fish
-        this.staminaBarBg.setPosition(
-            this.fishPosition.x - barWidth / 2 - 2,
-            this.fishPosition.y - 42
-        );
-        this.staminaBar.setPosition(0, 0);
     }
 
     createTensionMeter() {
         const width = this.scene.cameras.main.width;
         const height = this.scene.cameras.main.height;
         
-        // Tension meter position (right side of screen)
         const meterX = width - 80;
         const meterY = height * 0.3;
         const meterWidth = 30;
         const meterHeight = 300;
         
-        // Tension meter background with gradient
+        // Tension meter background
         this.tensionMeterBg = this.scene.add.graphics();
+        this.tensionMeterBg.fillStyle(0x2c3e50);
+        this.tensionMeterBg.fillRoundedRect(meterX - meterWidth/2, meterY - meterHeight/2, meterWidth, meterHeight, 5);
+        this.tensionMeterBg.lineStyle(2, 0x34495e);
+        this.tensionMeterBg.strokeRoundedRect(meterX - meterWidth/2, meterY - meterHeight/2, meterWidth, meterHeight, 5);
         this.tensionMeterBg.setDepth(1001);
-        
-        // Background with depth effect
-        this.tensionMeterBg.fillGradientStyle(0x1a1a1a, 0x1a1a1a, 0x333333, 0x333333);
-        this.tensionMeterBg.fillRoundedRect(meterX - meterWidth/2, meterY - meterHeight/2, meterWidth, meterHeight, 8);
-        
-        // Border with glow
-        this.tensionMeterBg.lineStyle(3, 0x00aaff, 0.8);
-        this.tensionMeterBg.strokeRoundedRect(meterX - meterWidth/2, meterY - meterHeight/2, meterWidth, meterHeight, 8);
-        
-        // Inner border
-        this.tensionMeterBg.lineStyle(1, 0xffffff, 0.3);
-        this.tensionMeterBg.strokeRoundedRect(meterX - meterWidth/2 + 2, meterY - meterHeight/2 + 2, meterWidth - 4, meterHeight - 4, 6);
-        
         this.uiContainer.add(this.tensionMeterBg);
         
-        // Create danger zones
+        // Create danger/safe zones
         this.createTensionZones(meterX, meterY, meterWidth, meterHeight);
         
-        // Safe zone indicator (green zone)
+        // Safe zone indicator
         this.tensionSafeZoneGraphic = this.scene.add.graphics();
         this.tensionSafeZoneGraphic.setDepth(1002);
-        
         const safeZoneStart = meterY - meterHeight/2 + ((100 - this.tensionSafeZone.max) / 100) * meterHeight;
         const safeZoneEnd = meterY - meterHeight/2 + ((100 - this.tensionSafeZone.min) / 100) * meterHeight;
         const safeZoneHeight = safeZoneEnd - safeZoneStart;
-        
-        // Glowing green safe zone
-        this.tensionSafeZoneGraphic.fillGradientStyle(0x00ff44, 0x00ff44, 0x00aa22, 0x00aa22);
+        this.tensionSafeZoneGraphic.fillStyle(0x27ae60, 0.5);
         this.tensionSafeZoneGraphic.fillRoundedRect(meterX - meterWidth/2 + 3, safeZoneStart, meterWidth - 6, safeZoneHeight, 4);
-        
-        // Safe zone glow effect
-        this.tensionSafeZoneGraphic.lineStyle(2, 0x88ff88, 0.6);
+        this.tensionSafeZoneGraphic.lineStyle(1, 0x27ae60, 0.8);
         this.tensionSafeZoneGraphic.strokeRoundedRect(meterX - meterWidth/2 + 2, safeZoneStart - 1, meterWidth - 4, safeZoneHeight + 2, 4);
-        
         this.uiContainer.add(this.tensionSafeZoneGraphic);
         
         // Tension indicator (moving element)
@@ -557,23 +565,23 @@ export class ReelingMiniGame {
         // Tension meter label
         const meterLabel = this.scene.add.text(meterX, meterY - meterHeight/2 - 30, '⚡ TENSION', {
             fontSize: '14px',
-            fill: '#00aaff',
-            align: 'center',
+            fill: '#3498db',
+            fontFamily: 'Arial',
             fontWeight: 'bold'
-        }).setOrigin(0.5);
+        });
+        meterLabel.setOrigin(0.5);
         this.uiContainer.add(meterLabel);
         
-        // Safe zone label with animation
+        // Safe zone label
         this.safeZoneLabel = this.scene.add.text(meterX + 40, (safeZoneStart + safeZoneEnd) / 2, '✓ SAFE', {
             fontSize: '12px',
-            fill: '#00ff88',
-            stroke: '#004422',
-            strokeThickness: 1,
+            fill: '#27ae60',
+            fontFamily: 'Arial',
             fontWeight: 'bold'
-        }).setOrigin(0, 0.5);
+        });
+        this.safeZoneLabel.setOrigin(0, 0.5);
         this.uiContainer.add(this.safeZoneLabel);
         
-        // Animate safe zone label
         this.scene.tweens.add({
             targets: this.safeZoneLabel,
             alpha: 0.7,
@@ -587,32 +595,31 @@ export class ReelingMiniGame {
         this.tensionValueText = this.scene.add.text(meterX, meterY + meterHeight/2 + 20, '50%', {
             fontSize: '16px',
             fill: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 2,
-            align: 'center',
+            fontFamily: 'Arial',
             fontWeight: 'bold'
-        }).setOrigin(0.5);
+        });
+        this.tensionValueText.setOrigin(0.5);
         this.uiContainer.add(this.tensionValueText);
         
         // Line integrity warning
         this.lineIntegrityText = this.scene.add.text(meterX, meterY + meterHeight/2 + 45, 'LINE: 100%', {
             fontSize: '12px',
-            fill: '#00ff00',
-            stroke: '#000000',
-            strokeThickness: 1,
-            align: 'center'
-        }).setOrigin(0.5);
+            fill: '#27ae60',
+            fontFamily: 'Arial',
+            fontWeight: 'bold'
+        });
+        this.lineIntegrityText.setOrigin(0.5);
         this.uiContainer.add(this.lineIntegrityText);
         
-        console.log('ReelingMiniGame: Enhanced tension meter created');
+        console.log('ReelingMiniGame: Tension meter created with standard Phaser graphics');
     }
 
     createTensionZones(meterX, meterY, meterWidth, meterHeight) {
         // Create visual zones for different tension levels
         const zones = [
-            { start: 0, end: 30, color: 0xff4444, alpha: 0.3, label: 'DANGER' },
-            { start: 30, end: 70, color: 0x44ff44, alpha: 0.3, label: 'SAFE' },
-            { start: 70, end: 100, color: 0xff4444, alpha: 0.3, label: 'DANGER' }
+            { start: 0, end: 30, color: 0xe74c3c, alpha: 0.3, label: 'DANGER' },
+            { start: 30, end: 70, color: 0x27ae60, alpha: 0.3, label: 'SAFE' },
+            { start: 70, end: 100, color: 0xe74c3c, alpha: 0.3, label: 'DANGER' }
         ];
         
         zones.forEach((zone, index) => {
@@ -620,20 +627,23 @@ export class ReelingMiniGame {
             const zoneEnd = meterY - meterHeight/2 + ((100 - zone.start) / 100) * meterHeight;
             const zoneHeight = zoneEnd - zoneStart;
             
-            const zoneGraphic = this.scene.add.graphics();
-            zoneGraphic.setDepth(1001);
-            zoneGraphic.fillStyle(zone.color, zone.alpha);
-            zoneGraphic.fillRoundedRect(meterX - meterWidth/2 + 3, zoneStart, meterWidth - 6, zoneHeight, 3);
-            this.uiContainer.add(zoneGraphic);
+            // Create zone panel
+            const zonePanel = this.scene.add.graphics();
+            zonePanel.fillStyle(zone.color, zone.alpha);
+            zonePanel.fillRoundedRect(meterX - meterWidth/2 + 3, zoneStart, meterWidth - 6, zoneHeight, 3);
+            zonePanel.setDepth(1001);
+            this.uiContainer.add(zonePanel);
             
             // Zone labels
-            if (index !== 1) { // Don't label safe zone here, we have a special label
+            if (index !== 1) { // Don't label safe zone here, we have a special label for it
                 const labelY = zoneStart + zoneHeight / 2;
                 const zoneLabel = this.scene.add.text(meterX + 35, labelY, zone.label, {
                     fontSize: '10px',
-                    fill: zone.color === 0xff4444 ? '#ff4444' : '#44ff44',
+                    fill: zone.color === 0xe74c3c ? '#e74c3c' : '#27ae60',
+                    fontFamily: 'Arial',
                     fontWeight: 'bold'
-                }).setOrigin(0, 0.5);
+                });
+                zoneLabel.setOrigin(0, 0.5);
                 this.uiContainer.add(zoneLabel);
             }
         });
@@ -1032,6 +1042,11 @@ export class ReelingMiniGame {
         // Update fish graphic
         this.drawFish();
         
+        // Update fish name text position to follow the fish
+        if (this.fishNameText) {
+            this.fishNameText.setPosition(this.fishPosition.x, this.fishPosition.y - 40);
+        }
+        
         // Update fishing line
         this.updateFishingLine();
         
@@ -1196,7 +1211,7 @@ export class ReelingMiniGame {
         this.activeQTE = {
             type: qteType,
             difficulty: difficulty,
-            timeLimit: 3000 - (difficulty * 500), // 3s to 1.5s
+            timeLimit: qteType === 'hold' ? 3000 : (3000 - (difficulty * 500)), // Fixed 3s for hold, variable for others
             startTime: this.scene.time.now,
             completed: false,
             success: false
@@ -1209,7 +1224,7 @@ export class ReelingMiniGame {
                 this.activeQTE.currentTaps = 0;
                 break;
             case 'hold':
-                this.activeQTE.holdDuration = 1000 + (difficulty * 500);
+                this.activeQTE.holdDuration = 1500; // Fixed 1.5 seconds
                 this.activeQTE.holdStartTime = null;
                 break;
             case 'sequence':
@@ -1252,25 +1267,22 @@ export class ReelingMiniGame {
     createQTEVisuals() {
         if (!this.activeQTE || !this.isActive) return;
         
-        // Clean up any existing QTE visuals first
         this.destroyQTEVisuals();
         
         const width = this.scene.cameras.main.width;
         const height = this.scene.cameras.main.height;
         
-        // Create QTE container
         this.qteContainer = this.scene.add.container(width / 2, height / 2);
         this.qteContainer.setDepth(2000);
         
         // Create background panel
         this.qteBackground = this.scene.add.graphics();
-        this.qteBackground.fillStyle(0x000000, 0.8);
+        this.qteBackground.fillStyle(0x2c3e50, 0.95);
         this.qteBackground.fillRoundedRect(-150, -80, 300, 160, 10);
-        this.qteBackground.lineStyle(3, 0xFFFFFF, 0.8);
+        this.qteBackground.lineStyle(3, 0x3498db);
         this.qteBackground.strokeRoundedRect(-150, -80, 300, 160, 10);
         this.qteContainer.add(this.qteBackground);
         
-        // Create QTE-specific visuals
         switch (this.activeQTE.type) {
             case 'tap':
                 this.createTapQTEVisuals();
@@ -1304,81 +1316,104 @@ export class ReelingMiniGame {
     createTapQTEVisuals() {
         // Instructions
         this.qteInstructions = this.scene.add.text(0, -50, 
-            `TAP SPACEBAR ${this.activeQTE.requiredTaps} TIMES!`, {
+            `TAP SPACE ${this.activeQTE.requiredTaps} TIMES!`, {
             fontSize: '16px',
             fill: '#ffffff',
-            fontWeight: 'bold',
-            align: 'center'
-        }).setOrigin(0.5);
+            fontFamily: 'Arial',
+            fontWeight: 'bold'
+        });
+        this.qteInstructions.setOrigin(0.5);
         this.qteContainer.add(this.qteInstructions);
         
         // Tap indicator
         this.qteTapIndicator = this.scene.add.graphics();
-        this.qteTapIndicator.fillStyle(0xFFFFFF);
+        this.qteTapIndicator.fillStyle(0x3498db);
         this.qteTapIndicator.fillRoundedRect(-30, -10, 60, 20, 5);
+        this.qteTapIndicator.lineStyle(2, 0x2980b9);
+        this.qteTapIndicator.strokeRoundedRect(-30, -10, 60, 20, 5);
         this.qteContainer.add(this.qteTapIndicator);
         
         // Tap indicator text
         const tapText = this.scene.add.text(0, 0, 'SPACE', {
             fontSize: '12px',
-            fill: '#000000',
+            fill: '#ffffff',
+            fontFamily: 'Arial',
             fontWeight: 'bold'
-        }).setOrigin(0.5);
+        });
+        tapText.setOrigin(0.5);
         this.qteContainer.add(tapText);
         
         // Tap counter
         const tapCounter = this.scene.add.text(0, 25, 
             `${this.activeQTE.currentTaps}/${this.activeQTE.requiredTaps}`, {
-            fontSize: '20px',
-            fill: '#00ff00',
+            fontSize: '18px',
+            fill: '#27ae60',
+            fontFamily: 'Arial',
             fontWeight: 'bold'
-        }).setOrigin(0.5);
+        });
+        tapCounter.setOrigin(0.5);
         this.qteContainer.add(tapCounter);
         
-        // Animate tap indicator
         this.scene.tweens.add({
-            targets: this.qteTapIndicator,
-            scaleX: 1.2,
-            scaleY: 1.2,
-            duration: 300,
+            targets: [this.qteTapIndicator, tapText],
+            scaleX: 1.1,
+            scaleY: 1.1,
+            duration: 500,
             yoyo: true,
             repeat: -1,
-            ease: 'Power2.easeInOut'
+            ease: 'Sine.easeInOut'
         });
     }
 
     createHoldQTEVisuals() {
         // Instructions
         this.qteInstructions = this.scene.add.text(0, -50, 
-            'HOLD SPACEBAR!', {
+            'HOLD SPACEBAR FOR 1.5 SECONDS!', {
             fontSize: '16px',
             fill: '#ffffff',
-            fontWeight: 'bold',
-            align: 'center'
-        }).setOrigin(0.5);
+            fontFamily: 'Arial',
+            fontWeight: 'bold'
+        });
+        this.qteInstructions.setOrigin(0.5);
         this.qteContainer.add(this.qteInstructions);
         
-        // Hold indicator
+        // Hold indicator panel
         this.qteTapIndicator = this.scene.add.graphics();
-        this.qteTapIndicator.fillStyle(0xFF6600);
-        this.qteTapIndicator.fillRoundedRect(-40, -15, 80, 30, 8);
-        this.qteTapIndicator.lineStyle(2, 0xFFFFFF);
-        this.qteTapIndicator.strokeRoundedRect(-40, -15, 80, 30, 8);
+        this.qteTapIndicator.fillStyle(0x3498db);
+        this.qteTapIndicator.fillRoundedRect(-40, -15, 80, 30, 5);
+        this.qteTapIndicator.lineStyle(2, 0x2980b9);
+        this.qteTapIndicator.strokeRoundedRect(-40, -15, 80, 30, 5);
         this.qteContainer.add(this.qteTapIndicator);
         
         // Hold text
         const holdText = this.scene.add.text(0, 0, 'HOLD SPACE', {
             fontSize: '12px',
             fill: '#ffffff',
+            fontFamily: 'Arial',
             fontWeight: 'bold'
-        }).setOrigin(0.5);
+        });
+        holdText.setOrigin(0.5);
         this.qteContainer.add(holdText);
         
-        // Hold duration bar
-        const holdBar = this.scene.add.graphics();
-        holdBar.fillStyle(0x00FF00);
-        holdBar.fillRect(-35, 20, 70, 8);
-        this.qteContainer.add(holdBar);
+        // Hold duration bar background
+        const holdBarBg = this.scene.add.graphics();
+        holdBarBg.fillStyle(0x2c3e50);
+        holdBarBg.fillRoundedRect(-75, 20, 150, 8, 3);
+        holdBarBg.lineStyle(1, 0x34495e);
+        holdBarBg.strokeRoundedRect(-75, 20, 150, 8, 3);
+        this.qteContainer.add(holdBarBg);
+
+        // Hold duration bar fill
+        this.holdBarFill = this.scene.add.graphics();
+        this.qteContainer.add(this.holdBarFill);
+        
+        // Add hold timer to update progress bar
+        this.holdProgressTimer = this.scene.time.addEvent({
+            delay: 50,
+            callback: this.updateHoldProgress,
+            callbackScope: this,
+            loop: true
+        });
     }
 
     createSequenceQTEVisuals() {
@@ -1387,12 +1422,12 @@ export class ReelingMiniGame {
             'FOLLOW THE SEQUENCE!', {
             fontSize: '16px',
             fill: '#ffffff',
-            fontWeight: 'bold',
-            align: 'center'
-        }).setOrigin(0.5);
+            fontFamily: 'Arial',
+            fontWeight: 'bold'
+        });
+        this.qteInstructions.setOrigin(0.5);
         this.qteContainer.add(this.qteInstructions);
         
-        // Create arrow indicators
         const arrowSpacing = 40;
         const startX = -(this.activeQTE.sequence.length - 1) * arrowSpacing / 2;
         
@@ -1400,21 +1435,21 @@ export class ReelingMiniGame {
         this.activeQTE.sequence.forEach((direction, index) => {
             const arrow = this.createDirectionArrow(direction, startX + index * arrowSpacing, 0);
             
-            // Highlight current arrow
             if (index === this.activeQTE.currentIndex) {
-                this.drawArrow(arrow, direction, 0x00FF00);
+                this.drawArrow(arrow, direction, 0x27ae60); // Green
                 this.scene.tweens.add({
                     targets: arrow,
                     scaleX: 1.3,
                     scaleY: 1.3,
-                    duration: 200,
+                    duration: 500,
                     yoyo: true,
-                    repeat: -1
+                    repeat: -1,
+                    ease: 'Sine.easeInOut'
                 });
             } else if (index < this.activeQTE.currentIndex) {
-                this.drawArrow(arrow, direction, 0x666666); // Completed arrows
+                this.drawArrow(arrow, direction, 0x666666); // Gray
             } else {
-                this.drawArrow(arrow, direction, 0xFFFFFF); // Future arrows
+                this.drawArrow(arrow, direction, 0xffffff); // White
             }
             
             this.qteArrows.push(arrow);
@@ -1425,8 +1460,11 @@ export class ReelingMiniGame {
         const progressText = this.scene.add.text(0, 35, 
             `${this.activeQTE.currentIndex}/${this.activeQTE.sequence.length}`, {
             fontSize: '14px',
-            fill: '#ffffff'
-        }).setOrigin(0.5);
+            fill: '#ffffff',
+            fontFamily: 'Arial',
+            fontWeight: 'bold'
+        });
+        progressText.setOrigin(0.5);
         this.qteContainer.add(progressText);
     }
 
@@ -1446,7 +1484,7 @@ export class ReelingMiniGame {
 
     drawArrow(arrow, direction, color) {
         arrow.clear();
-        arrow.fillStyle(color);
+        arrow.fillStyle(color); // Color is already a UITheme color from the caller
         
         switch (direction) {
             case 'up':
@@ -1472,24 +1510,27 @@ export class ReelingMiniGame {
             'HIT SPACEBAR AT THE RIGHT TIME!', {
             fontSize: '16px',
             fill: '#ffffff',
-            fontWeight: 'bold',
-            align: 'center'
-        }).setOrigin(0.5);
+            fontFamily: 'Arial',
+            fontWeight: 'bold'
+        });
+        this.qteInstructions.setOrigin(0.5);
         this.qteContainer.add(this.qteInstructions);
         
         // Timing bar background
         const timingBarBg = this.scene.add.graphics();
-        timingBarBg.fillStyle(0x333333);
+        timingBarBg.fillStyle(0x2c3e50);
         timingBarBg.fillRoundedRect(-100, -10, 200, 20, 5);
+        timingBarBg.lineStyle(2, 0x34495e);
+        timingBarBg.strokeRoundedRect(-100, -10, 200, 20, 5);
         this.qteContainer.add(timingBarBg);
         
-        // Target zone
         const targetPercent = this.activeQTE.targetTime / this.activeQTE.timeLimit;
         const targetX = -100 + (targetPercent * 200);
         const targetWidth = (this.activeQTE.tolerance * 2 / this.activeQTE.timeLimit) * 200;
         
+        // Target zone
         this.qteTimingTarget = this.scene.add.graphics();
-        this.qteTimingTarget.fillStyle(0x00FF00, 0.7);
+        this.qteTimingTarget.fillStyle(0x27ae60, 0.7); // Green with alpha
         this.qteTimingTarget.fillRoundedRect(targetX - targetWidth/2, -10, targetWidth, 20, 5);
         this.qteContainer.add(this.qteTimingTarget);
         
@@ -1512,24 +1553,27 @@ export class ReelingMiniGame {
         const instructionText = this.scene.add.text(0, 25, 
             'Hit SPACE when the red line is in the GREEN zone!', {
             fontSize: '12px',
-            fill: '#ffffff'
+            fill: '#ffffff',
+            fontFamily: 'Arial'
         }).setOrigin(0.5);
         this.qteContainer.add(instructionText);
     }
 
     createQTEProgressBar() {
-        // Time remaining bar
+        // Time remaining bar background
         const progressBarBg = this.scene.add.graphics();
-        progressBarBg.fillStyle(0x333333);
-        progressBarBg.fillRect(-140, 60, 280, 8);
+        progressBarBg.fillStyle(0x2c3e50);
+        progressBarBg.fillRoundedRect(-140, 60, 280, 8, 3);
+        progressBarBg.lineStyle(1, 0x34495e);
+        progressBarBg.strokeRoundedRect(-140, 60, 280, 8, 3);
         this.qteContainer.add(progressBarBg);
         
+        // QTE Progress bar fill
         this.qteProgressBar = this.scene.add.graphics();
-        this.qteProgressBar.fillStyle(0xFF6600);
-        this.qteProgressBar.fillRect(-140, 60, 280, 8);
+        this.qteProgressBar.fillStyle(0xf39c12); // Orange for time running out
+        this.qteProgressBar.fillRect(-140, 60, 280, 8); // Initial full fill
         this.qteContainer.add(this.qteProgressBar);
         
-        // Animate progress bar
         this.scene.tweens.add({
             targets: this.qteProgressBar,
             scaleX: 0,
@@ -1605,6 +1649,12 @@ export class ReelingMiniGame {
     }
 
     destroyQTEVisuals() {
+        // Clean up hold progress timer
+        if (this.holdProgressTimer) {
+            this.holdProgressTimer.destroy();
+            this.holdProgressTimer = null;
+        }
+        
         // Stop any ongoing tweens on QTE elements
         if (this.qteContainer) {
             this.scene.tweens.killTweensOf(this.qteContainer);
@@ -1641,6 +1691,7 @@ export class ReelingMiniGame {
         this.qteInstructions = null;
         this.qteProgressBar = null;
         this.qteTimingTarget = null;
+        this.holdBarFill = null;
     }
 
     handleInput(inputType, inputData) {
@@ -1696,7 +1747,7 @@ export class ReelingMiniGame {
                     }
                 } else if (inputType === 'holdEnd' && qte.holdStartTime) {
                     const holdDuration = this.scene.time.now - qte.holdStartTime;
-                    if (holdDuration >= qte.holdDuration) {
+                    if (holdDuration >= 1500) { // Fixed 1.5 seconds
                         success = true;
                     } else {
                         // Failed to hold long enough
@@ -1842,19 +1893,20 @@ export class ReelingMiniGame {
             `-${damage}`,
             {
                 fontSize: '16px',
-                fill: '#ff0000',
-                fontWeight: 'bold'
+                fill: '#e74c3c',
+                fontFamily: 'Arial',
+                fontWeight: 'bold',
+                stroke: '#000000',
+                strokeThickness: 2
             }
-        ).setOrigin(0.5);
+        );
+        damageText.setOrigin(0.5).setDepth(300);
         
-        damageText.setDepth(300);
-        
-        // Animate damage text
         this.scene.tweens.add({
             targets: damageText,
             y: damageText.y - 30,
             alpha: 0,
-            duration: 1000,
+            duration: 800,
             ease: 'Power2.easeOut',
             onComplete: () => {
                 damageText.destroy();
@@ -1969,142 +2021,150 @@ export class ReelingMiniGame {
         }
     }
 
-    complete(success, result) {
-        this.isActive = false;
-        
-        // Play completion audio based on result
-        if (success) {
-            this.audioManager?.playSFX('reel_success');
-        } else {
-            switch (result) {
-                case 'line_break':
-                    this.audioManager?.playSFX('line_break');
-                    break;
-                case 'fish_escape':
-                    this.audioManager?.playSFX('fish_escape');
-                    break;
-                default:
-                    this.audioManager?.playSFX('reel_fail');
-                    break;
+    complete(success, result, fishData, stats) {
+        // Clean up timers first to prevent any further calls
+        try {
+            if (this.reelingTimer) {
+                this.reelingTimer.destroy();
+                this.reelingTimer = null;
             }
-        }
-        
-        // Clean up timers
-        if (this.reelingTimer) {
-            this.reelingTimer.destroy();
-        }
-        if (this.struggleTimer) {
-            this.struggleTimer.destroy();
-        }
-        if (this.qteTimer) {
-            this.qteTimer.destroy();
+            if (this.struggleTimer) {
+                this.struggleTimer.destroy();
+                this.struggleTimer = null;
+            }
+            if (this.qteTimer) {
+                this.qteTimer.destroy();
+                this.qteTimer = null;
+            }
+        } catch (error) {
+            console.warn('ReelingMiniGame: Error cleaning up timers:', error);
         }
         
         console.log(`ReelingMiniGame: ${success ? 'Success' : 'Failed'} - ${result}`);
         
-        // Handle fish catch data properly
-        let fishData = null;
-        let reason = result;
+        // Prepare the final stats object with safe defaults
+        const finalStats = stats || {
+            tension: this.tension || 0,
+            lineIntegrity: this.lineIntegrity || 100,
+            reelProgress: this.reelProgress || 0,
+            fishStamina: this.fishStamina || 100,
+            qteSuccess: this.qteSuccess || 0,
+            qteFails: this.qteFails || 0
+        };
         
-        if (success && typeof result === 'object' && result.caught) {
-            // Fish was caught successfully - extract fish data
-            fishData = result.fishData || this.selectedFish || {
-                name: 'Unknown Fish',
-                id: 'unknown',
-                weight: 2.5,
-                rarity: 1
-            };
-            reason = 'fish_caught';
+        // Ensure fishData has safe defaults
+        const safeFishData = fishData || {
+            name: 'Unknown Fish',
+            weight: 2.5,
+            rarity: 1,
+            value: 100
+        };
+        
+        // Emit completion event with error handling
+        try {
+            this.scene.events.emit('fishing:reelComplete', {
+                success: success,
+                reason: result,
+                fish: safeFishData,
+                finalStats: finalStats
+            });
+        } catch (error) {
+            console.error('ReelingMiniGame: Error emitting completion event:', error);
         }
-        
-        // Emit completion event
-        this.scene.events.emit('fishing:reelComplete', {
-            success: success,
-            reason: reason,
-            fish: fishData, // Pass the actual fish data instead of this.fish (which is null)
-            finalStats: {
-                tension: this.tension,
-                lineIntegrity: this.lineIntegrity,
-                reelProgress: this.reelProgress,
-                fishStamina: this.fishStamina,
-                qteSuccess: this.qteSuccess,
-                qteFails: this.qteFails
-            },
-            // Include catch result for additional data
-            catchResult: (typeof result === 'object' && result.catchResult) ? result.catchResult : null
-        });
     }
 
     destroy() {
         this.isActive = false;
         
-        // Clean up timers
-        if (this.reelingTimer) {
-            this.reelingTimer.destroy();
-        }
-        if (this.struggleTimer) {
-            this.struggleTimer.destroy();
-        }
-        if (this.qteTimer) {
-            this.qteTimer.destroy();
+        // Clean up timers with error handling
+        try {
+            if (this.reelingTimer) {
+                this.reelingTimer.destroy();
+                this.reelingTimer = null;
+            }
+            if (this.struggleTimer) {
+                this.struggleTimer.destroy();
+                this.struggleTimer = null;
+            }
+            if (this.qteTimer) {
+                this.qteTimer.destroy();
+                this.qteTimer = null;
+            }
+        } catch (error) {
+            console.warn('ReelingMiniGame: Error destroying timers:', error);
         }
         
-        // Clean up input handling
-        if (this.mouseHandler) {
-            this.scene.input.off('pointerdown', this.mouseHandler);
-        }
-        if (this.keyDownHandler) {
-            this.scene.input.keyboard.off('keydown', this.keyDownHandler);
-        }
-        if (this.keyUpHandler) {
-            this.scene.input.keyboard.off('keyup', this.keyUpHandler);
-        }
-        if (this.keyHandler) {
-            document.removeEventListener('keydown', this.keyHandler);
+        // Clean up input handling with error handling
+        try {
+            if (this.mouseHandler && this.scene.input) {
+                this.scene.input.off('pointerdown', this.mouseHandler);
+            }
+            if (this.keyDownHandler && this.scene.input && this.scene.input.keyboard) {
+                this.scene.input.keyboard.off('keydown', this.keyDownHandler);
+            }
+            if (this.keyUpHandler && this.scene.input && this.scene.input.keyboard) {
+                this.scene.input.keyboard.off('keyup', this.keyUpHandler);
+            }
+            if (this.keyHandler && document) {
+                document.removeEventListener('keydown', this.keyHandler);
+            }
+        } catch (error) {
+            console.warn('ReelingMiniGame: Error removing input handlers:', error);
         }
         
         // Clean up QTE visuals
-        this.destroyQTEVisuals();
-        
-        // Clean up visual elements
-        if (this.fishGraphic) {
-            this.fishGraphic.destroy();
-        }
-        if (this.fishingLine) {
-            this.fishingLine.destroy();
-        }
-        if (this.staminaBar) {
-            this.staminaBar.destroy();
-        }
-        if (this.staminaBarBg) {
-            this.staminaBarBg.destroy();
-        }
-        if (this.tensionMeter) {
-            this.tensionMeter.destroy();
-        }
-        if (this.tensionMeterBg) {
-            this.tensionMeterBg.destroy();
-        }
-        if (this.tensionIndicator) {
-            this.tensionIndicator.destroy();
-        }
-        if (this.uiContainer) {
-            this.uiContainer.destroy();
+        try {
+            this.destroyQTEVisuals();
+        } catch (error) {
+            console.warn('ReelingMiniGame: Error destroying QTE visuals:', error);
         }
         
-        // Clean up splash effects
-        this.splashEffects.forEach(splash => {
-            if (splash && splash.active) {
-                splash.destroy();
+        // Clean up visual elements with error handling
+        const elementsToDestroy = [
+            'fishGraphic', 'fishNameText', 'fishingLine', 'staminaBar', 'staminaBarBg',
+            'tensionMeter', 'tensionMeterBg', 'tensionIndicator', 'uiContainer'
+        ];
+        
+        elementsToDestroy.forEach(element => {
+            try {
+                if (this[element]) {
+                    this[element].destroy();
+                    this[element] = null;
+                }
+            } catch (error) {
+                console.warn(`ReelingMiniGame: Error destroying ${element}:`, error);
             }
         });
-        this.splashEffects = [];
         
-        // Clean up celebration container
-        if (this.celebrationContainer) {
-            this.scene.tweens.killTweensOf(this.celebrationContainer);
-            this.celebrationContainer.destroy();
-            this.celebrationContainer = null;
+        // Clean up splash effects with error handling
+        try {
+            if (this.splashEffects && Array.isArray(this.splashEffects)) {
+                this.splashEffects.forEach(splash => {
+                    try {
+                        if (splash && splash.active) {
+                            splash.destroy();
+                        }
+                    } catch (error) {
+                        console.warn('ReelingMiniGame: Error destroying splash effect:', error);
+                    }
+                });
+                this.splashEffects = [];
+            }
+        } catch (error) {
+            console.warn('ReelingMiniGame: Error cleaning up splash effects:', error);
+        }
+        
+        // Clean up celebration container with error handling
+        try {
+            if (this.celebrationContainer) {
+                if (this.scene.tweens) {
+                    this.scene.tweens.killTweensOf(this.celebrationContainer);
+                }
+                this.celebrationContainer.destroy();
+                this.celebrationContainer = null;
+            }
+        } catch (error) {
+            console.warn('ReelingMiniGame: Error destroying celebration container:', error);
         }
         
         console.log('ReelingMiniGame: All visual elements destroyed');
@@ -2124,58 +2184,144 @@ export class ReelingMiniGame {
         // Calculate actual weight based on fish properties
         let actualWeight = 2.5; // Default weight
         
-        if (this.selectedFish && this.gameState.fishDatabase) {
-            // Use FishDatabase to calculate weight with variation
-            actualWeight = this.gameState.fishDatabase.calculateFishWeight(this.selectedFish);
-        } else if (this.fishProperties) {
-            // Fallback to fish properties
-            actualWeight = this.fishProperties.weight || 2.5;
+        try {
+            if (this.selectedFish && this.gameState.fishDatabase) {
+                // Use FishDatabase to calculate weight with variation
+                actualWeight = this.gameState.fishDatabase.calculateFishWeight(this.selectedFish);
+            } else if (this.fishProperties) {
+                // Fallback to fish properties
+                actualWeight = this.fishProperties.weight || 2.5;
+            }
+        } catch (error) {
+            console.warn('ReelingMiniGame: Error calculating fish weight:', error);
+            actualWeight = 2.5;
         }
         
         // Determine if it was a perfect catch based on QTE performance
         const perfectCatch = this.qteSuccess > 0 && this.qteFails === 0;
         
-        // Create comprehensive fish data for GameState
+        // Create comprehensive fish data for GameState with proper validation
         const fishData = {
             fishId: this.fishId || this.selectedFish?.id || 'unknown',
             name: this.selectedFish?.name || this.fishProperties?.name || 'Unknown Fish',
             weight: actualWeight,
-            rarity: Math.min(this.selectedFish?.rarity || 1, 6), // Cap rarity at 6
-            value: this.selectedFish?.coinValue || 100,
+            rarity: Math.min(Math.max(1, this.selectedFish?.rarity || 1), 6), // Ensure rarity is between 1-6
+            value: Math.max(1, this.selectedFish?.coinValue || 100), // Ensure positive value
             isPerfectCatch: perfectCatch,
             qtePerformance: {
-                successes: this.qteSuccess,
-                failures: this.qteFails,
-                totalQTEs: this.qteSuccess + this.qteFails
+                successes: this.qteSuccess || 0,
+                failures: this.qteFails || 0,
+                totalQTEs: (this.qteSuccess || 0) + (this.qteFails || 0)
             },
             catchStats: {
-                finalTension: this.tension,
-                lineIntegrity: this.lineIntegrity,
-                timeToReel: this.scene.time.now - this.startTime
+                finalTension: this.tension || 0,
+                lineIntegrity: this.lineIntegrity || 100,
+                timeToReel: this.scene.time.now - (this.startTime || this.scene.time.now)
             }
         };
         
         console.log('ReelingMiniGame: Fish data being processed:', fishData);
         console.log('ReelingMiniGame: Selected fish original data:', this.selectedFish);
         
-        // Let GameState handle the catch with FishDatabase
-        const catchResult = this.gameState.catchFish(fishData, perfectCatch);
-        
-        // Award perfect reel bonus if applicable
-        if (perfectCatch) {
-            this.gameState.trackPerfectReel();
+        // Let GameState handle the catch with error handling
+        let catchResult;
+        try {
+            catchResult = this.gameState.catchFish(fishData, perfectCatch);
+        } catch (error) {
+            console.error('ReelingMiniGame: Error in GameState.catchFish:', error);
+            console.error('ReelingMiniGame: Error stack:', error.stack);
+            
+            // Create fallback catch result with proper structure
+            catchResult = {
+                success: true,
+                fish: {
+                    id: fishData.fishId,
+                    name: fishData.name,
+                    rarity: fishData.rarity,
+                    weight: fishData.weight,
+                    value: fishData.value
+                },
+                weight: fishData.weight,
+                rewards: { 
+                    coins: fishData.value, 
+                    experience: Math.max(1, fishData.rarity * 10) 
+                },
+                isFirstCatch: false,
+                isRecord: false,
+                isPerfectCatch: perfectCatch
+            };
         }
         
-        // Show catch celebration
-        this.showCatchCelebration(catchResult);
+        // Validate catch result structure
+        if (!catchResult || typeof catchResult !== 'object') {
+            console.error('ReelingMiniGame: Invalid catch result from GameState');
+            catchResult = {
+                success: true,
+                fish: fishData,
+                weight: fishData.weight,
+                rewards: { coins: fishData.value, experience: 10 },
+                isFirstCatch: false,
+                isRecord: false,
+                isPerfectCatch: perfectCatch
+            };
+        }
         
-        // Complete the minigame
+        // Award perfect reel bonus if applicable
+        try {
+            if (perfectCatch && this.gameState.trackPerfectReel) {
+                this.gameState.trackPerfectReel();
+            }
+        } catch (error) {
+            console.warn('ReelingMiniGame: Error tracking perfect reel:', error);
+        }
+        
+        // Show catch celebration with error handling
+        try {
+            this.showCatchCelebration(catchResult);
+        } catch (error) {
+            console.error('ReelingMiniGame: Error showing celebration:', error);
+        }
+        
+        // Complete the minigame with proper fish data structure
         this.scene.time.delayedCall(2000, () => {
-            this.complete(true, {
-                caught: true,
-                catchResult: catchResult,
-                fishData: fishData
-            });
+            try {
+                // Ensure fish data has proper structure for completion
+                const completionFishData = catchResult.fish || fishData;
+                
+                // Pass the catch result and fish data properly to complete
+                this.complete(true, 'fish_caught', completionFishData, {
+                    tension: this.tension || 0,
+                    lineIntegrity: this.lineIntegrity || 100,
+                    reelProgress: this.reelProgress || 100,
+                    fishStamina: this.fishStamina || 0,
+                    qteSuccess: this.qteSuccess || 0,
+                    qteFails: this.qteFails || 0,
+                    catchResult: catchResult // Include the full catch result
+                });
+            } catch (error) {
+                console.error('ReelingMiniGame: Error completing minigame:', error);
+                console.error('ReelingMiniGame: Error stack:', error.stack);
+                
+                // Fallback completion with minimal data
+                try {
+                    this.complete(true, 'fish_caught', fishData, {
+                        catchResult: catchResult
+                    });
+                } catch (fallbackError) {
+                    console.error('ReelingMiniGame: Fallback completion also failed:', fallbackError);
+                    // Just emit the completion event manually
+                    try {
+                        this.scene.events.emit('fishing:reelComplete', {
+                            success: true,
+                            reason: 'fish_caught',
+                            fish: fishData,
+                            finalStats: {}
+                        });
+                    } catch (emitError) {
+                        console.error('ReelingMiniGame: Manual event emission failed:', emitError);
+                    }
+                }
+            }
         });
     }
     
@@ -2189,158 +2335,148 @@ export class ReelingMiniGame {
         const weight = catchResult.weight || 0;
         const rewards = catchResult.rewards || { coins: 0, experience: 0 };
         
-        console.log('ReelingMiniGame: Showing celebration for:', { fish, weight, rewards });
-        
-        // Validate fish data
-        if (!fish.name) {
-            console.warn('ReelingMiniGame: Fish missing name, using fallback');
-            fish.name = 'Unknown Fish';
-        }
-        
-        if (!fish.rarity || fish.rarity < 1) {
-            console.warn('ReelingMiniGame: Invalid fish rarity, using fallback');
-            fish.rarity = 1;
-        }
-        
-        // Cap rarity for display
+        if (!fish.name) fish.name = 'Unknown Fish';
+        if (!fish.rarity || fish.rarity < 1) fish.rarity = 1;
         const displayRarity = Math.min(fish.rarity, 6);
         
-        // Create celebration UI
-        const celebrationContainer = this.scene.add.container(
+        this.celebrationContainer = this.scene.add.container(
             this.scene.cameras.main.width / 2,
             this.scene.cameras.main.height / 2
         );
-        celebrationContainer.setDepth(3000);
+        this.celebrationContainer.setDepth(3000);
         
         // Background panel
         const bg = this.scene.add.graphics();
-        bg.fillStyle(0x000000, 0.9);
-        bg.fillRoundedRect(-200, -150, 400, 300, 20);
-        bg.lineStyle(3, 0xFFD700, 1);
-        bg.strokeRoundedRect(-200, -150, 400, 300, 20);
-        celebrationContainer.add(bg);
+        bg.fillStyle(0x2d5016, 0.95);
+        bg.fillRoundedRect(-200, -150, 400, 300, 15);
+        bg.lineStyle(3, 0x4a7c59);
+        bg.strokeRoundedRect(-200, -150, 400, 300, 15);
+        this.celebrationContainer.add(bg);
         
         // Title
         const title = this.scene.add.text(0, -120, 'FISH CAUGHT!', {
             fontSize: '32px',
-            fontFamily: 'Arial',
-            color: '#FFD700',
-            fontStyle: 'bold',
+            fill: '#ffff00',
+            fontWeight: 'bold',
             stroke: '#000000',
             strokeThickness: 4
-        }).setOrigin(0.5);
-        celebrationContainer.add(title);
+        });
+        title.setOrigin(0.5);
+        this.celebrationContainer.add(title);
         
-        // Fish name and rarity
-        const rarityColors = ['#888888', '#FFFFFF', '#00FF00', '#0080FF', '#FF00FF', 
-                            '#FF8000', '#FF0000', '#FFD700', '#FF1493', '#00FFFF'];
+        // Fish name with rarity color
+        const rarityColors = ['#8B4513', '#4169E1', '#32CD32', '#FF6347', '#FFD700', '#9370DB'];
         const rarityColor = rarityColors[Math.min(displayRarity - 1, rarityColors.length - 1)];
-        
         const fishName = this.scene.add.text(0, -60, fish.name, {
             fontSize: '24px',
-            fontFamily: 'Arial',
-            color: rarityColor,
-            fontStyle: 'bold',
+            fill: rarityColor,
+            fontWeight: 'bold',
             stroke: '#000000',
-            strokeThickness: 2
-        }).setOrigin(0.5);
-        celebrationContainer.add(fishName);
+            strokeThickness: 3
+        });
+        fishName.setOrigin(0.5);
+        this.celebrationContainer.add(fishName);
         
         // Weight
-        const weightText = this.scene.add.text(0, -20, `Weight: ${weight} kg`, {
-            fontSize: '20px',
-            fontFamily: 'Arial',
-            color: '#FFFFFF',
+        const weightText = this.scene.add.text(0, -20, `Weight: ${weight.toFixed(1)} kg`, {
+            fontSize: '18px',
+            fill: '#ffffff',
+            fontWeight: 'bold',
             stroke: '#000000',
             strokeThickness: 2
-        }).setOrigin(0.5);
-        celebrationContainer.add(weightText);
+        });
+        weightText.setOrigin(0.5);
+        this.celebrationContainer.add(weightText);
         
-        // Special badges
         let badgeY = 20;
+        const createBadge = (text, color, yOffset) => {
+            const badge = this.scene.add.text(0, yOffset, text, {
+                fontSize: '16px',
+                fill: color,
+                fontWeight: 'bold',
+                stroke: '#000000',
+                strokeThickness: 2
+            });
+            badge.setOrigin(0.5);
+            this.celebrationContainer.add(badge);
+            return badge;
+        };
         
         if (catchResult.isFirstCatch) {
-            const firstCatchBadge = this.scene.add.text(0, badgeY, '⭐ FIRST CATCH! ⭐', {
-                fontSize: '18px',
-                fontFamily: 'Arial',
-                color: '#FFD700',
-                fontStyle: 'bold',
-                stroke: '#000000',
-                strokeThickness: 2
-            }).setOrigin(0.5);
-            celebrationContainer.add(firstCatchBadge);
+            createBadge('⭐ FIRST CATCH! ⭐', '#ffff00', badgeY);
             badgeY += 30;
         }
-        
         if (catchResult.isRecord) {
-            const recordBadge = this.scene.add.text(0, badgeY, '🏆 NEW RECORD! 🏆', {
-                fontSize: '18px',
-                fontFamily: 'Arial',
-                color: '#FF6B6B',
-                fontStyle: 'bold',
-                stroke: '#000000',
-                strokeThickness: 2
-            }).setOrigin(0.5);
-            celebrationContainer.add(recordBadge);
+            createBadge('🏆 NEW RECORD! 🏆', '#9370DB', badgeY);
             badgeY += 30;
         }
-        
         if (catchResult.isPerfectCatch) {
-            const perfectBadge = this.scene.add.text(0, badgeY, '✨ PERFECT CATCH! ✨', {
-                fontSize: '18px',
-                fontFamily: 'Arial',
-                color: '#00FFFF',
-                fontStyle: 'bold',
-                stroke: '#000000',
-                strokeThickness: 2
-            }).setOrigin(0.5);
-            celebrationContainer.add(perfectBadge);
+            createBadge('✨ PERFECT CATCH! ✨', '#00ffff', badgeY);
             badgeY += 30;
         }
         
         // Rewards
         const coinsText = this.scene.add.text(-80, 90, `+${rewards.coins || 0} 🪙`, {
-            fontSize: '20px',
-            fontFamily: 'Arial',
-            color: '#FFD700',
-            fontStyle: 'bold',
+            fontSize: '18px',
+            fill: '#ffff00',
+            fontWeight: 'bold',
             stroke: '#000000',
             strokeThickness: 2
-        }).setOrigin(0.5);
-        celebrationContainer.add(coinsText);
+        });
+        coinsText.setOrigin(0.5);
+        this.celebrationContainer.add(coinsText);
         
         const expText = this.scene.add.text(80, 90, `+${rewards.experience || 0} XP`, {
-            fontSize: '20px',
-            fontFamily: 'Arial',
-            color: '#00FF00',
-            fontStyle: 'bold',
+            fontSize: '18px',
+            fill: '#00ff00',
+            fontWeight: 'bold',
             stroke: '#000000',
             strokeThickness: 2
-        }).setOrigin(0.5);
-        celebrationContainer.add(expText);
+        });
+        expText.setOrigin(0.5);
+        this.celebrationContainer.add(expText);
         
         // Animate celebration
-        celebrationContainer.setScale(0);
+        this.celebrationContainer.setScale(0);
         this.scene.tweens.add({
-            targets: celebrationContainer,
+            targets: this.celebrationContainer,
             scaleX: 1,
             scaleY: 1,
             duration: 500,
             ease: 'Back.easeOut'
         });
         
-        // Pulse animation for title
         this.scene.tweens.add({
             targets: title,
             scaleX: 1.1,
             scaleY: 1.1,
-            duration: 800,
+            duration: 1000,
             yoyo: true,
             repeat: -1,
             ease: 'Sine.easeInOut'
         });
+    }
+
+    updateHoldProgress() {
+        if (!this.activeQTE || this.activeQTE.type !== 'hold' || !this.holdBarFill) return;
         
-        // Store reference for cleanup
-        this.celebrationContainer = celebrationContainer;
+        this.holdBarFill.clear();
+        
+        if (this.activeQTE.holdStartTime) {
+            const holdTime = this.scene.time.now - this.activeQTE.holdStartTime;
+            const progress = Math.min(holdTime / 1500, 1); // 1.5 seconds
+            const barWidth = 150 * progress;
+            
+            // Change color based on progress
+            let barColor = 0xf39c12; // Orange (warning)
+            if (progress >= 1) {
+                barColor = 0x27ae60; // Green (success)
+            } else if (progress >= 0.5) {
+                barColor = 0x3498db; // Blue (info)
+            }
+            
+            this.holdBarFill.fillStyle(barColor);
+            this.holdBarFill.fillRect(-75, 20, barWidth, 8);
+        }
     }
 } 

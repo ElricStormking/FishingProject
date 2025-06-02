@@ -430,7 +430,7 @@ export class CraftingManager {
                         id: 'fishers_cap',
                         name: "Fisher's Cap",
                         type: 'clothing',
-                        slot: 'head',
+                        slotType: 'head',
                         rarity: 1,
                         description: 'A practical fishing cap',
                         stats: {
@@ -457,8 +457,9 @@ export class CraftingManager {
                         id: 'sunglasses',
                         name: 'Sunglasses',
                         type: 'clothing',
-                        slot: 'eyes',
+                        slotType: 'eyes',
                         rarity: 2,
+                        description: 'Stylish fishing sunglasses',
                         stats: {
                             fishDetection: 8,
                             rareFishChance: 5,
@@ -480,10 +481,20 @@ export class CraftingManager {
      * @returns {Array} - Array of recipes
      */
     getRecipes(category = null) {
-        if (category) {
-            return this.recipes[category] || [];
+        try {
+            if (!this.recipes) {
+                console.warn('CraftingManager: No recipes loaded');
+                return [];
+            }
+            
+            if (category) {
+                return this.recipes[category] || [];
+            }
+            return this.recipes;
+        } catch (error) {
+            console.error('CraftingManager: Error getting recipes:', error);
+            return category ? [] : {};
         }
-        return this.recipes;
     }
 
     /**
@@ -492,11 +503,24 @@ export class CraftingManager {
      * @returns {Object|null} - Recipe object or null
      */
     getRecipe(recipeId) {
-        for (const category in this.recipes) {
-            const recipe = this.recipes[category].find(r => r.id === recipeId);
-            if (recipe) return recipe;
+        try {
+            if (!this.recipes || !recipeId) {
+                console.warn('CraftingManager: No recipes loaded or invalid recipe ID');
+                return null;
+            }
+            
+            for (const category in this.recipes) {
+                const categoryRecipes = this.recipes[category];
+                if (Array.isArray(categoryRecipes)) {
+                    const recipe = categoryRecipes.find(r => r && r.id === recipeId);
+                    if (recipe) return recipe;
+                }
+            }
+            return null;
+        } catch (error) {
+            console.error('CraftingManager: Error getting recipe:', error);
+            return null;
         }
-        return null;
     }
 
     /**
@@ -505,49 +529,58 @@ export class CraftingManager {
      * @returns {Object} - Validation result
      */
     canCraft(recipeId) {
-        const recipe = this.getRecipe(recipeId);
-        if (!recipe) {
-            return { canCraft: false, reason: 'Recipe not found' };
-        }
-
-        // Check player level
-        if (recipe.result.unlockLevel && this.gameState.player.level < recipe.result.unlockLevel) {
-            return { 
-                canCraft: false, 
-                reason: `Requires level ${recipe.result.unlockLevel} (current: ${this.gameState.player.level})` 
-            };
-        }
-
-        // Check coins
-        if (this.gameState.player.money < recipe.cost) {
-            return { 
-                canCraft: false, 
-                reason: `Insufficient coins (need ${recipe.cost}, have ${this.gameState.player.money})` 
-            };
-        }
-
-        // Check ingredients
-        const missingIngredients = [];
-        for (const ingredient of recipe.ingredients) {
-            const available = this.getAvailableIngredient(ingredient);
-            if (available < ingredient.quantity) {
-                missingIngredients.push({
-                    ...ingredient,
-                    available,
-                    needed: ingredient.quantity
-                });
+        try {
+            const recipe = this.getRecipe(recipeId);
+            if (!recipe) {
+                return { canCraft: false, reason: 'Recipe not found' };
             }
-        }
 
-        if (missingIngredients.length > 0) {
-            return {
-                canCraft: false,
-                reason: 'Missing ingredients',
-                missingIngredients
-            };
-        }
+            // Check player level
+            if (recipe.result && recipe.result.unlockLevel && this.gameState.player.level < recipe.result.unlockLevel) {
+                return { 
+                    canCraft: false, 
+                    reason: `Requires level ${recipe.result.unlockLevel} (current: ${this.gameState.player.level})` 
+                };
+            }
 
-        return { canCraft: true };
+            // Check coins
+            if (this.gameState.player.money < recipe.cost) {
+                return { 
+                    canCraft: false, 
+                    reason: `Insufficient coins (need ${recipe.cost}, have ${this.gameState.player.money})` 
+                };
+            }
+
+            // Check ingredients
+            const missingIngredients = [];
+            if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
+                for (const ingredient of recipe.ingredients) {
+                    if (!ingredient) continue; // Skip invalid ingredients
+                    
+                    const available = this.getAvailableIngredient(ingredient);
+                    if (available < ingredient.quantity) {
+                        missingIngredients.push({
+                            ...ingredient,
+                            available,
+                            needed: ingredient.quantity
+                        });
+                    }
+                }
+            }
+
+            if (missingIngredients.length > 0) {
+                return {
+                    canCraft: false,
+                    reason: 'Missing ingredients',
+                    missingIngredients
+                };
+            }
+
+            return { canCraft: true };
+        } catch (error) {
+            console.error('CraftingManager: Error checking if can craft:', error);
+            return { canCraft: false, reason: 'Error checking craft requirements' };
+        }
     }
 
     /**
@@ -556,22 +589,32 @@ export class CraftingManager {
      * @returns {number} - Available quantity
      */
     getAvailableIngredient(ingredient) {
-        if (ingredient.type === 'fish') {
-            // Count fish cards in inventory
-            const fishCards = this.gameState.inventory.fish || [];
-            const matchingCards = fishCards.filter(card => card.id === ingredient.id);
-            return matchingCards.reduce((total, card) => total + (card.quantity || 1), 0);
-        } else if (ingredient.type === 'equipment') {
-            // Count equipment items
-            for (const category of ['rods', 'lures', 'boats', 'clothing']) {
-                const items = this.gameState.inventory[category] || [];
-                const matchingItems = items.filter(item => item.id === ingredient.id && !item.equipped);
-                if (matchingItems.length > 0) {
-                    return matchingItems.reduce((total, item) => total + (item.quantity || 1), 0);
+        try {
+            if (!ingredient || !ingredient.type || !ingredient.id) {
+                console.warn('CraftingManager: Invalid ingredient:', ingredient);
+                return 0;
+            }
+            
+            if (ingredient.type === 'fish') {
+                // Count fish cards in inventory
+                const fishCards = this.gameState.inventory.fish || [];
+                const matchingCards = fishCards.filter(card => card && card.id === ingredient.id);
+                return matchingCards.reduce((total, card) => total + (card.quantity || 1), 0);
+            } else if (ingredient.type === 'equipment') {
+                // Count equipment items
+                for (const category of ['rods', 'lures', 'boats', 'clothing']) {
+                    const items = this.gameState.inventory[category] || [];
+                    const matchingItems = items.filter(item => item && item.id === ingredient.id && !item.equipped);
+                    if (matchingItems.length > 0) {
+                        return matchingItems.reduce((total, item) => total + (item.quantity || 1), 0);
+                    }
                 }
             }
+            return 0;
+        } catch (error) {
+            console.error('CraftingManager: Error getting available ingredient:', error);
+            return 0;
         }
-        return 0;
     }
 
     /**
@@ -580,43 +623,55 @@ export class CraftingManager {
      * @returns {Object} - Crafting result
      */
     startCrafting(recipeId) {
-        const validation = this.canCraft(recipeId);
-        if (!validation.canCraft) {
-            return { success: false, reason: validation.reason, missingIngredients: validation.missingIngredients };
-        }
-
-        const recipe = this.getRecipe(recipeId);
-        
-        // Consume ingredients
-        for (const ingredient of recipe.ingredients) {
-            if (!this.consumeIngredient(ingredient)) {
-                return { success: false, reason: `Failed to consume ${ingredient.id}` };
+        try {
+            const validation = this.canCraft(recipeId);
+            if (!validation.canCraft) {
+                return { success: false, reason: validation.reason, missingIngredients: validation.missingIngredients };
             }
+
+            const recipe = this.getRecipe(recipeId);
+            if (!recipe) {
+                return { success: false, reason: 'Recipe not found' };
+            }
+            
+            // Consume ingredients
+            if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
+                for (const ingredient of recipe.ingredients) {
+                    if (!ingredient) continue; // Skip invalid ingredients
+                    
+                    if (!this.consumeIngredient(ingredient)) {
+                        return { success: false, reason: `Failed to consume ${ingredient.id}` };
+                    }
+                }
+            }
+
+            // Consume coins
+            this.gameState.player.money -= recipe.cost;
+
+            // Add to crafting queue
+            const craftingItem = {
+                id: Date.now().toString(),
+                recipeId: recipe.id,
+                recipe: recipe,
+                startTime: Date.now(),
+                endTime: Date.now() + (recipe.craftTime * 60 * 1000), // Convert minutes to milliseconds
+                completed: false
+            };
+
+            this.craftingQueue.push(craftingItem);
+            this.gameState.markDirty();
+
+            this.emit('craftingStarted', { craftingItem, recipe });
+            
+            return { 
+                success: true, 
+                craftingItem,
+                timeRemaining: recipe.craftTime * 60 * 1000
+            };
+        } catch (error) {
+            console.error('CraftingManager: Error starting crafting:', error);
+            return { success: false, reason: 'Error starting crafting process' };
         }
-
-        // Consume coins
-        this.gameState.player.money -= recipe.cost;
-
-        // Add to crafting queue
-        const craftingItem = {
-            id: Date.now().toString(),
-            recipeId: recipe.id,
-            recipe: recipe,
-            startTime: Date.now(),
-            endTime: Date.now() + (recipe.craftTime * 60 * 1000), // Convert minutes to milliseconds
-            completed: false
-        };
-
-        this.craftingQueue.push(craftingItem);
-        this.gameState.markDirty();
-
-        this.emit('craftingStarted', { craftingItem, recipe });
-        
-        return { 
-            success: true, 
-            craftingItem,
-            timeRemaining: recipe.craftTime * 60 * 1000
-        };
     }
 
     /**

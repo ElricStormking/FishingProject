@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import InputManager from '../scripts/InputManager.js';
+import UITheme from '../ui/UITheme.js';
 
 export default class SettingsScene extends Phaser.Scene {
     constructor() {
@@ -10,16 +11,12 @@ export default class SettingsScene extends Phaser.Scene {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
 
-        // Background
-        this.add.rectangle(width / 2, height / 2, width, height, 0x2c3e50);
+        // Background using UITheme
+        const background = UITheme.createPanel(this, 0, 0, width, height, 'primary');
+        this.add.existing(background);
 
-        // Title
-        const title = this.add.text(width / 2, 60, 'SETTINGS', {
-            fontSize: '36px',
-            fill: '#ffffff',
-            fontFamily: 'Arial',
-            fontStyle: 'bold'
-        });
+        // Title using UITheme
+        const title = UITheme.createText(this, width / 2, 60, 'SETTINGS', 'headerLarge');
         title.setOrigin(0.5);
 
         // Create input manager for this scene
@@ -58,33 +55,27 @@ export default class SettingsScene extends Phaser.Scene {
     createTabs() {
         const width = this.cameras.main.width;
         const tabY = 120;
+        const tabWidth = 150;
+        const tabHeight = 40;
 
         // Controls tab
-        this.controlsTab = this.createTab(width / 2 - 100, tabY, 'CONTROLS', () => {
+        this.controlsTab = this.createTab(width / 2 - (tabWidth / 2 + 10), tabY, tabWidth, tabHeight, 'CONTROLS', () => {
             this.switchTab('controls');
         });
 
-        // Audio tab (placeholder)
-        this.audioTab = this.createTab(width / 2 + 100, tabY, 'AUDIO', () => {
+        // Audio tab
+        this.audioTab = this.createTab(width / 2 + (tabWidth / 2 + 10), tabY, tabWidth, tabHeight, 'AUDIO', () => {
             this.switchTab('audio');
         });
 
         this.updateTabVisuals();
     }
 
-    createTab(x, y, text, callback) {
-        const tab = this.add.rectangle(x, y, 150, 40, 0x34495e);
-        const tabText = this.add.text(x, y, text, {
-            fontSize: '16px',
-            fill: '#ffffff',
-            fontFamily: 'Arial'
-        });
-        tabText.setOrigin(0.5);
-
-        tab.setInteractive();
-        tab.on('pointerdown', callback);
-
-        return { button: tab, text: tabText };
+    createTab(x, y, width, height, text, callback) {
+        // Use UITheme.createButton for tabs
+        const tabComponent = UITheme.createButton(this, x, y, width, height, text, callback, 'tab'); // Assuming 'tab' is a style in UITheme
+        // If createButton returns a container with button and text, you might need to manage them for visual updates
+        return tabComponent; 
     }
 
     switchTab(tabName) {
@@ -106,9 +97,25 @@ export default class SettingsScene extends Phaser.Scene {
     }
 
     updateTabVisuals() {
-        // Update tab colors
-        this.controlsTab.button.setFillStyle(this.currentTab === 'controls' ? 0x3498db : 0x34495e);
-        this.audioTab.button.setFillStyle(this.currentTab === 'audio' ? 0x3498db : 0x34495e);
+        // Update tab colors/styles based on UITheme properties
+        const activeStyle = UITheme.getButtonStyle('tabActive'); // Assuming a style for active tabs
+        const inactiveStyle = UITheme.getButtonStyle('tab');    // Assuming a style for inactive tabs
+
+        // Helper to apply style (this is conceptual, actual implementation depends on UITheme.createButton return)
+        const applyStyle = (tabComponent, style) => {
+            if (tabComponent && tabComponent.button && tabComponent.text && style) {
+                tabComponent.button.setFillStyle(style.backgroundColor, style.backgroundAlpha || 1);
+                tabComponent.button.setStrokeStyle(style.borderColor, style.borderAlpha || 1);
+                tabComponent.text.setStyle(style.textStyle);
+            }
+        };
+
+        if (this.controlsTab) {
+            applyStyle(this.controlsTab, this.currentTab === 'controls' ? activeStyle : inactiveStyle);
+        }
+        if (this.audioTab) {
+            applyStyle(this.audioTab, this.currentTab === 'audio' ? activeStyle : inactiveStyle);
+        }
     }
 
     createControlsTab() {
@@ -116,13 +123,10 @@ export default class SettingsScene extends Phaser.Scene {
         let y = 200;
         this.tabContent = [];
 
-        // Instructions
-        const instructions = this.add.text(width / 2, y, 'Click on a key binding to change it', {
-            fontSize: '18px',
-            fill: '#cccccc',
-            fontFamily: 'Arial'
-        });
+        // Instructions using UITheme
+        const instructions = UITheme.createText(this, width / 2, y, 'Click on a key binding to change it', 'bodyLarge');
         instructions.setOrigin(0.5);
+        instructions.setColor(UITheme.colors.textSecondary);
         this.tabContent.push(instructions);
         y += 50;
 
@@ -157,33 +161,31 @@ export default class SettingsScene extends Phaser.Scene {
     createBindingRow(actionKey, label, keys, y) {
         const elements = [];
         
-        // Action label
-        const actionLabel = this.add.text(100, y, label + ':', {
-            fontSize: '16px',
-            fill: '#ffffff',
-            fontFamily: 'Arial'
-        });
+        // Action label using UITheme
+        const actionLabel = UITheme.createText(this, 100, y, label + ':', 'bodyMedium');
+        // actionLabel.setColor(UITheme.colors.text); // Optional: if specific color needed
         elements.push(actionLabel);
 
         // Key bindings
         let x = 300;
         keys.forEach((key, index) => {
-            const keyButton = this.add.rectangle(x, y, 80, 30, 0x34495e);
-            const keyText = this.add.text(x, y, this.formatKeyName(key), {
-                fontSize: '14px',
-                fill: '#ffffff',
-                fontFamily: 'Arial'
-            });
-            keyText.setOrigin(0.5);
+            const keyButtonComponent = UITheme.createButton(
+                this, 
+                x, 
+                y, 
+                80, 
+                30, 
+                this.formatKeyName(key), 
+                () => { this.startRemapping(actionKey, key, keyButtonComponent.text || keyButtonComponent); }, // Pass text part of component or whole component
+                'keybinding' // Assuming 'keybinding' is a style in UITheme
+            );
+            
+            // Add button components to elements array and scene
+            if (keyButtonComponent.button) elements.push(keyButtonComponent.button);
+            if (keyButtonComponent.text) elements.push(keyButtonComponent.text);
+            // If createButton itself is the display object, add it.
+            // else if (!(keyButtonComponent.button || keyButtonComponent.text)) elements.push(keyButtonComponent);
 
-            keyButton.setInteractive();
-            keyButton.on('pointerover', () => keyButton.setFillStyle(0x3498db));
-            keyButton.on('pointerout', () => keyButton.setFillStyle(0x34495e));
-            keyButton.on('pointerdown', () => {
-                this.startRemapping(actionKey, key, keyText);
-            });
-
-            elements.push(keyButton, keyText);
             x += 100;
         });
 
@@ -224,20 +226,16 @@ export default class SettingsScene extends Phaser.Scene {
         textElement.setColor('#ffff00');
 
         // Show instruction
-        this.remappingInstruction = this.add.text(
+        this.remappingInstruction = UITheme.createText(
+            this,
             this.cameras.main.width / 2,
             this.cameras.main.height / 2,
             'Press the new key for this action\nPress ESC to cancel',
-            {
-                fontSize: '20px',
-                fill: '#ffff00',
-                fontFamily: 'Arial',
-                backgroundColor: '#000000',
-                padding: { x: 20, y: 10 },
-                align: 'center'
-            }
+            'overlayNotification' // Assuming 'overlayNotification' style in UITheme
         );
         this.remappingInstruction.setOrigin(0.5);
+        // this.remappingInstruction.setColor(UITheme.colors.warning); // Example style
+        // this.remappingInstruction.setBackgroundColor(UITheme.colors.overlay); // Example style
     }
 
     handleRemapping(newKeyCode) {
@@ -298,31 +296,19 @@ export default class SettingsScene extends Phaser.Scene {
         let y = 200;
         this.tabContent = [];
 
-        // Placeholder for audio settings
-        const placeholder = this.add.text(width / 2, y, 'Audio settings coming soon...', {
-            fontSize: '20px',
-            fill: '#cccccc',
-            fontFamily: 'Arial'
-        });
+        // Placeholder for audio settings using UITheme
+        const placeholder = UITheme.createText(this, width / 2, y, 'Audio settings coming soon...', 'bodyLarge');
         placeholder.setOrigin(0.5);
+        placeholder.setColor(UITheme.colors.textSecondary);
         this.tabContent.push(placeholder);
     }
 
     createButton(x, y, text, callback) {
-        const button = this.add.rectangle(x, y, 200, 50, 0x34495e);
-        const buttonText = this.add.text(x, y, text, {
-            fontSize: '18px',
-            fill: '#ffffff',
-            fontFamily: 'Arial'
-        });
-        buttonText.setOrigin(0.5);
-
-        button.setInteractive();
-        button.on('pointerover', () => button.setFillStyle(0x3498db));
-        button.on('pointerout', () => button.setFillStyle(0x34495e));
-        button.on('pointerdown', callback);
-
-        return { button, text: buttonText };
+        // Refactored to use UITheme.createButton
+        const buttonComponent = UITheme.createButton(this, x, y, 200, 50, text, callback, 'primary');
+        // Assuming createButton adds elements to the scene directly or returns a container
+        // If it returns a container with button and text, they might need to be added to tabContent if applicable
+        return buttonComponent;
     }
 
     showNotification(text) {

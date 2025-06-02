@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipment Enhancement System Test - Luxury Angler</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a2e;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            border: 2px solid #00aaff;
+            margin: 10px 0;
+        }
+        .controls {
+            margin: 10px 0;
+            padding: 10px;
+            background: #2c3e50;
+            border-radius: 5px;
+        }
+        .controls button {
+            margin: 5px;
+            padding: 8px 15px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .controls button:hover {
+            background: #2980b9;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            background: #34495e;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Equipment Enhancement System Test</h1>
+    <p>Testing the complete equipment enhancement functionality including upgrades, enhancements, sets, and specializations.</p>
+    
+    <div class="controls">
+        <h3>📋 Test Controls</h3>
+        <button onclick="addTestEquipment()">Add Test Equipment</button>
+        <button onclick="addEnhancementMaterials()">Add Enhancement Materials</button>
+        <button onclick="testUpgradeSystem()">Test Upgrade System</button>
+        <button onclick="testEnhancementSystem()">Test Enhancement System</button>
+        <button onclick="testSetBonuses()">Test Set Bonuses</button>
+        <button onclick="testSpecializations()">Test Specializations</button>
+        <button onclick="openEnhancementUI()">Open Enhancement UI</button>
+        <button onclick="showStats()">Show Current Stats</button>
+    </div>
+
+    <div id="game-container"></div>
+
+    <div class="status" id="status">
+        <h3>📊 Enhancement System Status</h3>
+        <div id="status-content">System ready for testing...</div>
+    </div>
+
+    <script type="module">
+        import { GameState } from './src/scripts/GameState.js';
+        import { InventoryManager } from './src/scripts/InventoryManager.js';
+        import { EquipmentEnhancer } from './src/scripts/EquipmentEnhancer.js';
+        import { EquipmentEnhancementUI } from './src/ui/EquipmentEnhancementUI.js';
+
+        class EquipmentTestScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'EquipmentTestScene' });
+            }
+
+            create() {
+                const width = this.cameras.main.width;
+                const height = this.cameras.main.height;
+
+                // Initialize systems
+                this.gameState = GameState.getInstance();
+                this.gameState.startAutoSave();
+                
+                // Setup enhancement system
+                this.equipmentEnhancer = new EquipmentEnhancer(this.gameState, this.gameState.inventoryManager);
+                this.gameState.equipmentEnhancer = this.equipmentEnhancer;
+
+                // Create enhancement UI
+                this.enhancementUI = new EquipmentEnhancementUI(this, 50, 50, 700, 500);
+
+                // Background
+                this.add.rectangle(width/2, height/2, width, height, 0x1a1a2e);
+
+                // Title
+                this.add.text(width/2, 50, 'EQUIPMENT ENHANCEMENT SYSTEM TEST', {
+                    fontSize: '28px',
+                    fontFamily: 'Arial',
+                    color: '#4a90e2',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+
+                // Instructions
+                this.add.text(width/2, 100, 'Use the controls above to test different enhancement features', {
+                    fontSize: '16px',
+                    fontFamily: 'Arial',
+                    color: '#ffffff'
+                }).setOrigin(0.5);
+
+                // Equipment status display
+                this.statusDisplay = this.add.text(50, 150, '', {
+                    fontSize: '14px',
+                    fontFamily: 'Arial',
+                    color: '#ffffff',
+                    backgroundColor: '#2c3e50',
+                    padding: { x: 10, y: 10 }
+                });
+
+                this.updateStatusDisplay();
+
+                // Make scene globally accessible
+                window.testScene = this;
+                
+                console.log('Equipment Enhancement Test Scene initialized');
+                this.updateWebStatus('Equipment Enhancement System initialized successfully');
+            }
+
+            updateStatusDisplay() {
+                if (!this.statusDisplay) return;
+
+                const gameState = this.gameState;
+                const enhancer = this.equipmentEnhancer;
+                
+                let statusText = '📦 CURRENT EQUIPMENT STATUS:\n\n';
+                
+                // Show equipped items
+                const equipped = gameState.inventoryManager.getEquippedItems();
+                Object.entries(equipped).forEach(([category, items]) => {
+                    if (items.length > 0) {
+                        statusText += `${category.toUpperCase()}:\n`;
+                        items.forEach(item => {
+                            const level = item.level || 0;
+                            const enhancement = item.enhancement || 0;
+                            statusText += `  • ${item.name} [Lv.${level}] [+${enhancement}]\n`;
+                        });
+                        statusText += '\n';
+                    }
+                });
+
+                // Show set bonuses
+                if (enhancer) {
+                    const { activeSets, setBonuses } = enhancer.getActiveSetBonuses();
+                    if (Object.keys(activeSets).length > 0) {
+                        statusText += '🎯 ACTIVE SET BONUSES:\n';
+                        Object.entries(activeSets).forEach(([setId, setInfo]) => {
+                            statusText += `  • ${setInfo.name}: ${setInfo.equippedPieces}/${setInfo.totalPieces} pieces\n`;
+                        });
+                        statusText += '\n';
+                    }
+                }
+
+                // Show total stats
+                statusText += '📊 TOTAL EQUIPMENT STATS:\n';
+                const totalStats = enhancer ? enhancer.getTotalEquipmentStats() : {};
+                Object.entries(totalStats).forEach(([stat, value]) => {
+                    statusText += `  • ${stat}: +${value}\n`;
+                });
+
+                this.statusDisplay.setText(statusText);
+            }
+
+            updateWebStatus(message) {
+                const statusContent = document.getElementById('status-content');
+                if (statusContent) {
+                    const timestamp = new Date().toLocaleTimeString();
+                    statusContent.innerHTML += `<br>[${timestamp}] ${message}`;
+                    statusContent.scrollTop = statusContent.scrollHeight;
+                }
+            }
+        }
+
+        // Game configuration
+        const config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            parent: 'game-container',
+            backgroundColor: '#1a1a2e',
+            scene: EquipmentTestScene
+        };
+
+        const game = new Phaser.Game(config);
+
+        // Test functions
+        window.addTestEquipment = function() {
+            const gameState = GameState.getInstance();
+            const inventory = gameState.inventoryManager;
+            
+            // Add various equipment pieces for testing
+            const testEquipment = [
+                { category: 'rods', id: 'carbon_rod', name: 'Carbon Rod', rarity: 3 },
+                { category: 'lures', id: 'advanced_spinner', name: 'Advanced Spinner', rarity: 2 },
+                { category: 'boats', id: 'speedboat', name: 'Speedboat', rarity: 3 },
+                { category: 'accessories', id: 'fishing_vest', name: 'Fishing Vest', rarity: 2 }
+            ];
+
+            testEquipment.forEach(eq => {
+                if (!inventory.hasItem(eq.category, eq.id)) {
+                    inventory.addItem(eq.category, {
+                        id: eq.id,
+                        name: eq.name,
+                        rarity: eq.rarity,
+                        owned: true,
+                        level: 0,
+                        enhancement: 0,
+                        stats: {
+                            castAccuracy: 10,
+                            tensionStability: 15,
+                            rareFishChance: 5
+                        }
+                    });
+                }
+            });
+
+            window.testScene.updateStatusDisplay();
+            window.testScene.updateWebStatus('Test equipment added successfully');
+        };
+
+        window.addEnhancementMaterials = function() {
+            const gameState = GameState.getInstance();
+            
+            // Add enhancement materials
+            gameState.player.coins = Math.max(gameState.player.coins, 10000);
+            
+            // Add materials to inventory if materials category exists
+            if (gameState.inventory.materials) {
+                const materials = [
+                    { id: 'basic_stone', name: 'Basic Enhancement Stone', quantity: 10 },
+                    { id: 'advanced_stone', name: 'Advanced Enhancement Stone', quantity: 5 },
+                    { id: 'master_stone', name: 'Master Enhancement Stone', quantity: 2 },
+                    { id: 'protection_scroll', name: 'Protection Scroll', quantity: 5 },
+                    { id: 'blessed_scroll', name: 'Blessed Scroll', quantity: 2 }
+                ];
+
+                materials.forEach(mat => {
+                    gameState.inventoryManager.addItem('materials', mat);
+                });
+            }
+
+            window.testScene.updateWebStatus(`Enhanced materials added. Coins: ${gameState.player.coins}`);
+        };
+
+        window.testUpgradeSystem = function() {
+            const enhancer = window.testScene.equipmentEnhancer;
+            const gameState = GameState.getInstance();
+            
+            // Find first owned equipment
+            const equipped = gameState.inventoryManager.getEquippedItems();
+            let testItem = null;
+            let testCategory = null;
+
+            for (const [category, items] of Object.entries(equipped)) {
+                if (items.length > 0) {
+                    testItem = items[0];
+                    testCategory = category;
+                    break;
+                }
+            }
+
+            if (testItem && enhancer) {
+                const result = enhancer.upgradeEquipment(testCategory, testItem.id);
+                window.testScene.updateWebStatus(`Upgrade Result: ${JSON.stringify(result)}`);
+                window.testScene.updateStatusDisplay();
+            } else {
+                window.testScene.updateWebStatus('No equipment found to upgrade');
+            }
+        };
+
+        window.testEnhancementSystem = function() {
+            const enhancer = window.testScene.equipmentEnhancer;
+            const gameState = GameState.getInstance();
+            
+            // Find first owned equipment
+            const equipped = gameState.inventoryManager.getEquippedItems();
+            let testItem = null;
+            let testCategory = null;
+
+            for (const [category, items] of Object.entries(equipped)) {
+                if (items.length > 0) {
+                    testItem = items[0];
+                    testCategory = category;
+                    break;
+                }
+            }
+
+            if (testItem && enhancer) {
+                const result = enhancer.enhanceEquipment(testCategory, testItem.id, 'basic_stone');
+                window.testScene.updateWebStatus(`Enhancement Result: ${JSON.stringify(result)}`);
+                window.testScene.updateStatusDisplay();
+            } else {
+                window.testScene.updateWebStatus('No equipment found to enhance');
+            }
+        };
+
+        window.testSetBonuses = function() {
+            const enhancer = window.testScene.equipmentEnhancer;
+            
+            if (enhancer) {
+                const setData = enhancer.getActiveSetBonuses();
+                window.testScene.updateWebStatus(`Active Sets: ${JSON.stringify(setData, null, 2)}`);
+                window.testScene.updateStatusDisplay();
+            }
+        };
+
+        window.testSpecializations = function() {
+            const enhancer = window.testScene.equipmentEnhancer;
+            
+            if (enhancer) {
+                const context = {
+                    location: 'ocean_harbor',
+                    timeOfDay: 'dawn',
+                    weather: 'sunny',
+                    targetFish: 'tuna'
+                };
+                
+                const specializations = enhancer.getSpecializationBonuses(context);
+                window.testScene.updateWebStatus(`Specialization Bonuses: ${JSON.stringify(specializations, null, 2)}`);
+            }
+        };
+
+        window.openEnhancementUI = function() {
+            if (window.testScene.enhancementUI) {
+                window.testScene.enhancementUI.show();
+                window.testScene.updateWebStatus('Equipment Enhancement UI opened');
+            }
+        };
+
+        window.showStats = function() {
+            const enhancer = window.testScene.equipmentEnhancer;
+            
+            if (enhancer) {
+                const totalStats = enhancer.getTotalEquipmentStats();
+                window.testScene.updateWebStatus(`Total Equipment Stats: ${JSON.stringify(totalStats, null, 2)}`);
+            }
+        };
+
+        console.log('Equipment Enhancement System Test loaded');
+    </script>
+</body>
+</html> 

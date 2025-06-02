@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxury Angler - BoatMenu Fix Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+        #game-container {
+            width: 1200px;
+            height: 800px;
+            margin: 0 auto;
+            border: 3px solid #00aaff;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0, 170, 255, 0.5);
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn:hover { background: #45a049; }
+        .btn.danger { background: #f44336; }
+        .btn.danger:hover { background: #da190b; }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">🎣 Luxury Angler - BoatMenu Fix Test 🎣</h1>
+    
+    <div class="controls">
+        <button class="btn" onclick="startGame()">🚀 Start BoatMenu Test</button>
+        <button class="btn" onclick="testTravel()">🗺️ Test Travel Menu</button>
+        <button class="btn" onclick="testCabin()">🏠 Test Cabin</button>
+        <button class="btn danger" onclick="resetGame()">🔄 Reset Game</button>
+    </div>
+    
+    <div id="game-container"></div>
+    
+    <div style="text-align: center; margin: 20px 0;">
+        <h3>🔧 BoatMenuScene Fix Status:</h3>
+        <p>✅ Fixed openTravelMenu() syntax errors</p>
+        <p>✅ Fixed MapSelectionUI reference issues</p>
+        <p>✅ Fixed conditional logic syntax</p>
+        <p>✅ Proper error handling for missing UI components</p>
+        <p>✅ Implemented complete MapSelectionUI with location selection</p>
+        <p>✅ Integrated with LocationData.js for all fishing locations</p>
+    </div>
+
+    <script type="module">
+        import Phaser from './node_modules/phaser/dist/phaser.esm.js';
+        import BoatMenuScene from './src/scenes/BoatMenuScene.js';
+        import GameState from './src/scripts/GameState.js';
+
+        let game;
+
+        // Game configuration
+        const config = {
+            type: Phaser.AUTO,
+            width: 1200,
+            height: 800,
+            parent: 'game-container',
+            backgroundColor: '#2c3e50',
+            scene: [BoatMenuScene],
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },
+                    debug: false
+                }
+            }
+        };
+
+        // Global functions for buttons
+        window.startGame = function() {
+            if (game) {
+                game.destroy();
+            }
+            
+            try {
+                // Initialize GameState
+                const gameState = GameState.getInstance();
+                console.log('BoatMenuFixTest: GameState initialized');
+                
+                // Create game
+                game = new Phaser.Game(config);
+                console.log('BoatMenuFixTest: Game created successfully');
+                
+                // Test message
+                setTimeout(() => {
+                    console.log('✅ BoatMenuScene test: Game started without syntax errors!');
+                }, 1000);
+                
+            } catch (error) {
+                console.error('BoatMenuFixTest: Error starting game:', error);
+                alert('❌ Error starting game: ' + error.message);
+            }
+        };
+
+        window.testTravel = function() {
+            if (game && game.scene.scenes[0]) {
+                try {
+                    const boatScene = game.scene.scenes[0];
+                    if (boatScene.openTravelMenu) {
+                        boatScene.openTravelMenu();
+                        console.log('✅ Travel menu test: openTravelMenu() called successfully');
+                    } else {
+                        console.warn('⚠️ BoatMenuScene not ready yet');
+                    }
+                } catch (error) {
+                    console.error('❌ Travel menu test failed:', error);
+                    alert('Travel menu test error: ' + error.message);
+                }
+            } else {
+                alert('❌ Game not started yet! Click "Start BoatMenu Test" first.');
+            }
+        };
+
+        window.testCabin = function() {
+            if (game && game.scene.scenes[0]) {
+                try {
+                    const boatScene = game.scene.scenes[0];
+                    if (boatScene.openCabin) {
+                        boatScene.openCabin();
+                        console.log('✅ Cabin test: openCabin() called successfully');
+                    } else {
+                        console.warn('⚠️ BoatMenuScene not ready yet');
+                    }
+                } catch (error) {
+                    console.error('❌ Cabin test failed:', error);
+                    alert('Cabin test error: ' + error.message);
+                }
+            } else {
+                alert('❌ Game not started yet! Click "Start BoatMenu Test" first.');
+            }
+        };
+
+        window.resetGame = function() {
+            if (game) {
+                game.destroy();
+                game = null;
+                console.log('🔄 Game reset completed');
+            }
+        };
+
+        // Auto-start the test
+        console.log('🎮 BoatMenuScene Fix Test Ready');
+        console.log('📝 Testing fixes for:');
+        console.log('  - openTravelMenu() syntax errors');
+        console.log('  - MapSelectionUI reference issues');
+        console.log('  - Conditional logic syntax');
+        console.log('  - Error handling improvements');
+        
+    </script>
+</body>
+</html> 

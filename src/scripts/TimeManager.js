@@ -1,377 +1,280 @@
-// TimeManager.js - Comprehensive time system for Luxury Angler
+// TimeManager.js - 8-Period Day/Night Cycle System
 export class TimeManager {
-    constructor(gameState) {
+    constructor(scene, gameState) {
+        this.scene = scene;
         this.gameState = gameState;
-        this.isRunning = false;
-        this.timeSpeed = 1; // 1 = normal speed, 2 = 2x speed, etc.
-        this.listeners = new Map();
         
-        // Time configuration - 8 periods as per GDD
+        // Time configuration
+        this.currentTime = 360; // Start at 6:00 AM (6 * 60 minutes)
+        this.timeSpeed = 1; // Minutes per real second (can be accelerated)
+        this.paused = false;
+        
+        // 8-Period time system (in minutes from midnight)
         this.timePeriods = {
-            dawn: { start: 5, end: 7, name: 'Dawn', icon: '🌅' },
-            morning: { start: 7, end: 10, name: 'Morning', icon: '🌞' },
-            midday: { start: 10, end: 13, name: 'Midday', icon: '☀️' },
-            afternoon: { start: 13, end: 16, name: 'Afternoon', icon: '🌤️' },
-            evening: { start: 16, end: 18, name: 'Evening', icon: '🌇' },
-            dusk: { start: 18, end: 20, name: 'Dusk', icon: '🌆' },
-            night: { start: 20, end: 23, name: 'Night', icon: '🌙' },
-            lateNight: { start: 23, end: 5, name: 'Late Night', icon: '🌌' }
+            'LATE_NIGHT': { start: 0, end: 300, name: 'Late Night' },      // 00:00-05:00
+            'DAWN': { start: 300, end: 420, name: 'Dawn' },               // 05:00-07:00
+            'MORNING': { start: 420, end: 600, name: 'Morning' },         // 07:00-10:00
+            'MIDDAY': { start: 600, end: 780, name: 'Midday' },           // 10:00-13:00
+            'AFTERNOON': { start: 780, end: 960, name: 'Afternoon' },     // 13:00-16:00
+            'EVENING': { start: 960, end: 1080, name: 'Evening' },        // 16:00-18:00
+            'DUSK': { start: 1080, end: 1200, name: 'Dusk' },             // 18:00-20:00
+            'NIGHT': { start: 1200, end: 1440, name: 'Night' }            // 20:00-24:00
         };
-        
-        // Time effects on fishing
-        this.timeEffects = {
-            dawn: { 
-                fishActivity: 0.8, 
-                biteRate: 1.1, 
-                rareChance: 1.2,
-                description: 'Calm morning waters, good for patient fishing'
-            },
-            morning: { 
-                fishActivity: 1.3, 
-                biteRate: 1.4, 
-                rareChance: 1.0,
-                description: 'Peak fishing time! Fish are very active'
-            },
-            midday: { 
-                fishActivity: 0.7, 
-                biteRate: 0.8, 
-                rareChance: 0.8,
-                description: 'Bright sun makes fish less active'
-            },
-            afternoon: { 
-                fishActivity: 1.1, 
-                biteRate: 1.2, 
-                rareChance: 1.0,
-                description: 'Good fishing conditions resume'
-            },
-            evening: { 
-                fishActivity: 1.4, 
-                biteRate: 1.3, 
-                rareChance: 1.1,
-                description: 'Another peak period as fish feed before dark'
-            },
-            dusk: { 
-                fishActivity: 1.2, 
-                biteRate: 1.1, 
-                rareChance: 1.3,
-                description: 'Twilight brings unique fishing opportunities'
-            },
-            night: { 
-                fishActivity: 0.9, 
-                biteRate: 1.0, 
-                rareChance: 1.5,
-                description: 'Night fishing reveals different species'
-            },
-            lateNight: { 
-                fishActivity: 0.6, 
-                biteRate: 0.9, 
-                rareChance: 1.8,
-                description: 'Deep night fishing for rare nocturnal fish'
-            }
-        };
-        
-        // Initialize time if not set
-        if (!this.gameState.world.gameTime) {
-            this.gameState.world.gameTime = 7 * 60; // Start at 7:00 AM
-        }
         
         this.currentPeriod = this.getCurrentPeriod();
         this.lastPeriod = this.currentPeriod;
         
-        console.log('TimeManager: Initialized with 8-period day/night cycle');
-    }
-
-    start() {
-        this.isRunning = true;
-        this.lastUpdateTime = Date.now();
-        console.log('TimeManager: Started');
-    }
-
-    stop() {
-        this.isRunning = false;
-        console.log('TimeManager: Stopped');
-    }
-
-    update(deltaTime) {
-        if (!this.isRunning) return;
+        // Fish activity modifiers by time period
+        this.fishActivityModifiers = {
+            'LATE_NIGHT': { activity: 0.3, rareChance: 1.8, biteFast: 0.7 },
+            'DAWN': { activity: 1.2, rareChance: 1.4, biteFast: 1.1 },
+            'MORNING': { activity: 1.5, rareChance: 1.0, biteFast: 1.2 },
+            'MIDDAY': { activity: 0.8, rareChance: 0.8, biteFast: 0.9 },
+            'AFTERNOON': { activity: 1.1, rareChance: 1.0, biteFast: 1.0 },
+            'EVENING': { activity: 1.4, rareChance: 1.3, biteFast: 1.1 },
+            'DUSK': { activity: 1.3, rareChance: 1.6, biteFast: 1.2 },
+            'NIGHT': { activity: 0.9, rareChance: 1.5, biteFast: 0.8 }
+        };
         
-        // Convert real time to game time (1 real minute = 1 game hour by default)
-        const gameTimeIncrement = (deltaTime / 1000) * this.timeSpeed * (60 / 60); // 1 real second = 1 game minute
+        // Initialize update timer (will be set when scene is ready)
+        this.timeUpdateEvent = null;
         
-        this.gameState.world.gameTime += gameTimeIncrement;
+        // Event system for time changes
+        this.timeChangeCallbacks = [];
+        this.periodChangeCallbacks = [];
         
-        // Handle day rollover (24 hours = 1440 minutes)
-        if (this.gameState.world.gameTime >= 1440) {
-            this.gameState.world.gameTime -= 1440;
+        // Defer initialization until scene is ready with safety checks
+        if (this.scene && this.scene.time && this.scene.time.addEvent) {
+            // Scene is fully ready, start immediately
+            this.startTimeUpdates();
+        } else {
+            // Scene not ready yet, use polling approach instead of events
+            console.log('TimeManager: Scene not ready, will poll for readiness...');
+            this.waitForSceneReady();
+        }
+        
+        console.log('TimeManager: Initialized, waiting for scene ready...');
+    }
+    
+    waitForSceneReady() {
+        // Poll for scene readiness instead of relying on events
+        const checkReady = () => {
+            if (this.scene && this.scene.time && this.scene.time.addEvent) {
+                console.log('TimeManager: Scene is now ready, starting time updates...');
+                this.startTimeUpdates();
+            } else {
+                // Check again in 100ms
+                setTimeout(checkReady, 100);
+            }
+        };
+        
+        setTimeout(checkReady, 100);
+    }
+    
+    startTimeUpdates() {
+        // Safety check for scene.time availability
+        if (!this.scene || !this.scene.time) {
+            console.warn('TimeManager: Scene.time not available, retrying in 100ms...');
+            setTimeout(() => this.startTimeUpdates(), 100);
+            return;
+        }
+        
+        if (this.timeUpdateEvent) {
+            this.timeUpdateEvent.destroy();
+        }
+        
+        try {
+            this.timeUpdateEvent = this.scene.time.addEvent({
+                delay: 1000, // Update every second
+                callback: this.updateTime,
+                callbackScope: this,
+                loop: true
+            });
+            
+            console.log('TimeManager: Time updates started successfully');
+        } catch (error) {
+            console.error('TimeManager: Error starting time updates:', error);
+            // Retry after a delay
+            setTimeout(() => this.startTimeUpdates(), 500);
+        }
+    }
+    
+    updateTime() {
+        if (this.paused) return;
+        
+        // Advance time
+        this.currentTime += this.timeSpeed;
+        
+        // Handle day rollover
+        if (this.currentTime >= 1440) { // 24 hours = 1440 minutes
+            this.currentTime = 0;
             this.onNewDay();
         }
         
         // Check for period changes
-        const newPeriod = this.getCurrentPeriod();
-        if (newPeriod !== this.currentPeriod) {
-            this.onPeriodChange(this.currentPeriod, newPeriod);
+        this.currentPeriod = this.getCurrentPeriod();
+        if (this.currentPeriod !== this.lastPeriod) {
+            this.onPeriodChange(this.lastPeriod, this.currentPeriod);
             this.lastPeriod = this.currentPeriod;
-            this.currentPeriod = newPeriod;
         }
+        
+        // Notify time change listeners
+        this.notifyTimeChange();
+    }
+    
+    getCurrentPeriod() {
+        for (const [periodKey, period] of Object.entries(this.timePeriods)) {
+            if (this.currentTime >= period.start && this.currentTime < period.end) {
+                return periodKey;
+            }
+        }
+        return 'LATE_NIGHT'; // Default fallback
+    }
+    
+    getCurrentPeriodName() {
+        return this.timePeriods[this.currentPeriod]?.name || 'Unknown';
+    }
+    
+    getTimeString() {
+        const hours = Math.floor(this.currentTime / 60);
+        const minutes = Math.floor(this.currentTime % 60);
+        const displayHours = hours === 0 ? 12 : (hours > 12 ? hours - 12 : hours);
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        
+        return `${displayHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+    }
+    
+    getFishActivityModifiers() {
+        return this.fishActivityModifiers[this.currentPeriod] || { activity: 1.0, rareChance: 1.0, biteFast: 1.0 };
+    }
+    
+    setTimeSpeed(speed) {
+        this.timeSpeed = Math.max(0.1, Math.min(50, speed)); // Clamp between 0.1x and 50x
+    }
+    
+    pauseTime() {
+        this.paused = true;
+    }
+    
+    resumeTime() {
+        this.paused = false;
+    }
+    
+    togglePause() {
+        this.paused = !this.paused;
+        return this.paused;
+    }
+    
+    // Set specific time (for testing or story events)
+    setTime(hours, minutes = 0) {
+        this.currentTime = (hours * 60) + minutes;
+        if (this.currentTime >= 1440) this.currentTime = this.currentTime % 1440;
+        this.currentPeriod = this.getCurrentPeriod();
+        this.notifyTimeChange();
+    }
+    
+    // Get lighting intensity for visual effects (0.0 to 1.0)
+    getLightingIntensity() {
+        const lightingMap = {
+            'LATE_NIGHT': 0.1,  // Very dark
+            'DAWN': 0.4,         // Growing light
+            'MORNING': 0.9,      // Bright
+            'MIDDAY': 1.0,       // Brightest
+            'AFTERNOON': 0.9,    // Bright
+            'EVENING': 0.7,      // Dimming
+            'DUSK': 0.3,         // Twilight
+            'NIGHT': 0.2         // Dark
+        };
+        
+        return lightingMap[this.currentPeriod] || 0.5;
+    }
+    
+    // Get sky color for visual effects
+    getSkyColor() {
+        const skyColors = {
+            'LATE_NIGHT': 0x0a0a1a,  // Deep night blue
+            'DAWN': 0xff6b35,        // Orange dawn
+            'MORNING': 0x87ceeb,     // Sky blue
+            'MIDDAY': 0x00bfff,      // Bright blue
+            'AFTERNOON': 0x87ceeb,   // Sky blue
+            'EVENING': 0xffa500,     // Orange
+            'DUSK': 0x8b008b,        // Purple
+            'NIGHT': 0x191970        // Midnight blue
+        };
+        
+        return skyColors[this.currentPeriod] || 0x87ceeb;
+    }
+    
+    // Event handling
+    onTimeChange(callback) {
+        this.timeChangeCallbacks.push(callback);
+    }
+    
+    onPeriodChange(callback) {
+        this.periodChangeCallbacks.push(callback);
+    }
+    
+    notifyTimeChange() {
+        this.timeChangeCallbacks.forEach(callback => {
+            try {
+                callback(this.currentTime, this.getTimeString(), this.currentPeriod);
+            } catch (error) {
+                console.error('Time change callback error:', error);
+            }
+        });
+    }
+    
+    onPeriodChange(oldPeriod, newPeriod) {
+        console.log(`Time period changed: ${oldPeriod} → ${newPeriod}`);
+        
+        this.periodChangeCallbacks.forEach(callback => {
+            try {
+                callback(oldPeriod, newPeriod, this.getFishActivityModifiers());
+            } catch (error) {
+                console.error('Period change callback error:', error);
+            }
+        });
         
         // Update game state
-        this.gameState.world.timeOfDay = this.currentPeriod;
-    }
-
-    getCurrentPeriod() {
-        const hours = Math.floor(this.gameState.world.gameTime / 60);
-        const currentHour = hours % 24;
-        
-        for (const [periodId, period] of Object.entries(this.timePeriods)) {
-            if (period.start <= period.end) {
-                // Normal period (doesn't cross midnight)
-                if (currentHour >= period.start && currentHour < period.end) {
-                    return periodId;
-                }
-            } else {
-                // Period crosses midnight (like late night: 23-5)
-                if (currentHour >= period.start || currentHour < period.end) {
-                    return periodId;
-                }
-            }
-        }
-        
-        return 'morning'; // Fallback
-    }
-
-    getCurrentTime() {
-        const totalMinutes = Math.floor(this.gameState.world.gameTime);
-        const hours = Math.floor(totalMinutes / 60) % 24;
-        const minutes = totalMinutes % 60;
-        
-        return {
-            hours: hours,
-            minutes: minutes,
-            totalMinutes: totalMinutes,
-            period: this.currentPeriod,
-            formatted: this.formatTime(hours, minutes),
-            is24Hour: true
-        };
-    }
-
-    formatTime(hours, minutes, use24Hour = false) {
-        if (use24Hour) {
-            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-        } else {
-            const period = hours >= 12 ? 'PM' : 'AM';
-            const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
-            return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+        if (this.gameState) {
+            this.gameState.currentTimePeriod = newPeriod;
+            this.gameState.currentTime = this.currentTime;
         }
     }
-
-    setTime(hours, minutes = 0) {
-        this.gameState.world.gameTime = (hours * 60) + minutes;
-        this.currentPeriod = this.getCurrentPeriod();
-        this.gameState.world.timeOfDay = this.currentPeriod;
-        
-        this.emit('timeChanged', this.getCurrentTime());
-        console.log(`TimeManager: Time set to ${this.formatTime(hours, minutes)}`);
-    }
-
-    setTimeSpeed(speed) {
-        this.timeSpeed = Math.max(0.1, Math.min(10, speed)); // Clamp between 0.1x and 10x
-        this.emit('timeSpeedChanged', this.timeSpeed);
-        console.log(`TimeManager: Time speed set to ${this.timeSpeed}x`);
-    }
-
-    getTimeSpeed() {
-        return this.timeSpeed;
-    }
-
-    advanceTime(minutes) {
-        this.gameState.world.gameTime += minutes;
-        
-        if (this.gameState.world.gameTime >= 1440) {
-            this.gameState.world.gameTime -= 1440;
-            this.onNewDay();
-        }
-        
-        const newPeriod = this.getCurrentPeriod();
-        if (newPeriod !== this.currentPeriod) {
-            this.onPeriodChange(this.currentPeriod, newPeriod);
-            this.lastPeriod = this.currentPeriod;
-            this.currentPeriod = newPeriod;
-        }
-        
-        this.gameState.world.timeOfDay = this.currentPeriod;
-        this.emit('timeChanged', this.getCurrentTime());
-    }
-
-    onPeriodChange(oldPeriod, newPeriod) {
-        const periodData = this.timePeriods[newPeriod];
-        const effects = this.timeEffects[newPeriod];
-        
-        console.log(`TimeManager: Period changed from ${oldPeriod} to ${newPeriod}`);
-        
-        this.emit('periodChanged', {
-            oldPeriod: oldPeriod,
-            newPeriod: newPeriod,
-            periodData: periodData,
-            effects: effects,
-            time: this.getCurrentTime()
-        });
-    }
-
+    
     onNewDay() {
-        console.log('TimeManager: New day started');
-        this.emit('newDay', {
-            day: Math.floor(this.gameState.world.realPlayTime / (1440 * 60 * 1000)) + 1,
-            time: this.getCurrentTime()
-        });
-    }
-
-    getPeriodInfo(periodId = null) {
-        const period = periodId || this.currentPeriod;
-        return {
-            id: period,
-            ...this.timePeriods[period],
-            effects: this.timeEffects[period],
-            isCurrent: period === this.currentPeriod
-        };
-    }
-
-    getAllPeriods() {
-        return Object.keys(this.timePeriods).map(periodId => this.getPeriodInfo(periodId));
-    }
-
-    getTimeEffects(periodId = null) {
-        const period = periodId || this.currentPeriod;
-        return { ...this.timeEffects[period] };
-    }
-
-    getFishingConditions() {
-        const effects = this.getTimeEffects();
-        const periodInfo = this.getPeriodInfo();
-        
-        return {
-            period: this.currentPeriod,
-            periodName: periodInfo.name,
-            icon: periodInfo.icon,
-            description: effects.description,
-            fishActivity: effects.fishActivity,
-            biteRate: effects.biteRate,
-            rareChance: effects.rareChance,
-            isOptimal: effects.fishActivity >= 1.2 && effects.biteRate >= 1.2,
-            time: this.getCurrentTime()
-        };
-    }
-
-    getOptimalFishingTimes() {
-        return Object.entries(this.timeEffects)
-            .filter(([period, effects]) => effects.fishActivity >= 1.2 && effects.biteRate >= 1.2)
-            .map(([period, effects]) => ({
-                period: period,
-                periodName: this.timePeriods[period].name,
-                icon: this.timePeriods[period].icon,
-                startTime: this.formatTime(this.timePeriods[period].start, 0),
-                endTime: this.formatTime(this.timePeriods[period].end, 0),
-                effects: effects
-            }));
-    }
-
-    getTimeUntilPeriod(targetPeriod) {
-        const targetStart = this.timePeriods[targetPeriod].start * 60;
-        const currentTime = this.gameState.world.gameTime;
-        
-        let timeUntil;
-        if (targetStart > currentTime) {
-            timeUntil = targetStart - currentTime;
-        } else {
-            // Next day
-            timeUntil = (1440 - currentTime) + targetStart;
-        }
-        
-        const hours = Math.floor(timeUntil / 60);
-        const minutes = timeUntil % 60;
-        
-        return {
-            totalMinutes: timeUntil,
-            hours: hours,
-            minutes: minutes,
-            formatted: `${hours}h ${minutes}m`
-        };
-    }
-
-    // Event system
-    on(event, callback) {
-        if (!this.listeners.has(event)) {
-            this.listeners.set(event, []);
-        }
-        this.listeners.get(event).push(callback);
-    }
-
-    off(event, callback) {
-        if (this.listeners.has(event)) {
-            const callbacks = this.listeners.get(event);
-            const index = callbacks.indexOf(callback);
-            if (index > -1) {
-                callbacks.splice(index, 1);
-            }
+        console.log('New day started!');
+        // Reset daily activities, refresh shop, etc.
+        if (this.gameState) {
+            this.gameState.currentDay = (this.gameState.currentDay || 0) + 1;
         }
     }
-
-    emit(event, data) {
-        if (this.listeners.has(event)) {
-            this.listeners.get(event).forEach(callback => {
-                try {
-                    callback(data);
-                } catch (error) {
-                    console.error(`TimeManager: Error in event callback for ${event}:`, error);
-                }
-            });
-        }
-    }
-
+    
     // Save/Load support
-    getSaveData() {
+    getTimeData() {
         return {
-            gameTime: this.gameState.world.gameTime,
-            timeSpeed: this.timeSpeed,
-            currentPeriod: this.currentPeriod,
-            isRunning: this.isRunning
-        };
-    }
-
-    loadSaveData(data) {
-        if (data.gameTime !== undefined) {
-            this.gameState.world.gameTime = data.gameTime;
-        }
-        if (data.timeSpeed !== undefined) {
-            this.timeSpeed = data.timeSpeed;
-        }
-        if (data.currentPeriod !== undefined) {
-            this.currentPeriod = data.currentPeriod;
-        }
-        if (data.isRunning !== undefined) {
-            this.isRunning = data.isRunning;
-        }
-        
-        this.gameState.world.timeOfDay = this.currentPeriod;
-        console.log('TimeManager: Save data loaded');
-    }
-
-    // Debug methods
-    debugSetPeriod(periodId) {
-        if (this.timePeriods[periodId]) {
-            const period = this.timePeriods[periodId];
-            this.setTime(period.start, 0);
-            console.log(`TimeManager: Debug set to ${periodId} period`);
-        }
-    }
-
-    getDebugInfo() {
-        return {
-            currentTime: this.getCurrentTime(),
+            currentTime: this.currentTime,
             currentPeriod: this.currentPeriod,
             timeSpeed: this.timeSpeed,
-            isRunning: this.isRunning,
-            effects: this.getTimeEffects(),
-            optimalTimes: this.getOptimalFishingTimes()
+            paused: this.paused
         };
+    }
+    
+    loadTimeData(data) {
+        if (data) {
+            this.currentTime = data.currentTime || 360;
+            this.currentPeriod = data.currentPeriod || this.getCurrentPeriod();
+            this.timeSpeed = data.timeSpeed || 1;
+            this.paused = data.paused || false;
+            this.lastPeriod = this.currentPeriod;
+        }
+    }
+    
+    destroy() {
+        if (this.timeUpdateEvent) {
+            this.timeUpdateEvent.destroy();
+        }
+        this.timeChangeCallbacks = [];
+        this.periodChangeCallbacks = [];
     }
 } 

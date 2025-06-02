@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxury Angler - Album System Test</title>
+    <style>
+        body {
+            margin: 0;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+        }
+        
+        #game-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        canvas {
+            border: 3px solid #ffd700;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+        }
+        
+        .info-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #ffd700;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #ffd700;
+            max-width: 300px;
+            font-size: 14px;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #ffd700;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #ffd700;
+            max-width: 300px;
+        }
+        
+        .control-button {
+            background: #8B4513;
+            color: #ffd700;
+            border: 2px solid #ffd700;
+            padding: 8px 16px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: Georgia, serif;
+            font-size: 12px;
+        }
+        
+        .control-button:hover {
+            background: #a0522d;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="phaser-game"></canvas>
+    </div>
+    
+    <div class="info-panel">
+        <h3>🖼️ Album System Test</h3>
+        <p><strong>Testing:</strong> HCG unlock system, visual notifications, and album interface</p>
+        <p><strong>Features:</strong></p>
+        <ul>
+            <li>Romance meter thresholds (34, 50, 67, 84)</li>
+            <li>HCG unlock notifications with rarity effects</li>
+            <li>Album browsing with filtering</li>
+            <li>Achievement-based group HCGs</li>
+        </ul>
+    </div>
+    
+    <div class="controls">
+        <h4>Debug Controls:</h4>
+        <button class="control-button" onclick="testHCGUnlock()">Test HCG Unlock</button>
+        <button class="control-button" onclick="unlockAllHCGs()">Unlock All HCGs</button>
+        <button class="control-button" onclick="resetHCGs()">Reset HCGs</button>
+        <button class="control-button" onclick="openAlbumDirect()">Open Album</button>
+        <br>
+        <button class="control-button" onclick="simulateRomanceIncrease()">+10 Romance (Mia)</button>
+        <button class="control-button" onclick="setRomanceLevel(34)">Set Mia Friend (34)</button>
+        <button class="control-button" onclick="setRomanceLevel(67)">Set Mia Romantic (67)</button>
+    </div>
+
+    <script type="module">
+        import Phaser from './node_modules/phaser/dist/phaser.esm.js';
+        import BootScene from './src/scenes/BootScene.js';
+        import PreloadScene from './src/scenes/PreloadScene.js';
+        import GameScene from './src/scenes/GameScene.js';
+        import CabinScene from './src/scenes/CabinScene.js';
+        import AlbumScene from './src/scenes/AlbumScene.js';
+        import HCGUnlockSystem from './src/scripts/HCGUnlockSystem.js';
+
+        const config = {
+            type: Phaser.AUTO,
+            width: 1280,
+            height: 720,
+            parent: 'phaser-game',
+            backgroundColor: '#1a1a2e',
+            scene: [
+                BootScene,
+                PreloadScene,
+                GameScene,
+                CabinScene,
+                AlbumScene
+            ],
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH
+            }
+        };
+
+        const game = new Phaser.Game(config);
+        let currentScene = null;
+        let hcgSystem = null;
+
+        // Wait for game to be ready
+        game.events.once('ready', () => {
+            console.log('Album System Test: Game initialized');
+            
+            // Initialize HCG system for testing
+            hcgSystem = new HCGUnlockSystem();
+            
+            // Start with cabin scene for testing
+            setTimeout(() => {
+                game.scene.start('CabinScene', { callingScene: 'GameScene' });
+                currentScene = game.scene.getScene('CabinScene');
+            }, 2000);
+        });
+
+        // Global test functions
+        window.testHCGUnlock = function() {
+            if (currentScene && currentScene.hcgNotificationManager) {
+                const testUnlock = {
+                    npcId: 'mia',
+                    hcgData: {
+                        id: 'test_hcg',
+                        title: 'Test Unlock',
+                        description: 'Testing the HCG unlock notification system',
+                        rarity: 'legendary',
+                        unlockMessage: 'Test HCG unlocked!'
+                    },
+                    unlockType: 'romance_threshold'
+                };
+                
+                currentScene.hcgNotificationManager.showHCGUnlock(testUnlock);
+            }
+        };
+
+        window.unlockAllHCGs = function() {
+            if (hcgSystem) {
+                hcgSystem.unlockAllHCGs();
+                console.log('All HCGs unlocked for testing');
+                
+                if (currentScene && currentScene.updateAlbumButton) {
+                    currentScene.updateAlbumButton();
+                }
+            }
+        };
+
+        window.resetHCGs = function() {
+            localStorage.removeItem('cabin_unlocked_hcgs');
+            localStorage.removeItem('cabin_new_hcgs');
+            console.log('HCGs reset');
+            
+            if (currentScene && currentScene.updateAlbumButton) {
+                currentScene.updateAlbumButton();
+            }
+        };
+
+        window.openAlbumDirect = function() {
+            if (currentScene && currentScene.openAlbum) {
+                currentScene.openAlbum();
+            } else {
+                game.scene.launch('AlbumScene', {
+                    callingScene: 'CabinScene',
+                    unlockedHCGs: JSON.parse(localStorage.getItem('cabin_unlocked_hcgs') || '[]')
+                });
+            }
+        };
+
+        window.simulateRomanceIncrease = function() {
+            if (currentScene && currentScene.hcgUnlockSystem) {
+                const oldValue = 20;
+                const newValue = 30;
+                
+                // Simulate romance meter increase
+                const unlocks = currentScene.hcgUnlockSystem.checkForUnlocks('mia', oldValue, newValue);
+                
+                unlocks.forEach(unlockData => {
+                    currentScene.hcgNotificationManager.showHCGUnlock(unlockData);
+                });
+                
+                console.log(`Simulated romance increase for Mia: ${oldValue} -> ${newValue}`);
+            }
+        };
+
+        window.setRomanceLevel = function(level) {
+            if (currentScene && currentScene.hcgUnlockSystem) {
+                // Save NPC data with specific romance level
+                const npcData = {
+                    id: 'mia',
+                    name: 'Mia',
+                    romanceMeter: level,
+                    maxRomance: 100,
+                    relationship: currentScene.hcgUnlockSystem.getRelationshipLevel(level)
+                };
+                
+                localStorage.setItem('cabin_npc_mia', JSON.stringify(npcData));
+                
+                // Check for unlocks at this level
+                const unlocks = currentScene.hcgUnlockSystem.checkForUnlocks('mia', 0, level);
+                
+                unlocks.forEach(unlockData => {
+                    currentScene.hcgNotificationManager.showHCGUnlock(unlockData);
+                });
+                
+                console.log(`Set Mia romance level to ${level}: ${npcData.relationship}`);
+                
+                if (currentScene.updateAlbumButton) {
+                    currentScene.updateAlbumButton();
+                }
+            }
+        };
+
+        // Debug info
+        console.log('Album System Test Controls:');
+        console.log('- testHCGUnlock(): Test notification system');
+        console.log('- unlockAllHCGs(): Unlock all HCGs for album testing');
+        console.log('- resetHCGs(): Clear all unlocked HCGs');
+        console.log('- openAlbumDirect(): Open album scene directly');
+        console.log('- simulateRomanceIncrease(): Test romance-based unlock');
+        console.log('- setRomanceLevel(level): Set specific romance level for testing');
+    </script>
+</body>
+</html> 

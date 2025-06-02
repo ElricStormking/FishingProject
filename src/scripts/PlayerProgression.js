@@ -1,8 +1,15 @@
+import { EventEmitter } from './EventEmitter.js';
+import { AchievementEnhancer } from './AchievementEnhancer.js';
+
 // PlayerProgression.js - Comprehensive player progression and leveling system
-export class PlayerProgression {
+export class PlayerProgression extends EventEmitter {
     constructor(gameState) {
+        super();
         this.gameState = gameState;
         this.listeners = new Map();
+        
+        // Initialize achievement enhancer (will be initialized after tournament manager is available)
+        this.achievementEnhancer = null;
         
         // Experience sources and multipliers
         this.experienceSources = {
@@ -729,6 +736,11 @@ export class PlayerProgression {
                 player.progression.locationsUnlocked++;
                 break;
         }
+        
+        // Track enhanced achievements if available
+        if (this.achievementEnhancer) {
+            this.achievementEnhancer.trackEnhancedEvent(source, details);
+        }
     }
 
     checkLevelRewards(level) {
@@ -890,9 +902,13 @@ export class PlayerProgression {
         if (this.listeners.has(event)) {
             this.listeners.get(event).forEach(callback => {
                 try {
-                    callback(data);
+                    // Add safety check for data parameter
+                    const safeData = data || {};
+                    callback(safeData);
                 } catch (error) {
                     console.error(`PlayerProgression: Error in event callback for ${event}:`, error);
+                    console.error('PlayerProgression: Data that caused error:', data);
+                    console.error('PlayerProgression: Callback:', callback.toString().substring(0, 100));
                 }
             });
         }
@@ -975,18 +991,35 @@ export class PlayerProgression {
     checkAchievements(eventType, data = {}) {
         const unlockedAchievements = [];
         
+        // Add safety checks for gameState and player
+        if (!this.gameState || !this.gameState.player) {
+            console.warn('PlayerProgression: GameState or player not available for achievement check');
+            return unlockedAchievements;
+        }
+        
+        // Ensure achievements object exists
+        if (!this.gameState.player.achievements) {
+            console.warn('PlayerProgression: Player achievements not initialized');
+            this.initializeProgression();
+        }
+        
         Object.values(this.achievements).forEach(achievement => {
-            const playerAchievement = this.gameState.player.achievements[achievement.id];
-            
-            // Add null check for playerAchievement
-            if (playerAchievement && !playerAchievement.completed) {
-                const progress = this.calculateAchievementProgress(achievement, data);
-                playerAchievement.progress = progress;
+            try {
+                const playerAchievement = this.gameState.player.achievements[achievement.id];
                 
-                if (this.meetsAchievementRequirement(achievement, data)) {
-                    this.unlockAchievement(achievement.id);
-                    unlockedAchievements.push(achievement);
+                // Add null check for playerAchievement
+                if (playerAchievement && !playerAchievement.completed) {
+                    const progress = this.calculateAchievementProgress(achievement, data);
+                    playerAchievement.progress = progress;
+                    
+                    if (this.meetsAchievementRequirement(achievement, data)) {
+                        if (this.unlockAchievement(achievement.id)) {
+                            unlockedAchievements.push(achievement);
+                        }
+                    }
                 }
+            } catch (error) {
+                console.error(`PlayerProgression: Error checking achievement ${achievement.id}:`, error);
             }
         });
         
@@ -1079,127 +1112,297 @@ export class PlayerProgression {
     
     getAchievementData() {
         const player = this.gameState.player;
-        const achievementData = {};
+        const allAchievements = { ...this.achievements };
         
-        Object.entries(this.achievements).forEach(([id, achievement]) => {
-            const playerProgress = player.achievements[id];
-            const progress = this.calculateAchievementProgress(achievement);
+        // Add enhanced achievements if available
+        if (this.achievementEnhancer) {
+            const enhancedAchievements = this.achievementEnhancer.getEnhancedAchievements();
+            Object.assign(allAchievements, enhancedAchievements);
+        }
+        
+        // Process each achievement to add progress and completion data
+        const processedAchievements = {};
+        
+        Object.entries(allAchievements).forEach(([id, achievement]) => {
+            const playerAchievement = player.achievements[id] || player.enhancedAchievements?.[id] || {};
+            const progress = playerAchievement.progress || 0;
+            const completed = playerAchievement.completed || false;
+            const progressPercent = achievement.target ? Math.min((progress / achievement.target) * 100, 100) : 0;
             
-            // Add null check for playerProgress
-            achievementData[id] = {
+            processedAchievements[id] = {
                 ...achievement,
-                progress: progress,
-                progressPercent: Math.min(100, (progress / achievement.requirement.value) * 100),
-                completed: playerProgress?.completed || false,
-                completedAt: playerProgress?.completedAt || null
+                id,
+                progress,
+                completed,
+                progressPercent,
+                completedAt: playerAchievement.completedAt,
+                tier: achievement.tier || 'bronze' // Default tier
             };
         });
         
-        return achievementData;
+        return processedAchievements;
+    }
+    
+    getUnlockedAchievements() {
+        const player = this.gameState.player;
+        const unlockedAchievements = [];
+        
+        Object.entries(this.achievements).forEach(([id, achievement]) => {
+            const playerProgress = player.achievements[id];
+            if (playerProgress?.completed) {
+                unlockedAchievements.push(id);
+            }
+        });
+        
+        return unlockedAchievements;
     }
     
     // Enhanced statistics tracking
     updateStatistics(eventType, data = {}) {
-        const player = this.gameState.player;
-        
-        // Ensure enhanced statistics exist
-        if (!player.statistics.enhanced) {
-            this.initializeProgression();
+        try {
+            const player = this.gameState.player;
+            
+            // Ensure enhanced statistics exist
+            if (!player.statistics.enhanced) {
+                this.initializeProgression();
+            }
+            
+            const stats = player.statistics.enhanced;
+            const progression = player.progression;
+            
+            // Add null checks for stats and progression
+            if (!stats || !progression) {
+                console.warn('PlayerProgression: Statistics objects not properly initialized');
+                return [];
+            }
+            
+            switch (eventType) {
+                case 'fishCaught':
+                    // Validate and safely process fish data
+                    const fishValue = Math.max(0, parseFloat(data.value) || 0);
+                    const fishWeight = Math.max(0, parseFloat(data.weight) || 0);
+                    const fishRarity = Math.min(Math.max(1, parseInt(data.rarity) || 1), 10);
+                    const fishName = (data.name && typeof data.name === 'string') ? data.name.trim() : 'Unknown Fish';
+                    const fishSpecies = (data.species && typeof data.species === 'string') ? data.species.trim() : 'unknown';
+                    
+                    stats.totalFishCaught++;
+                    stats.totalFishValue += fishValue;
+                    stats.totalCoinsEarned += fishValue;
+                    
+                    if (fishWeight > 0 && fishWeight > (stats.biggestFishWeight || 0)) {
+                        stats.biggestFishWeight = fishWeight;
+                        stats.biggestFishSpecies = fishName;
+                    }
+                    
+                    if (stats.rareFishCaught) {
+                        // Ensure rareFishCaught array/object is properly initialized
+                        if (typeof stats.rareFishCaught !== 'object') {
+                            stats.rareFishCaught = {};
+                        }
+                        stats.rareFishCaught[fishRarity] = (stats.rareFishCaught[fishRarity] || 0) + 1;
+                    }
+                    
+                    if (fishSpecies && fishSpecies !== 'unknown' && stats.speciesCaught) {
+                        // Ensure speciesCaught object is properly initialized
+                        if (typeof stats.speciesCaught !== 'object') {
+                            stats.speciesCaught = {};
+                        }
+                        
+                        if (!stats.speciesCaught[fishSpecies]) {
+                            stats.speciesCaught[fishSpecies] = 0;
+                            
+                            // Track first catches
+                            if (stats.firstCatches && Array.isArray(stats.firstCatches)) {
+                                stats.firstCatches.push({
+                                    species: fishSpecies,
+                                    name: fishName,
+                                    caughtAt: new Date().toISOString()
+                                });
+                            }
+                        }
+                        stats.speciesCaught[fishSpecies] = (stats.speciesCaught[fishSpecies] || 0) + 1;
+                    }
+                    break;
+                    
+                case 'perfectCast':
+                    progression.perfectCasts++;
+                    if (stats.perfectCastStreak !== undefined) {
+                        stats.perfectCastStreak++;
+                        if (stats.perfectCastStreak > (stats.longestPerfectCastStreak || 0)) {
+                            stats.longestPerfectCastStreak = stats.perfectCastStreak;
+                        }
+                    }
+                    break;
+                    
+                case 'failedCast':
+                    if (stats.perfectCastStreak !== undefined) {
+                        stats.perfectCastStreak = 0;
+                    }
+                    break;
+                    
+                case 'perfectLure':
+                    progression.perfectLures++;
+                    if (stats.perfectLureStreak !== undefined) {
+                        stats.perfectLureStreak++;
+                        if (stats.perfectLureStreak > (stats.longestPerfectLureStreak || 0)) {
+                            stats.longestPerfectLureStreak = stats.perfectLureStreak;
+                        }
+                    }
+                    break;
+                    
+                case 'failedLure':
+                    if (stats.perfectLureStreak !== undefined) {
+                        stats.perfectLureStreak = 0;
+                    }
+                    break;
+                    
+                case 'perfectReel':
+                    progression.perfectReels++;
+                    if (stats.perfectReelStreak !== undefined) {
+                        stats.perfectReelStreak++;
+                        if (stats.perfectReelStreak > (stats.longestPerfectReelStreak || 0)) {
+                            stats.longestPerfectReelStreak = stats.perfectReelStreak;
+                        }
+                    }
+                    break;
+                    
+                case 'failedReel':
+                    if (stats.perfectReelStreak !== undefined) {
+                        stats.perfectReelStreak = 0;
+                    }
+                    break;
+                    
+                case 'lineBreak':
+                    if (stats.lineBreaks !== undefined) stats.lineBreaks++;
+                    if (stats.fishLost !== undefined) stats.fishLost++;
+                    break;
+                    
+                case 'fishEscaped':
+                    if (stats.fishLost !== undefined) stats.fishLost++;
+                    break;
+                    
+                case 'locationVisited':
+                    if (data.location && typeof data.location === 'string' && stats.locationsFished && Array.isArray(stats.locationsFished)) {
+                        const location = data.location.trim();
+                        if (location && !stats.locationsFished.includes(location)) {
+                            stats.locationsFished.push(location);
+                        }
+                    }
+                    break;
+                    
+                case 'itemPurchased':
+                    const itemCost = Math.max(0, parseFloat(data.cost) || 0);
+                    if (stats.totalCoinsSpent !== undefined) stats.totalCoinsSpent += itemCost;
+                    if (stats.itemsBought !== undefined) stats.itemsBought++;
+                    break;
+                    
+                case 'itemCrafted':
+                    if (stats.itemsCrafted !== undefined) stats.itemsCrafted++;
+                    break;
+                    
+                default:
+                    console.log(`PlayerProgression: Unknown event type for statistics: ${eventType}`);
+                    break;
+            }
+            
+            // Check for achievements after updating stats
+            let unlockedAchievements = [];
+            try {
+                unlockedAchievements = this.checkAchievements(eventType, data);
+            } catch (achievementError) {
+                console.error('PlayerProgression: Error checking achievements:', achievementError);
+                unlockedAchievements = [];
+            }
+            
+            this.gameState.markDirty();
+            return unlockedAchievements;
+            
+        } catch (error) {
+            console.error('PlayerProgression: Error in updateStatistics:', error);
+            console.error('PlayerProgression: Event type:', eventType);
+            console.error('PlayerProgression: Data:', data);
+            console.error('PlayerProgression: Error stack:', error.stack);
+            
+            // Return empty array to prevent further crashes
+            return [];
         }
-        
-        const stats = player.statistics.enhanced;
-        const progression = player.progression;
-        
-        switch (eventType) {
-            case 'fishCaught':
-                stats.totalFishCaught++;
-                stats.totalFishValue += data.value || 0;
-                stats.totalCoinsEarned += data.value || 0;
-                
-                if (data.weight && data.weight > stats.biggestFishWeight) {
-                    stats.biggestFishWeight = data.weight;
-                    stats.biggestFishSpecies = data.name;
-                }
-                
-                if (data.rarity) {
-                    stats.rareFishCaught[data.rarity] = (stats.rareFishCaught[data.rarity] || 0) + 1;
-                }
-                
-                if (data.species && !stats.speciesCaught[data.species]) {
-                    stats.speciesCaught[data.species] = 0;
-                    stats.firstCatches.push({
-                        species: data.species,
-                        caughtAt: new Date().toISOString()
-                    });
-                }
-                stats.speciesCaught[data.species] = (stats.speciesCaught[data.species] || 0) + 1;
-                break;
-                
-            case 'perfectCast':
-                progression.perfectCasts++;
-                stats.perfectCastStreak++;
-                if (stats.perfectCastStreak > stats.longestPerfectCastStreak) {
-                    stats.longestPerfectCastStreak = stats.perfectCastStreak;
-                }
-                break;
-                
-            case 'failedCast':
-                stats.perfectCastStreak = 0;
-                break;
-                
-            case 'perfectLure':
-                progression.perfectLures++;
-                stats.perfectLureStreak++;
-                if (stats.perfectLureStreak > stats.longestPerfectLureStreak) {
-                    stats.longestPerfectLureStreak = stats.perfectLureStreak;
-                }
-                break;
-                
-            case 'failedLure':
-                stats.perfectLureStreak = 0;
-                break;
-                
-            case 'perfectReel':
-                progression.perfectReels++;
-                stats.perfectReelStreak++;
-                if (stats.perfectReelStreak > stats.longestPerfectReelStreak) {
-                    stats.longestPerfectReelStreak = stats.perfectReelStreak;
-                }
-                break;
-                
-            case 'failedReel':
-                stats.perfectReelStreak = 0;
-                break;
-                
-            case 'lineBreak':
-                stats.lineBreaks++;
-                stats.fishLost++;
-                break;
-                
-            case 'fishEscaped':
-                stats.fishLost++;
-                break;
-                
-            case 'locationVisited':
-                if (data.location && !stats.locationsFished.includes(data.location)) {
-                    stats.locationsFished.push(data.location);
-                }
-                break;
-                
-            case 'itemPurchased':
-                stats.totalCoinsSpent += data.cost || 0;
-                stats.itemsBought++;
-                break;
-                
-            case 'itemCrafted':
-                stats.itemsCrafted++;
-                break;
+    }
+
+    // Initialize AchievementEnhancer when tournament manager is available
+    initializeAchievementEnhancer(tournamentManager) {
+        if (!this.achievementEnhancer && tournamentManager) {
+            this.achievementEnhancer = new AchievementEnhancer(this.gameState, this, tournamentManager);
+            this.achievementEnhancer.initializeEnhancedProgress();
+            
+            // Set up event forwarding
+            this.achievementEnhancer.on('enhancedAchievementUnlocked', (data) => {
+                this.emit('achievementUnlocked', data);
+            });
+            
+            this.achievementEnhancer.on('achievementChainCompleted', (data) => {
+                this.emit('achievementChainCompleted', data);
+            });
+            
+            console.log('PlayerProgression: Achievement enhancement system initialized');
         }
-        
-        // Check for achievements after updating stats
+    }
+
+    // Enhanced method to track all achievement-related events
+    trackAchievementEvent(eventType, data = {}) {
+        // Track in existing achievement system
         const unlockedAchievements = this.checkAchievements(eventType, data);
         
-        this.gameState.markDirty();
+        // Track in enhanced achievement system
+        if (this.achievementEnhancer) {
+            const enhancedUnlocked = this.achievementEnhancer.trackEnhancedEvent(eventType, data);
+            return [...unlockedAchievements, ...enhancedUnlocked];
+        }
+        
         return unlockedAchievements;
+    }
+
+    // Get achievement chain progress
+    getAchievementChains() {
+        if (!this.achievementEnhancer) {
+            return [];
+        }
+        
+        return this.achievementEnhancer.getAchievementChains();
+    }
+
+    // Get achievement statistics
+    getAchievementStats() {
+        const regular = Object.values(this.getAchievementData());
+        const regularCompleted = regular.filter(a => a.completed).length;
+        
+        let enhancedCompleted = 0;
+        let totalChains = 0;
+        let completedChains = 0;
+        
+        if (this.achievementEnhancer) {
+            const enhanced = this.achievementEnhancer.getAllEnhancedAchievements();
+            enhancedCompleted = Object.values(enhanced).filter(a => a.completed).length;
+            
+            const chains = this.achievementEnhancer.getAchievementChainProgress();
+            totalChains = chains.length;
+            completedChains = chains.filter(c => c.completed).length;
+        }
+        
+        return {
+            regularAchievements: {
+                completed: regularCompleted,
+                total: Object.keys(this.achievements).length
+            },
+            enhancedAchievements: {
+                completed: enhancedCompleted,
+                total: this.achievementEnhancer ? Object.keys(this.achievementEnhancer.enhancedAchievements).length : 0
+            },
+            achievementChains: {
+                completed: completedChains,
+                total: totalChains
+            },
+            totalCompleted: regularCompleted + enhancedCompleted,
+            totalAchievements: Object.keys(this.achievements).length + (this.achievementEnhancer ? Object.keys(this.achievementEnhancer.enhancedAchievements).length : 0)
+        };
     }
 } 

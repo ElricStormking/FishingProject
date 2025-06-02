@@ -1,0 +1,160 @@
+backgrounds:
+  room: assets/backgrounds/room_day.jpg
+  room_night: assets/backgrounds/room_night.jpg
+  room_night_light: assets/backgrounds/room_night_light.jpg
+  fishing_dock: public/assets/npcs/fishing-dock-bg.jpg
+  boat_deck: public/assets/npcs/boat-deck-bg.jpg
+  harbor_sunset: public/assets/npcs/harbor-sunset-bg.jpg
+  tackle_shop: public/assets/npcs/tackle-shop-bg.jpg
+
+characters:
+  deuzi:
+    displayName: Deuzilene
+    speechColour: "#ca90cf"
+    looks:
+      normal: assets/characters/Char3NormalSchool.png
+      happy: assets/characters/Char3HappySchool.png
+      angry: assets/characters/Char3AngrySchool.png
+  mia:
+    displayName: Mia
+    speechColour: "#ff6b9d"
+    looks:
+      normal: public/assets/npcs/mia-normal.png
+      happy: public/assets/npcs/mia-happy.png
+      shy: public/assets/npcs/mia-shy.png
+      excited: public/assets/npcs/mia-excited.png
+  
+  sophie:
+    displayName: Sophie
+    speechColour: "#4ecdc4"
+    looks:
+      normal: public/assets/npcs/sophie-normal.png
+      confident: public/assets/npcs/sophie-confident.png
+      impressed: public/assets/npcs/sophie-impressed.png
+      competitive: public/assets/npcs/sophie-competitive.png
+  
+  luna:
+    displayName: Luna
+    speechColour: "#9b59b6"
+    looks:
+      normal: public/assets/npcs/luna-normal.png
+      wise: public/assets/npcs/luna-wise.png
+      mysterious: public/assets/npcs/luna-mysterious.png
+      gentle: public/assets/npcs/luna-gentle.png
+
+cgs:
+  phone1: assets/objects/phone1.png
+  phone2: assets/objects/phone2.png
+  fishing_rod: public/assets/npcs/fishing-rod.png
+  fish_catch: public/assets/npcs/fish-catch.png
+  sunset_silhouette: public/assets/npcs/sunset-silhouette.png
+
+music:
+  rollingCredits: assets/audio/Evan_Schaeffer_-_01_-_Aqueduct.mp3
+  morningBGM: assets/audio/Evan_Schaeffer_-_03_-_Glow.mp3
+  calm_waters: public/assets/audio/calm-waters.mp3
+  harbor_ambience: public/assets/audio/harbor-ambience.mp3
+  romantic_sunset: public/assets/audio/romantic-sunset.mp3
+
+sfx:
+  ringtoneSFX: assets/audio/nokia6210-24-elise.mp3
+  ringtoneSFX2: assets/audio/alcatel-top_secret.mp3
+  water_splash: public/assets/audio/water-splash.mp3
+  fish_caught: public/assets/audio/fish-caught.mp3
+  seagull_cry: public/assets/audio/seagull-cry.mp3
+
+extra:
+  spritesheets:
+    rain: assets/ambient/rain.png 17 17
+    sakura: assets/ambient/sakura-petals.png 17 26
+    snowflakes: assets/ambient/snowflakes.png 17 17
+    snowflakes_large: assets/ambient/snowflakes_large.png 64 64
+    water_ripples: public/assets/npcs/water-ripples.png 32 32
+    seagulls: public/assets/npcs/seagulls.png 64 64
+
+assets:
+  fonts:
+    - Arial
+  images:
+    textbox: assets/gui/textbox.png
+    namebox: assets/gui/namebox.png
+    button: assets/gui/button.png
+  spritesheets:
+    choices: assets/gui/choices.png 200 50
+  audio:
+    click: assets/audio/click.mp3
+
+config:
+  hud:
+    - type: 'messageBox'
+      id: 'default'
+      asset: 'textbox'
+      x: 50
+      y: 450
+      text:
+        x: 20
+        y: 20
+        style:
+          font: Arial
+          fontSize: 18px
+          fill: "#FFFFFF"
+          wordWrap: true
+          wordWrapWidth: 700
+      ctc:
+        x: 750
+        y: 100
+        asset: button
+        animationStyle: static
+    
+    - type: 'nameBox'
+      id: 'default'
+      asset: 'namebox'
+      x: 50
+      y: 400
+      text:
+        x: 10
+        y: 5
+        style:
+          font: Arial
+          fontSize: 16px
+          fill: "#FFFFFF"
+          boundsAlignH: center
+          boundsAlignV: middle
+    
+    - type: 'choices'
+      id: 'default'
+      asset: 'choices'
+      x: 400
+      y: 300
+      alignment: centered
+      separation: 10
+      label:
+        x: 10
+        y: 10
+        style:
+          font: Arial
+          fontSize: 16px
+          fill: "#FFFFFF"
+          boundsAlignH: center
+          boundsAlignV: middle
+
+  menus:
+    main:
+      - type: 'button'
+        asset: 'button'
+        x: 350
+        y: 250
+        binding: 'start'
+        label:
+          text: "Start Game"
+          style:
+            font: Arial
+            fontSize: 20px
+            fill: "#FFFFFF"
+            boundsAlignH: center
+            boundsAlignV: middle
+
+# path to assets
+assetsPath: assets/gui/
+# gui version
+GUIVersion: "2.0"

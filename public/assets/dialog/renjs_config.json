@@ -1,0 +1,279 @@
+{
+  "name": "Luxury Angler Dialog System",
+  "version": "1.0.0",
+  "description": "Dialog system for the fishing game",
+  "story": {
+    "start": "main_menu"
+  },
+  "characters": {
+    "mia": {
+      "displayName": "Mia",
+      "color": "#64b5f6",
+      "looks": {
+        "normal": "assets/npcs/mia-portrait.png",
+        "happy": "assets/npcs/mia-portrait.png",
+        "surprised": "assets/npcs/mia-portrait.png"
+      }
+    },
+    "sophie": {
+      "displayName": "Sophie",
+      "color": "#ff9800",
+      "looks": {
+        "normal": "assets/npcs/sophie-portrait.png",
+        "excited": "assets/npcs/sophie-portrait.png",
+        "energetic": "assets/npcs/sophie-portrait.png"
+      }
+    },
+    "luna": {
+      "displayName": "Luna",
+      "color": "#9c27b0",
+      "looks": {
+        "normal": "assets/npcs/luna-portrait.png",
+        "mysterious": "assets/npcs/luna-portrait.png",
+        "thoughtful": "assets/npcs/luna-portrait.png"
+      }
+    },
+    "player": {
+      "displayName": "You",
+      "color": "#4caf50"
+    }
+  },
+  "backgrounds": {
+    "dialog_bg": "assets/ui/dialog-background.png",
+    "village": "assets/backgrounds/village.png",
+    "dock": "assets/backgrounds/dock.png"
+  },
+  "gui": {
+    "dialogBox": "assets/ui/dialog-box.png",
+    "choiceButton": "assets/ui/choice-button.png",
+    "nameplate": "assets/ui/nameplate.png"
+  },
+  "scenes": {
+    "main_menu": {
+      "text": "Who would you like to talk to?",
+      "choices": [
+        {
+          "text": "Talk to Mia",
+          "action": "scene mia_intro"
+        },
+        {
+          "text": "Talk to Sophie", 
+          "action": "scene sophie_intro"
+        },
+        {
+          "text": "Talk to Luna",
+          "action": "scene luna_intro"
+        }
+      ]
+    },
+    "mia_intro": {
+      "background": "dialog_bg",
+      "actions": [
+        {
+          "type": "say",
+          "character": "mia",
+          "text": "Hello there! I'm Mia, your friendly fishing guide. Welcome to our beautiful fishing village!"
+        },
+        {
+          "type": "say", 
+          "character": "mia",
+          "text": "Would you like to learn some basic fishing techniques?"
+        },
+        {
+          "type": "choices",
+          "options": [
+            {
+              "text": "Yes, teach me!",
+              "action": "scene mia_fishing_lesson"
+            },
+            {
+              "text": "Tell me about the village",
+              "action": "scene mia_village_info"
+            },
+            {
+              "text": "Maybe later",
+              "action": "call romance_meter_increase mia 1; scene end_dialog"
+            }
+          ]
+        }
+      ]
+    },
+    "sophie_intro": {
+      "background": "dialog_bg",
+      "actions": [
+        {
+          "type": "say",
+          "character": "sophie",
+          "text": "Hey! I'm Sophie! *bounces excitedly*"
+        },
+        {
+          "type": "say",
+          "character": "sophie", 
+          "text": "I absolutely LOVE fishing! The thrill of the catch, the peaceful water... it's amazing!"
+        },
+        {
+          "type": "say",
+          "character": "sophie",
+          "text": "Want to hear about my latest adventure?"
+        },
+        {
+          "type": "choices",
+          "options": [
+            {
+              "text": "Tell me about your adventure!",
+              "action": "scene sophie_adventure"
+            },
+            {
+              "text": "What's your favorite fishing spot?",
+              "action": "scene sophie_spots"
+            },
+            {
+              "text": "You're very enthusiastic!",
+              "action": "call romance_meter_increase sophie 3; scene sophie_enthusiasm"
+            }
+          ]
+        }
+      ]
+    },
+    "luna_intro": {
+      "background": "dialog_bg",
+      "actions": [
+        {
+          "type": "say",
+          "character": "luna",
+          "text": "Greetings, fellow seeker of the depths..."
+        },
+        {
+          "type": "say",
+          "character": "luna",
+          "text": "I am Luna. The waters whisper secrets to those who listen carefully."
+        },
+        {
+          "type": "say",
+          "character": "luna",
+          "text": "Perhaps... you seek wisdom beyond the surface?"
+        },
+        {
+          "type": "choices",
+          "options": [
+            {
+              "text": "What secrets do the waters hold?",
+              "action": "scene luna_secrets"
+            },
+            {
+              "text": "You speak mysteriously",
+              "action": "scene luna_mystery"
+            },
+            {
+              "text": "Teach me about deep water fishing",
+              "action": "call romance_meter_increase luna 2; scene luna_deep_fishing"
+            }
+          ]
+        }
+      ]
+    },
+    "mia_fishing_lesson": {
+      "actions": [
+        {
+          "type": "say",
+          "character": "mia",
+          "text": "Wonderful! Let me share the basics with you."
+        },
+        {
+          "type": "say",
+          "character": "mia",
+          "text": "First, always check your equipment before heading out. A good rod and fresh bait make all the difference!"
+        },
+        {
+          "type": "call",
+          "function": "romance_meter_increase mia 5"
+        },
+        {
+          "type": "call",
+          "function": "quest_unlock fishing_tutorial"
+        },
+        {
+          "type": "call",
+          "function": "achievement_unlock first_lesson"
+        },
+        {
+          "type": "goto",
+          "target": "end_dialog"
+        }
+      ]
+    },
+    "sophie_adventure": {
+      "actions": [
+        {
+          "type": "say",
+          "character": "sophie",
+          "text": "Oh my gosh, you won't believe what happened yesterday!"
+        },
+        {
+          "type": "say",
+          "character": "sophie",
+          "text": "I was out by the old pier when I hooked something HUGE! It fought like crazy!"
+        },
+        {
+          "type": "say",
+          "character": "sophie",
+          "text": "Turned out to be a magnificent bass! My biggest catch yet!"
+        },
+        {
+          "type": "call",
+          "function": "romance_meter_increase sophie 4"
+        },
+        {
+          "type": "call",
+          "function": "achievement_unlock heard_sophie_story"
+        },
+        {
+          "type": "goto",
+          "target": "end_dialog"
+        }
+      ]
+    },
+    "luna_secrets": {
+      "actions": [
+        {
+          "type": "say",
+          "character": "luna",
+          "text": "The waters... they remember. Every ripple, every cast, every life that has touched their surface."
+        },
+        {
+          "type": "say",
+          "character": "luna",
+          "text": "In the deepest parts, where sunlight fears to tread, ancient fish swim with wisdom older than the village itself."
+        },
+        {
+          "type": "say",
+          "character": "luna",
+          "text": "Perhaps one day, you will understand their language..."
+        },
+        {
+          "type": "call",
+          "function": "romance_meter_increase luna 6"
+        },
+        {
+          "type": "call",
+          "function": "achievement_unlock luna_wisdom"
+        },
+        {
+          "type": "goto",
+          "target": "end_dialog"
+        }
+      ]
+    },
+    "end_dialog": {
+      "actions": [
+        {
+          "type": "call",
+          "function": "achievement_unlock first_conversation"
+        },
+        {
+          "type": "end"
+        }
+      ]
+    }
+  }
+} 

@@ -116,7 +116,7 @@ export class AudioManager {
                 if (asset.url === 'placeholder') {
                     // Create placeholder immediately for missing files
                     console.log(`AudioManager: Creating placeholder for ${asset.key} (no file available)`);
-                    this.createPlaceholderSound(asset.key, asset.loop || false);
+                this.createPlaceholderSound(asset.key, asset.loop || false);
                 } else {
                     // Try to load real file
                     this.loadAudioFile(asset.key, asset.url, asset.loop || false, category);
@@ -678,6 +678,10 @@ export class AudioManager {
                 music: 'music_boat',
                 ambient: ['ambient_water', 'ambient_seagulls']
             },
+            CabinScene: {
+                music: 'music_boat', // Use same music as BoatMenuScene for continuity
+                ambient: ['ambient_water'] // Softer ambient for indoor cabin
+            },
             GameScene: {
                 music: 'music_fishing',
                 ambient: ['ambient_water', 'ambient_wind']
@@ -690,9 +694,15 @@ export class AudioManager {
 
         const config = audioConfig[sceneKey];
         if (config) {
-            // Change music
-            if (config.music) {
+            // Change music only if it's different from current music
+            if (config.music && (!this.currentMusic || this.currentMusic.key !== config.music)) {
                 this.playMusic(config.music);
+            } else if (config.music && this.currentMusic && this.currentMusic.key === config.music) {
+                // Same music - don't restart, just ensure it's playing
+                if (!this.currentMusic.isPlaying) {
+                    this.currentMusic.play();
+                }
+                console.log(`AudioManager: Continuing current music - ${config.music}`);
             }
             
             // Stop all ambient sounds first
@@ -708,6 +718,8 @@ export class AudioManager {
             });
             
             console.log(`AudioManager: Set audio for scene ${sceneKey}`);
+        } else {
+            console.warn(`AudioManager: No audio configuration found for scene ${sceneKey}`);
         }
     }
 

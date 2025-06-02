@@ -1,657 +1,503 @@
-// WeatherManager.js - Dynamic weather system for Luxury Angler
+// WeatherManager.js - Dynamic Weather System for Fishing
 export class WeatherManager {
-    constructor(gameState, scene) {
-        this.gameState = gameState;
+    constructor(scene, gameState, timeManager) {
         this.scene = scene;
-        this.listeners = new Map();
+        this.gameState = gameState;
+        this.timeManager = timeManager;
         
-        // Validate inputs
-        if (!gameState) {
-            console.error('WeatherManager: gameState is required');
-            return;
-        }
-        if (!scene) {
-            console.error('WeatherManager: scene is required');
-            return;
-        }
-        
-        // Weather types and their effects
+        // Weather states
         this.weatherTypes = {
-            sunny: {
+            'SUNNY': {
                 name: 'Sunny',
                 icon: '☀️',
-                description: 'Clear skies and calm waters',
-                probability: 0.4,
-                duration: { min: 120, max: 300 }, // minutes
+                description: 'Clear skies and bright sunshine',
+                probability: 0.6,
+                duration: { min: 120, max: 240 }, // 2-4 hours
                 effects: {
                     fishActivity: 1.0,
                     biteRate: 1.0,
-                    rareChance: 1.0,
-                    visibility: 1.0,
-                    castAccuracy: 1.0
-                },
-                visual: {
-                    skyColor: 0x87CEEB,
-                    waterColor: 0x4682B4,
-                    lightIntensity: 1.0,
-                    particles: null
-                },
-                audio: {
-                    ambient: 'sunny_ambient',
-                    volume: 0.3
+                    lineVisibility: 1.2, // Fish see line more clearly
+                    playerVisibility: 0.9 // Reduced visibility due to glare
                 }
             },
-            cloudy: {
-                name: 'Cloudy',
-                icon: '☁️',
-                description: 'Overcast skies with diffused light',
-                probability: 0.3,
-                duration: { min: 90, max: 240 },
-                effects: {
-                    fishActivity: 1.1,
-                    biteRate: 1.05,
-                    rareChance: 1.0,
-                    visibility: 0.9,
-                    castAccuracy: 0.95
-                },
-                visual: {
-                    skyColor: 0x708090,
-                    waterColor: 0x2F4F4F,
-                    lightIntensity: 0.7,
-                    particles: null
-                },
-                audio: {
-                    ambient: 'cloudy_ambient',
-                    volume: 0.4
-                }
-            },
-            rainy: {
+            'RAINY': {
                 name: 'Rainy',
                 icon: '🌧️',
                 description: 'Light to moderate rainfall',
-                probability: 0.2,
-                duration: { min: 60, max: 180 },
+                probability: 0.4,
+                duration: { min: 60, max: 180 }, // 1-3 hours
                 effects: {
-                    fishActivity: 1.3,
-                    biteRate: 1.4,
-                    rareChance: 1.2,
-                    visibility: 0.7,
-                    castAccuracy: 0.8
-                },
-                visual: {
-                    skyColor: 0x696969,
-                    waterColor: 0x2F4F4F,
-                    lightIntensity: 0.5,
-                    particles: 'rain'
-                },
-                audio: {
-                    ambient: 'rain_ambient',
-                    volume: 0.6
-                }
-            },
-            stormy: {
-                name: 'Stormy',
-                icon: '⛈️',
-                description: 'Heavy rain with strong winds',
-                probability: 0.1,
-                duration: { min: 30, max: 90 },
-                effects: {
-                    fishActivity: 0.6,
-                    biteRate: 0.7,
-                    rareChance: 1.5,
-                    visibility: 0.5,
-                    castAccuracy: 0.6
-                },
-                visual: {
-                    skyColor: 0x2F2F2F,
-                    waterColor: 0x191970,
-                    lightIntensity: 0.3,
-                    particles: 'storm'
-                },
-                audio: {
-                    ambient: 'storm_ambient',
-                    volume: 0.8
+                    fishActivity: 1.4, // Fish more active in rain
+                    biteRate: 1.3,
+                    lineVisibility: 0.7, // Rain obscures line
+                    playerVisibility: 0.8 // Reduced visibility
                 }
             }
         };
         
-        // Initialize weather if not set
-        if (!this.gameState.world.weather) {
-            this.gameState.world.weather = 'sunny';
-        }
-        
-        this.currentWeather = this.gameState.world.weather;
-        this.weatherDuration = 0;
+        // Current weather state
+        this.currentWeather = 'SUNNY';
+        this.weatherDuration = 180; // Duration in game minutes
         this.weatherTimer = 0;
         this.isTransitioning = false;
-        this.transitionDuration = 30; // seconds for weather transition
+        this.transitionDuration = 15; // 15 minutes transition time
+        this.transitionTimer = 0;
         
-        // Weather forecast (3 days)
+        // Forecast system (3-day forecast)
         this.forecast = this.generateForecast();
         
-        // Visual effects
-        this.weatherParticles = null;
-        this.skyTint = null;
-        this.waterTint = null;
+        // Weather particles and effects
+        this.rainParticles = null;
+        this.weatherSounds = null;
+        
+        // Initialize weather safely
+        this.initializeWeather();
+        
+        // Listen to time changes (with safety check)
+        if (this.timeManager) {
+            this.timeManager.onTimeChange(this.onTimeUpdate.bind(this));
+        } else {
+            console.warn('WeatherManager: TimeManager not available');
+        }
         
         console.log('WeatherManager: Initialized with dynamic weather system');
     }
-
-    start() {
-        try {
-            this.setWeatherDuration();
-            this.applyWeatherEffects();
-            console.log(`WeatherManager: Started with ${this.currentWeather} weather`);
-        } catch (error) {
-            console.error('WeatherManager: Error starting weather system:', error);
+    
+    initializeWeather() {
+        // Set initial weather based on probability
+        this.currentWeather = Math.random() < 0.6 ? 'SUNNY' : 'RAINY';
+        this.weatherDuration = this.getRandomDuration(this.currentWeather);
+        this.weatherTimer = 0;
+        
+        // Create visual effects for current weather
+        this.updateWeatherEffects();
+        
+        // Update game state
+        if (this.gameState) {
+            this.gameState.currentWeather = this.currentWeather;
         }
     }
-
-    update(deltaTime) {
-        this.weatherTimer += deltaTime / 1000; // Convert to seconds
+    
+    onTimeUpdate(currentTime, timeString, timePeriod) {
+        if (this.timeManager.paused) return;
         
-        // Check if weather should change
-        if (this.weatherTimer >= this.weatherDuration * 60) { // Convert minutes to seconds
-            this.changeWeather();
-        }
+        // Update weather timer (1 game minute = 1 real second with 1x speed)
+        this.weatherTimer += this.timeManager.timeSpeed;
         
-        // Update weather particles
-        this.updateWeatherParticles(deltaTime);
-    }
-
-    changeWeather() {
-        const newWeather = this.selectNewWeather();
-        
-        if (newWeather !== this.currentWeather) {
-            this.transitionToWeather(newWeather);
+        if (this.isTransitioning) {
+            this.transitionTimer += this.timeManager.timeSpeed;
+            if (this.transitionTimer >= this.transitionDuration) {
+                this.completeWeatherTransition();
+            }
         } else {
-            // Same weather, just reset timer
-            this.setWeatherDuration();
-            this.weatherTimer = 0;
+            // Check if weather should change
+            if (this.weatherTimer >= this.weatherDuration) {
+                this.startWeatherTransition();
+            }
         }
     }
-
-    selectNewWeather() {
-        // Weight probabilities based on current weather and time
-        const weights = { ...this.weatherTypes };
-        
-        // Modify probabilities based on current weather (weather tends to persist)
-        Object.keys(weights).forEach(weather => {
-            if (weather === this.currentWeather) {
-                weights[weather].probability *= 1.5; // Current weather more likely to continue
-            }
-        });
-        
-        // Create weighted array
-        const weightedWeather = [];
-        Object.entries(weights).forEach(([weather, data]) => {
-            const weight = Math.floor(data.probability * 100);
-            for (let i = 0; i < weight; i++) {
-                weightedWeather.push(weather);
-            }
-        });
-        
-        return weightedWeather[Math.floor(Math.random() * weightedWeather.length)];
-    }
-
-    transitionToWeather(newWeather) {
-        if (this.isTransitioning) return;
-        
+    
+    startWeatherTransition() {
+        console.log(`Weather transition starting from ${this.currentWeather}`);
         this.isTransitioning = true;
+        this.transitionTimer = 0;
+        
+        // Determine new weather
+        const newWeather = this.getNextWeather();
+        this.nextWeather = newWeather;
+        
+        // Start transition effects
+        this.startTransitionEffects();
+    }
+    
+    completeWeatherTransition() {
         const oldWeather = this.currentWeather;
+        this.currentWeather = this.nextWeather;
+        this.weatherDuration = this.getRandomDuration(this.currentWeather);
+        this.weatherTimer = 0;
+        this.isTransitioning = false;
+        this.transitionTimer = 0;
         
-        console.log(`WeatherManager: Transitioning from ${oldWeather} to ${newWeather}`);
+        console.log(`Weather changed: ${oldWeather} → ${this.currentWeather}`);
         
-        // Emit transition start event
-        this.emit('weatherTransitionStart', {
-            oldWeather: oldWeather,
-            newWeather: newWeather,
-            duration: this.transitionDuration
-        });
+        // Update visual effects
+        this.updateWeatherEffects();
         
-        // Smooth transition over time
-        this.scene.tweens.add({
-            targets: this,
-            duration: this.transitionDuration * 1000,
-            ease: 'Power2.easeInOut',
-            onUpdate: () => {
-                // Update visual effects during transition
-                this.updateTransitionEffects(oldWeather, newWeather, this.scene.tweens.getTweensOf(this)[0].progress);
-            },
-            onComplete: () => {
-                this.currentWeather = newWeather;
-                this.gameState.world.weather = newWeather;
-                this.isTransitioning = false;
-                this.setWeatherDuration();
-                this.weatherTimer = 0;
-                
-                this.applyWeatherEffects();
-                this.updateForecast();
-                
-                this.emit('weatherChanged', {
-                    oldWeather: oldWeather,
-                    newWeather: newWeather,
-                    effects: this.getWeatherEffects(),
-                    forecast: this.forecast
-                });
-                
-                console.log(`WeatherManager: Weather changed to ${newWeather}`);
-            }
-        });
-    }
-
-    setWeatherDuration() {
-        const weatherData = this.weatherTypes[this.currentWeather];
-        this.weatherDuration = Phaser.Math.Between(weatherData.duration.min, weatherData.duration.max);
-    }
-
-    applyWeatherEffects() {
-        try {
-            const weatherData = this.weatherTypes[this.currentWeather];
-            if (!weatherData) {
-                console.warn(`WeatherManager: No weather data found for ${this.currentWeather}`);
-                return;
-            }
-            
-            // Apply visual effects with error handling
-            try {
-                this.updateSkyColor(weatherData.visual.skyColor);
-            } catch (error) {
-                console.warn('WeatherManager: Error updating sky color:', error);
-            }
-            
-            try {
-                this.updateWaterColor(weatherData.visual.waterColor);
-            } catch (error) {
-                console.warn('WeatherManager: Error updating water color:', error);
-            }
-            
-            try {
-                this.updateLighting(weatherData.visual.lightIntensity);
-            } catch (error) {
-                console.warn('WeatherManager: Error updating lighting:', error);
-            }
-            
-            try {
-                this.createWeatherParticles(weatherData.visual.particles);
-            } catch (error) {
-                console.warn('WeatherManager: Error creating weather particles:', error);
-            }
-            
-            // Apply audio effects
-            try {
-                this.updateWeatherAudio(weatherData.audio);
-            } catch (error) {
-                console.warn('WeatherManager: Error updating weather audio:', error);
-            }
-            
-            console.log(`WeatherManager: Applied ${this.currentWeather} weather effects`);
-        } catch (error) {
-            console.error('WeatherManager: Error applying weather effects:', error);
-        }
-    }
-
-    updateSkyColor(color) {
-        if (this.scene && this.scene.cameras && this.scene.cameras.main) {
-            // Create sky gradient effect
-            if (!this.skyTint) {
-                this.skyTint = this.scene.add.graphics();
-                this.skyTint.setDepth(-1000);
-            }
-            
-            this.skyTint.clear();
-            this.skyTint.fillGradientStyle(color, color, 0x87CEEB, 0x87CEEB, 0.3);
-            this.skyTint.fillRect(0, 0, this.scene.cameras.main.width, this.scene.cameras.main.height * 0.6);
-        }
-    }
-
-    updateWaterColor(color) {
-        if (this.scene && this.scene.cameras && this.scene.cameras.main) {
-            // Update water tint
-            if (!this.waterTint) {
-                this.waterTint = this.scene.add.graphics();
-                this.waterTint.setDepth(-999);
-            }
-            
-            this.waterTint.clear();
-            this.waterTint.fillStyle(color, 0.2);
-            this.waterTint.fillRect(0, this.scene.cameras.main.height * 0.6, 
-                                   this.scene.cameras.main.width, this.scene.cameras.main.height * 0.4);
-        }
-    }
-
-    updateLighting(intensity) {
-        if (this.scene && this.scene.cameras && this.scene.cameras.main) {
-            // Adjust overall scene lighting using the correct tint method
-            const tintValue = Math.floor(255 * intensity);
-            const tintColor = (tintValue << 16) | (tintValue << 8) | tintValue;
-            this.scene.cameras.main.setTint(tintColor);
-        }
-    }
-
-    createWeatherParticles(particleType) {
-        // Clean up existing particles
-        if (this.weatherParticles) {
-            this.weatherParticles.destroy();
-            this.weatherParticles = null;
+        // Update forecast
+        this.updateForecast();
+        
+        // Update game state
+        if (this.gameState) {
+            this.gameState.currentWeather = this.currentWeather;
         }
         
-        if (!particleType || !this.scene) return;
+        // Notify weather change
+        this.onWeatherChange(oldWeather, this.currentWeather);
+    }
+    
+    getNextWeather() {
+        // Simple weather logic - could be enhanced with pressure systems, seasons, etc.
+        const currentType = this.weatherTypes[this.currentWeather];
+        const otherWeatherTypes = Object.keys(this.weatherTypes).filter(w => w !== this.currentWeather);
         
-        const width = this.scene.cameras.main.width;
-        const height = this.scene.cameras.main.height;
-        
-        switch (particleType) {
-            case 'rain':
-                this.createRainParticles(width, height);
-                break;
-            case 'storm':
-                this.createStormParticles(width, height);
-                break;
+        // Random selection with some bias toward sunny weather
+        if (this.currentWeather === 'RAINY') {
+            return Math.random() < 0.7 ? 'SUNNY' : 'RAINY'; // 70% chance rain stops
+        } else {
+            return Math.random() < 0.3 ? 'RAINY' : 'SUNNY'; // 30% chance of rain
         }
     }
-
-    createRainParticles(width, height) {
+    
+    getRandomDuration(weatherType) {
+        const weather = this.weatherTypes[weatherType];
+        const min = weather.duration.min;
+        const max = weather.duration.max;
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+    
+    updateWeatherEffects() {
+        // Remove existing weather effects
+        this.clearWeatherEffects();
+        
+        // Add new weather effects
+        if (this.currentWeather === 'RAINY') {
+            this.createRainEffects();
+        }
+        
+        // Update lighting and atmosphere
+        this.updateAtmosphere();
+    }
+    
+    createRainEffects() {
         // Create rain particle system
-        this.weatherParticles = this.scene.add.particles(0, 0, 'pixel', {
-            x: { min: -50, max: width + 50 },
-            y: { min: -50, max: -10 },
-            speedX: { min: -20, max: -10 },
-            speedY: { min: 200, max: 400 },
-            scale: { min: 0.1, max: 0.3 },
-            alpha: { min: 0.3, max: 0.7 },
-            lifespan: 3000,
-            frequency: 50,
-            tint: 0x87CEEB
-        });
-        
-        this.weatherParticles.setDepth(1000);
-    }
-
-    createStormParticles(width, height) {
-        // Create storm particle system (heavier rain)
-        this.weatherParticles = this.scene.add.particles(0, 0, 'pixel', {
-            x: { min: -100, max: width + 100 },
-            y: { min: -50, max: -10 },
-            speedX: { min: -50, max: -30 },
-            speedY: { min: 300, max: 600 },
-            scale: { min: 0.2, max: 0.5 },
-            alpha: { min: 0.4, max: 0.8 },
-            lifespan: 2000,
-            frequency: 20,
-            tint: 0x4682B4
-        });
-        
-        this.weatherParticles.setDepth(1000);
-        
-        // Add lightning effect occasionally
-        this.addLightningEffect();
-    }
-
-    addLightningEffect() {
-        if (!this.scene) return;
-        
-        const lightningTimer = this.scene.time.addEvent({
-            delay: Phaser.Math.Between(10000, 30000),
-            callback: () => {
-                if (this.currentWeather === 'stormy') {
-                    this.createLightningFlash();
-                    // Schedule next lightning
-                    lightningTimer.reset({
-                        delay: Phaser.Math.Between(10000, 30000),
-                        callback: lightningTimer.callback
-                    });
-                } else {
-                    lightningTimer.destroy();
+        if (this.scene.add && this.scene.cameras && this.scene.cameras.main) {
+            try {
+                // Simple rain particles using rectangles
+                this.rainParticles = this.scene.add.group();
+                
+                const cameraWidth = this.scene.cameras.main.width;
+                const cameraHeight = this.scene.cameras.main.height;
+                
+                // Validate camera dimensions
+                if (!cameraWidth || !cameraHeight || cameraWidth <= 0 || cameraHeight <= 0) {
+                    console.warn('WeatherManager: Invalid camera dimensions for rain effects');
+                    return;
                 }
+                
+                // Create multiple rain drops
+                for (let i = 0; i < 100; i++) {
+                    try {
+                        const rainDrop = this.scene.add.rectangle(
+                            Math.random() * cameraWidth,
+                            Math.random() * cameraHeight,
+                            2, 20, 0x6bc4e6, 0.6
+                        );
+                        
+                        rainDrop.setDepth(1000); // Above most game elements
+                        this.rainParticles.add(rainDrop);
+                        
+                        // Animate rain drop with error handling
+                        this.scene.tweens.add({
+                            targets: rainDrop,
+                            y: rainDrop.y + cameraHeight + 50,
+                            duration: 1000 + Math.random() * 500,
+                            repeat: -1,
+                            onRepeat: () => {
+                                try {
+                                    if (rainDrop && rainDrop.active) {
+                                        rainDrop.y = -30;
+                                        rainDrop.x = Math.random() * cameraWidth;
+                                    }
+                                } catch (repeatError) {
+                                    console.warn('WeatherManager: Error in rain drop repeat:', repeatError);
+                                }
+                            }
+                        });
+                    } catch (dropError) {
+                        console.warn('WeatherManager: Error creating rain drop:', dropError);
+                    }
+                }
+                
+                console.log('WeatherManager: Rain effects created successfully');
+            } catch (error) {
+                console.error('WeatherManager: Error creating rain effects:', error);
+                this.rainParticles = null;
             }
-        });
-    }
-
-    createLightningFlash() {
-        if (!this.scene) return;
-        
-        const flash = this.scene.add.graphics();
-        flash.fillStyle(0xFFFFFF, 0.8);
-        flash.fillRect(0, 0, this.scene.cameras.main.width, this.scene.cameras.main.height);
-        flash.setDepth(2000);
-        
-        // Flash effect
-        this.scene.tweens.add({
-            targets: flash,
-            alpha: 0,
-            duration: 200,
-            ease: 'Power2.easeOut',
-            onComplete: () => flash.destroy()
-        });
-        
-        // Play thunder sound after delay
-        this.scene.time.delayedCall(Phaser.Math.Between(1000, 3000), () => {
-            if (this.gameState.audioManager) {
-                this.gameState.audioManager.playSFX('thunder');
-            }
-        });
-    }
-
-    updateWeatherAudio(audioData) {
-        if (this.gameState.audioManager && audioData.ambient) {
-            this.gameState.audioManager.playAmbient(audioData.ambient, audioData.volume);
+        } else {
+            console.warn('WeatherManager: Scene, camera, or add method not available for rain effects');
         }
     }
-
-    updateWeatherParticles(deltaTime) {
-        // Update particle systems if needed
-        if (this.weatherParticles && this.weatherParticles.active) {
-            // Particles update automatically, but we can add custom behavior here
+    
+    clearWeatherEffects() {
+        try {
+            if (this.rainParticles) {
+                // Clear all rain particles safely
+                this.rainParticles.clear(true, true);
+                this.rainParticles = null;
+                console.log('WeatherManager: Rain effects cleared successfully');
+            }
+            
+            // Clear atmosphere overlay
+            if (this.atmosphereOverlay) {
+                this.atmosphereOverlay.destroy();
+                this.atmosphereOverlay = null;
+                console.log('WeatherManager: Atmosphere overlay cleared');
+            }
+        } catch (error) {
+            console.error('WeatherManager: Error clearing weather effects:', error);
+            // Force null assignment even if clear fails
+            this.rainParticles = null;
+            this.atmosphereOverlay = null;
         }
     }
-
-    updateTransitionEffects(oldWeather, newWeather, progress) {
-        // Smooth transition between weather effects
-        const oldData = this.weatherTypes[oldWeather];
-        const newData = this.weatherTypes[newWeather];
-        
-        // Interpolate lighting
-        const oldIntensity = oldData.visual.lightIntensity;
-        const newIntensity = newData.visual.lightIntensity;
-        const currentIntensity = oldIntensity + (newIntensity - oldIntensity) * progress;
-        
-        this.updateLighting(currentIntensity);
+    
+    updateAtmosphere() {
+        // Update sky color and lighting based on weather
+        if (this.scene.cameras && this.scene.cameras.main) {
+            try {
+                const baseColor = this.timeManager ? this.timeManager.getSkyColor() : 0x87ceeb;
+                let atmosphereColor = baseColor;
+                
+                if (this.currentWeather === 'RAINY') {
+                    // Darker, grayer atmosphere for rain
+                    atmosphereColor = this.darkenColor(baseColor, 0.7);
+                }
+                
+                // Remove existing atmosphere overlay if it exists
+                if (this.atmosphereOverlay) {
+                    this.atmosphereOverlay.destroy();
+                    this.atmosphereOverlay = null;
+                }
+                
+                // Create subtle weather atmosphere overlay using graphics
+                if (this.currentWeather === 'RAINY') {
+                    this.atmosphereOverlay = this.scene.add.graphics();
+                    this.atmosphereOverlay.fillStyle(0x334455, 0.1); // Very subtle dark blue overlay
+                    this.atmosphereOverlay.fillRect(0, 0, this.scene.cameras.main.width, this.scene.cameras.main.height);
+                    this.atmosphereOverlay.setDepth(500); // Above background but below UI
+                    this.atmosphereOverlay.setScrollFactor(0); // Don't scroll with camera
+                }
+                
+                console.log(`WeatherManager: Applied ${this.currentWeather} atmosphere effects`);
+                
+            } catch (error) {
+                console.error('WeatherManager: Error applying atmosphere effects:', error);
+                console.error('WeatherManager: Error details:', error.message);
+                // Continue without atmosphere effects if there's an error
+            }
+        } else {
+            console.warn('WeatherManager: Camera not available for atmosphere effects');
+        }
     }
-
-    getWeatherEffects(weatherType = null) {
-        const weather = weatherType || this.currentWeather;
-        return { ...this.weatherTypes[weather].effects };
+    
+    darkenColor(color, factor) {
+        const r = Math.floor(((color >> 16) & 0xFF) * factor);
+        const g = Math.floor(((color >> 8) & 0xFF) * factor);
+        const b = Math.floor((color & 0xFF) * factor);
+        return (r << 16) | (g << 8) | b;
     }
-
-    getWeatherInfo(weatherType = null) {
-        const weather = weatherType || this.currentWeather;
-        return {
-            type: weather,
-            ...this.weatherTypes[weather],
-            isCurrent: weather === this.currentWeather,
-            timeRemaining: this.getTimeRemaining()
-        };
+    
+    startTransitionEffects() {
+        console.log(`Starting weather transition effects to ${this.nextWeather}`);
+        // Could add transition-specific effects here (clouds forming, etc.)
     }
-
-    getTimeRemaining() {
-        const remainingSeconds = (this.weatherDuration * 60) - this.weatherTimer;
-        const hours = Math.floor(remainingSeconds / 3600);
-        const minutes = Math.floor((remainingSeconds % 3600) / 60);
-        
-        return {
-            totalSeconds: remainingSeconds,
-            hours: hours,
-            minutes: minutes,
-            formatted: hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`
-        };
-    }
-
+    
+    // Forecast system
     generateForecast() {
         const forecast = [];
-        let currentWeather = this.currentWeather;
+        let currentWeatherType = this.currentWeather;
         
+        // Generate 3-day forecast
         for (let day = 0; day < 3; day++) {
             const dayForecast = [];
             
-            // Generate 4 periods per day (morning, afternoon, evening, night)
-            for (let period = 0; period < 4; period++) {
-                currentWeather = this.selectNewWeather();
+            // Generate 8 period forecasts for each day
+            for (let period = 0; period < 8; period++) {
+                // Simple forecast logic - could be enhanced
+                if (period === 0) {
+                    currentWeatherType = this.getNextWeather();
+                } else {
+                    currentWeatherType = Math.random() < 0.8 ? currentWeatherType : this.getNextWeather();
+                }
+                
                 dayForecast.push({
-                    weather: currentWeather,
-                    ...this.weatherTypes[currentWeather],
-                    period: ['Morning', 'Afternoon', 'Evening', 'Night'][period]
+                    period: period,
+                    weather: currentWeatherType,
+                    ...this.weatherTypes[currentWeatherType]
                 });
             }
             
-            forecast.push({
-                day: day + 1,
-                periods: dayForecast
-            });
+            forecast.push(dayForecast);
         }
         
         return forecast;
     }
-
+    
     updateForecast() {
-        this.forecast = this.generateForecast();
-    }
-
-    getForecast() {
-        return this.forecast;
-    }
-
-    getFishingConditions() {
-        const effects = this.getWeatherEffects();
-        const weatherInfo = this.getWeatherInfo();
+        // Shift forecast and generate new day
+        this.forecast.shift();
         
+        // Generate new day forecast
+        const newDayForecast = [];
+        let weatherType = this.forecast[this.forecast.length - 1][7].weather; // Last weather of last day
+        
+        for (let period = 0; period < 8; period++) {
+            weatherType = Math.random() < 0.8 ? weatherType : this.getNextWeather();
+            newDayForecast.push({
+                period: period,
+                weather: weatherType,
+                ...this.weatherTypes[weatherType]
+            });
+        }
+        
+        this.forecast.push(newDayForecast);
+    }
+    
+    // Public API
+    getCurrentWeather() {
         return {
-            weather: this.currentWeather,
-            weatherName: weatherInfo.name,
-            icon: weatherInfo.icon,
-            description: weatherInfo.description,
-            fishActivity: effects.fishActivity,
-            biteRate: effects.biteRate,
-            rareChance: effects.rareChance,
-            visibility: effects.visibility,
-            castAccuracy: effects.castAccuracy,
-            isOptimal: effects.fishActivity >= 1.2 && effects.biteRate >= 1.2,
-            timeRemaining: this.getTimeRemaining()
+            type: this.currentWeather,
+            ...this.weatherTypes[this.currentWeather],
+            timeRemaining: this.weatherDuration - this.weatherTimer,
+            isTransitioning: this.isTransitioning
         };
     }
-
-    // Manual weather control (for testing/debugging)
+    
+    getWeatherEffects() {
+        const weather = this.weatherTypes[this.currentWeather];
+        const timeEffects = this.timeManager ? this.timeManager.getFishActivityModifiers() : { activity: 1.0, rareChance: 1.0 };
+        
+        return {
+            fishActivity: weather.effects.fishActivity * timeEffects.activity,
+            biteRate: weather.effects.biteRate * timeEffects.activity,
+            lineVisibility: weather.effects.lineVisibility,
+            playerVisibility: weather.effects.playerVisibility,
+            rareChance: timeEffects.rareChance // Weather doesn't directly affect rarity, but time does
+        };
+    }
+    
+    getForecast(days = 3) {
+        return this.forecast.slice(0, days);
+    }
+    
+    getOptimalFishingConditions() {
+        const currentEffects = this.getWeatherEffects();
+        const timePeriod = this.timeManager ? this.timeManager.getCurrentPeriodName() : 'Unknown';
+        
+        return {
+            isOptimal: currentEffects.fishActivity >= 1.2 && currentEffects.biteRate >= 1.2,
+            rating: Math.floor((currentEffects.fishActivity + currentEffects.biteRate) * 50),
+            period: timePeriod,
+            weather: this.getCurrentWeather().name,
+            effects: currentEffects
+        };
+    }
+    
+    // Force weather change (for testing/story events)
     setWeather(weatherType, duration = null) {
         if (this.weatherTypes[weatherType]) {
             this.currentWeather = weatherType;
-            this.gameState.world.weather = weatherType;
-            
-            if (duration) {
-                this.weatherDuration = duration;
-            } else {
-                this.setWeatherDuration();
-            }
-            
+            this.weatherDuration = duration || this.getRandomDuration(weatherType);
             this.weatherTimer = 0;
-            this.applyWeatherEffects();
-            this.updateForecast();
+            this.isTransitioning = false;
             
-            this.emit('weatherChanged', {
-                oldWeather: this.currentWeather,
-                newWeather: weatherType,
-                effects: this.getWeatherEffects(),
-                forecast: this.forecast
-            });
+            this.updateWeatherEffects();
             
-            console.log(`WeatherManager: Manually set weather to ${weatherType}`);
-        }
-    }
-
-    // Event system
-    on(event, callback) {
-        if (!this.listeners.has(event)) {
-            this.listeners.set(event, []);
-        }
-        this.listeners.get(event).push(callback);
-    }
-
-    off(event, callback) {
-        if (this.listeners.has(event)) {
-            const callbacks = this.listeners.get(event);
-            const index = callbacks.indexOf(callback);
-            if (index > -1) {
-                callbacks.splice(index, 1);
+            if (this.gameState) {
+                this.gameState.currentWeather = weatherType;
             }
+            
+            console.log(`Weather manually set to ${weatherType}`);
         }
     }
-
-    emit(event, data) {
-        if (this.listeners.has(event)) {
-            this.listeners.get(event).forEach(callback => {
-                try {
-                    callback(data);
-                } catch (error) {
-                    console.error(`WeatherManager: Error in event callback for ${event}:`, error);
-                }
-            });
-        }
+    
+    // Event handling
+    onWeatherChange(oldWeather, newWeather) {
+        console.log(`Weather changed from ${oldWeather} to ${newWeather}`);
+        
+        // Could emit events here for other systems to react
+        // this.scene.events.emit('weatherChanged', { oldWeather, newWeather, effects: this.getWeatherEffects() });
     }
-
+    
     // Save/Load support
-    getSaveData() {
+    getWeatherData() {
         return {
             currentWeather: this.currentWeather,
             weatherDuration: this.weatherDuration,
             weatherTimer: this.weatherTimer,
+            isTransitioning: this.isTransitioning,
+            transitionTimer: this.transitionTimer,
             forecast: this.forecast
         };
     }
-
-    loadSaveData(data) {
-        if (data.currentWeather !== undefined) {
-            this.currentWeather = data.currentWeather;
-            this.gameState.world.weather = this.currentWeather;
+    
+    loadWeatherData(data) {
+        if (data) {
+            this.currentWeather = data.currentWeather || 'SUNNY';
+            this.weatherDuration = data.weatherDuration || 180;
+            this.weatherTimer = data.weatherTimer || 0;
+            this.isTransitioning = data.isTransitioning || false;
+            this.transitionTimer = data.transitionTimer || 0;
+            this.forecast = data.forecast || this.generateForecast();
+            
+            this.updateWeatherEffects();
         }
-        if (data.weatherDuration !== undefined) {
-            this.weatherDuration = data.weatherDuration;
-        }
-        if (data.weatherTimer !== undefined) {
-            this.weatherTimer = data.weatherTimer;
-        }
-        if (data.forecast !== undefined) {
-            this.forecast = data.forecast;
-        }
-        
-        this.applyWeatherEffects();
-        console.log('WeatherManager: Save data loaded');
     }
-
-    // Cleanup
+    
     destroy() {
-        if (this.weatherParticles) {
-            this.weatherParticles.destroy();
-        }
-        if (this.skyTint) {
-            this.skyTint.destroy();
-        }
-        if (this.waterTint) {
-            this.waterTint.destroy();
+        this.clearWeatherEffects();
+        
+        if (this.weatherSounds) {
+            // Stop weather sounds
         }
         
-        this.listeners.clear();
-        console.log('WeatherManager: Destroyed');
+        console.log('WeatherManager: Destroyed successfully');
     }
-
-    // Debug methods
-    getDebugInfo() {
-        return {
-            currentWeather: this.currentWeather,
-            weatherDuration: this.weatherDuration,
-            weatherTimer: this.weatherTimer,
-            timeRemaining: this.getTimeRemaining(),
-            effects: this.getWeatherEffects(),
-            forecast: this.forecast,
-            isTransitioning: this.isTransitioning
-        };
+    
+    setupTransitionEffects() {
+        // Smooth transitions between weather states
+        if (this.currentWeatherState && this.isTransitioning) {
+            this.updateTransitionEffects();
+        }
+    }
+    
+    // Location-specific weather patterns
+    setLocationWeatherPatterns(locationId, weatherPatterns) {
+        this.locationWeatherPatterns = weatherPatterns;
+        this.currentLocationId = locationId;
+        
+        console.log(`WeatherManager: Set weather patterns for location ${locationId}:`, weatherPatterns);
+        
+        // Immediately update weather probability based on location
+        this.updateLocationWeatherProbability();
+    }
+    
+    updateLocationWeatherProbability() {
+        if (!this.locationWeatherPatterns) return;
+        
+        // Update weather types with location-specific probabilities
+        Object.keys(this.weatherTypes).forEach(weatherType => {
+            if (this.locationWeatherPatterns[weatherType] !== undefined) {
+                this.weatherTypes[weatherType].probability = this.locationWeatherPatterns[weatherType];
+            }
+        });
+        
+        console.log('WeatherManager: Updated weather probabilities for location:', this.weatherTypes);
+    }
+    
+    getLocationWeatherEffects() {
+        // Get location-specific weather effects if available
+        const locationManager = this.gameState.locationManager;
+        if (locationManager && this.currentWeatherState) {
+            const locationEffects = locationManager.getLocationWeatherEffects(this.currentWeatherState);
+            if (locationEffects && Object.keys(locationEffects).length > 0) {
+                return {
+                    ...this.getWeatherEffects(),
+                    ...locationEffects
+                };
+            }
+        }
+        
+        return this.getWeatherEffects();
     }
 } 

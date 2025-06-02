@@ -203,7 +203,7 @@ export class PlayerProgressionUI {
 
         // Achievement categories filter
         this.categoryButtons = {};
-        const categories = ['all', 'catch', 'rarity', 'collection', 'skill', 'level', 'wealth', 'exploration'];
+        const categories = ['all', 'catch', 'rarity', 'collection', 'skill', 'level', 'wealth', 'exploration', 'tournament', 'equipment', 'mastery', 'chains'];
         const categoryNames = {
             all: 'All',
             catch: 'Fishing',
@@ -212,12 +212,20 @@ export class PlayerProgressionUI {
             skill: 'Skills',
             level: 'Levels',
             wealth: 'Wealth',
-            exploration: 'Exploration'
+            exploration: 'Exploration',
+            tournament: 'Tournament',
+            equipment: 'Equipment',
+            mastery: 'Mastery',
+            chains: 'Chains'
         };
 
+        // Create two rows of category buttons
+        const buttonsPerRow = 6;
         categories.forEach((category, index) => {
-            const x = 20 + (index * 85);
-            const y = 55;
+            const row = Math.floor(index / buttonsPerRow);
+            const col = index % buttonsPerRow;
+            const x = 20 + (col * 85);
+            const y = 55 + (row * 35);
             
             const button = this.scene.add.graphics();
             button.fillStyle(0x333333, 0.8);
@@ -241,28 +249,124 @@ export class PlayerProgressionUI {
             this.categoryButtons[category] = { button, text, hitArea, x, y };
         });
 
-        // Achievements list container
-        this.achievementsListContainer = this.scene.add.container(20, 95);
+        // Achievement tier filter
+        this.tierButtons = {};
+        const tiers = ['all', 'bronze', 'silver', 'gold', 'legendary'];
+        const tierColors = {
+            all: 0x555555,
+            bronze: 0xcd7f32,
+            silver: 0xc0c0c0,
+            gold: 0xffd700,
+            legendary: 0xff6b35
+        };
+
+        tiers.forEach((tier, index) => {
+            const x = 20 + (index * 90);
+            const y = 125; // Below category buttons
+            
+            const button = this.scene.add.graphics();
+            button.fillStyle(tierColors[tier], 0.3);
+            button.fillRoundedRect(x, y, 85, 25, 12);
+            button.lineStyle(2, tierColors[tier]);
+            button.strokeRoundedRect(x, y, 85, 25, 12);
+            this.achievementsContent.add(button);
+
+            const text = this.scene.add.text(x + 42, y + 12, tier.charAt(0).toUpperCase() + tier.slice(1), {
+                fontSize: '11px',
+                fill: '#ffffff',
+                align: 'center'
+            }).setOrigin(0.5);
+            this.achievementsContent.add(text);
+
+            const hitArea = this.scene.add.rectangle(x + 42, y + 12, 85, 25, 0x000000, 0);
+            hitArea.setInteractive({ useHandCursor: true });
+            hitArea.on('pointerdown', () => this.filterByTier(tier));
+            this.achievementsContent.add(hitArea);
+
+            this.tierButtons[tier] = { button, text, hitArea, x, y };
+        });
+
+        // Achievements list container - moved down to accommodate tier filters
+        this.achievementsListContainer = this.scene.add.container(20, 165);
         this.achievementsContent.add(this.achievementsListContainer);
 
-        // Initialize with all achievements
+        // Initialize filters
         this.currentAchievementFilter = 'all';
+        this.currentTierFilter = 'all';
         this.achievementCards = [];
     }
 
     filterAchievements(category) {
+        // Update button appearance
+        Object.entries(this.categoryButtons).forEach(([cat, button]) => {
+            const color = cat === category ? 0x4a90e2 : 0x333333;
+            button.button.clear();
+            button.button.fillStyle(color, 0.8);
+            button.button.fillRoundedRect(button.x, button.y, 80, 25, 12);
+            button.button.lineStyle(1, 0x555555);
+            button.button.strokeRoundedRect(button.x, button.y, 80, 25, 12);
+        });
+        
         this.currentAchievementFilter = category;
         this.updateAchievementsContent();
-        this.updateCategoryButtonAppearance(category);
+    }
+
+    filterByTier(tier) {
+        // Update button appearance
+        Object.entries(this.tierButtons).forEach(([t, button]) => {
+            const baseColor = tier === 'all' ? 0x555555 : 
+                             tier === 'bronze' ? 0xcd7f32 :
+                             tier === 'silver' ? 0xc0c0c0 :
+                             tier === 'gold' ? 0xffd700 : 0xff6b35;
+            
+            const isSelected = t === tier;
+            const color = isSelected ? baseColor : 0x333333;
+            const alpha = isSelected ? 0.8 : 0.3;
+            
+            button.button.clear();
+            button.button.fillStyle(color, alpha);
+            button.button.fillRoundedRect(button.x, button.y, 85, 25, 12);
+            button.button.lineStyle(2, baseColor);
+            button.button.strokeRoundedRect(button.x, button.y, 85, 25, 12);
+        });
+        
+        this.currentTierFilter = tier;
+        this.updateAchievementsContent();
     }
 
     createAchievementCard(achievement, x, y, width = 400, height = 80) {
         const card = this.scene.add.container(x, y);
         
-        // Card background
+        // Card background with tier-based coloring
         const bg = this.scene.add.graphics();
-        const bgColor = achievement.completed ? 0x2d5016 : 0x2c2c2c;
-        const borderColor = achievement.completed ? 0x4caf50 : 0x555555;
+        let bgColor, borderColor;
+        
+        if (achievement.completed) {
+            switch (achievement.tier) {
+                case 'bronze':
+                    bgColor = 0x4a3728;
+                    borderColor = 0xcd7f32;
+                    break;
+                case 'silver':
+                    bgColor = 0x3c3c3c;
+                    borderColor = 0xc0c0c0;
+                    break;
+                case 'gold':
+                    bgColor = 0x4a4228;
+                    borderColor = 0xffd700;
+                    break;
+                case 'legendary':
+                    bgColor = 0x4a2515;
+                    borderColor = 0xff6b35;
+                    break;
+                default:
+                    bgColor = 0x2d5016;
+                    borderColor = 0x4caf50;
+            }
+        } else {
+            bgColor = 0x2c2c2c;
+            borderColor = achievement.canUnlock === false ? 0x555555 : 0x777777;
+        }
         
         bg.fillStyle(bgColor, 0.9);
         bg.fillRoundedRect(0, 0, width, height, 8);
@@ -276,15 +380,38 @@ export class PlayerProgressionUI {
         }).setOrigin(0.5);
         card.add(icon);
         
+        // Tier indicator
+        if (achievement.tier) {
+            const tierColors = {
+                bronze: '#cd7f32',
+                silver: '#c0c0c0',
+                gold: '#ffd700',
+                legendary: '#ff6b35'
+            };
+            
+            const tierText = this.scene.add.text(width - 15, 10, achievement.tier.toUpperCase(), {
+                fontSize: '8px',
+                fill: tierColors[achievement.tier] || '#ffffff',
+                align: 'right'
+            }).setOrigin(1, 0);
+            card.add(tierText);
+        }
+        
         // Achievement name and description
-        const name = this.scene.add.text(45, 15, achievement.name, {
+        const nameColor = achievement.completed ? 
+            (achievement.tier === 'legendary' ? '#ff6b35' : 
+             achievement.tier === 'gold' ? '#ffd700' : 
+             achievement.tier === 'silver' ? '#c0c0c0' : 
+             achievement.tier === 'bronze' ? '#cd7f32' : '#4caf50') : '#ffffff';
+            
+        const name = this.scene.add.text(45, 12, achievement.name, {
             fontSize: '14px',
             fontWeight: 'bold',
-            fill: achievement.completed ? '#4caf50' : '#ffffff'
+            fill: nameColor
         });
         card.add(name);
         
-        const description = this.scene.add.text(45, 35, achievement.description, {
+        const description = this.scene.add.text(45, 32, achievement.description, {
             fontSize: '11px',
             fill: '#cccccc',
             wordWrap: { width: width - 200 }
@@ -299,7 +426,7 @@ export class PlayerProgressionUI {
         
         const progressFill = this.scene.add.graphics();
         const progressPercent = achievement.progressPercent || 0;
-        const progressColor = achievement.completed ? 0x4caf50 : 0x4a90e2;
+        const progressColor = achievement.completed ? borderColor : 0x4a90e2;
         
         progressFill.fillStyle(progressColor);
         progressFill.fillRoundedRect(width - 150, 20, (120 * progressPercent) / 100, 12, 6);
@@ -319,7 +446,7 @@ export class PlayerProgressionUI {
             const completedDate = new Date(achievement.completedAt).toLocaleDateString();
             const completedText = this.scene.add.text(width - 90, 45, `Completed: ${completedDate}`, {
                 fontSize: '9px',
-                fill: '#4caf50',
+                fill: nameColor,
                 align: 'center'
             }).setOrigin(0.5);
             card.add(completedText);
@@ -328,6 +455,7 @@ export class PlayerProgressionUI {
             if (achievement.rewards.experience) rewardParts.push(`${achievement.rewards.experience} XP`);
             if (achievement.rewards.coins) rewardParts.push(`${achievement.rewards.coins} coins`);
             if (achievement.rewards.skillPoints) rewardParts.push(`${achievement.rewards.skillPoints} SP`);
+            if (achievement.rewards.title) rewardParts.push(`"${achievement.rewards.title}"`);
             
             const rewardText = this.scene.add.text(width - 90, 45, `Rewards: ${rewardParts.join(', ')}`, {
                 fontSize: '9px',
@@ -336,6 +464,162 @@ export class PlayerProgressionUI {
                 wordWrap: { width: 140 }
             }).setOrigin(0.5);
             card.add(rewardText);
+        }
+        
+        // Dependency indicator
+        if (achievement.dependsOn && achievement.canUnlock === false) {
+            const lockIcon = this.scene.add.text(width - 30, height / 2, '🔒', {
+                fontSize: '16px'
+            }).setOrigin(0.5);
+            card.add(lockIcon);
+        }
+        
+        return card;
+    }
+
+    createAchievementChainCard(chain, x, y) {
+        const cardWidth = 850;
+        const cardHeight = 120;
+        
+        const card = this.scene.add.container(x, y);
+        
+        // Background with chain-specific styling
+        const bg = this.scene.add.graphics();
+        bg.fillStyle(0x2a1810, 0.9);
+        bg.fillRoundedRect(0, 0, cardWidth, cardHeight, 12);
+        bg.lineStyle(2, 0xffd700, 0.8);
+        bg.strokeRoundedRect(0, 0, cardWidth, cardHeight, 12);
+        card.add(bg);
+        
+        // Chain icon and title
+        const chainIcon = this.scene.add.text(20, 20, '🔗', {
+            fontSize: '24px'
+        });
+        card.add(chainIcon);
+        
+        const chainTitle = this.scene.add.text(60, 15, chain.name, {
+            fontSize: '18px',
+            fontWeight: 'bold',
+            fill: '#ffd700'
+        });
+        card.add(chainTitle);
+        
+        const chainDesc = this.scene.add.text(60, 40, chain.description, {
+            fontSize: '12px',
+            fill: '#cccccc',
+            wordWrap: { width: 400 }
+        });
+        card.add(chainDesc);
+        
+        // Progress bar for chain completion
+        const progressBg = this.scene.add.graphics();
+        progressBg.fillStyle(0x333333, 0.8);
+        progressBg.fillRoundedRect(60, 70, 400, 20, 10);
+        card.add(progressBg);
+        
+        const completedCount = chain.achievements.filter(id => {
+            const achievement = this.playerProgression.getAchievementData()[id];
+            return achievement && achievement.completed;
+        }).length;
+        
+        const progressPercent = (completedCount / chain.achievements.length) * 100;
+        const progressWidth = (progressPercent / 100) * 400;
+        
+        if (progressWidth > 0) {
+            const progressFill = this.scene.add.graphics();
+            progressFill.fillStyle(0xffd700, 0.8);
+            progressFill.fillRoundedRect(60, 70, progressWidth, 20, 10);
+            card.add(progressFill);
+        }
+        
+        const progressText = this.scene.add.text(260, 80, `${completedCount}/${chain.achievements.length} Complete`, {
+            fontSize: '12px',
+            fill: '#ffffff',
+            fontWeight: 'bold'
+        }).setOrigin(0.5);
+        card.add(progressText);
+        
+        // Individual achievement indicators
+        const achievementStartX = 500;
+        const achievementSpacing = 60;
+        
+        chain.achievements.forEach((achievementId, index) => {
+            const achievement = this.playerProgression.getAchievementData()[achievementId];
+            if (!achievement) return;
+            
+            const achievementX = achievementStartX + (index * achievementSpacing);
+            const achievementY = 30;
+            
+            // Achievement mini-card
+            const miniCard = this.scene.add.graphics();
+            const isCompleted = achievement.completed;
+            const bgColor = isCompleted ? 0x2d5016 : 0x333333;
+            const borderColor = isCompleted ? 0x4caf50 : 0x666666;
+            
+            miniCard.fillStyle(bgColor, 0.8);
+            miniCard.fillRoundedRect(achievementX, achievementY, 50, 60, 8);
+            miniCard.lineStyle(1, borderColor);
+            miniCard.strokeRoundedRect(achievementX, achievementY, 50, 60, 8);
+            card.add(miniCard);
+            
+            // Achievement icon
+            const icon = this.scene.add.text(achievementX + 25, achievementY + 20, achievement.icon, {
+                fontSize: '16px'
+            }).setOrigin(0.5);
+            card.add(icon);
+            
+            // Achievement name (truncated)
+            const name = this.scene.add.text(achievementX + 25, achievementY + 45, 
+                achievement.name.length > 8 ? achievement.name.substring(0, 8) + '...' : achievement.name, {
+                fontSize: '8px',
+                fill: isCompleted ? '#ffffff' : '#999999',
+                align: 'center'
+            }).setOrigin(0.5);
+            card.add(name);
+            
+            // Completion checkmark
+            if (isCompleted) {
+                const checkmark = this.scene.add.text(achievementX + 40, achievementY + 5, '✓', {
+                    fontSize: '12px',
+                    fill: '#4caf50',
+                    fontWeight: 'bold'
+                });
+                card.add(checkmark);
+            }
+        });
+        
+        // Chain rewards display
+        if (chain.rewards) {
+            const rewardText = this.scene.add.text(cardWidth - 20, 20, 'Chain Rewards:', {
+                fontSize: '12px',
+                fill: '#ffd700',
+                fontWeight: 'bold'
+            }).setOrigin(1, 0);
+            card.add(rewardText);
+            
+            const rewardParts = [];
+            if (chain.rewards.coins) rewardParts.push(`${chain.rewards.coins} coins`);
+            if (chain.rewards.experience) rewardParts.push(`${chain.rewards.experience} XP`);
+            if (chain.rewards.skillPoints) rewardParts.push(`${chain.rewards.skillPoints} SP`);
+            if (chain.rewards.title) rewardParts.push(`"${chain.rewards.title}"`);
+            
+            const rewardDetails = this.scene.add.text(cardWidth - 20, 40, rewardParts.join('\n'), {
+                fontSize: '10px',
+                fill: '#ffeb3b',
+                align: 'right'
+            }).setOrigin(1, 0);
+            card.add(rewardDetails);
+        }
+        
+        // Completion status
+        const isChainComplete = completedCount === chain.achievements.length;
+        if (isChainComplete) {
+            const completeBadge = this.scene.add.text(cardWidth - 20, cardHeight - 20, '🏆 COMPLETE', {
+                fontSize: '14px',
+                fill: '#ffd700',
+                fontWeight: 'bold'
+            }).setOrigin(1, 1);
+            card.add(completeBadge);
         }
         
         return card;
@@ -441,16 +725,64 @@ export class PlayerProgressionUI {
         }).setOrigin(0.5);
         container.add(upgradeText);
 
-        // Make upgrade button interactive
+        // Make upgrade button interactive (original area inside container)
         const upgradeHitArea = this.scene.add.rectangle(60, height - 22, 100, 25, 0x000000, 0);
         upgradeHitArea.setInteractive({ useHandCursor: true });
-        upgradeHitArea.on('pointerdown', () => this.upgradeSkill(treeId, skillId));
+        upgradeHitArea.on('pointerdown', () => {
+            console.log('PlayerProgressionUI: Original upgrade button clicked for', treeId, skillId);
+            this.upgradeSkill(treeId, skillId);
+        });
         container.add(upgradeHitArea);
+
+        // Create working interactive area outside container (similar to USE button fix)
+        // Calculate absolute position when container is added to the scene
+        const workingUpgradeButton = this.scene.add.rectangle(
+            0, 0, // Will be positioned dynamically when shown
+            105, 30
+        ).setInteractive()
+        .setAlpha(0.01) // Barely visible but functional
+        .setFillStyle(0x4caf50) // Green fill for functionality
+        .setDepth(5000); // Higher depth than the progression UI (2000)
+        
+        // Store click handler
+        const upgradeClickHandler = () => {
+            console.log('PlayerProgressionUI: Working upgrade button clicked for', treeId, skillId);
+            this.upgradeSkill(treeId, skillId);
+        };
+        
+        // Apply hover and click effects for both areas
+        const onHover = () => {
+            upgradeButton.clear();
+            upgradeButton.fillStyle(0x66bb6a, 1); // Brighter green on hover
+            upgradeButton.fillRoundedRect(10, height - 35, 100, 25, 5);
+            upgradeText.setScale(1.05);
+            workingUpgradeButton.setAlpha(0.05); // Slightly more visible on hover
+        };
+        
+        const onOut = () => {
+            upgradeButton.clear();
+            upgradeButton.fillStyle(0x4caf50, 0.8);
+            upgradeButton.fillRoundedRect(10, height - 35, 100, 25, 5);
+            upgradeText.setScale(1.0);
+            workingUpgradeButton.setAlpha(0.01); // Back to barely visible
+        };
+        
+        // Apply events to both areas
+        upgradeHitArea.on('pointerover', onHover);
+        upgradeHitArea.on('pointerout', onOut);
+        
+        workingUpgradeButton.on('pointerdown', upgradeClickHandler);
+        workingUpgradeButton.on('pointerover', onHover);
+        workingUpgradeButton.on('pointerout', onOut);
+
+        // Initially hide working button
+        workingUpgradeButton.setVisible(false);
 
         // Store references for updates
         container.skillData = {
             treeId, skillId, skill,
-            levelText, effectText, upgradeButton, upgradeText, upgradeHitArea
+            levelText, effectText, upgradeButton, upgradeText, upgradeHitArea,
+            workingUpgradeButton, upgradeClickHandler // Store working button reference
         };
 
         return container;
@@ -458,6 +790,9 @@ export class PlayerProgressionUI {
 
     showTab(tabId) {
         this.currentTab = tabId;
+        
+        // Hide all working upgrade buttons first
+        this.hideAllWorkingUpgradeButtons();
         
         // Hide all content
         this.overviewContent.setVisible(false);
@@ -483,6 +818,9 @@ export class PlayerProgressionUI {
         } else if (this.skillTreeContents[tabId]) {
             this.skillTreeContents[tabId].setVisible(true);
             this.updateSkillTreeContent(tabId);
+            
+            // Show and position working upgrade buttons for this skill tree
+            this.showWorkingUpgradeButtons(tabId);
         }
         
         // Update tab button appearance
@@ -497,6 +835,40 @@ export class PlayerProgressionUI {
                 button.button.fillStyle(0x333333, 0.8);
                 button.button.fillRoundedRect(button.button.x, button.button.y, 100, 35, 5);
                 button.text.setFill('#cccccc');
+            }
+        });
+    }
+
+    hideAllWorkingUpgradeButtons() {
+        // Hide all working upgrade buttons from all skill trees
+        Object.values(this.skillTreeContents).forEach(content => {
+            content.list.forEach(child => {
+                if (child.skillData && child.skillData.workingUpgradeButton) {
+                    child.skillData.workingUpgradeButton.setVisible(false);
+                }
+            });
+        });
+    }
+
+    showWorkingUpgradeButtons(treeId) {
+        const container = this.skillTreeContents[treeId];
+        if (!container) return;
+        
+        // Position and show working upgrade buttons for the current skill tree
+        container.list.forEach(child => {
+            if (child.skillData && child.skillData.workingUpgradeButton) {
+                const { workingUpgradeButton } = child.skillData;
+                
+                // Calculate absolute position
+                // child is the skill card container
+                // Need to account for: main container position + content container position + skill container position + button offset
+                const absoluteX = this.x + 20 + child.x + 60; // main x + content offset + skill card x + button center x
+                const absoluteY = this.y + 80 + child.y + 108; // main y + content offset + skill card y + button center y
+                
+                console.log(`PlayerProgressionUI: Positioning working upgrade button for ${child.skillData.treeId}-${child.skillData.skillId} at (${absoluteX}, ${absoluteY})`);
+                
+                workingUpgradeButton.setPosition(absoluteX, absoluteY);
+                workingUpgradeButton.setVisible(true);
             }
         });
     }
@@ -579,7 +951,7 @@ export class PlayerProgressionUI {
         // Update each skill card
         container.list.forEach(child => {
             if (child.skillData) {
-                const { skillId, levelText, effectText, upgradeButton, upgradeText, upgradeHitArea } = child.skillData;
+                const { skillId, levelText, effectText, upgradeButton, upgradeText, upgradeHitArea, workingUpgradeButton } = child.skillData;
                 const skillData = treeData.skills[skillId];
                 
                 // Update level display
@@ -597,6 +969,12 @@ export class PlayerProgressionUI {
                     upgradeText.setText('UPGRADE');
                     upgradeText.setFill('#ffffff');
                     upgradeHitArea.setInteractive();
+                    
+                    // Enable working upgrade button
+                    if (workingUpgradeButton) {
+                        workingUpgradeButton.setInteractive();
+                        workingUpgradeButton.setFillStyle(0x4caf50);
+                    }
                 } else {
                     upgradeButton.clear();
                     upgradeButton.fillStyle(0x666666, 0.8);
@@ -611,6 +989,12 @@ export class PlayerProgressionUI {
                     }
                     upgradeText.setFill('#999999');
                     upgradeHitArea.disableInteractive();
+                    
+                    // Disable working upgrade button
+                    if (workingUpgradeButton) {
+                        workingUpgradeButton.disableInteractive();
+                        workingUpgradeButton.setFillStyle(0x666666);
+                    }
                 }
             }
         });
@@ -886,6 +1270,9 @@ export class PlayerProgressionUI {
     }
 
     hide() {
+        // Hide working upgrade buttons first
+        this.hideAllWorkingUpgradeButtons();
+        
         this.scene.tweens.add({
             targets: this.container,
             scale: 0.8,
@@ -907,6 +1294,15 @@ export class PlayerProgressionUI {
     }
 
     destroy() {
+        // Clean up working upgrade buttons first
+        Object.values(this.skillTreeContents).forEach(content => {
+            content.list.forEach(child => {
+                if (child.skillData && child.skillData.workingUpgradeButton) {
+                    child.skillData.workingUpgradeButton.destroy();
+                }
+            });
+        });
+        
         // Clean up event listeners
         this.playerProgression.off('levelUp', this.showLevelUpNotification);
         this.playerProgression.off('experienceGained', this.updateDisplay);
@@ -921,21 +1317,54 @@ export class PlayerProgressionUI {
         this.achievementsListContainer.removeAll(true);
         this.achievementCards = [];
         
-        // Get achievement data from progression system
+        if (this.currentAchievementFilter === 'chains') {
+            // Display achievement chains
+            const chains = this.playerProgression.getAchievementChains();
+            
+            chains.forEach((chain, index) => {
+                const y = index * 130; // Space for chain cards
+                const card = this.createAchievementChainCard(chain, 0, y);
+                this.achievementsListContainer.add(card);
+                this.achievementCards.push(card);
+            });
+            
+            return;
+        }
+        
+        // Get all achievement data (regular + enhanced)
         const achievementData = this.playerProgression.getAchievementData();
         
-        // Filter achievements based on current filter
+        // Filter achievements based on current filters
         let filteredAchievements = Object.values(achievementData);
+        
+        // Category filter
         if (this.currentAchievementFilter !== 'all') {
             filteredAchievements = filteredAchievements.filter(achievement => 
                 achievement.category === this.currentAchievementFilter
             );
         }
         
-        // Sort achievements: completed first, then by progress percentage
+        // Tier filter
+        if (this.currentTierFilter !== 'all') {
+            filteredAchievements = filteredAchievements.filter(achievement => 
+                achievement.tier === this.currentTierFilter
+            );
+        }
+        
+        // Sort achievements: completed first, then by tier, then by progress percentage
         filteredAchievements.sort((a, b) => {
+            // Completed achievements first
             if (a.completed && !b.completed) return -1;
             if (!a.completed && b.completed) return 1;
+            
+            // Within same completion status, sort by tier
+            const tierOrder = { legendary: 4, gold: 3, silver: 2, bronze: 1 };
+            const aTier = tierOrder[a.tier] || 0;
+            const bTier = tierOrder[b.tier] || 0;
+            
+            if (aTier !== bTier) return bTier - aTier; // Higher tier first
+            
+            // Within same tier, sort by progress
             return b.progressPercent - a.progressPercent;
         });
         
@@ -967,11 +1396,35 @@ export class PlayerProgressionUI {
         );
         notification.setDepth(2500);
 
-        // Background
+        // Background with tier-based colors
         const bg = this.scene.add.graphics();
-        bg.fillStyle(0x2d5016, 0.95);
+        let bgColor = 0x2d5016;
+        let borderColor = 0x4caf50;
+        
+        if (achievement.tier) {
+            switch (achievement.tier) {
+                case 'bronze':
+                    bgColor = 0x4a3728;
+                    borderColor = 0xcd7f32;
+                    break;
+                case 'silver':
+                    bgColor = 0x3c3c3c;
+                    borderColor = 0xc0c0c0;
+                    break;
+                case 'gold':
+                    bgColor = 0x4a4228;
+                    borderColor = 0xffd700;
+                    break;
+                case 'legendary':
+                    bgColor = 0x4a2515;
+                    borderColor = 0xff6b35;
+                    break;
+            }
+        }
+        
+        bg.fillStyle(bgColor, 0.95);
         bg.fillRoundedRect(0, 0, 350, 100, 12);
-        bg.lineStyle(3, 0x4caf50, 0.9);
+        bg.lineStyle(3, borderColor, 0.9);
         bg.strokeRoundedRect(0, 0, 350, 100, 12);
         notification.add(bg);
 
@@ -981,17 +1434,18 @@ export class PlayerProgressionUI {
         }).setOrigin(0.5);
         notification.add(icon);
 
-        // "Achievement Unlocked!" text
-        const titleText = this.scene.add.text(60, 20, '🏆 ACHIEVEMENT UNLOCKED!', {
-            fontSize: '14px',
+        // "Achievement Unlocked!" text with tier indication
+        const titleText = this.scene.add.text(60, 15, 
+            `🏆 ${achievement.tier ? achievement.tier.toUpperCase() + ' ' : ''}ACHIEVEMENT UNLOCKED!`, {
+            fontSize: '12px',
             fontWeight: 'bold',
-            fill: '#4caf50'
+            fill: borderColor === 0x4caf50 ? '#4caf50' : `#${borderColor.toString(16).padStart(6, '0')}`
         });
         notification.add(titleText);
 
         // Achievement name
-        const nameText = this.scene.add.text(60, 40, achievement.name, {
-            fontSize: '16px',
+        const nameText = this.scene.add.text(60, 35, achievement.name, {
+            fontSize: '14px',
             fontWeight: 'bold',
             fill: '#ffffff'
         });
@@ -1002,11 +1456,13 @@ export class PlayerProgressionUI {
         if (achievement.rewards.experience) rewardParts.push(`${achievement.rewards.experience} XP`);
         if (achievement.rewards.coins) rewardParts.push(`${achievement.rewards.coins} coins`);
         if (achievement.rewards.skillPoints) rewardParts.push(`${achievement.rewards.skillPoints} SP`);
+        if (achievement.rewards.title) rewardParts.push(`"${achievement.rewards.title}"`);
         
         if (rewardParts.length > 0) {
-            const rewardsText = this.scene.add.text(60, 65, `Rewards: ${rewardParts.join(', ')}`, {
-                fontSize: '12px',
-                fill: '#ffeb3b'
+            const rewardsText = this.scene.add.text(60, 55, `Rewards: ${rewardParts.join(', ')}`, {
+                fontSize: '10px',
+                fill: '#ffeb3b',
+                wordWrap: { width: 280 }
             });
             notification.add(rewardsText);
         }

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Selection UI Test - Fixed</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a2e;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            border: 2px solid #00aaff;
+            margin: 10px 0;
+        }
+        .controls {
+            margin: 10px 0;
+            padding: 10px;
+            background: #2c3e50;
+            border-radius: 5px;
+        }
+        .controls button {
+            margin: 5px;
+            padding: 8px 15px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .controls button:hover {
+            background: #52a3e8;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            background: #34495e;
+            border-radius: 5px;
+        }
+        .error-log {
+            margin: 10px 0;
+            padding: 10px;
+            background: #e74c3c;
+            border-radius: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🗺️ Map Selection UI Test - Fixed Version</h1>
+    
+    <div class="status">
+        <h3>Status: FIXED - Event handling improved</h3>
+        <p>✅ Fixed graphics/text array handling</p>
+        <p>✅ Added proper event error handling</p>
+        <p>✅ Improved button click safety</p>
+        <p>✅ Enhanced travel validation</p>
+    </div>
+
+    <div class="controls">
+        <h3>Testing Controls:</h3>
+        <button onclick="openMapUI()">🗺️ Open Map Selection</button>
+        <button onclick="setPlayerLevel(20)">⬆️ Set Level 20</button>
+        <button onclick="addAllAchievements()">🏆 Add All Achievements</button>
+        <button onclick="resetPlayer()">🔄 Reset Player</button>
+        <button onclick="testErrorHandling()">⚠️ Test Error Handling</button>
+    </div>
+
+    <div id="game-container"></div>
+
+    <div class="status">
+        <h3>Test Features:</h3>
+        <ul>
+            <li>Click any location button to test selection</li>
+            <li>Click "Travel to Location" to test travel functionality</li>
+            <li>Click outside the panel to test overlay close</li>
+            <li>Hover over buttons to test hover effects</li>
+            <li>Check console for error logs</li>
+        </ul>
+    </div>
+
+    <div id="error-log" class="error-log" style="display: none;">
+        <h3>Error Log:</h3>
+        <div id="error-content"></div>
+    </div>
+
+    <script type="module">
+        import { LOCATION_DATA, getUnlockedLocations } from './src/data/LocationData.js';
+        import { MapSelectionUI } from './src/ui/MapSelectionUI.js';
+
+        // Capture console errors
+        const originalConsoleError = console.error;
+        const errorLog = document.getElementById('error-log');
+        const errorContent = document.getElementById('error-content');
+        let errorCount = 0;
+
+        console.error = function(...args) {
+            errorCount++;
+            if (errorCount === 1) {
+                errorLog.style.display = 'block';
+            }
+            errorContent.innerHTML += `<div style="margin: 5px 0; padding: 5px; background: rgba(255,255,255,0.1); border-radius: 3px;">
+                <strong>Error ${errorCount}:</strong> ${args.join(' ')}<br>
+                <small>${new Date().toLocaleTimeString()}</small>
+            </div>`;
+            errorContent.scrollTop = errorContent.scrollHeight;
+            originalConsoleError.apply(console, args);
+        };
+
+        // Mock GameState
+        class MockGameState {
+            constructor() {
+                this.player = {
+                    level: 20,
+                    currentLocation: 'Starting Port',
+                    achievements: ['Tutorial Completion', 'Night Fishing Achievement', 'Win Fishing Contest']
+                };
+            }
+        }
+
+        // Mock BoatMenuScene
+        class MockBoatMenuScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'MockScene' });
+                this.gameState = new MockGameState();
+            }
+
+            create() {
+                console.log('MockBoatMenuScene: Scene created');
+                
+                // Add title
+                this.add.text(400, 50, 'Map Selection UI Test - Fixed', {
+                    fontSize: '24px',
+                    fill: '#00aaff',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+
+                this.add.text(400, 90, 'Click "Open Map Selection" to test the fixed interface', {
+                    fontSize: '16px',
+                    fill: '#ffffff'
+                }).setOrigin(0.5);
+
+                // Create map selection UI with error handling
+                try {
+                    this.mapSelectionUI = new MapSelectionUI(this, null, this.gameState);
+                    console.log('MockBoatMenuScene: MapSelectionUI created successfully');
+                } catch (error) {
+                    console.error('MockBoatMenuScene: Error creating MapSelectionUI:', error);
+                    this.mapSelectionUI = null;
+                }
+
+                // Make functions globally available
+                window.testScene = this;
+                window.openMapUI = () => {
+                    try {
+                        if (this.mapSelectionUI) {
+                            this.mapSelectionUI.show();
+                            console.log('Test: Map UI opened successfully');
+                        } else {
+                            console.error('Test: MapSelectionUI not available');
+                        }
+                    } catch (error) {
+                        console.error('Test: Error opening map UI:', error);
+                    }
+                };
+
+                window.setPlayerLevel = (level) => {
+                    this.gameState.player.level = level;
+                    console.log(`Test: Player level set to ${level}`);
+                };
+
+                window.addAllAchievements = () => {
+                    this.gameState.player.achievements = [
+                        'Tutorial Completion',
+                        'Night Fishing Achievement', 
+                        'Win Fishing Contest'
+                    ];
+                    console.log('Test: All achievements added');
+                };
+
+                window.resetPlayer = () => {
+                    this.gameState.player.level = 1;
+                    this.gameState.player.achievements = [];
+                    console.log('Test: Player reset to level 1, no achievements');
+                };
+
+                window.testErrorHandling = () => {
+                    console.log('Test: Testing error handling...');
+                    try {
+                        // Test null location
+                        if (this.mapSelectionUI) {
+                            this.mapSelectionUI.selectedLocation = null;
+                            this.mapSelectionUI.travelToSelectedLocation();
+                        }
+                    } catch (error) {
+                        console.error('Test: Expected error caught:', error);
+                    }
+                };
+            }
+
+            // Mock methods that MapSelectionUI expects
+            showSuccessMessage(message) {
+                console.log('SUCCESS:', message);
+                this.add.text(400, 150, message, {
+                    fontSize: '16px',
+                    fill: '#00ff00',
+                    backgroundColor: '#000000',
+                    padding: { x: 10, y: 5 }
+                }).setOrigin(0.5);
+            }
+
+            showErrorMessage(message) {
+                console.error('ERROR:', message);
+                this.add.text(400, 200, message, {
+                    fontSize: '16px',
+                    fill: '#ff0000',
+                    backgroundColor: '#000000',
+                    padding: { x: 10, y: 5 }
+                }).setOrigin(0.5);
+            }
+
+            updateStatus(data) {
+                console.log('Status updated:', data);
+            }
+        }
+
+        // Phaser configuration
+        const config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            parent: 'game-container',
+            backgroundColor: '#1a1a2e',
+            scene: MockBoatMenuScene
+        };
+
+        // Start the game
+        const game = new Phaser.Game(config);
+        
+        console.log('Map Selection UI Test - Fixed Version Started');
+        console.log('Available locations:', Object.keys(LOCATION_DATA));
+    </script>
+</body>
+</html> 
