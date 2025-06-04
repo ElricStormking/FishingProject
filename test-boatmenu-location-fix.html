@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎣 BoatMenu Location & Shop Fix Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            margin: 5px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .btn.success {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        }
+        
+        .btn.danger {
+            background: linear-gradient(135deg, #f44336 0%, #da190b 100%);
+        }
+        
+        .btn.warning {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+        }
+        
+        #game-container {
+            width: 100%;
+            height: 600px;
+            margin: 20px auto;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        
+        .status {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            backdrop-filter: blur(10px);
+        }
+        
+        .test-instructions {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .test-step {
+            margin: 10px 0;
+            padding: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">🎣 Luxury Angler - BoatMenu Location & Shop Fix Test 🎣</h1>
+    
+    <div class="test-instructions">
+        <h3>🧪 Test Instructions:</h3>
+        <div class="test-step">1. ✅ Verify "Starting Port" shows in location display</div>
+        <div class="test-step">2. ✅ Verify Shop button is available and functional at Starting Port</div>
+        <div class="test-step">3. 🗺️ Use Travel menu to go to another location</div>
+        <div class="test-step">4. ❌ Verify Shop button is disabled/grayed out at other locations</div>
+        <div class="test-step">5. 🚤 Verify Return to Port button appears at other locations</div>
+        <div class="test-step">6. 🔄 Use Return to Port to go back to Starting Port</div>
+        <div class="test-step">7. ✅ Verify Shop becomes available again at Starting Port</div>
+    </div>
+    
+    <div class="controls">
+        <button class="btn success" onclick="startTest()">🚀 Start BoatMenu Test</button>
+        <button class="btn warning" onclick="testTravel()">🗺️ Force Travel Test</button>
+        <button class="btn" onclick="testShop()">🛒 Force Shop Test</button>
+        <button class="btn danger" onclick="resetTest()">🔄 Reset Test</button>
+    </div>
+    
+    <div id="game-container"></div>
+    
+    <div class="status">
+        <h3>🔧 Fix Status:</h3>
+        <p>✅ Synchronized player.currentLocation and world.currentLocation</p>
+        <p>✅ Fixed GameLoop.isAtStartingPort() to check both location properties</p>
+        <p>✅ Updated BoatMenuScene.updateButtonStates() to properly calculate shop availability</p>
+        <p>✅ Added location validation to openShop() method</p>
+        <p>✅ Enhanced MapSelectionUI to integrate with GameLoop travel system</p>
+        <p>✅ Fixed initial status display to show correct location</p>
+    </div>
+
+    <script type="module">
+        import Phaser from './node_modules/phaser/dist/phaser.esm.js';
+        import BoatMenuScene from './src/scenes/BoatMenuScene.js';
+        import GameState from './src/scripts/GameState.js';
+
+        let game;
+        let gameState;
+
+        // Game configuration
+        const config = {
+            type: Phaser.AUTO,
+            width: 1200,
+            height: 600,
+            parent: 'game-container',
+            backgroundColor: '#2c3e50',
+            scene: [BoatMenuScene],
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },
+                    debug: false
+                }
+            }
+        };
+
+        window.startTest = function() {
+            console.log('🚀 Starting BoatMenu Location & Shop Fix Test...');
+            
+            if (game) {
+                game.destroy(true);
+            }
+
+            // Initialize game state
+            gameState = GameState.getInstance();
+            
+            // Ensure proper initial state
+            gameState.player = gameState.player || {};
+            gameState.player.currentLocation = 'Starting Port';
+            gameState.world = gameState.world || {};
+            gameState.world.currentLocation = 'Starting Port';
+            gameState.player.energy = 100;
+            gameState.player.level = 5;
+            gameState.player.money = 1000;
+            
+            console.log('✅ Initial state set - Location:', gameState.player.currentLocation);
+
+            // Create game
+            game = new Phaser.Game(config);
+            
+            console.log('🎮 Game started - Check location display and shop availability!');
+        };
+
+        window.testTravel = function() {
+            console.log('🗺️ Testing travel to another location...');
+            
+            if (gameState && game && game.scene.scenes[0]) {
+                const scene = game.scene.scenes[0];
+                
+                // Simulate travel to Beginner Lake
+                if (scene.gameLoop && scene.gameLoop.initiateTravel) {
+                    console.log('Using GameLoop travel system...');
+                    scene.gameLoop.initiateTravel('Beginner', 'Lake');
+                } else {
+                    console.log('Using direct location update...');
+                    gameState.player.currentLocation = 'Beginner Lake';
+                    gameState.world.currentLocation = 'Beginner Lake';
+                    
+                    if (scene.updateStatus) {
+                        scene.updateStatus({
+                            location: 'Beginner Lake'
+                        });
+                    }
+                }
+                
+                console.log('✅ Traveled to Beginner Lake - Check shop availability!');
+            }
+        };
+
+        window.testShop = function() {
+            console.log('🛒 Testing shop access...');
+            
+            if (game && game.scene.scenes[0]) {
+                const scene = game.scene.scenes[0];
+                if (scene.openShop) {
+                    scene.openShop();
+                }
+            }
+        };
+
+        window.resetTest = function() {
+            console.log('🔄 Resetting test...');
+            
+            if (gameState) {
+                gameState.player.currentLocation = 'Starting Port';
+                gameState.world.currentLocation = 'Starting Port';
+                
+                if (game && game.scene.scenes[0]) {
+                    const scene = game.scene.scenes[0];
+                    if (scene.updateStatus) {
+                        scene.updateStatus({
+                            location: 'Starting Port'
+                        });
+                    }
+                }
+            }
+            
+            console.log('✅ Reset to Starting Port - Shop should be available again!');
+        };
+
+        // Auto-start for quick testing
+        setTimeout(() => {
+            startTest();
+        }, 1000);
+    </script>
+</body>
+</html> 

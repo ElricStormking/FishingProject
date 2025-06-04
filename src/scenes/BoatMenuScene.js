@@ -141,6 +141,14 @@ export default class BoatMenuScene extends Phaser.Scene {
             this.gameLoop.enterBoatMenu();
         }
         
+        // Ensure initial status is displayed correctly
+        this.time.delayedCall(100, () => {
+            // Force initial status update to ensure location is shown correctly
+            this.updateStatus({
+                location: this.gameState?.player?.currentLocation || 'Starting Port'
+            });
+        });
+        
         // Show welcome back message if returning from fishing
         if (data && data.returnedFromFishing && !data.errorRecovery) {
             this.time.delayedCall(1000, () => {
@@ -776,8 +784,31 @@ export default class BoatMenuScene extends Phaser.Scene {
             
             // Check location allows fishing
             const currentLocation = this.gameState.player.currentLocation || 'Unknown';
-            const fishableLocations = ['Beginner Lake', 'Ocean Harbor', 'Mountain Stream', 'Midnight Pond', 'Champion\'s Cove', 'Starting Port'];
-            if (!fishableLocations.includes(currentLocation)) {
+            
+            // Define main fishing areas (partial match will work for sub-areas)
+            const fishableAreas = [
+                'Beginner Lake',      // Allows "Beginner Lake - Shallow Waters", etc.
+                'Ocean Harbor',       // Allows "Ocean Harbor - Deep Waters", etc.
+                'Mountain Stream',    // Allows "Mountain Stream - Rapids", etc.
+                'Midnight Pond',      // Allows "Midnight Pond - Moonlit Shore", etc.
+                'Champion\'s Cove',   // Allows "Champion's Cove - Crystal Bay", etc.
+                'Starting Port',      // Exact match for port
+                'Coral Cove',         // Story mode locations
+                'Deep Abyss',
+                'Tropical Lagoon',
+                'Arctic Waters',
+                'Volcanic Depths',
+                'Training Lagoon',    // Practice mode locations
+                'Open Waters',
+                'Skill Harbor'
+            ];
+            
+            // Check if current location starts with any of the fishable areas
+            const isValidLocation = fishableAreas.some(area => currentLocation.startsWith(area));
+            
+            if (!isValidLocation) {
+                console.log('BoatMenuScene: Invalid fishing location:', currentLocation);
+                console.log('BoatMenuScene: Valid areas:', fishableAreas);
                 return { canFish: false, reason: 'Cannot fish at this location: ' + currentLocation };
             }
             
@@ -937,6 +968,16 @@ export default class BoatMenuScene extends Phaser.Scene {
 
     openShop() {
         console.log('BoatMenuScene: Opening shop');
+        
+        // Check if at Starting Port before allowing shop access
+        const currentLocation = this.gameState?.player?.currentLocation || 'Starting Port';
+        if (currentLocation !== 'Starting Port') {
+            console.log('BoatMenuScene: Shop not available - not at Starting Port. Current location:', currentLocation);
+            this.audioManager?.playSFX('fail');
+            this.showErrorMessage('Shop only available at Starting Port!\nCurrent location: ' + currentLocation);
+            return;
+        }
+        
         this.audioManager?.playSFX('button');
         
         if (this.shopUI) {
@@ -1285,8 +1326,20 @@ export default class BoatMenuScene extends Phaser.Scene {
             (typeof this.gameState.player.energy === 'undefined' || this.gameState.player.energy === null)) {
             this.gameState.player.energy = 100;
         }
+
+        // Fix location synchronization - ensure both location properties are synchronized
+        const currentLocation = statusData.location || this.gameState?.player?.currentLocation || 'Starting Port';
         
-        this.locationText.setText(`Location: ${statusData.location || this.gameState?.player?.currentLocation || 'Starting Port'}`);
+        // Sync both location properties to avoid mismatches
+        if (this.gameState) {
+            if (!this.gameState.world) {
+                this.gameState.world = {};
+            }
+            this.gameState.player.currentLocation = currentLocation;
+            this.gameState.world.currentLocation = currentLocation;
+        }
+        
+        this.locationText.setText(`Location: ${currentLocation}`);
         this.timeText.setText(`Time: ${statusData.time || 'Dawn'}`);
         this.weatherText.setText(`Weather: ${statusData.weather || 'Sunny'}`);
         
@@ -1314,24 +1367,49 @@ export default class BoatMenuScene extends Phaser.Scene {
     }
 
     updateButtonStates(data) {
-        // Enable/disable buttons based on available actions
-        const actions = data.availableActions || ['travel', 'fish', 'cabin', 'inventory', 'shop']; // Default to all actions available
+        // Fix shop availability logic - determine actions properly based on actual location
+        const currentLocation = data.location || this.gameState?.player?.currentLocation || 'Starting Port';
+        const isAtStartingPort = currentLocation === 'Starting Port';
         
+        // Determine available actions based on location and game state
+        let availableActions = ['fish', 'cabin', 'inventory', 'travel']; // Base actions always available
+        
+        // Only add shop if actually at Starting Port
+        if (isAtStartingPort) {
+            availableActions.push('shop');
+            if (this.gameState?.inventory?.fish?.length > 0) {
+                availableActions.push('sell_fish');
+            }
+        }
+        
+        // Use provided actions if available, otherwise use calculated actions
+        const actions = data.availableActions || availableActions;
+        
+        // Update button states based on actual availability
         this.buttons.travel.button.setAlpha(actions.includes('travel') ? 1 : 0.5);
         this.buttons.fish.button.setAlpha(actions.includes('fish') ? 1 : 0.5);
         this.buttons.shop.button.setAlpha(actions.includes('shop') ? 1 : 0.5);
         
+        // Disable shop button interaction if not at Starting Port
+        if (!actions.includes('shop')) {
+            this.buttons.shop.button.setInteractive(false);
+            this.buttons.shop.button.input.enabled = false;
+        } else {
+            this.buttons.shop.button.setInteractive(true);
+            this.buttons.shop.button.input.enabled = true;
+        }
+        
         // Show/hide tournament button based on mode
-        const inTournamentMode = this.gameLoop.currentMode === 'tournament';
+        const inTournamentMode = this.gameLoop?.currentMode === 'tournament';
         this.buttons.tournament.button.setVisible(inTournamentMode);
         this.buttons.tournament.text.setVisible(inTournamentMode);
         
-        // Show/hide return button
-        const canShop = data.canShop !== undefined ? data.canShop : true; // Default to can shop
-        const location = data.location || 'Starting Port';
-        const shouldShowReturn = !canShop && location !== 'Starting Port';
+        // Show/hide return button - only show if NOT at Starting Port
+        const shouldShowReturn = !isAtStartingPort;
         this.returnButton.button.setVisible(shouldShowReturn);
         this.returnButton.text.setVisible(shouldShowReturn);
+        
+        console.log(`BoatMenuScene: Updated button states - Location: ${currentLocation}, Shop available: ${actions.includes('shop')}, Return button: ${shouldShowReturn}`);
     }
 
     updateProgressBars() {

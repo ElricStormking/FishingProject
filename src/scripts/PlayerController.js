@@ -8,6 +8,7 @@ export default class PlayerController {
     constructor(scene) {
         this.scene = scene;
         this.gameState = GameState.getInstance();
+        this.enabled = true; // Allow external systems to disable player control
         
         // Initialize audio manager
         this.audioManager = this.gameState.getAudioManager(scene);
@@ -125,11 +126,11 @@ export default class PlayerController {
     }
 
     canCast() {
-        return this.isActive && !this.isCasting && !this.isReeling;
+        return this.enabled && this.isActive && !this.isCasting && !this.isReeling;
     }
 
     canReel() {
-        return this.isActive && this.currentLure && !this.isCasting;
+        return this.enabled && this.isActive && this.currentLure && !this.isCasting;
     }
 
     disableCastingInput() {
@@ -910,27 +911,37 @@ export default class PlayerController {
         
         // Auto-hide instructions after 5 seconds (longer for more info)
         this.scene.time.delayedCall(5000, () => {
-            if (instructions) {
+            if (instructions && !instructions.destroyed) {
                 this.scene.tweens.add({
                     targets: instructions,
                     alpha: 0,
                     duration: 1000,
-                    onComplete: () => instructions.destroy()
+                    onComplete: () => {
+                        if (instructions && !instructions.destroyed) {
+                            instructions.destroy();
+                        }
+                    }
                 });
             }
         });
         
         // Listen for QTE events to show additional feedback
         this.qteStartHandler = (data) => {
-            if (this.scene && this.scene.scene.isActive()) {
+            if (this.scene && this.scene.scene && this.scene.scene.isActive()) {
                 this.showQTEAlert(data.qte);
             }
         };
         
         this.qteCompleteHandler = (data) => {
-            if (this.scene && this.scene.scene.isActive()) {
+            if (this.scene && this.scene.scene && this.scene.scene.isActive()) {
                 this.showQTEResult(data.success);
             }
+        };
+        
+        // Store event handlers for cleanup
+        this.activeQTEHandlers = {
+            qteStart: this.qteStartHandler,
+            qteComplete: this.qteCompleteHandler
         };
         
         this.scene.events.on('fishing:qteStart', this.qteStartHandler);
@@ -938,109 +949,182 @@ export default class PlayerController {
     }
 
     showQTEAlert(qte) {
-        // Create alert text based on QTE type
-        let alertText = 'QTE ALERT!';
-        let alertColor = '#ffff00';
-        
-        switch (qte.type) {
-            case 'tap':
-                alertText = `TAP SPACEBAR ${qte.requiredTaps} TIMES!`;
-                break;
-            case 'hold':
-                alertText = 'HOLD SPACEBAR!';
-                break;
-            case 'sequence':
-                alertText = 'FOLLOW THE ARROWS!';
-                break;
-            case 'timing':
-                alertText = 'PERFECT TIMING!';
-                break;
-        }
-        
-        const alert = this.scene.add.text(
-            this.scene.cameras.main.width / 2,
-            this.scene.cameras.main.height * 0.2,
-            alertText,
-            {
-                fontSize: '24px',
-                fill: alertColor,
-                fontWeight: 'bold',
-                stroke: '#000000',
-                strokeThickness: 3
+        try {
+            // Verify scene is still active and valid
+            if (!this.scene || !this.scene.add || !this.scene.cameras?.main) {
+                console.warn('PlayerController: Scene not available for QTE alert');
+                return;
             }
-        ).setOrigin(0.5).setDepth(1999);
-        
-        // Animate alert
-        this.scene.tweens.add({
-            targets: alert,
-            scaleX: 1.2,
-            scaleY: 1.2,
-            duration: 200,
-            yoyo: true,
-            repeat: 1,
-            ease: 'Power2.easeOut',
-            onComplete: () => {
+            
+            // Create alert text based on QTE type
+            let alertText = 'QTE ALERT!';
+            let alertColor = '#ffff00';
+            
+            switch (qte.type) {
+                case 'tap':
+                    alertText = `TAP SPACEBAR ${qte.requiredTaps} TIMES!`;
+                    break;
+                case 'hold':
+                    alertText = 'HOLD SPACEBAR!';
+                    break;
+                case 'sequence':
+                    alertText = 'FOLLOW THE ARROWS!';
+                    break;
+                case 'timing':
+                    alertText = 'PERFECT TIMING!';
+                    break;
+            }
+            
+            const alert = this.scene.add.text(
+                this.scene.cameras.main.width / 2,
+                this.scene.cameras.main.height * 0.2,
+                alertText,
+                {
+                    fontSize: '24px',
+                    fill: alertColor,
+                    fontWeight: 'bold',
+                    stroke: '#000000',
+                    strokeThickness: 3
+                }
+            ).setOrigin(0.5).setDepth(1999);
+            
+            // Animate alert with error handling
+            if (this.scene.tweens) {
                 this.scene.tweens.add({
                     targets: alert,
-                    alpha: 0,
-                    duration: 500,
-                    delay: 1000,
-                    onComplete: () => alert.destroy()
+                    scaleX: 1.2,
+                    scaleY: 1.2,
+                    duration: 200,
+                    yoyo: true,
+                    repeat: 1,
+                    ease: 'Power2.easeOut',
+                    onComplete: () => {
+                        if (this.scene && this.scene.tweens && alert && !alert.destroyed) {
+                            this.scene.tweens.add({
+                                targets: alert,
+                                alpha: 0,
+                                duration: 500,
+                                delay: 1000,
+                                onComplete: () => {
+                                    if (alert && !alert.destroyed) {
+                                        alert.destroy();
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+            } else {
+                // Fallback cleanup without animation
+                this.scene.time.delayedCall(1500, () => {
+                    if (alert && !alert.destroyed) {
+                        alert.destroy();
+                    }
                 });
             }
-        });
+        } catch (error) {
+            console.error('PlayerController: Error in showQTEAlert:', error);
+        }
     }
 
     showQTEResult(success) {
-        const resultText = success ? 'SUCCESS!' : 'FAILED!';
-        const resultColor = success ? '#00ff00' : '#ff0000';
-        
-        const result = this.scene.add.text(
-            this.scene.cameras.main.width / 2,
-            this.scene.cameras.main.height * 0.3,
-            resultText,
-            {
-                fontSize: '32px',
-                fill: resultColor,
-                fontWeight: 'bold',
-                stroke: '#000000',
-                strokeThickness: 4
+        try {
+            // Verify scene is still active and valid
+            if (!this.scene || !this.scene.add || !this.scene.cameras?.main) {
+                console.warn('PlayerController: Scene not available for QTE result');
+                return;
             }
-        ).setOrigin(0.5).setDepth(1999);
-        
-        // Animate result
-        this.scene.tweens.add({
-            targets: result,
-            scaleX: 1.5,
-            scaleY: 1.5,
-            alpha: 0,
-            duration: 800,
-            ease: 'Power2.easeOut',
-            onComplete: () => result.destroy()
-        });
+            
+            const resultText = success ? 'SUCCESS!' : 'FAILED!';
+            const resultColor = success ? '#00ff00' : '#ff0000';
+            
+            const result = this.scene.add.text(
+                this.scene.cameras.main.width / 2,
+                this.scene.cameras.main.height * 0.3,
+                resultText,
+                {
+                    fontSize: '32px',
+                    fill: resultColor,
+                    fontWeight: 'bold',
+                    stroke: '#000000',
+                    strokeThickness: 4
+                }
+            ).setOrigin(0.5).setDepth(1999);
+            
+            // Animate result with error handling
+            if (this.scene.tweens) {
+                this.scene.tweens.add({
+                    targets: result,
+                    scaleX: 1.5,
+                    scaleY: 1.5,
+                    alpha: 0,
+                    duration: 800,
+                    ease: 'Power2.easeOut',
+                    onComplete: () => {
+                        if (result && !result.destroyed) {
+                            result.destroy();
+                        }
+                    }
+                });
+            } else {
+                // Fallback cleanup without animation
+                this.scene.time.delayedCall(800, () => {
+                    if (result && !result.destroyed) {
+                        result.destroy();
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('PlayerController: Error in showQTEResult:', error);
+        }
     }
 
     onReelComplete(success, reason, fish, finalStats) {
-        // IMMEDIATELY clean up reeling minigame
-        if (this.reelMinigame) {
-            this.reelMinigame.destroy();
-            this.reelMinigame = null;
-        }
+        console.log(`PlayerController: Reel complete - success: ${success}, reason: ${reason}`);
         
-        if (success) {
-            console.log(`PlayerController: Successfully caught fish!`, fish);
+        try {
+            // IMMEDIATELY clean up reeling minigame
+            if (this.reelMinigame) {
+                this.reelMinigame.destroy();
+                this.reelMinigame = null;
+            }
             
-            // Extract catch result from finalStats if available
-            const catchResult = finalStats?.catchResult || null;
+            // Clean up QTE event listeners immediately after reel completion
+            if (this.activeQTEHandlers && this.scene && this.scene.events) {
+                if (this.activeQTEHandlers.qteStart) {
+                    this.scene.events.off('fishing:qteStart', this.activeQTEHandlers.qteStart);
+                }
+                if (this.activeQTEHandlers.qteComplete) {
+                    this.scene.events.off('fishing:qteComplete', this.activeQTEHandlers.qteComplete);
+                }
+                this.activeQTEHandlers = null;
+                console.log('PlayerController: QTE handlers cleaned up after reel completion');
+            }
             
-            // Pass both fish data and catch result to finishFishingSuccess
-            this.finishFishingSuccess({
-                fish: fish,
-                catchResult: catchResult
-            });
-        } else {
-            console.log(`PlayerController: Failed to catch fish - ${reason}`);
-            this.onFishingFailed(reason, fish, finalStats);
+            if (success) {
+                console.log(`PlayerController: Successfully caught fish!`, fish);
+                
+                // Extract catch result from finalStats if available
+                const catchResult = finalStats?.catchResult || null;
+                
+                // Pass both fish data and catch result to finishFishingSuccess
+                this.finishFishingSuccess({
+                    fish: fish,
+                    catchResult: catchResult
+                });
+            } else {
+                console.log(`PlayerController: Failed to catch fish - ${reason}`);
+                this.onFishingFailed(reason, fish, finalStats);
+            }
+        } catch (error) {
+            console.error('PlayerController: Error in onReelComplete:', error);
+            
+            // Ensure cleanup happens even if there's an error
+            try {
+                this.cleanupCast();
+            } catch (cleanupError) {
+                console.error('PlayerController: Error in emergency cleanup:', cleanupError);
+            }
         }
     }
 
@@ -1331,8 +1415,26 @@ export default class PlayerController {
     }
 
     cleanupCast() {
+        console.log('PlayerController: Starting cast cleanup...');
+        
         this.isCasting = false;
         this.isReeling = false;
+        
+        // Clean up QTE event listeners to prevent errors
+        try {
+            if (this.activeQTEHandlers && this.scene && this.scene.events) {
+                if (this.activeQTEHandlers.qteStart) {
+                    this.scene.events.off('fishing:qteStart', this.activeQTEHandlers.qteStart);
+                }
+                if (this.activeQTEHandlers.qteComplete) {
+                    this.scene.events.off('fishing:qteComplete', this.activeQTEHandlers.qteComplete);
+                }
+                this.activeQTEHandlers = null;
+                console.log('PlayerController: QTE event listeners cleaned up');
+            }
+        } catch (error) {
+            console.warn('PlayerController: Error cleaning up QTE event listeners:', error);
+        }
         
         // RE-ENABLE casting input after fishing sequence ends
         this.enableCastingInput();
@@ -1343,30 +1445,38 @@ export default class PlayerController {
         }
         
         // Clean up minigames (should already be cleaned up, but double-check)
-        if (this.castMinigame) {
-            this.castMinigame.destroy();
-            this.castMinigame = null;
-        }
-        
-        if (this.lureMinigame) {
-            this.lureMinigame.destroy();
-            this.lureMinigame = null;
-        }
-        
-        if (this.reelMinigame) {
-            this.reelMinigame.destroy();
-            this.reelMinigame = null;
+        try {
+            if (this.castMinigame) {
+                this.castMinigame.destroy();
+                this.castMinigame = null;
+            }
+            
+            if (this.lureMinigame) {
+                this.lureMinigame.destroy();
+                this.lureMinigame = null;
+            }
+            
+            if (this.reelMinigame) {
+                this.reelMinigame.destroy();
+                this.reelMinigame = null;
+            }
+        } catch (error) {
+            console.warn('PlayerController: Error cleaning up minigames:', error);
         }
         
         // Clean up old fishing line and lure if they exist
-        if (this.currentLine) {
-            this.currentLine.destroy();
-            this.currentLine = null;
-        }
-        
-        if (this.currentLure) {
-            this.currentLure.destroy();
-            this.currentLure = null;
+        try {
+            if (this.currentLine) {
+                this.currentLine.destroy();
+                this.currentLine = null;
+            }
+            
+            if (this.currentLure) {
+                this.currentLure.destroy();
+                this.currentLure = null;
+            }
+        } catch (error) {
+            console.warn('PlayerController: Error cleaning up fishing line/lure:', error);
         }
         
         console.log('PlayerController: Cast cleanup complete');
@@ -1430,7 +1540,15 @@ export default class PlayerController {
 
     // Update method called each frame
     update() {
-        // Update any continuous player controller logic
+        if (!this.enabled) return; // Respect enabled flag
+        
+        // Update fishing logic and interactions
+        this.updateInteractionHints();
+    }
+
+    updateInteractionHints() {
+        // Update any interaction hints or UI elements
+        // This can be expanded later for dynamic interaction feedback
         if (this.isReeling) {
             // Handle reeling input and mechanics
         }
@@ -1454,37 +1572,60 @@ export default class PlayerController {
     }
 
     onFishingFailed(reason, fish, finalStats) {
-        // Process fishing failure
         console.log(`PlayerController: Fishing failed - ${reason}`);
         
-        // Play failure audio based on reason
-        switch (reason) {
-            case 'line_break':
-                this.audioManager?.playSFX('line_break');
-                break;
-            case 'fish_escape':
-                this.audioManager?.playSFX('fish_escape');
-                break;
-            default:
-                this.audioManager?.playSFX('fail');
-                break;
+        try {
+            // Play failure audio based on reason
+            switch (reason) {
+                case 'line_break':
+                    this.audioManager?.playSFX('line_break');
+                    break;
+                case 'fish_escape':
+                    this.audioManager?.playSFX('fish_escape');
+                    break;
+                default:
+                    this.audioManager?.playSFX('fail');
+                    break;
+            }
+            
+            // Apply failure consequences
+            this.applyFailureConsequences(reason, fish);
+            
+            // Show failure feedback
+            this.showFailureFeedback(reason, fish);
+            
+            // Clean up
+            this.cleanupCast();
+            
+            // Trigger failure event
+            this.scene.events.emit('player:fishingFailed', {
+                reason: reason,
+                fish: fish,
+                finalStats: finalStats
+            });
+        } catch (error) {
+            console.error('PlayerController: Error in onFishingFailed:', error);
+            
+            // Ensure cleanup happens even if there's an error during failure handling
+            try {
+                this.cleanupCast();
+            } catch (cleanupError) {
+                console.error('PlayerController: Error in emergency cleanup during failure:', cleanupError);
+            }
+            
+            // Try to emit failure event even if other things failed
+            try {
+                if (this.scene && this.scene.events) {
+                    this.scene.events.emit('player:fishingFailed', {
+                        reason: reason || 'unknown_error',
+                        fish: fish,
+                        finalStats: finalStats
+                    });
+                }
+            } catch (eventError) {
+                console.error('PlayerController: Error emitting failure event:', eventError);
+            }
         }
-        
-        // Apply failure consequences
-        this.applyFailureConsequences(reason, fish);
-        
-        // Show failure feedback
-        this.showFailureFeedback(reason, fish);
-        
-        // Clean up
-        this.cleanupCast();
-        
-        // Trigger failure event
-        this.scene.events.emit('player:fishingFailed', {
-            reason: reason,
-            fish: fish,
-            finalStats: finalStats
-        });
     }
 
     applyFailureConsequences(reason, fish) {
@@ -1782,99 +1923,5 @@ export default class PlayerController {
         bonus += (rarityBonus / 100) * 0.5;
         
         return bonus;
-    }
-
-    onReelingComplete(result, castInfo) {
-        console.log('PlayerController: Reeling completed with result:', result);
-        
-        try {
-            if (result.success && result.fishCaught) {
-                // Apply fishing spot bonuses to the caught fish
-                if (castInfo.spotInfo) {
-                    console.log(`PlayerController: Fish caught from ${castInfo.spotInfo.config.name} spot!`);
-                    
-                    // Add spot information to fish data for display
-                    result.fishCaught.caughtFrom = castInfo.spotInfo.config.name;
-                    result.fishCaught.spotBonus = castInfo.rarityBonus;
-                }
-                
-                // Process the caught fish through game systems
-                this.processCaughtFish(result.fishCaught, castInfo);
-            } else {
-                console.log('PlayerController: Fish escaped or reeling failed');
-            }
-        } catch (error) {
-            console.error('PlayerController: Error processing reeling completion:', error);
-        } finally {
-            // Clean up and reset fishing state
-            this.isFishing = false;
-            if (this.reelingMiniGame) {
-                this.reelingMiniGame.destroy();
-                this.reelingMiniGame = null;
-            }
-        }
-    }
-
-    processCaughtFish(fishData, castInfo) {
-        try {
-            // Calculate final experience and coin bonuses
-            let expMultiplier = castInfo.rarityBonus ? 1 + (castInfo.rarityBonus / 100) : 1;
-            let coinMultiplier = castInfo.rarityBonus ? 1 + (castInfo.rarityBonus / 200) : 1;
-            
-            // Add to inventory and process rewards
-            const catchResult = this.gameState.catchFish(fishData, false);
-            
-            if (catchResult.success) {
-                // Apply spot bonuses to rewards
-                catchResult.rewards.experience = Math.floor(catchResult.rewards.experience * expMultiplier);
-                catchResult.rewards.coins = Math.floor(catchResult.rewards.coins * coinMultiplier);
-                
-                console.log(`PlayerController: Fish caught successfully! Experience: ${catchResult.rewards.experience}, Coins: ${catchResult.rewards.coins}`);
-                
-                // Show success feedback
-                this.showCatchSuccess(catchResult, castInfo);
-            } else {
-                console.error('PlayerController: Failed to process caught fish:', catchResult.error);
-            }
-        } catch (error) {
-            console.error('PlayerController: Error processing caught fish:', error);
-        }
-    }
-
-    showCatchSuccess(catchResult, castInfo) {
-        // Show notification with spot bonus information
-        let message = `Caught ${catchResult.fish.name}!`;
-        
-        if (castInfo.spotInfo) {
-            message += `\nFrom: ${castInfo.spotInfo.config.name}`;
-            if (castInfo.rarityBonus > 0) {
-                message += `\n+${castInfo.rarityBonus}% Rarity Bonus!`;
-            }
-        }
-        
-        message += `\n+${catchResult.rewards.experience} XP, +${catchResult.rewards.coins} coins`;
-        
-        // Show temporary success message (you could enhance this with better UI)
-        const successText = this.scene.add.text(
-            this.scene.cameras.main.width / 2,
-            this.scene.cameras.main.height / 2,
-            message,
-            {
-                fontSize: '24px',
-                fill: '#00ff00',
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                padding: { x: 20, y: 10 },
-                align: 'center'
-            }
-        ).setOrigin(0.5).setDepth(2000);
-        
-        // Fade out after 3 seconds
-        this.scene.tweens.add({
-            targets: successText,
-            alpha: 0,
-            duration: 1000,
-            delay: 2000,
-            onComplete: () => successText.destroy()
-        });
     }
 } 

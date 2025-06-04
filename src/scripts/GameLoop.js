@@ -58,11 +58,23 @@ export default class GameLoop {
         this.currentPhase = 'boat_menu';
         console.log('GameLoop: Entered Boat Menu phase');
         
+        // Ensure location properties are synchronized
+        const currentLocation = this.gameState.player.currentLocation || this.gameState.world?.currentLocation || 'Starting Port';
+        
+        // Sync both location properties to avoid mismatches
+        if (!this.gameState.world) {
+            this.gameState.world = {};
+        }
+        this.gameState.player.currentLocation = currentLocation;
+        this.gameState.world.currentLocation = currentLocation;
+        
+        console.log('GameLoop: Synchronized location to:', currentLocation);
+        
         // Update UI to show boat menu options
         this.scene.events.emit('gameloop:boatMenu', {
-            location: this.gameState.world.currentLocation,
-            time: this.gameState.world.timeOfDay,
-            weather: this.gameState.world.weather,
+            location: currentLocation,
+            time: this.gameState.world.timeOfDay || 'Dawn',
+            weather: this.gameState.world.weather || 'Sunny',
             energy: this.gameState.player.energy,
             fishtankFull: this.isFiretankFull(),
             canShop: this.isAtStartingPort(),
@@ -78,7 +90,8 @@ export default class GameLoop {
         }
 
         this.currentPhase = 'traveling';
-        console.log(`GameLoop: Traveling to ${targetMap}, Spot ${targetSpot}`);
+        const newLocation = `${targetMap} ${targetSpot}`;
+        console.log(`GameLoop: Traveling to ${newLocation}`);
         
         // Consume resources
         this.gameState.spendEnergy(2);
@@ -86,12 +99,18 @@ export default class GameLoop {
         this.sessionStats.energySpent += 2;
         this.sessionStats.timeAdvanced += 1;
         
-        // Update location
-        this.gameState.world.currentLocation = `${targetMap}, Spot ${targetSpot}`;
+        // Update location in both places to ensure synchronization
+        if (!this.gameState.world) {
+            this.gameState.world = {};
+        }
+        this.gameState.player.currentLocation = newLocation;
+        this.gameState.world.currentLocation = newLocation;
+        
+        console.log('GameLoop: Location updated to:', newLocation);
         
         // Trigger travel animation/transition
         this.scene.events.emit('gameloop:travel', {
-            destination: `${targetMap}, Spot ${targetSpot}`,
+            destination: newLocation,
             energyCost: 2,
             timeCost: 1
         });
@@ -315,7 +334,21 @@ export default class GameLoop {
     }
 
     canFish() {
-        return this.gameState.player.energy >= 5 && this.isActive && !this.isFiretankFull();
+        // Check basic requirements
+        const hasEnergy = this.gameState.player.energy >= 5;
+        const isGameActive = this.isActive;
+        const fishtankNotFull = !this.isFiretankFull();
+        
+        // Check if location is valid for fishing
+        const currentMode = this.currentMode || 'story';
+        const validLocation = this.isValidFishingLocation(currentMode);
+        
+        if (!validLocation) {
+            console.log('GameLoop: Cannot fish - invalid location for mode:', currentMode);
+            console.log('GameLoop: Current location:', this.gameState.world?.currentLocation || this.gameState.player?.currentLocation);
+        }
+        
+        return hasEnergy && isGameActive && fishtankNotFull && validLocation;
     }
 
     isFiretankFull() {
@@ -324,21 +357,36 @@ export default class GameLoop {
     }
 
     isAtStartingPort() {
-        return this.gameState.world.currentLocation === 'Starting Port';
+        // Check both location properties for robustness
+        const worldLocation = this.gameState.world?.currentLocation;
+        const playerLocation = this.gameState.player?.currentLocation;
+        const currentLocation = worldLocation || playerLocation || 'Starting Port';
+        
+        return currentLocation === 'Starting Port';
     }
 
     isValidFishingLocation(mode) {
-        const location = this.gameState.world.currentLocation;
+        const location = this.gameState.world?.currentLocation || this.gameState.player?.currentLocation || 'Starting Port';
+        
+        // Define fishing areas by mode
+        const storyModeAreas = [
+            'Coral Cove', 'Deep Abyss', 'Tropical Lagoon', 
+            'Arctic Waters', 'Volcanic Depths',
+            'Beginner Lake', 'Ocean Harbor', 'Mountain Stream',  // Include beginner areas in story mode
+            'Midnight Pond', 'Champion\'s Cove'
+        ];
+        
+        const practiceModeAreas = [
+            'Training Lagoon', 'Open Waters', 'Skill Harbor',
+            'Beginner Lake', 'Ocean Harbor', 'Mountain Stream'   // Include beginner areas in practice mode
+        ];
         
         if (mode === 'story') {
-            // Story mode: only story maps allowed
-            return location.includes('Coral Cove') || location.includes('Deep Abyss') || 
-                   location.includes('Tropical Lagoon') || location.includes('Arctic Waters') ||
-                   location.includes('Volcanic Depths');
+            // Story mode: allow story maps and beginner areas
+            return storyModeAreas.some(area => location.startsWith(area));
         } else {
-            // Practice mode: practice maps only (excluding basic fish map)
-            return location.includes('Training Lagoon') || location.includes('Open Waters') ||
-                   location.includes('Skill Harbor');
+            // Practice mode: allow practice maps and beginner areas
+            return practiceModeAreas.some(area => location.startsWith(area));
         }
     }
 

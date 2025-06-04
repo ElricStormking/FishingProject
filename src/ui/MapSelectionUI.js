@@ -366,36 +366,96 @@ export class MapSelectionUI {
                 return;
             }
             
-            // Update game state with new location
-            this.gameState.player.currentLocation = this.selectedLocation.name;
-            console.log('MapSelectionUI: Player location updated to', this.selectedLocation.name);
-            
-            // Play travel sound with error handling
-            try {
-                if (this.scene.audioManager && this.scene.audioManager.playSFX) {
-                    this.scene.audioManager.playSFX('travel');
+            // Check if GameLoop is available for proper travel system
+            if (this.scene.gameLoop && typeof this.scene.gameLoop.initiateTravel === 'function') {
+                // Parse location name to extract map and spot for GameLoop
+                const locationName = this.selectedLocation.name;
+                let targetMap, targetSpot;
+                
+                // Handle different location name formats
+                if (locationName === 'Starting Port') {
+                    targetMap = 'Starting';
+                    targetSpot = 'Port';
+                } else if (locationName.includes(' ')) {
+                    // Split on the last space to separate map and spot
+                    const parts = locationName.split(' ');
+                    targetSpot = parts.pop(); // Last word is the spot
+                    targetMap = parts.join(' '); // Rest is the map name
+                } else {
+                    // Single word location
+                    targetMap = locationName;
+                    targetSpot = 'Harbor';
                 }
-            } catch (audioError) {
-                console.warn('MapSelectionUI: Audio error (non-critical):', audioError);
+                
+                console.log('MapSelectionUI: Initiating GameLoop travel to:', targetMap, targetSpot);
+                
+                // Use GameLoop's travel system which handles energy, time, and proper location sync
+                const travelSuccess = this.scene.gameLoop.initiateTravel(targetMap, targetSpot);
+                
+                if (travelSuccess) {
+                    // Play travel sound with error handling
+                    try {
+                        if (this.scene.audioManager && this.scene.audioManager.playSFX) {
+                            this.scene.audioManager.playSFX('travel');
+                        }
+                    } catch (audioError) {
+                        console.warn('MapSelectionUI: Audio error (non-critical):', audioError);
+                    }
+                    
+                    // Show travel message
+                    if (this.scene.showSuccessMessage) {
+                        this.scene.showSuccessMessage(`Traveling to ${this.selectedLocation.name}...`);
+                    }
+                    
+                    // Close the map interface
+                    this.hide();
+                    
+                    console.log('MapSelectionUI: Successfully initiated travel via GameLoop');
+                } else {
+                    console.warn('MapSelectionUI: GameLoop travel failed - insufficient resources or constraints');
+                    if (this.scene.showErrorMessage) {
+                        this.scene.showErrorMessage('Cannot travel: Insufficient energy or other constraints');
+                    }
+                }
+            } else {
+                // Fallback: Direct location update (less ideal but functional)
+                console.warn('MapSelectionUI: GameLoop not available, using direct location update');
+                
+                // Update location in both places for consistency
+                this.gameState.player.currentLocation = this.selectedLocation.name;
+                if (!this.gameState.world) {
+                    this.gameState.world = {};
+                }
+                this.gameState.world.currentLocation = this.selectedLocation.name;
+                
+                console.log('MapSelectionUI: Player location updated to', this.selectedLocation.name);
+                
+                // Play travel sound with error handling
+                try {
+                    if (this.scene.audioManager && this.scene.audioManager.playSFX) {
+                        this.scene.audioManager.playSFX('travel');
+                    }
+                } catch (audioError) {
+                    console.warn('MapSelectionUI: Audio error (non-critical):', audioError);
+                }
+                
+                // Show travel message
+                if (this.scene.showSuccessMessage) {
+                    this.scene.showSuccessMessage(`Traveling to ${this.selectedLocation.name}...`);
+                }
+                
+                // Update the boat menu status
+                if (this.scene.updateStatus) {
+                    this.scene.updateStatus({
+                        location: this.selectedLocation.name
+                    });
+                }
+                
+                // Close the map interface
+                this.hide();
+                
+                console.log('MapSelectionUI: Successfully traveled using direct update');
             }
-            
-            // Show travel message
-            if (this.scene.showSuccessMessage) {
-                this.scene.showSuccessMessage(`Traveling to ${this.selectedLocation.name}...`);
-            }
-            
-            // Update the boat menu status
-            if (this.scene.updateStatus) {
-                this.scene.updateStatus({
-                    location: this.selectedLocation.name,
-                    availableActions: ['fish', 'cabin', 'inventory']
-                });
-            }
-            
-            // Close the map interface
-            this.hide();
-            
-            console.log('MapSelectionUI: Successfully traveled to', this.selectedLocation.name);
             
         } catch (error) {
             console.error('MapSelectionUI: Error traveling to location:', error);

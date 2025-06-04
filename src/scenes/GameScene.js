@@ -22,6 +22,7 @@ import { LoadingStateManager } from '../ui/LoadingStateManager.js';
 import { RenJsDebugUI } from '../ui/RenJsDebugUI.js';
 import { AchievementPopupSystem } from '../ui/AchievementPopupSystem.js';
 import { RenJsSaveIntegration } from '../scripts/RenJsSaveIntegration.js';
+import { QTEDebugTool } from '../ui/QTEDebugTool.js';
 
 export default class GameScene extends Phaser.Scene {
     constructor() {
@@ -82,6 +83,9 @@ export default class GameScene extends Phaser.Scene {
             // Initialize Achievement Popup System (Component 2)
             this.achievementPopupSystem = new AchievementPopupSystem(this);
             
+            // Initialize QTE Debug Tool for testing and debugging
+            this.qteDebugTool = new QTEDebugTool(this);
+            
             // Initialize Save Integration (Component 3) - will be completed after other managers
             
             console.log('GameScene: RenJs integration components initialized successfully');
@@ -89,6 +93,7 @@ export default class GameScene extends Phaser.Scene {
             console.error('GameScene: Error initializing RenJs integration:', error);
             this.renJsDebugUI = null;
             this.achievementPopupSystem = null;
+            this.qteDebugTool = null;
         }
 
         // Initialize audio manager for this scene
@@ -226,10 +231,12 @@ export default class GameScene extends Phaser.Scene {
         const helpTextContent = this.fishingSession ? 
             'SPACEBAR: Cast | WASD: Control Lure | SPACEBAR: Reel | ESC: Return to Boat\n' +
             'I: Inventory | P: Progression | T: Time & Weather | E: Equipment Enhancement\n' +
-            'D: Dialog (Mia) | F: Dialog (Sophie) | G: Dialog (Luna) | Q: Quest Log | H: Toggle Help' :
+            'D: Dialog (Mia) | F: Dialog (Sophie) | G: Dialog (Luna) | Q: Quest Log | H: Toggle Help\n' +
+            'F9 or Ctrl+Shift+Q: QTE Debug Tool' :
             'SPACEBAR: Cast | WASD: Control Lure | SPACEBAR: Reel\n' +
             'I: Inventory | P: Progression | T: Time & Weather | M: Map Selection | E: Equipment Enhancement\n' +
-            'D: Dialog (Mia) | F: Dialog (Sophie) | G: Dialog (Luna) | Q: Quest Log | Mouse: Navigate UI | H: Toggle Help';
+            'D: Dialog (Mia) | F: Dialog (Sophie) | G: Dialog (Luna) | Q: Quest Log | Mouse: Navigate UI | H: Toggle Help\n' +
+            'F9 or Ctrl+Shift+Q: QTE Debug Tool';
             
         this.helpText = this.add.text(10, 10, helpTextContent, {
             fontSize: '16px',
@@ -455,8 +462,12 @@ export default class GameScene extends Phaser.Scene {
             
             // Debug quest system status (with error handling)
             try {
-                const questStatus = this.questManager.getDebugStatus();
-                console.log('GameScene: Quest system debug status:', questStatus);
+                if (this.questManager && typeof this.questManager.getDebugStatus === 'function') {
+                    const questStatus = this.questManager.getDebugStatus();
+                    console.log('GameScene: Quest system debug status:', questStatus);
+                } else {
+                    console.log('GameScene: Quest Manager debug status not available');
+                }
             } catch (debugError) {
                 console.warn('GameScene: Could not get quest debug status:', debugError.message);
             }
@@ -585,6 +596,24 @@ export default class GameScene extends Phaser.Scene {
         this.input.keyboard.on('keydown-Q', () => {
             if (this.questManager) {
                 this.questManager.showQuestLog();
+            }
+        });
+
+        // QTE Debug Tool shortcut (F9 or CTRL+SHIFT+Q)
+        this.input.keyboard.on('keydown-F9', () => {
+            if (this.qteDebugTool) {
+                this.qteDebugTool.toggle();
+            }
+        });
+
+        // Alternative debug shortcut (CTRL+SHIFT+Q)
+        this.input.keyboard.addCapture('Q');
+        this.input.keyboard.on('keydown', (event) => {
+            if (event.code === 'KeyQ' && event.ctrlKey && event.shiftKey) {
+                event.preventDefault();
+                if (this.qteDebugTool) {
+                    this.qteDebugTool.toggle();
+                }
             }
         });
 
@@ -2569,6 +2598,16 @@ export default class GameScene extends Phaser.Scene {
                 }
             } catch (stateError) {
                 console.warn('GameScene: Error clearing gameState references:', stateError);
+            }
+            
+            // Clean up QTE Debug Tool
+            try {
+                if (this.qteDebugTool) {
+                    this.qteDebugTool.destroy();
+                    this.qteDebugTool = null;
+                }
+            } catch (debugToolError) {
+                console.warn('GameScene: Error cleaning up QTE debug tool:', debugToolError);
             }
             
             console.log('GameScene: Cleanup completed successfully');

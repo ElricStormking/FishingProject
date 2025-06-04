@@ -36,6 +36,7 @@ export class ReelingMiniGame {
         this.qteTypes = ['tap', 'hold', 'sequence', 'timing'];
         this.qteSuccess = 0;
         this.qteFails = 0;
+        this.holdCompleted = false; // Track hold QTE completion
         
         // Visual elements
         this.fishGraphic = null;
@@ -727,31 +728,49 @@ export class ReelingMiniGame {
             this.handleInput('reel', { pointer: pointer });
         };
         
-        // Keyboard input for QTEs
-        this.keyHandler = (event) => {
+        // CONSOLIDATED keyboard input - use DOM events for consistency with QTEDebugTool
+        this.keyDownHandler = (event) => {
             if (!this.isActive || !this.activeQTE) return;
+            
+            // Ignore key repeat events to prevent hold time corruption
+            if (event.repeat) {
+                console.log('ReelingMiniGame: Ignoring key repeat event for', event.code);
+                return;
+            }
+            
+            // Add debugging for hold QTEs
+            if (this.activeQTE.type === 'hold') {
+                console.log('ReelingMiniGame: KeyDown event for HOLD QTE:', event.code, 'at time:', this.scene.time.now);
+            }
             
             switch (event.code) {
                 case 'Space':
                     event.preventDefault();
-                    if (this.activeQTE.type === 'tap') {
+                    if (this.activeQTE.type === 'hold') {
+                        console.log('ReelingMiniGame: HOLD START detected at time:', this.scene.time.now);
+                        this.handleInput('holdStart');
+                    } else if (this.activeQTE.type === 'tap') {
                         this.handleInput('tap');
                     } else if (this.activeQTE.type === 'timing') {
                         this.handleInput('tap');
                     }
                     break;
+                case 'ArrowUp':
                 case 'KeyW':
                     event.preventDefault();
                     this.handleInput('direction', { direction: 'up' });
                     break;
+                case 'ArrowDown':
                 case 'KeyS':
                     event.preventDefault();
                     this.handleInput('direction', { direction: 'down' });
                     break;
+                case 'ArrowLeft':
                 case 'KeyA':
                     event.preventDefault();
                     this.handleInput('direction', { direction: 'left' });
                     break;
+                case 'ArrowRight':
                 case 'KeyD':
                     event.preventDefault();
                     this.handleInput('direction', { direction: 'right' });
@@ -759,29 +778,22 @@ export class ReelingMiniGame {
             }
         };
         
-        // Hold detection for hold QTEs
-        this.keyDownHandler = (event) => {
-            if (!this.isActive || !this.activeQTE) return;
-            if (event.code === 'Space' && this.activeQTE.type === 'hold') {
-                event.preventDefault();
-                this.handleInput('holdStart');
-            }
-        };
-        
         this.keyUpHandler = (event) => {
             if (!this.isActive || !this.activeQTE) return;
+            
             if (event.code === 'Space' && this.activeQTE.type === 'hold') {
                 event.preventDefault();
+                console.log('ReelingMiniGame: HOLD END detected at time:', this.scene.time.now);
                 this.handleInput('holdEnd');
             }
         };
         
+        // Use DOM events for keyboard input to match QTEDebugTool implementation
         this.scene.input.on('pointerdown', this.mouseHandler);
-        this.scene.input.keyboard.on('keydown', this.keyDownHandler);
-        this.scene.input.keyboard.on('keyup', this.keyUpHandler);
-        document.addEventListener('keydown', this.keyHandler);
+        document.addEventListener('keydown', this.keyDownHandler);
+        document.addEventListener('keyup', this.keyUpHandler);
         
-        console.log('ReelingMiniGame: Input handling set up');
+        console.log('ReelingMiniGame: Consolidated input handling set up with DOM events');
     }
 
     updateTensionMeter() {
@@ -1297,6 +1309,7 @@ export class ReelingMiniGame {
             case 'hold':
                 this.activeQTE.holdDuration = 1500; // Fixed 1.5 seconds
                 this.activeQTE.holdStartTime = null;
+                this.holdCompleted = false; // Reset hold completion flag
                 break;
             case 'sequence':
                 this.activeQTE.sequence = this.generateInputSequence(difficulty + 2);
@@ -1490,7 +1503,7 @@ export class ReelingMiniGame {
     createSequenceQTEVisuals() {
         // Instructions
         this.qteInstructions = this.scene.add.text(0, -50, 
-            'PRESS THE WASD KEYS IN ORDER!', {
+            'PRESS ARROW KEYS OR WASD IN ORDER!', {
             fontSize: '16px',
             fill: '#ffffff',
             fontFamily: 'Arial',
@@ -1573,20 +1586,20 @@ export class ReelingMiniGame {
         arrow.lineStyle(2, color);
         arrow.strokeRoundedRect(-keySize/2, -keySize/2, keySize, keySize, keyRadius);
         
-        // Get the letter for this direction
-        let keyLetter = '';
+        // Get the arrow symbol for this direction
+        let keySymbol = '';
         switch (direction) {
             case 'up':
-                keyLetter = 'W';
+                keySymbol = '↑';
                 break;
             case 'down':
-                keyLetter = 'S';
+                keySymbol = '↓';
                 break;
             case 'left':
-                keyLetter = 'A';
+                keySymbol = '←';
                 break;
             case 'right':
-                keyLetter = 'D';
+                keySymbol = '→';
                 break;
         }
         
@@ -1597,7 +1610,7 @@ export class ReelingMiniGame {
         
         // Create text object for the letter using relative positioning to the container
         const colorHex = '#' + color.toString(16).padStart(6, '0');
-        arrow.keyText = arrow.scene.add.text(0, 0, keyLetter, {
+        arrow.keyText = arrow.scene.add.text(0, 0, keySymbol, {
             fontSize: '14px',
             fill: colorHex,
             fontFamily: 'Arial',
@@ -1762,6 +1775,9 @@ export class ReelingMiniGame {
             this.holdProgressTimer = null;
         }
         
+        // Reset hold completion flag
+        this.holdCompleted = false;
+        
         // Stop any ongoing tweens on QTE elements
         if (this.qteContainer) {
             this.scene.tweens.killTweensOf(this.qteContainer);
@@ -1847,7 +1863,11 @@ export class ReelingMiniGame {
                 
             case 'hold':
                 if (inputType === 'holdStart') {
+                    // Only set holdStartTime if it's not already set (prevent key repeat from overwriting)
+                    if (!qte.holdStartTime) {
                     qte.holdStartTime = this.scene.time.now;
+                        console.log('ReelingMiniGame: Hold started at time:', qte.holdStartTime);
+                        
                     // Visual feedback for hold start
                     if (this.qteTapIndicator && this.qteTapIndicator.active) {
                         this.qteTapIndicator.clear();
@@ -1855,13 +1875,31 @@ export class ReelingMiniGame {
                         this.qteTapIndicator.fillRoundedRect(-40, -15, 80, 30, 8);
                         this.qteTapIndicator.lineStyle(2, 0xFFFFFF);
                         this.qteTapIndicator.strokeRoundedRect(-40, -15, 80, 30, 8);
+                            console.log('ReelingMiniGame: Visual feedback updated for hold start');
+                        }
+                    } else {
+                        console.log('ReelingMiniGame: Hold start ignored (key repeat) - already holding since:', qte.holdStartTime);
                     }
-                } else if (inputType === 'holdEnd' && qte.holdStartTime) {
-                    const holdDuration = this.scene.time.now - qte.holdStartTime;
+                } else if (inputType === 'holdEnd') {
+                    const currentTime = this.scene.time.now;
+                    console.log('ReelingMiniGame: Hold end detected at time:', currentTime);
+                    console.log('ReelingMiniGame: Hold start time was:', qte.holdStartTime);
+                    
+                    if (qte.holdStartTime) {
+                        const holdDuration = currentTime - qte.holdStartTime;
+                        console.log('ReelingMiniGame: Hold ended. Duration:', holdDuration, 'ms. Required: 1500ms');
+                        
                     if (holdDuration >= 1500) { // Fixed 1.5 seconds
                         success = true;
+                            console.log('ReelingMiniGame: Hold QTE SUCCESS! Duration was sufficient.');
                     } else {
                         // Failed to hold long enough
+                            console.log('ReelingMiniGame: Hold QTE FAILED - too short. Actual:', holdDuration, 'ms');
+                            this.completeQTE(false);
+                            return true;
+                        }
+                    } else {
+                        console.log('ReelingMiniGame: Hold QTE FAILED - no start time recorded!');
                         this.completeQTE(false);
                         return true;
                     }
@@ -2031,6 +2069,12 @@ export class ReelingMiniGame {
         this.activeQTE.completed = true;
         this.activeQTE.success = success;
         
+        // Emit QTE completion event for debug tool
+        this.scene.events.emit('fishing:qteComplete', {
+            qte: this.activeQTE,
+            success: success
+        });
+        
         // Play audio feedback for QTE result
         if (success) {
             this.audioManager?.playSFX('qte_success');
@@ -2067,47 +2111,436 @@ export class ReelingMiniGame {
             
             // Failure visual feedback - flash effects removed to prevent visual problems
             if (this.qteContainer) {
-                // Red flash removed to prevent visual problems
-                // const flashOverlay = this.scene.add.graphics();
-                // flashOverlay.fillStyle(0xFF0000, 0.3);
-                // flashOverlay.fillRoundedRect(-150, -80, 300, 160, 10);
-                // this.qteContainer.add(flashOverlay);
-                // 
-                // this.scene.time.delayedCall(200, () => {
-                //     if (flashOverlay && flashOverlay.active) {
-                //         flashOverlay.destroy();
-                //     }
-                // });
-                
-                // Shake animation removed to prevent visual problems
-                // this.scene.tweens.add({
-                //     targets: this.qteContainer,
-                //     x: this.qteContainer.x + 10,
-                //     duration: 50,
-                //     yoyo: true,
-                //     repeat: 3,
-                //     ease: 'Power2.easeInOut',
-                //     onComplete: () => {
-                //         this.destroyQTEVisuals();
-                //     }
-                // });
-                
-                // Simple cleanup without visual effects
-                this.destroyQTEVisuals();
+                this.scene.tweens.add({
+                    targets: this.qteContainer,
+                    scaleX: 0.8,
+                    scaleY: 0.8,
+                    duration: 200,
+                    yoyo: true,
+                    ease: 'Power2.easeIn',
+                    onComplete: () => {
+                        this.destroyQTEVisuals();
+                    }
+                });
             }
         }
         
-        // Emit QTE completion event
-        this.scene.events.emit('fishing:qteComplete', {
-            qte: this.activeQTE,
-            success: success,
-            newTension: this.tension
+        // Remove QTE and schedule next one
+        this.activeQTE = null;
+        this.qteCount++;
+        
+        // Schedule next QTE if game is still active
+        if (this.isActive && this.qteCount < this.maxQTEs) {
+            this.scheduleNextQTE();
+        }
+    }
+
+    // Debug tool integration methods
+    /**
+     * Force trigger a specific QTE type for debugging
+     * @param {string} qteType - The type of QTE to trigger ('tap', 'hold', 'sequence', 'timing')
+     * @param {number} difficulty - Difficulty level (1-5)
+     */
+    debugTriggerQTE(qteType, difficulty = 3) {
+        if (!this.isActive) {
+            console.warn('ReelingMiniGame: Cannot trigger debug QTE - game not active');
+            return false;
+        }
+        
+        if (this.activeQTE) {
+            console.warn('ReelingMiniGame: Cannot trigger debug QTE - QTE already active');
+            return false;
+        }
+        
+        console.log(`ReelingMiniGame: Debug triggering QTE - ${qteType}, difficulty ${difficulty}`);
+        
+        // Clear any existing QTE timer
+        if (this.qteTimer) {
+            this.qteTimer.destroy();
+            this.qteTimer = null;
+        }
+        
+        // Create debug QTE
+        this.activeQTE = {
+            type: qteType,
+            difficulty: difficulty,
+            timeLimit: qteType === 'hold' ? 3000 : (3000 - (difficulty * 500)),
+            startTime: this.scene.time.now,
+            completed: false,
+            success: false,
+            isDebugQTE: true // Mark as debug QTE
+        };
+        
+        // Generate QTE-specific data
+        switch (qteType) {
+            case 'tap':
+                this.activeQTE.requiredTaps = difficulty + 2;
+                this.activeQTE.currentTaps = 0;
+                break;
+            case 'hold':
+                this.activeQTE.holdDuration = 1500;
+                this.activeQTE.holdStartTime = null;
+                break;
+            case 'sequence':
+                this.activeQTE.sequence = this.generateInputSequence(difficulty + 2);
+                this.activeQTE.currentIndex = 0;
+                break;
+            case 'timing':
+                this.activeQTE.targetTime = this.activeQTE.timeLimit * 0.7;
+                this.activeQTE.tolerance = 200;
+                break;
+        }
+        
+        // Create visual QTE elements
+        this.createQTEVisuals();
+        
+        // Emit QTE start event for debug tool
+        this.scene.events.emit('fishing:qteStart', {
+            qte: this.activeQTE
         });
         
-        this.activeQTE = null;
+        // Set QTE timeout
+        this.scene.time.delayedCall(this.activeQTE.timeLimit, () => {
+            if (this.activeQTE && !this.activeQTE.completed) {
+                this.completeQTE(false);
+            }
+        });
         
-        // Schedule next QTE
-        this.scheduleNextQTE();
+        return true;
+    }
+
+    /**
+     * Force trigger a specific fish struggle pattern for debugging
+     * @param {string} struggleType - The struggle pattern to trigger
+     * @param {number} intensity - Struggle intensity (1-10)
+     */
+    debugTriggerStruggle(struggleType, intensity = 5) {
+        if (!this.isActive) {
+            console.warn('ReelingMiniGame: Cannot trigger debug struggle - game not active');
+            return false;
+        }
+        
+        console.log(`ReelingMiniGame: Debug triggering struggle - ${struggleType}, intensity ${intensity}`);
+        
+        // Clear any existing struggle timer
+        if (this.struggleTimer) {
+            this.struggleTimer.destroy();
+            this.struggleTimer = null;
+        }
+        
+        // Set struggle state
+        this.fishStruggling = true;
+        this.struggleType = struggleType;
+        this.struggleIntensity = intensity;
+        this.isDebugStruggle = true;
+        
+        // Emit struggle event for debug tool
+        this.scene.events.emit('fishing:fishStruggle', {
+            struggleType: struggleType,
+            intensity: intensity
+        });
+        
+        // Start struggle-specific behavior
+        this.applyStruggleEffects(struggleType, intensity);
+        
+        // Schedule QTE based on struggle type
+        const qteDelay = Math.max(500, 2000 - (intensity * 200)); // Faster QTEs for higher intensity
+        this.scene.time.delayedCall(qteDelay, () => {
+            if (this.isActive && !this.activeQTE) {
+                const qteType = this.getQTETypeForStruggle(struggleType);
+                this.debugTriggerQTE(qteType, Math.min(5, Math.max(1, Math.floor(intensity / 2))));
+            }
+        });
+        
+        // End struggle after duration
+        const struggleDuration = 3000 + (intensity * 500); // Longer struggles for higher intensity
+        this.scene.time.delayedCall(struggleDuration, () => {
+            if (this.isDebugStruggle) {
+                this.endDebugStruggle();
+            }
+        });
+        
+        return true;
+    }
+
+    /**
+     * Apply struggle-specific effects for debugging
+     * @param {string} struggleType - The struggle pattern
+     * @param {number} intensity - Struggle intensity
+     */
+    applyStruggleEffects(struggleType, intensity) {
+        const baseEffect = intensity * 2;
+        
+        switch (struggleType) {
+            case 'dash':
+                // Sudden tension spike
+                this.tension += baseEffect * 2;
+                this.fishPosition.x += intensity * 10; // Move fish quickly
+                break;
+            case 'thrash':
+                // Erratic tension changes
+                this.tension += baseEffect;
+                // Start erratic movement
+                this.startErraticMovement(intensity);
+                break;
+            case 'dive':
+                // Gradual tension increase
+                this.tension += baseEffect * 1.5;
+                this.fishPosition.y += intensity * 5; // Move fish down
+                break;
+            case 'surface':
+                // Reduce tension temporarily
+                this.tension -= baseEffect;
+                this.fishPosition.y -= intensity * 5; // Move fish up
+                break;
+            case 'circle':
+                // Moderate tension with circular movement
+                this.tension += baseEffect;
+                this.startCircularMovement(intensity);
+                break;
+            case 'jump':
+                // Brief high tension spike
+                this.tension += baseEffect * 3;
+                this.createJumpEffect(intensity);
+                break;
+            case 'roll':
+                // Rolling tension pattern
+                this.startRollingTension(intensity);
+                break;
+            case 'shake':
+                // Quick tension fluctuations
+                this.startShakePattern(intensity);
+                break;
+            case 'pull':
+                // Steady high tension
+                this.tension += baseEffect * 1.5;
+                this.reelProgress -= intensity; // Pull line out
+                break;
+            case 'spiral':
+                // Complex movement with moderate tension
+                this.tension += baseEffect;
+                this.startSpiralMovement(intensity);
+                break;
+        }
+        
+        // Clamp tension to valid range
+        this.tension = Phaser.Math.Clamp(this.tension, 0, 100);
+        
+        console.log(`ReelingMiniGame: Applied ${struggleType} effects - tension: ${this.tension}`);
+    }
+
+    /**
+     * Get appropriate QTE type for struggle pattern
+     * @param {string} struggleType - The struggle pattern
+     * @returns {string} QTE type
+     */
+    getQTETypeForStruggle(struggleType) {
+        const qteMap = {
+            'dash': 'tap',       // Rapid tapping to counter burst
+            'thrash': 'sequence', // Sequence to counter erratic movement
+            'dive': 'timing',    // Timing to counter dive momentum
+            'surface': 'timing', // Timing to maintain control
+            'circle': 'hold',    // Hold to maintain steady pressure
+            'jump': 'timing',    // Timing to react to jump
+            'roll': 'sequence',  // Sequence to counter rolling
+            'shake': 'tap',      // Rapid tapping to counter shaking
+            'pull': 'hold',      // Hold to counter steady pull
+            'spiral': 'sequence' // Sequence to counter complex movement
+        };
+        
+        return qteMap[struggleType] || 'tap';
+    }
+
+    /**
+     * End debug struggle state
+     */
+    endDebugStruggle() {
+        this.fishStruggling = false;
+        this.struggleType = null;
+        this.isDebugStruggle = false;
+        
+        // Stop all struggle-related movement patterns
+        this.stopAllMovementPatterns();
+        
+        console.log('ReelingMiniGame: Debug struggle ended');
+    }
+
+    /**
+     * Start erratic movement pattern
+     * @param {number} intensity - Movement intensity
+     */
+    startErraticMovement(intensity) {
+        this.erraticMovementTimer = this.scene.time.addEvent({
+            delay: 200,
+            callback: () => {
+                if (this.fishStruggling && this.struggleType === 'thrash') {
+                    this.fishPosition.x += Phaser.Math.Between(-intensity * 5, intensity * 5);
+                    this.fishPosition.y += Phaser.Math.Between(-intensity * 3, intensity * 3);
+                }
+            },
+            repeat: 10,
+            callbackScope: this
+        });
+    }
+
+    /**
+     * Start circular movement pattern
+     * @param {number} intensity - Movement intensity
+     */
+    startCircularMovement(intensity) {
+        let angle = 0;
+        const radius = intensity * 3;
+        const centerX = this.fishPosition.x;
+        const centerY = this.fishPosition.y;
+        
+        this.circularMovementTimer = this.scene.time.addEvent({
+            delay: 100,
+            callback: () => {
+                if (this.fishStruggling && this.struggleType === 'circle') {
+                    angle += 0.2;
+                    this.fishPosition.x = centerX + Math.cos(angle) * radius;
+                    this.fishPosition.y = centerY + Math.sin(angle) * radius;
+                }
+            },
+            repeat: 30,
+            callbackScope: this
+        });
+    }
+
+    /**
+     * Create jump effect
+     * @param {number} intensity - Jump intensity
+     */
+    createJumpEffect(intensity) {
+        const originalY = this.fishPosition.y;
+        const jumpHeight = intensity * 8;
+        
+        this.scene.tweens.add({
+            targets: this.fishPosition,
+            y: originalY - jumpHeight,
+            duration: 300,
+            ease: 'Power2.easeOut',
+            yoyo: true,
+            onComplete: () => {
+                this.fishPosition.y = originalY;
+            }
+        });
+    }
+
+    /**
+     * Start rolling tension pattern
+     * @param {number} intensity - Pattern intensity
+     */
+    startRollingTension(intensity) {
+        let tensionBase = this.tension;
+        let phase = 0;
+        
+        this.rollingTensionTimer = this.scene.time.addEvent({
+            delay: 300,
+            callback: () => {
+                if (this.fishStruggling && this.struggleType === 'roll') {
+                    phase += 0.5;
+                    this.tension = tensionBase + Math.sin(phase) * intensity * 2;
+                    this.tension = Phaser.Math.Clamp(this.tension, 0, 100);
+                }
+            },
+            repeat: 10,
+            callbackScope: this
+        });
+    }
+
+    /**
+     * Start shake pattern
+     * @param {number} intensity - Shake intensity
+     */
+    startShakePattern(intensity) {
+        this.shakePatternTimer = this.scene.time.addEvent({
+            delay: 150,
+            callback: () => {
+                if (this.fishStruggling && this.struggleType === 'shake') {
+                    this.tension += Phaser.Math.Between(-intensity, intensity * 2);
+                    this.tension = Phaser.Math.Clamp(this.tension, 0, 100);
+                    
+                    // Visual shake effect
+                    this.fishPosition.x += Phaser.Math.Between(-2, 2);
+                    this.fishPosition.y += Phaser.Math.Between(-2, 2);
+                }
+            },
+            repeat: 15,
+            callbackScope: this
+        });
+    }
+
+    /**
+     * Start spiral movement pattern
+     * @param {number} intensity - Movement intensity
+     */
+    startSpiralMovement(intensity) {
+        let angle = 0;
+        let radius = intensity;
+        const centerX = this.fishPosition.x;
+        const centerY = this.fishPosition.y;
+        
+        this.spiralMovementTimer = this.scene.time.addEvent({
+            delay: 100,
+            callback: () => {
+                if (this.fishStruggling && this.struggleType === 'spiral') {
+                    angle += 0.3;
+                    radius += 0.5;
+                    this.fishPosition.x = centerX + Math.cos(angle) * radius;
+                    this.fishPosition.y = centerY + Math.sin(angle) * radius;
+                }
+            },
+            repeat: 25,
+            callbackScope: this
+        });
+    }
+
+    /**
+     * Stop all movement patterns
+     */
+    stopAllMovementPatterns() {
+        [
+            'erraticMovementTimer',
+            'circularMovementTimer', 
+            'rollingTensionTimer',
+            'shakePatternTimer',
+            'spiralMovementTimer'
+        ].forEach(timerName => {
+            if (this[timerName]) {
+                this[timerName].destroy();
+                this[timerName] = null;
+            }
+        });
+    }
+
+    /**
+     * Get current debug state for debug tool
+     * @returns {Object} Debug state information
+     */
+    getDebugState() {
+        return {
+            isActive: this.isActive,
+            tension: this.tension,
+            fishStamina: this.fishStamina,
+            reelProgress: this.reelProgress,
+            lineIntegrity: this.lineIntegrity,
+            fishStruggling: this.fishStruggling,
+            struggleType: this.struggleType,
+            activeQTE: this.activeQTE ? {
+                type: this.activeQTE.type,
+                difficulty: this.activeQTE.difficulty,
+                timeRemaining: this.activeQTE.timeLimit - (this.scene.time.now - this.activeQTE.startTime),
+                completed: this.activeQTE.completed,
+                success: this.activeQTE.success
+            } : null,
+            qteStats: {
+                success: this.qteSuccess,
+                fails: this.qteFails,
+                total: this.qteSuccess + this.qteFails
+            },
+            fishProperties: this.fishProperties
+        };
     }
 
     checkWinLoseConditions() {
@@ -2255,24 +2688,20 @@ export class ReelingMiniGame {
                 this.scene.input.off('pointerdown', this.mouseHandler);
                 this.mouseHandler = null;
             }
-            
-            if (this.scene.input.keyboard) {
-                if (this.keyDownHandler) {
-                    this.scene.input.keyboard.off('keydown', this.keyDownHandler);
-                    this.keyDownHandler = null;
-                }
-                if (this.keyUpHandler) {
-                    this.scene.input.keyboard.off('keyup', this.keyUpHandler);
-                    this.keyUpHandler = null;
-                }
-            }
-            
-            // Remove document listener
-            if (this.keyHandler && document) {
-                document.removeEventListener('keydown', this.keyHandler);
-                this.keyHandler = null;
-            }
         }
+        
+        // Clean up DOM event listeners
+        if (this.keyDownHandler && document) {
+            document.removeEventListener('keydown', this.keyDownHandler);
+            this.keyDownHandler = null;
+        }
+        
+        if (this.keyUpHandler && document) {
+            document.removeEventListener('keyup', this.keyUpHandler);
+            this.keyUpHandler = null;
+        }
+        
+        console.log('ReelingMiniGame: Input event listeners cleaned up');
         
         // Clear tweens first to prevent issues during destruction
         if (this.scene.tweens) {
@@ -2725,6 +3154,33 @@ export class ReelingMiniGame {
             
             this.holdBarFill.fillStyle(barColor);
             this.holdBarFill.fillRect(-75, 20, barWidth, 8);
+            
+            // Debug logging every 250ms to track progress
+            if (Math.floor(holdTime / 250) !== Math.floor((holdTime - 50) / 250)) {
+                console.log(`ReelingMiniGame: Hold progress: ${(progress * 100).toFixed(1)}% (${holdTime.toFixed(0)}ms / 1500ms)`);
+            }
+            
+            // Visual feedback when complete
+            if (progress >= 1 && !this.holdCompleted) {
+                this.holdCompleted = true;
+                console.log('ReelingMiniGame: Hold duration reached! Player can release now.');
+                
+                // Flash the indicator green to show completion
+                if (this.qteTapIndicator && this.qteTapIndicator.active) {
+                    this.scene.tweens.add({
+                        targets: this.qteTapIndicator,
+                        alpha: 0.5,
+                        duration: 150,
+                        yoyo: true,
+                        repeat: 3,
+                        ease: 'Power2'
+                    });
+                }
+            }
+        } else {
+            // No hold started yet - draw empty bar
+            this.holdBarFill.fillStyle(0x666666, 0.5);
+            this.holdBarFill.fillRect(-75, 20, 150, 8);
         }
     }
 } 

@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QTE Debug Tool Test - Luxury Angler</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            width: 100%;
+            height: 80vh;
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .instructions {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .control-btn {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .control-btn:hover {
+            background: #2980b9;
+        }
+        .control-btn:active {
+            background: #1f6f94;
+        }
+        .status-panel {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 8px;
+            border: 1px solid #34495e;
+        }
+        .feature-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 5px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        .feature-list li:before {
+            content: "✓";
+            color: #27ae60;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎣 QTE Debug Tool Test - Luxury Angler</h1>
+    
+    <div class="instructions">
+        <h3>📋 QTE Debug Tool Features:</h3>
+        <ul class="feature-list">
+            <li><strong>10 Fish Struggle Types:</strong> dash, thrash, dive, surface, circle, jump, roll, shake, pull, spiral</li>
+            <li><strong>4 QTE Types:</strong> tap, hold, sequence, timing</li>
+            <li><strong>Real-time Debugging:</strong> Live tension, stamina, and QTE status monitoring</li>
+            <li><strong>Statistics Tracking:</strong> Success rates, reaction times, performance metrics</li>
+            <li><strong>Advanced Testing:</strong> Stress tests, mixed tests, performance benchmarks</li>
+            <li><strong>Mock QTE System:</strong> Test QTEs even without active fishing session</li>
+        </ul>
+        
+        <h3>🎮 Controls:</h3>
+        <p><strong>F9</strong> or <strong>Ctrl+Shift+Q</strong> - Open QTE Debug Tool</p>
+        <p><strong>Spacebar</strong> - Cast line to start fishing session</p>
+        <p><strong>WASD</strong> - Control lure during fishing</p>
+        <p><strong>H</strong> - Toggle help display</p>
+    </div>
+    
+    <div id="game-container"></div>
+    
+    <div class="controls">
+        <button class="control-btn" onclick="startFishing()">🎣 Start Fishing</button>
+        <button class="control-btn" onclick="openDebugTool()">🔧 Open Debug Tool</button>
+        <button class="control-btn" onclick="testMockQTE()">⚡ Test Mock QTE</button>
+        <button class="control-btn" onclick="showHelp()">❓ Toggle Help</button>
+        <button class="control-btn" onclick="resetGame()">🔄 Reset Game</button>
+    </div>
+    
+    <div class="status-panel">
+        <h3>🎯 QTE Debug Tool Testing Instructions:</h3>
+        <ol>
+            <li><strong>Start Fishing:</strong> Click "Start Fishing" or press Spacebar to begin a fishing session</li>
+            <li><strong>Open Debug Tool:</strong> Press F9 or Ctrl+Shift+Q to open the comprehensive debug interface</li>
+            <li><strong>Test Individual QTEs:</strong> Use the QTE Type Testing panel to trigger specific QTE types</li>
+            <li><strong>Test Struggle Patterns:</strong> Use the Struggle Pattern Testing panel to test all 10 fish struggle behaviors</li>
+            <li><strong>Monitor Real-time:</strong> Watch the Real-time Debug Info panel for live game state information</li>
+            <li><strong>Run Advanced Tests:</strong> Use stress tests, mixed tests, and performance benchmarks</li>
+            <li><strong>View Statistics:</strong> Check success rates, reaction times, and performance metrics</li>
+            <li><strong>Export Data:</strong> Export debug statistics for analysis</li>
+        </ol>
+        
+        <h4>🧪 Testing Scenarios:</h4>
+        <ul>
+            <li><strong>Individual QTE Testing:</strong> Test each of the 4 QTE types (tap, hold, sequence, timing) individually</li>
+            <li><strong>Struggle Pattern Testing:</strong> Test all 10 fish struggle patterns and their associated QTE responses</li>
+            <li><strong>Difficulty Scaling:</strong> Adjust difficulty slider (1-5) to test QTE complexity scaling</li>
+            <li><strong>Rapid Fire Testing:</strong> Run 20 random QTEs in quick succession</li>
+            <li><strong>Stress Testing:</strong> Execute 50 QTEs to test system stability</li>
+            <li><strong>Mixed Testing:</strong> Test struggle+QTE combinations automatically</li>
+            <li><strong>Performance Testing:</strong> Benchmark 100 mock QTEs for performance analysis</li>
+        </ul>
+        
+        <h4>📊 Debug Information Available:</h4>
+        <ul>
+            <li>Game active status and current QTE information</li>
+            <li>Fish struggling state and tension levels</li>
+            <li>Real-time stamina and reel progress</li>
+            <li>QTE success rates and reaction times</li>
+            <li>Individual QTE type performance breakdown</li>
+            <li>Struggle pattern trigger counts</li>
+            <li>System performance metrics</li>
+        </ul>
+    </div>
+
+    <script type="module">
+        import Phaser from 'https://cdn.skypack.dev/phaser@3.70.0';
+        
+        // Mock game configuration for testing
+        const config = {
+            type: Phaser.AUTO,
+            width: window.innerWidth - 40,
+            height: window.innerHeight * 0.8,
+            parent: 'game-container',
+            backgroundColor: '#2c5aa0',
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },
+                    debug: false
+                }
+            },
+            scene: {
+                key: 'TestScene',
+                preload: preload,
+                create: create,
+                update: update
+            }
+        };
+
+        let game;
+        let gameScene;
+        let qteDebugTool;
+        let mockReelingMiniGame;
+
+        // Mock classes for testing
+        class MockGameState {
+            constructor() {
+                this.player = { currentActivity: 'fishing' };
+            }
+            
+            getEquippedItem() {
+                return { stats: { reelSpeed: 5, lineStrength: 5, tensionStability: 5 } };
+            }
+            
+            startAutoSave() {}
+            stopAutoSave() {}
+        }
+
+        class MockReelingMiniGame {
+            constructor(scene) {
+                this.scene = scene;
+                this.isActive = false;
+                this.tension = 50;
+                this.fishStamina = 100;
+                this.reelProgress = 0;
+                this.lineIntegrity = 100;
+                this.fishStruggling = false;
+                this.struggleType = null;
+                this.activeQTE = null;
+                this.qteSuccess = 0;
+                this.qteFails = 0;
+                this.fishProperties = {
+                    name: 'Test Fish',
+                    size: 5,
+                    strength: 5,
+                    speed: 5,
+                    endurance: 5
+                };
+            }
+
+            start() {
+                this.isActive = true;
+                console.log('MockReelingMiniGame: Started');
+            }
+
+            debugTriggerQTE(qteType, difficulty) {
+                if (!this.isActive) return false;
+                
+                this.activeQTE = {
+                    type: qteType,
+                    difficulty: difficulty,
+                    timeLimit: 3000,
+                    startTime: this.scene.time.now,
+                    completed: false,
+                    success: false
+                };
+
+                console.log(`MockReelingMiniGame: Debug QTE triggered - ${qteType}`);
+                
+                // Emit start event
+                this.scene.events.emit('fishing:qteStart', {
+                    qte: this.activeQTE
+                });
+
+                // Auto-complete after 2 seconds
+                this.scene.time.delayedCall(2000, () => {
+                    if (this.activeQTE && !this.activeQTE.completed) {
+                        const success = Math.random() > 0.3; // 70% success rate
+                        this.activeQTE.completed = true;
+                        this.activeQTE.success = success;
+                        
+                        if (success) {
+                            this.qteSuccess++;
+                            this.tension = Math.max(0, this.tension - 10);
+                        } else {
+                            this.qteFails++;
+                            this.tension = Math.min(100, this.tension + 15);
+                        }
+
+                        this.scene.events.emit('fishing:qteComplete', {
+                            qte: this.activeQTE,
+                            success: success
+                        });
+
+                        this.activeQTE = null;
+                    }
+                });
+
+                return true;
+            }
+
+            debugTriggerStruggle(struggleType, intensity) {
+                if (!this.isActive) return false;
+                
+                this.fishStruggling = true;
+                this.struggleType = struggleType;
+                
+                console.log(`MockReelingMiniGame: Debug struggle triggered - ${struggleType}`);
+                
+                // Emit struggle event
+                this.scene.events.emit('fishing:fishStruggle', {
+                    struggleType: struggleType,
+                    intensity: intensity
+                });
+
+                // Auto-trigger QTE after 1 second
+                this.scene.time.delayedCall(1000, () => {
+                    const qteType = this.getQTETypeForStruggle(struggleType);
+                    this.debugTriggerQTE(qteType, Math.floor(intensity / 2));
+                });
+
+                // End struggle after 3 seconds
+                this.scene.time.delayedCall(3000, () => {
+                    this.fishStruggling = false;
+                    this.struggleType = null;
+                });
+
+                return true;
+            }
+
+            getQTETypeForStruggle(struggleType) {
+                const qteMap = {
+                    'dash': 'tap',
+                    'thrash': 'sequence',
+                    'dive': 'timing',
+                    'surface': 'timing',
+                    'circle': 'hold',
+                    'jump': 'timing',
+                    'roll': 'sequence',
+                    'shake': 'tap',
+                    'pull': 'hold',
+                    'spiral': 'sequence'
+                };
+                return qteMap[struggleType] || 'tap';
+            }
+
+            getDebugState() {
+                return {
+                    isActive: this.isActive,
+                    tension: this.tension,
+                    fishStamina: this.fishStamina,
+                    reelProgress: this.reelProgress,
+                    lineIntegrity: this.lineIntegrity,
+                    fishStruggling: this.fishStruggling,
+                    struggleType: this.struggleType,
+                    activeQTE: this.activeQTE,
+                    qteStats: {
+                        success: this.qteSuccess,
+                        fails: this.qteFails,
+                        total: this.qteSuccess + this.qteFails
+                    },
+                    fishProperties: this.fishProperties
+                };
+            }
+
+            stopAllMovementPatterns() {
+                // Mock method
+            }
+        }
+
+        function preload() {
+            // Mock preload
+        }
+
+        function create() {
+            gameScene = this;
+            
+            // Create mock game state
+            this.gameState = new MockGameState();
+            
+            // Create mock reeling mini game
+            mockReelingMiniGame = new MockReelingMiniGame(this);
+            this.reelingMiniGame = mockReelingMiniGame;
+            
+            // Create background
+            this.add.rectangle(this.cameras.main.centerX, this.cameras.main.centerY, 
+                this.cameras.main.width, this.cameras.main.height, 0x2c5aa0);
+            
+            // Add water effect
+            const water = this.add.graphics();
+            water.fillGradientStyle(0x006699, 0x006699, 0x004466, 0x004466, 1);
+            water.fillRect(0, this.cameras.main.height * 0.3, this.cameras.main.width, this.cameras.main.height * 0.7);
+            
+            // Add title
+            const title = this.add.text(this.cameras.main.centerX, 50, 'QTE Debug Tool Test Environment', {
+                fontSize: '32px',
+                fill: '#ffffff',
+                fontFamily: 'Arial',
+                fontWeight: 'bold',
+                stroke: '#000000',
+                strokeThickness: 4
+            });
+            title.setOrigin(0.5);
+            
+            // Add instructions
+            const instructions = this.add.text(this.cameras.main.centerX, 120, 
+                'Press F9 or Ctrl+Shift+Q to open QTE Debug Tool\nSpacebar to start fishing • H for help', {
+                fontSize: '18px',
+                fill: '#ffffff',
+                fontFamily: 'Arial',
+                align: 'center',
+                backgroundColor: '#000000',
+                padding: { x: 20, y: 10 }
+            });
+            instructions.setOrigin(0.5);
+            instructions.setName('instructions'); // Add name for reference
+            
+            // Create QTE Debug Tool (import it dynamically since it's an ES6 module)
+            loadQTEDebugTool().then(() => {
+                console.log('QTE Debug Tool loaded successfully');
+            }).catch(error => {
+                console.error('Failed to load QTE Debug Tool:', error);
+                // Create a simple mock for demonstration
+                this.qteDebugTool = {
+                    toggle: () => {
+                        alert('QTE Debug Tool would open here!\n\nFeatures:\n• Test 4 QTE types\n• Test 10 struggle patterns\n• Real-time debugging\n• Statistics tracking\n• Performance testing');
+                    },
+                    createMockQTE: (type) => {
+                        alert(`Mock ${type.toUpperCase()} QTE would be created here!`);
+                    }
+                };
+            });
+            
+            // Input handling
+            this.input.keyboard.on('keydown-SPACE', () => {
+                startFishingSession();
+            });
+            
+            this.input.keyboard.on('keydown-F9', () => {
+                if (this.qteDebugTool) {
+                    this.qteDebugTool.toggle();
+                }
+            });
+            
+            // Ctrl+Shift+Q shortcut
+            this.input.keyboard.on('keydown', (event) => {
+                if (event.code === 'KeyQ' && event.ctrlKey && event.shiftKey) {
+                    event.preventDefault();
+                    if (this.qteDebugTool) {
+                        this.qteDebugTool.toggle();
+                    }
+                }
+            });
+            
+            this.input.keyboard.on('keydown-H', () => {
+                instructions.visible = !instructions.visible;
+            });
+        }
+
+        // Method to load QTE Debug Tool with proper error handling
+        function loadQTEDebugTool() {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    // First try to import UITheme (required dependency)
+                    const UIThemeModule = await import('./src/ui/UITheme.js');
+                    console.log('UITheme loaded successfully');
+                    
+                    // Then import QTE Debug Tool
+                    const QTEModule = await import('./src/ui/QTEDebugTool.js');
+                    const QTEDebugTool = QTEModule.QTEDebugTool;
+                    
+                    // Create the debug tool
+                    gameScene.qteDebugTool = new QTEDebugTool(gameScene);
+                    console.log('QTE Debug Tool loaded successfully');
+                    
+                    // Override some methods for test environment
+                    gameScene.qteDebugTool.attachToReelingMiniGame = function() {
+                        if (mockReelingMiniGame) {
+                            this.reelingMiniGame = mockReelingMiniGame;
+                            console.log('QTEDebugTool: Attached to mock reeling mini game');
+                        } else {
+                            console.log('QTEDebugTool: No mock reeling mini game found');
+                        }
+                    };
+                    
+                    resolve();
+                } catch (error) {
+                    console.error('Error loading QTE Debug Tool:', error);
+                    reject(error);
+                }
+            });
+        }
+
+        function update() {
+            // Mock update
+        }
+
+        function startFishingSession() {
+            if (mockReelingMiniGame) {
+                mockReelingMiniGame.start();
+                console.log('Fishing session started');
+                
+                if (gameScene) {
+                    const statusText = gameScene.add.text(gameScene.cameras.main.centerX, 200, 
+                        'Fishing Session Active!\nQTE Debug Tool now available', {
+                        fontSize: '24px',
+                        fill: '#00ff00',
+                        fontFamily: 'Arial',
+                        align: 'center',
+                        backgroundColor: '#000000',
+                        padding: { x: 15, y: 10 }
+                    });
+                    statusText.setOrigin(0.5);
+                    
+                    gameScene.time.delayedCall(3000, () => {
+                        if (statusText && statusText.active) {
+                            statusText.destroy();
+                        }
+                    });
+                }
+            }
+        }
+
+        // Global functions for buttons
+        window.startFishing = startFishingSession;
+        
+        window.openDebugTool = () => {
+            if (gameScene && gameScene.qteDebugTool) {
+                gameScene.qteDebugTool.toggle();
+            } else {
+                alert('QTE Debug Tool not available yet. The game is still loading.');
+            }
+        };
+        
+        window.testMockQTE = () => {
+            if (gameScene && gameScene.qteDebugTool) {
+                const qteTypes = ['tap', 'hold', 'sequence', 'timing'];
+                const randomQTE = qteTypes[Math.floor(Math.random() * qteTypes.length)];
+                gameScene.qteDebugTool.createMockQTE(randomQTE);
+            }
+        };
+        
+        window.showHelp = () => {
+            if (gameScene) {
+                const helpElement = gameScene.children.getByName('instructions');
+                if (helpElement) {
+                    helpElement.visible = !helpElement.visible;
+                }
+            }
+        };
+        
+        window.resetGame = () => {
+            if (game) {
+                game.destroy(true);
+            }
+            setTimeout(() => {
+                game = new Phaser.Game(config);
+            }, 100);
+        };
+
+        // Initialize game
+        game = new Phaser.Game(config);
+    </script>
+</body>
+</html> 
