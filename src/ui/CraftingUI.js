@@ -448,6 +448,11 @@ export class CraftingUI {
         this.container.setVisible(true);
         this.clickBlocker.setVisible(true);
         
+        // Hide fish button when crafting is open
+        if (this.scene.hideFishButton) {
+            this.scene.hideFishButton();
+        }
+        
         // Show working tab areas
         Object.values(this.workingTabAreas).forEach(area => {
             area.setVisible(true);
@@ -470,6 +475,11 @@ export class CraftingUI {
         this.isVisible = false;
         this.container.setVisible(false);
         this.clickBlocker.setVisible(false);
+        
+        // Show fish button when crafting is closed
+        if (this.scene.showFishButton) {
+            this.scene.showFishButton();
+        }
         
         // Hide working tab areas
         Object.values(this.workingTabAreas).forEach(area => {

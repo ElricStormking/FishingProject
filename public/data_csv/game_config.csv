@@ -1,0 +1,38 @@
+config_category,config_name,config_value,description
+fishing,baseCatchChance,0.2,Base probability of catching a fish
+fishing,proximityBonus,0.3,Bonus chance when near fish
+fishing,proximityDistance,80,Distance for proximity bonus
+fishing,castDelay,1500,Delay before cast in milliseconds
+fishing,castDurationBase,500,Base casting duration
+fishing,castDurationMultiplier,2,Multiplier for cast power
+fishing,maxCastDuration,1500,Maximum casting duration
+fishing,fishingLineWidth,2,Width of fishing line
+fishing,fishingLineColor,0x8B4513,Hex color of fishing line
+fishing,fishingLineAlpha,0.8,Transparency of fishing line
+fishing,lureScale,0.8,Scale factor for lures
+fishing,fishScale,0.8,Scale factor for fish
+fishing,fishCount,8,Number of fish in a location
+spawning,baseSpawnChance,100,Base chance for fish spawn
+spawning,rarityPenalty,10,Penalty per rarity level
+spawning,timeBonus,20,Bonus for correct time
+spawning,weatherBonus,15,Bonus for correct weather
+spawning,depthPenalty,5,Penalty per depth level
+spawning,levelRequirementMultiplier,5,Multiplier for level requirements
+spawning,levelPenalty,0.5,Penalty per level below requirement
+lureEffectiveness,typeMatchBonus,25,Bonus for matching lure type
+lureEffectiveness,depthMatchBonus,15,Bonus for matching depth
+lureEffectiveness,baitPreferenceMultiplier,2,Multiplier for bait preference
+ui,crosshairSize,10,Size of crosshair
+ui,crosshairLineLength,15,Length of crosshair lines
+ui,crosshairColor,0xffffff,Color of crosshair
+ui,crosshairAlpha,0.8,Transparency of crosshair
+ui,crosshairLineWidth,2,Width of crosshair lines
+experience,baseExperiencePerFish,10,Base XP for catching fish
+experience,levelUpThreshold,100,XP needed for first level
+experience,levelUpMultiplier,1.5,Multiplier for each level
+economy,baseCoinValue,50,Base coin value for fish
+economy,rarityMultiplier,2,Coin multiplier per rarity
+economy,shopPriceMultiplier,1.2,Shop price markup
+time,gameTimeMultiplier,60,Game time speed multiplier
+time,realTimeToGameTime,1000,Conversion ratio
+time,autoSaveInterval,30000,Auto save interval in ms 

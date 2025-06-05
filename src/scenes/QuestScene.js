@@ -28,7 +28,12 @@ export default class QuestScene extends Phaser.Scene {
     create() {
         console.log('QuestScene: Initializing Quest UI');
         
-        // Get quest manager from game state instead of GameScene
+        // Hide fish button when quest UI is opened
+        if (this.scene.get('BoatMenuScene') && this.scene.get('BoatMenuScene').hideFishButton) {
+            this.scene.get('BoatMenuScene').hideFishButton();
+        }
+        
+        // Get quest manager from game state or create one
         try {
             // First try to get it from a running GameScene
             const gameScene = this.scene.get('GameScene');
@@ -36,11 +41,17 @@ export default class QuestScene extends Phaser.Scene {
                 this.questManager = gameScene.questManager;
                 console.log('QuestScene: QuestManager found from GameScene');
             } else {
-                // Fallback: try to get it from the scene manager or create a temporary one
-                console.warn('QuestScene: GameScene not available, creating temporary QuestManager');
-                // Import QuestManager and create a temporary instance
-                this.questManager = new QuestManager(this);
-                console.log('QuestScene: Temporary QuestManager created');
+                // Try to get it from BoatMenuScene if available
+                const boatMenuScene = this.scene.get('BoatMenuScene');
+                if (boatMenuScene && boatMenuScene.questManager) {
+                    this.questManager = boatMenuScene.questManager;
+                    console.log('QuestScene: QuestManager found from BoatMenuScene');
+                } else {
+                    // Create a new QuestManager instance for this session
+                    console.log('QuestScene: Creating new QuestManager instance');
+                    this.questManager = new QuestManager(this);
+                    console.log('QuestScene: QuestManager created successfully');
+                }
             }
         } catch (error) {
             console.error('QuestScene: Error accessing QuestManager:', error);
@@ -697,11 +708,22 @@ export default class QuestScene extends Phaser.Scene {
 
     returnToGame() {
         console.log('QuestScene: Returning to game');
+        
+        // Show fish button when quest UI is closed
+        if (this.scene.get('BoatMenuScene') && this.scene.get('BoatMenuScene').showFishButton) {
+            this.scene.get('BoatMenuScene').showFishButton();
+        }
+        
         this.scene.stop('QuestScene');
         this.scene.resume(this.fromScene);
     }
 
     destroy() {
+        // Show fish button when quest scene is destroyed
+        if (this.scene.get('BoatMenuScene') && this.scene.get('BoatMenuScene').showFishButton) {
+            this.scene.get('BoatMenuScene').showFishButton();
+        }
+        
         this.clearQuestList();
         this.clearQuestDetails();
         super.destroy();

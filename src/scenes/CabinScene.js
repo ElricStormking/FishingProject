@@ -62,6 +62,11 @@ export default class CabinScene extends Phaser.Scene {
     async create() {
         const { width, height } = this.cameras.main;
         
+        // Hide fish button when cabin is opened
+        if (this.scene.get('BoatMenuScene') && this.scene.get('BoatMenuScene').hideFishButton) {
+            this.scene.get('BoatMenuScene').hideFishButton();
+        }
+        
         // Initialize GameState first
         this.gameState = GameState.getInstance();
         
@@ -1415,6 +1420,11 @@ export default class CabinScene extends Phaser.Scene {
 
     exitCabin() {
         console.log('CabinScene: Exiting cabin, returning to', this.callingScene);
+        
+        // Show fish button when cabin is closed
+        if (this.scene.get('BoatMenuScene') && this.scene.get('BoatMenuScene').showFishButton) {
+            this.scene.get('BoatMenuScene').showFishButton();
+        }
         
         // Play exit sound
         if (this.audioManager) {

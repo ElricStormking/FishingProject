@@ -22,6 +22,12 @@ export class MapSelectionUI {
         if (this.isVisible) return;
         
         this.isVisible = true;
+        
+        // Hide fish button when map selection is open
+        if (this.scene.hideFishButton) {
+            this.scene.hideFishButton();
+        }
+        
         this.createMapInterface();
         console.log('MapSelectionUI: Interface opened');
     }
@@ -30,6 +36,12 @@ export class MapSelectionUI {
         if (!this.isVisible) return;
         
         this.isVisible = false;
+        
+        // Show fish button when map selection is closed
+        if (this.scene.showFishButton) {
+            this.scene.showFishButton();
+        }
+        
         if (this.container) {
             this.container.destroy();
             this.container = null;

@@ -1,0 +1,7 @@
+rarity_level,rarity_name,rarity_color,description,coin_multiplier,xp_multiplier,spawn_chance_modifier
+1,Common,#8C7853,Basic items and fish,1.0,1.0,1.0
+2,Uncommon,#FFFFFF,Slightly better than common,1.5,1.5,0.7
+3,Rare,#1EFF00,Notable items and fish,2.0,2.0,0.4
+4,Epic,#0070DD,High-quality items and fish,3.0,3.0,0.2
+5,Legendary,#A335EE,Exceptional items and fish,5.0,5.0,0.1
+6,Mythic,#FF8000,Ultimate tier items and fish,10.0,10.0,0.05 

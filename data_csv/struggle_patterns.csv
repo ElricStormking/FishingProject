@@ -1,0 +1,12 @@
+struggle_id,struggle_name,description,pattern_1_direction,pattern_1_intensity,pattern_1_duration,pattern_2_direction,pattern_2_intensity,pattern_2_duration,pattern_3_direction,pattern_3_intensity,pattern_3_duration,pattern_4_direction,pattern_4_intensity,pattern_4_duration
+gentle_pull,Gentle Pull,Slow steady resistance - perfect for beginners,left,2,1000,right,1,800,left,2,600,,,
+rapid_thrashing,Rapid Thrashing,Quick erratic movements in all directions,left,4,300,right,4,300,up,3,400,down,3,400
+steady_pull,Steady Pull,Consistent resistance in one direction,left,3,1200,right,2,800,left,4,1000,,,
+jumping_escape,Jumping Escape,Fish leaps out of water trying to escape,up,6,800,down,4,600,left,5,700,up,7,900
+violent_thrashing,Violent Thrashing,Aggressive shaking that can snap the line,left,7,500,right,8,400,up,6,600,down,7,500
+deep_dive,Deep Dive,Fish dives straight down with force,down,6,1000,left,4,600,down,8,1200,,,
+bulldogging,Bulldogging,Fish uses its weight to resist being pulled up,down,7,1500,left,6,1000,down,9,1800,,,
+long_sprint,Long Sprint,Sustained high-speed run in one direction,left,8,2000,right,6,1000,left,9,2500,,,
+power_run,Power Run,Explosive bursts of power and speed,left,9,800,right,10,600,left,8,1000,right,10,800
+aerial_acrobatics,Aerial Acrobatics,Spectacular jumps and tail walks,up,9,700,left,7,500,up,10,800,right,8,600
+circle_fighting,Circle Fighting,Fish swims in circles to create slack,left,6,800,up,6,800,right,6,800,down,6,800 

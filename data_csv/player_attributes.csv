@@ -1,0 +1,35 @@
+attribute_id,attribute_name,category,description,base_value,max_value,improvement_per_level,max_level_bonus,unit
+castAccuracy,Cast Accuracy,fishing,Increases hotspot target zone size,50,100,1,20,%
+energy,Energy,core,Stamina for performing actions,100,200,2,100,points
+biteRate,Bite Rate,fishing,Likelihood of fish biting the lure,30,80,0.5,25,%
+rareFishChance,Rare Fish Chance,fishing,Probability of encountering rare fish,5,25,0.2,10,%
+qtePrecision,QTE Precision,skill,Extends QTE timing windows,50,100,0.5,25,%
+lureSuccess,Lure Success,fishing,Success rate of luring inputs,60,95,0.5,25,%
+lineStrength,Line Strength,fishing,Reduces line break chance during fights,70,95,0.3,15,%
+castingRange,Casting Range,fishing,Maximum distance for casting lures,50,100,0.5,25,meters
+boatSpeed,Boat Speed,travel,Reduces travel time between locations,100,130,0.3,15,%
+coinGain,Coin Gain,economy,Increases coins earned from activities,100,130,0.3,15,%
+rodCastAccuracy,Rod Cast Accuracy,equipment,Equipment bonus to casting precision,0,50,,,% 
+tensionStability,Tension Stability,equipment,Widens safe tension zone during fights,0,60,,,% 
+rodRareFishChance,Rod Rare Fish Chance,equipment,Equipment bonus to rare fish encounters,0,40,,,% 
+rodCastingRange,Rod Casting Range,equipment,Equipment bonus to casting distance,0,70,,,% 
+reelSpeed,Reel Speed,equipment,Faster reeling during fish fights,0,40,,,% 
+struggleResistance,Struggle Resistance,equipment,Reduces fish struggle intensity,0,35,,,% 
+lureBiteRate,Lure Bite Rate,equipment,Equipment bonus to fish bite probability,0,100,,,% 
+lureLureSuccess,Lure Success Rate,equipment,Equipment bonus to luring minigame,0,80,,,% 
+lureDurability,Lure Durability,equipment,Reduces lure failure chance,0,50,,,% 
+lurePrecision,Lure Precision,equipment,Tightens input timing windows,0,45,,,% 
+romanceEffectiveness,Romance Effectiveness,social,Increases romance points gained,100,200,,,% 
+chatroomAffinity,Chatroom Affinity,social,Boosts chatroom interaction success,100,180,,,% 
+entertainmentMoodBoost,Entertainment Mood Boost,social,Enhances companion mood improvements,100,150,,,% 
+companionFishDetection,Companion Fish Detection,fishing,Companions help spot high-value fish,0,25,,,% 
+companionEnergy,Companion Energy Boost,core,Companions provide energy bonuses,0,50,,,points
+companionQtePrecision,Companion QTE Precision,skill,Companions extend QTE timing windows,0,20,,,% 
+craftingEfficiency,Crafting Efficiency,crafting,Reduces crafting time and costs,0,50,,,% 
+autoFishingYield,Auto-Fishing Yield,automation,Increases auto-fishing rewards,0,80,,,% 
+boatFishDetection,Boat Fish Detection,fishing,Enhanced fish detection systems,0,35,,,% 
+hotspotStability,Hotspot Stability,fishing,Increases fishing hotspot duration,0,70,,,% 
+companionSlotCapacity,Companion Slot Capacity,social,Number of companions that can join,1,6,,,slots
+autoFishingEfficiency,Auto-Fishing Efficiency,automation,Reduces auto-fishing time requirements,0,50,,,% 
+boatDurability,Boat Durability,survival,Reduces penalties in adverse conditions,100,200,,,% 
+fishtankStorage,Fishtank Storage,storage,Expands Fish Card storage capacity,10,100,,,cards 

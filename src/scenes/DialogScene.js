@@ -81,17 +81,46 @@ export default class DialogScene extends Phaser.Scene {
         this.isDialogActive = true;
     }
 
-    async initializeDialogSystem() {
-        // Get the dialog manager - try external first, then GameScene
-        let dialogManager = this.externalDialogManager;
-        
-        if (!dialogManager) {
-            const gameScene = this.scene.get('GameScene');
-            dialogManager = gameScene?.dialogManager;
+    /**
+     * Get DialogManager from various sources with fallback logic
+     * @returns {Object|null} DialogManager instance or null if not found
+     */
+    getDialogManager() {
+        // Try external first
+        if (this.externalDialogManager) {
+            return this.externalDialogManager;
         }
         
+        // Try GameScene
+        const gameScene = this.scene.get('GameScene');
+        if (gameScene?.dialogManager) {
+            return gameScene.dialogManager;
+        }
+        
+        // Try BoatMenuScene
+        const boatMenuScene = this.scene.get('BoatMenuScene');
+        if (boatMenuScene?.dialogManager) {
+            return boatMenuScene.dialogManager;
+        }
+        
+        // Try global gameState
+        try {
+            if (typeof window !== 'undefined' && window.gameState?.dialogManager) {
+                return window.gameState.dialogManager;
+            }
+        } catch (error) {
+            console.warn('DialogScene: Could not access global gameState:', error);
+        }
+        
+        return null;
+    }
+
+    async initializeDialogSystem() {
+        // Get the dialog manager using fallback logic
+        const dialogManager = this.getDialogManager();
+        
         if (!dialogManager) {
-            console.error('DialogScene: DialogManager not found in external data or GameScene');
+            console.error('DialogScene: DialogManager not found in any source (external, GameScene, BoatMenuScene, or GameState)');
             this.closeDialog();
             return;
         }
@@ -116,11 +145,7 @@ export default class DialogScene extends Phaser.Scene {
     async startRenJsDialog() {
         try {
             // Get NPC data for configuration - use same DialogManager retrieval logic
-            let dialogManager = this.externalDialogManager;
-            if (!dialogManager) {
-                const gameScene = this.scene.get('GameScene');
-                dialogManager = gameScene?.dialogManager;
-            }
+            let dialogManager = this.getDialogManager();
             
             const npcData = dialogManager?.getNPCData(this.currentNPCId);
             
@@ -150,11 +175,7 @@ export default class DialogScene extends Phaser.Scene {
 
     startCustomDialog() {
         // Get the dialog manager and NPC data - use same DialogManager retrieval logic
-        let dialogManager = this.externalDialogManager;
-        if (!dialogManager) {
-            const gameScene = this.scene.get('GameScene');
-            dialogManager = gameScene?.dialogManager;
-        }
+        let dialogManager = this.getDialogManager();
         
         if (!dialogManager) {
             console.error('DialogScene: DialogManager not found');

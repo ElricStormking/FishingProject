@@ -447,6 +447,73 @@ export class InventoryUI {
         });
 
         this.debugButtonArea = workingDebugButton;
+        
+        // Add force clean button
+        this.createForceCleanButton();
+    }
+
+    createForceCleanButton() {
+        // Create a force clean button next to the debug button
+        const cleanButtonX = this.width - 55;
+        const cleanButtonY = 70;
+        const cleanButtonSize = 20;
+
+        // Clean button using UITheme
+        const cleanBtn = UITheme.createButton(
+            this.scene, 
+            cleanButtonX, 
+            cleanButtonY, 
+            cleanButtonSize, 
+            cleanButtonSize, 
+            '🧹', 
+            () => this.forceCleanInventory(),
+            'error'
+        );
+
+        this.container.add([cleanBtn.button, cleanBtn.text]);
+
+        // Working interactive area for clean button
+        const workingCleanButton = this.scene.add.rectangle(
+            this.x + cleanButtonX,
+            this.y + cleanButtonY,
+            cleanButtonSize + 5,
+            cleanButtonSize + 5
+        ).setInteractive()
+        .setAlpha(0.01)
+        .setFillStyle(0xe74c3c)
+        .setDepth(this.scene.getUIDepth ? this.scene.getUIDepth('ui_interactive') : 1502);
+
+        workingCleanButton.on('pointerdown', () => {
+            this.forceCleanInventory();
+        });
+
+        this.cleanButtonArea = workingCleanButton;
+    }
+
+    forceCleanInventory() {
+        console.log('InventoryUI: Force clean inventory clicked!');
+        this.audioManager?.playSFX('button');
+        
+        try {
+            if (this.inventoryManager && typeof this.inventoryManager.forceCleanInventory === 'function') {
+                const success = this.inventoryManager.forceCleanInventory();
+                if (success) {
+                    this.showMessage('🧹 Inventory force cleaned!\nAll undefined items removed!', '#27ae60');
+                    
+                    // Refresh everything
+                    this.refreshItems();
+                    this.updateStats();
+                    this.updateEquipmentSlots();
+                } else {
+                    this.showMessage('❌ Force clean failed', '#e74c3c');
+                }
+            } else {
+                this.showMessage('❌ InventoryManager not available', '#e74c3c');
+            }
+        } catch (error) {
+            console.error('InventoryUI: Error in force clean inventory:', error);
+            this.showMessage('❌ Clean failed: ' + error.message, '#e74c3c');
+        }
     }
 
     debugFixEquipment() {
@@ -658,21 +725,28 @@ export class InventoryUI {
                 ).setInteractive()
                 .setAlpha(0.01) // Barely visible but functional
                 .setFillStyle(0x000000) // Black fill for functionality
-                .setDepth(this.scene.getUIDepth ? this.scene.getUIDepth('ui_interactive') : 1502); // Above container and background
+                .setDepth(this.scene.getUIDepth ? this.scene.getUIDepth('ui_interactive') : 1502) // Above container and background
+                .setVisible(false); // Initially hidden until UI is shown
                 
                 const slotIndex = row * this.slotsPerRow + col;
                 
                 workingSlotArea.on('pointerover', () => {
+                    // Only respond if UI is visible
+                    if (!this.isVisible) return;
                     workingSlotArea.setAlpha(0.02); // Slight change for functionality
                     this.onSlotHover(slotIndex);
                 });
                 
                 workingSlotArea.on('pointerout', () => {
+                    // Only respond if UI is visible
+                    if (!this.isVisible) return;
                     workingSlotArea.setAlpha(0.01); // Back to barely visible
                     this.onSlotOut(slotIndex);
                 });
                 
                 workingSlotArea.on('pointerdown', () => {
+                    // Only respond if UI is visible
+                    if (!this.isVisible) return;
                     this.onSlotClick(slotIndex);
                 });
                 
@@ -700,16 +774,22 @@ export class InventoryUI {
 
         // Slot events with better debugging
         slotArea.on('pointerover', () => {
+            // Only respond if UI is visible
+            if (!this.isVisible) return;
             console.log(`InventoryUI: Slot ${index} hover`);
             this.onSlotHover(index);
         });
         
         slotArea.on('pointerout', () => {
+            // Only respond if UI is visible
+            if (!this.isVisible) return;
             console.log(`InventoryUI: Slot ${index} out`);
             this.onSlotOut(index);
         });
 
         slotArea.on('pointerdown', () => {
+            // Only respond if UI is visible
+            if (!this.isVisible) return;
             console.log(`InventoryUI: Slot ${index} clicked`);
             this.onSlotClick(index);
         });
@@ -805,7 +885,11 @@ export class InventoryUI {
             .setInteractive()
             .setAlpha(0);
 
-        slotArea.on('pointerdown', () => this.onEquipmentSlotClick(slotType));
+        slotArea.on('pointerdown', () => {
+            // Only respond if UI is visible
+            if (!this.isVisible) return;
+            this.onEquipmentSlotClick(slotType);
+        });
         
         // Add working interactive area (like other UI elements)
         const workingSlotArea = this.scene.add.rectangle(
@@ -816,9 +900,12 @@ export class InventoryUI {
         ).setInteractive()
         .setAlpha(0.01)
         .setFillStyle(0x000000)
-        .setDepth(this.scene.getUIDepth ? this.scene.getUIDepth('ui_interactive') : 1502);
+        .setDepth(this.scene.getUIDepth ? this.scene.getUIDepth('ui_interactive') : 1502)
+        .setVisible(false); // Initially hidden until UI is shown
         
         workingSlotArea.on('pointerdown', () => {
+            // Only respond if UI is visible
+            if (!this.isVisible) return;
             console.log('InventoryUI: Working equipment slot clicked:', slotType);
             this.onEquipmentSlotClick(slotType);
         });
@@ -982,29 +1069,10 @@ export class InventoryUI {
         console.log('InventoryUI: Compatible items for', slotType, ':', compatibleItems.length);
         
         if (compatibleItems.length === 0) {
-            // No compatible items - show message and try to add some sample items
-            console.log('InventoryUI: No compatible items found, checking if we have any items at all');
-            
-            // Check if we have any items in relevant categories
-            const relevantCategories = this.getRelevantCategoriesForSlot(slotType);
-            const hasAnyItems = relevantCategories.some(cat => 
-                this.gameState.inventory[cat] && this.gameState.inventory[cat].length > 0
-            );
-            
-            if (!hasAnyItems) {
-                // Add some sample items for this slot type
-                console.log(`InventoryUI: Adding sample items for slot type: ${slotType}`);
-                this.addSampleItemsForSlot(slotType);
-                
-                // Try again after adding items
-                const newCompatibleItems = this.getCompatibleItemsForSlot(slotType);
-                if (newCompatibleItems.length > 0) {
-                    this.showEquipmentSelectionMenu(slotType, newCompatibleItems, null);
-                    return;
-                }
-            }
-            
-            this.showMessage(`No ${slotType} equipment available`, UITheme.colors.warning);
+            // 🚨 DISABLED: Automatic sample item generation to prevent undefined items
+            // Show message that no equipment is available
+            console.log('InventoryUI: No compatible items found for slot:', slotType);
+            this.showMessage(`No ${slotType} equipment available.\nUse the shop or crafting to get equipment.`, UITheme.colors.warning);
             return;
         }
         
@@ -1048,51 +1116,81 @@ export class InventoryUI {
     }
 
     /**
-     * Add sample items for a specific slot type
+     * Add sample items for a specific equipment slot (with full validation)
      */
     addSampleItemsForSlot(slotType) {
         try {
-            console.log(`InventoryUI: Adding sample items for slot: ${slotType}`);
+            console.log(`InventoryUI: Adding validated sample items for slot: ${slotType}`);
+            
+            // 🚨 VALIDATION: Only add sample items if InventoryManager is available
+            if (!this.inventoryManager) {
+                console.error('InventoryUI: InventoryManager not available, cannot add sample items');
+                return;
+            }
             
             switch (slotType) {
                 case 'rod':
-                    // Add sample rods
+                    // Add sample rods with complete data
                     const sampleRods = [
                         {
-                            id: 'basic_rod_sample',
+                            id: `basic_rod_sample_${Date.now()}`,
                             name: 'Basic Fishing Rod',
                             rarity: 1,
                             equipSlot: 'rod',
                             stats: { castAccuracy: 5, tensionStability: 3 },
                             description: 'A simple fishing rod for beginners',
-                            unlockLevel: 1
+                            unlockLevel: 1,
+                            cost: 100,
+                            durability: 100,
+                            condition: 100,
+                            owned: true,
+                            equipped: false,
+                            quantity: 1
                         }
                     ];
-                    sampleRods.forEach(rod => this.inventoryManager.addItem('rods', rod));
+                    sampleRods.forEach(rod => {
+                        if (this.inventoryManager.validateItemData(rod, 'rods')) {
+                            this.inventoryManager.addValidatedItem('rods', rod);
+                        } else {
+                            console.error('InventoryUI: Sample rod failed validation:', rod);
+                        }
+                    });
                     break;
                     
                 case 'lure':
-                    // Add sample lures
+                    // Add sample lures with complete data
                     const sampleLures = [
                         {
-                            id: 'basic_spinner_sample',
+                            id: `basic_spinner_sample_${Date.now()}`,
                             name: 'Basic Spinner',
                             type: 'spinner',
                             rarity: 1,
                             equipSlot: 'lure',
-                            biteRate: 20,
+                            stats: { biteRate: 20 },
                             description: 'Simple spinning lure for beginners',
-                            unlockLevel: 1
+                            unlockLevel: 1,
+                            cost: 50,
+                            durability: 50,
+                            condition: 50,
+                            owned: true,
+                            equipped: false,
+                            quantity: 3
                         }
                     ];
-                    sampleLures.forEach(lure => this.inventoryManager.addItem('lures', lure));
+                    sampleLures.forEach(lure => {
+                        if (this.inventoryManager.validateItemData(lure, 'lures')) {
+                            this.inventoryManager.addValidatedItem('lures', lure);
+                        } else {
+                            console.error('InventoryUI: Sample lure failed validation:', lure);
+                        }
+                    });
                     break;
                     
                 case 'boat':
-                    // Add sample boats
+                    // Add sample boats with complete data
                     const sampleBoats = [
                         {
-                            id: 'rowboat_sample',
+                            id: `rowboat_sample_${Date.now()}`,
                             name: 'Rowboat',
                             rarity: 1,
                             equipSlot: 'boat',
@@ -1694,6 +1792,10 @@ export class InventoryUI {
                 this.debugButtonArea.destroy();
             }
             
+            if (this.cleanButtonArea && !this.cleanButtonArea.destroyed) {
+                this.cleanButtonArea.destroy();
+            }
+            
             // Clean up blockers with null checks
             if (this.clickBlocker && !this.clickBlocker.destroyed) {
                 this.clickBlocker.destroy();
@@ -1759,6 +1861,24 @@ export class InventoryUI {
                 return;
             }
             
+            // Hide fish button when inventory is open
+            if (this.scene.hideFishButton) {
+                this.scene.hideFishButton();
+            }
+            
+            // 🚨 FORCE CLEAN: Remove any undefined items immediately when inventory opens
+            try {
+                if (this.inventoryManager && this.inventoryManager.forceCleanAllUndefinedItems) {
+                    const cleanedCount = this.inventoryManager.forceCleanAllUndefinedItems();
+                    if (cleanedCount > 0) {
+                        console.log(`InventoryUI: ✅ Cleaned ${cleanedCount} undefined items from inventory`);
+                        this.gameState.save(); // Save immediately after cleaning
+                    }
+                }
+            } catch (cleanError) {
+                console.error('InventoryUI: Error cleaning undefined items:', cleanError);
+            }
+            
             // Force fix equipment slots when showing inventory
             if (this.inventoryManager && typeof this.inventoryManager.fixMissingEquipSlots === 'function') {
                 console.log('InventoryUI: Force-fixing equipment slots on show');
@@ -1779,6 +1899,22 @@ export class InventoryUI {
                 this.backgroundBlocker.setVisible(true);
             }
             
+            // Show all working slot areas
+            this.itemSlots.forEach(slot => {
+                if (slot.workingArea && !slot.workingArea.destroyed) {
+                    slot.workingArea.setVisible(true);
+                }
+            });
+            
+            // Show working equipment slot areas
+            if (this.workingAreas) {
+                this.workingAreas.forEach(area => {
+                    if (area && !area.destroyed) {
+                        area.setVisible(true);
+                    }
+                });
+            }
+            
             // Refresh content when showing
             this.refreshItems();
             this.updateStats();
@@ -1797,6 +1933,11 @@ export class InventoryUI {
             
             this.isVisible = false;
             
+            // Show fish button when inventory is closed
+            if (this.scene.showFishButton) {
+                this.scene.showFishButton();
+            }
+            
             if (this.container && !this.container.destroyed) {
                 this.container.setVisible(false);
             }
@@ -1807,6 +1948,22 @@ export class InventoryUI {
             
             if (this.backgroundBlocker && !this.backgroundBlocker.destroyed) {
                 this.backgroundBlocker.setVisible(false);
+            }
+            
+            // Hide all working slot areas
+            this.itemSlots.forEach(slot => {
+                if (slot.workingArea && !slot.workingArea.destroyed) {
+                    slot.workingArea.setVisible(false);
+                }
+            });
+            
+            // Hide working equipment slot areas
+            if (this.workingAreas) {
+                this.workingAreas.forEach(area => {
+                    if (area && !area.destroyed) {
+                        area.setVisible(false);
+                    }
+                });
             }
             
             // Clear any open menus
@@ -1893,6 +2050,9 @@ export class InventoryUI {
             const categoryItems = this.gameState.inventory[this.currentCategory] || [];
             console.log(`InventoryUI: Found ${categoryItems.length} items in ${this.currentCategory}`);
             
+            // 🚨 CHECK FOR UNDEFINED ITEMS
+            this.checkForUndefinedItems(categoryItems);
+            
             // Clear existing item displays
             this.clearItemSlots();
             
@@ -1907,6 +2067,48 @@ export class InventoryUI {
             
         } catch (error) {
             console.error('InventoryUI: Error refreshing items:', error);
+        }
+    }
+
+    /**
+     * Check for undefined items and warn the user
+     * @param {array} items - Array of items to check
+     */
+    checkForUndefinedItems(items) {
+        try {
+            const undefinedItems = items.filter(item => 
+                !item || !item.name || item.name === 'undefined' || item.name === ''
+            );
+            
+            if (undefinedItems.length > 0) {
+                console.error(`🚨 InventoryUI: Found ${undefinedItems.length} undefined items in ${this.currentCategory}:`, undefinedItems);
+                
+                // Show warning message to user
+                this.showMessage(
+                    `🚨 WARNING: ${undefinedItems.length} undefined items detected!\nThis indicates fallback data is being used.`, 
+                    '#e74c3c'
+                );
+                
+                // Check if DataLoader is using fallback data
+                if (this.gameState.gameDataLoader && typeof this.gameState.gameDataLoader.checkForFallbackData === 'function') {
+                    const fallbackReport = this.gameState.gameDataLoader.checkForFallbackData();
+                    if (fallbackReport.usingFallback) {
+                        console.error('🚨 InventoryUI: DataLoader is using fallback data!', fallbackReport);
+                        this.showMessage(
+                            `🚨 FALLBACK DATA DETECTED!\nFiles: ${fallbackReport.fallbackFiles.join(', ')}`, 
+                            '#e74c3c'
+                        );
+                    }
+                }
+                
+                return true; // Undefined items found
+            }
+            
+            return false; // No undefined items
+            
+        } catch (error) {
+            console.error('InventoryUI: Error checking for undefined items:', error);
+            return false;
         }
     }
 

@@ -8,7 +8,7 @@ export default class MenuScene extends Phaser.Scene {
         super({ key: 'MenuScene' });
     }
 
-    create() {
+    async create() {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
 
@@ -16,6 +16,9 @@ export default class MenuScene extends Phaser.Scene {
         this.sceneManager = SceneManager.getInstance();
         this.sceneManager.setCurrentScene(this);
         this.gameState = GameState.getInstance();
+        
+        // Initialize the game state with proper data
+        await this.gameState.initialize();
         
         // Initialize audio for the first time
         this.gameState.initializeAudio(this);

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxury Angler - Game Functionality Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: #1a1a2e;
+            border: 2px solid #00aaff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .test-button {
+            background: #00aaff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+        }
+        .test-button:hover {
+            background: #0088cc;
+        }
+        .game-frame {
+            width: 100%;
+            height: 720px;
+            border: 2px solid #00aaff;
+            border-radius: 10px;
+            background: #000;
+        }
+        .instructions {
+            background: #2a2a4e;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .status {
+            background: #1e3a1e;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #00ff66;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎣 Luxury Angler - Game Functionality Test</h1>
+        
+        <div class="status">
+            <strong>Server Status:</strong> Running on <a href="http://localhost:5173" target="_blank" style="color: #00aaff;">http://localhost:5173</a>
+        </div>
+        
+        <div class="test-section">
+            <h2>🎮 Game Testing Instructions</h2>
+            <div class="instructions">
+                <h3>Basic Gameplay Test:</h3>
+                <ol>
+                    <li><strong>Launch Game:</strong> Click the link above to open the game</li>
+                    <li><strong>Navigate Menus:</strong> Test menu navigation and UI responsiveness</li>
+                    <li><strong>Start Fishing:</strong> Click the green "FISH" button to enter fishing mode</li>
+                    <li><strong>Test QTE System:</strong> Experience the 10 different QTE types during fishing</li>
+                </ol>
+                
+                <h3>QTE Debug Tool Test:</h3>
+                <ol>
+                    <li><strong>Open Debug Tool:</strong> Press <code>F12</code> or <code>Ctrl+Shift+Q</code> during fishing</li>
+                    <li><strong>Test Individual QTEs:</strong> Use the QTE test buttons to trigger specific actions</li>
+                    <li><strong>Test All QTEs:</strong> Use "Test All QTEs" for comprehensive testing</li>
+                    <li><strong>Monitor Statistics:</strong> Watch real-time performance tracking</li>
+                    <li><strong>Export Data:</strong> Use export function for detailed analysis</li>
+                </ol>
+                
+                <h3>Fish AI & Struggle Patterns:</h3>
+                <ol>
+                    <li><strong>Observe Fish Behavior:</strong> Notice different fish struggle patterns</li>
+                    <li><strong>Test Struggle Types:</strong> Use debug tool to test all 10 struggle types</li>
+                    <li><strong>Monitor AI States:</strong> Watch fish transition between behavior states</li>
+                    <li><strong>Environmental Effects:</strong> Test time/weather impact on fish behavior</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔧 Debug Features Available</h2>
+            <div class="instructions">
+                <h3>Keyboard Shortcuts:</h3>
+                <ul>
+                    <li><code>F5</code> - Reset fish inventory (adds 5 trout cards)</li>
+                    <li><code>F6</code> - Debug current fish inventory</li>
+                    <li><code>F7</code> - Add 50,000 coins for testing</li>
+                    <li><code>F8</code> - Set player level to 15</li>
+                    <li><code>F12</code> or <code>Ctrl+Shift+Q</code> - Toggle QTE Debug Tool</li>
+                    <li><code>ESC</code> - Return to main menu</li>
+                </ul>
+                
+                <h3>QTE Debug Tool Features:</h3>
+                <ul>
+                    <li><strong>Control Panel:</strong> Start/stop sessions, reset stats, export data</li>
+                    <li><strong>Statistics Panel:</strong> Real-time performance tracking</li>
+                    <li><strong>QTE Test Panel:</strong> Individual QTE type testing</li>
+                    <li><strong>Struggle Test Panel:</strong> Fish struggle pattern testing</li>
+                    <li><strong>Auto-Test Mode:</strong> Continuous automated testing</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📊 Expected QTE Control Schemes</h2>
+            <div class="instructions">
+                <h3>10 QTE Types to Test:</h3>
+                <ol>
+                    <li><strong>DASH:</strong> Rapid Tap (SPACEBAR multiple times)</li>
+                    <li><strong>THRASH:</strong> Hold & Release (Hold SPACEBAR for 1.5 seconds)</li>
+                    <li><strong>DIVE:</strong> Timing Window (Hit SPACEBAR when indicator enters green zone)</li>
+                    <li><strong>SURFACE:</strong> Directional Sequence (Press WASD keys in displayed order)</li>
+                    <li><strong>CIRCLE:</strong> Rotation Hold (Hold SPACEBAR during circular motion)</li>
+                    <li><strong>JUMP:</strong> Precision Timing (Hit SPACEBAR at exact breach moment)</li>
+                    <li><strong>ROLL:</strong> Alternating Tap (Alternate A and D keys rapidly)</li>
+                    <li><strong>SHAKE:</strong> Rhythm Tap (Tap SPACEBAR in rhythm with beats)</li>
+                    <li><strong>PULL:</strong> Power Hold (Hold SPACEBAR for 2-3 seconds)</li>
+                    <li><strong>SPIRAL:</strong> Complex Sequence (WASD sequence + SPACEBAR timing combo)</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🐟 Fish AI Behavior to Observe</h2>
+            <div class="instructions">
+                <h3>Swimming States:</h3>
+                <ul>
+                    <li><strong>IDLE (30%):</strong> Fish stays relatively still</li>
+                    <li><strong>PATROL (40%):</strong> Fish moves in patterns</li>
+                    <li><strong>FEEDING (20%):</strong> Fish actively seeks bait</li>
+                    <li><strong>FLEEING (10%):</strong> Fish tries to escape</li>
+                </ul>
+                
+                <h3>Struggle Intensity Patterns:</h3>
+                <ul>
+                    <li><strong>Burst Patterns:</strong> Sudden intensity spikes</li>
+                    <li><strong>Gradual Patterns:</strong> Smooth intensity changes</li>
+                    <li><strong>Oscillating Patterns:</strong> Regular up/down cycles</li>
+                    <li><strong>Chaotic Patterns:</strong> Unpredictable variations</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>✅ Test Checklist</h2>
+            <div class="instructions">
+                <h3>Core Functionality:</h3>
+                <ul>
+                    <li>☐ Game loads without errors</li>
+                    <li>☐ Menu navigation works</li>
+                    <li>☐ Fishing mode starts successfully</li>
+                    <li>☐ QTE debug tool opens (F12/Ctrl+Shift+Q)</li>
+                    <li>☐ All 10 QTE types can be triggered</li>
+                    <li>☐ Statistics tracking works</li>
+                    <li>☐ Fish AI shows different behaviors</li>
+                    <li>☐ Struggle patterns vary by fish type</li>
+                    <li>☐ Debug shortcuts work (F5-F8)</li>
+                    <li>☐ Export functionality works</li>
+                </ul>
+                
+                <h3>Performance:</h3>
+                <ul>
+                    <li>☐ Smooth 60 FPS gameplay</li>
+                    <li>☐ No memory leaks during extended play</li>
+                    <li>☐ QTE responses feel responsive</li>
+                    <li>☐ Audio plays correctly</li>
+                    <li>☐ Visual effects render properly</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🚀 Quick Launch</h2>
+            <button class="test-button" onclick="window.open('http://localhost:5173', '_blank')">
+                🎮 Launch Game
+            </button>
+            <button class="test-button" onclick="window.open('http://localhost:5173', '_blank'); setTimeout(() => alert('Press F12 or Ctrl+Shift+Q to open QTE Debug Tool once in fishing mode!'), 2000)">
+                🔧 Launch with Debug Reminder
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        // Auto-refresh server status
+        setInterval(() => {
+            fetch('http://localhost:5173')
+                .then(() => {
+                    document.querySelector('.status').style.borderLeftColor = '#00ff66';
+                    document.querySelector('.status strong').textContent = 'Server Status: ✅ Online';
+                })
+                .catch(() => {
+                    document.querySelector('.status').style.borderLeftColor = '#ff6666';
+                    document.querySelector('.status strong').textContent = 'Server Status: ❌ Offline';
+                });
+        }, 5000);
+    </script>
+</body>
+</html> 

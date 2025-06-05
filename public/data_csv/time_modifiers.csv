@@ -1,0 +1,10 @@
+time_period,bite_rate_mod,rare_fish_chance_mod,fish_detection_mod,description
+dawn,15,5,0,Early morning prime fishing time
+morning,10,0,5,Good visibility and moderate activity
+noon,0,0,10,Bright conditions but lower activity
+afternoon,5,0,5,Moderate fishing conditions
+evening,10,3,0,Activity increases as day ends
+dusk,20,8,0,Prime time as fish feed before dark
+night,25,10,-10,High activity but reduced visibility
+midnight,30,15,-20,Peak nocturnal activity
+late_night,25,12,-15,Late night feeding patterns 

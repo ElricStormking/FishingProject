@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Loading & Casting Test - Luxury Angler</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+        .test-panel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            max-width: 350px;
+            z-index: 10000;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .test-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+        }
+        .test-button:hover {
+            background: #45a049;
+        }
+        .test-button.danger {
+            background: #f44336;
+        }
+        .test-button.danger:hover {
+            background: #da190b;
+        }
+        .test-button.warning {
+            background: #ff9800;
+        }
+        .test-button.warning:hover {
+            background: #e68900;
+        }
+        .test-info {
+            font-size: 12px;
+            margin: 5px 0;
+            padding: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        .test-result {
+            font-size: 11px;
+            margin: 3px 0;
+            padding: 3px;
+            border-radius: 3px;
+        }
+        .test-result.success {
+            background: rgba(76, 175, 80, 0.3);
+            border-left: 3px solid #4CAF50;
+        }
+        .test-result.error {
+            background: rgba(244, 67, 54, 0.3);
+            border-left: 3px solid #f44336;
+        }
+        .test-result.warning {
+            background: rgba(255, 152, 0, 0.3);
+            border-left: 3px solid #ff9800;
+        }
+        #game-container {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+        }
+        #test-log {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+            font-size: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-panel">
+        <h3>🎣 Data Loading & Casting Test</h3>
+        
+        <div class="test-info">
+            <strong>Status:</strong> <span id="test-status">Initializing...</span>
+        </div>
+        <div class="test-info">
+            <strong>Data Loader:</strong> <span id="data-status">Loading...</span>
+        </div>
+        <div class="test-info">
+            <strong>Fallback Check:</strong> <span id="fallback-status">Checking...</span>
+        </div>
+        
+        <button class="test-button" onclick="testDataLoading()">📊 Test Data Loading</button>
+        <button class="test-button warning" onclick="checkForFallbackData()">🚨 Check Fallback Data</button>
+        <button class="test-button" onclick="testCastingSystem()">🎯 Test Casting System</button>
+        <button class="test-button" onclick="validateJsonData()">✅ Validate JSON Data</button>
+        <button class="test-button danger" onclick="forceCleanInventory()">🧹 Force Clean Inventory</button>
+        
+        <div id="test-results">
+            <div class="test-result">Test results will appear here...</div>
+        </div>
+        
+        <div id="test-log">
+            <div>Test log will appear here...</div>
+        </div>
+    </div>
+
+    <div id="game-container"></div>
+
+    <script type="module">
+        import Phaser from './node_modules/phaser/dist/phaser.esm.js';
+        import GameScene from './src/scenes/GameScene.js';
+        import MenuScene from './src/scenes/MenuScene.js';
+        import { gameDataLoader } from './src/scripts/DataLoader.js';
+        import GameState from './src/scripts/GameState.js';
+
+        let game;
+        let gameState;
+        let currentScene;
+
+        // Test logging function
+        function testLog(message, type = 'info') {
+            const logContainer = document.getElementById('test-log');
+            const logEntry = document.createElement('div');
+            logEntry.className = `test-result ${type}`;
+            logEntry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            console.log(`[DATA TEST] ${message}`);
+        }
+
+        function addTestResult(message, type = 'info') {
+            const resultsContainer = document.getElementById('test-results');
+            const resultEntry = document.createElement('div');
+            resultEntry.className = `test-result ${type}`;
+            resultEntry.textContent = message;
+            resultsContainer.appendChild(resultEntry);
+        }
+
+        // Global test functions
+        window.testDataLoading = async function() {
+            testLog('🔍 Testing data loading...', 'info');
+            addTestResult('Testing data loading...', 'info');
+            
+            try {
+                // Force reload data
+                await gameDataLoader.loadAllData();
+                
+                const summary = gameDataLoader.getDataSummary();
+                testLog(`✅ Data loaded successfully: ${JSON.stringify(summary)}`, 'success');
+                addTestResult(`✅ Data loaded: ${summary.fish} fish, ${summary.lures} lures, ${summary.rods} rods`, 'success');
+                
+                // Test specific data
+                const allFish = gameDataLoader.getAllFish();
+                if (allFish && allFish.length > 0) {
+                    testLog(`✅ Fish data: ${allFish.length} species loaded`, 'success');
+                    testLog(`First fish: ${allFish[0].name} (${allFish[0].id})`, 'info');
+                    addTestResult(`✅ Fish data: ${allFish.length} species`, 'success');
+                } else {
+                    testLog('❌ No fish data loaded', 'error');
+                    addTestResult('❌ No fish data loaded', 'error');
+                }
+                
+                document.getElementById('data-status').textContent = 'Loaded';
+                
+            } catch (error) {
+                testLog(`❌ Data loading failed: ${error.message}`, 'error');
+                addTestResult(`❌ Data loading failed: ${error.message}`, 'error');
+                document.getElementById('data-status').textContent = 'Failed';
+            }
+        };
+
+        window.checkForFallbackData = function() {
+            testLog('🚨 Checking for fallback data...', 'warning');
+            
+            try {
+                const fallbackReport = gameDataLoader.checkForFallbackData();
+                
+                if (fallbackReport.error) {
+                    testLog(`❌ Fallback check error: ${fallbackReport.error}`, 'error');
+                    addTestResult(`❌ Fallback check error: ${fallbackReport.error}`, 'error');
+                    return;
+                }
+                
+                if (fallbackReport.usingFallback) {
+                    testLog('🚨 FALLBACK DATA DETECTED!', 'error');
+                    testLog(`Fallback files: ${fallbackReport.fallbackFiles.join(', ')}`, 'error');
+                    fallbackReport.warnings.forEach(warning => {
+                        testLog(warning, 'error');
+                        addTestResult(warning, 'error');
+                    });
+                    document.getElementById('fallback-status').textContent = '🚨 USING FALLBACK';
+                } else {
+                    testLog('✅ No fallback data detected - using real JSON data', 'success');
+                    testLog(`Real files: ${fallbackReport.realFiles.join(', ')}`, 'success');
+                    addTestResult('✅ No fallback data detected', 'success');
+                    document.getElementById('fallback-status').textContent = '✅ Real Data';
+                }
+                
+            } catch (error) {
+                testLog(`❌ Error checking fallback data: ${error.message}`, 'error');
+                addTestResult(`❌ Error checking fallback data: ${error.message}`, 'error');
+            }
+        };
+
+        window.testCastingSystem = function() {
+            testLog('🎯 Testing casting system...', 'info');
+            
+            if (!currentScene) {
+                testLog('❌ No current scene available', 'error');
+                addTestResult('❌ No current scene available', 'error');
+                return;
+            }
+            
+            if (currentScene.scene.key !== 'GameScene') {
+                testLog('❌ Not in GameScene, switching...', 'warning');
+                game.scene.start('GameScene');
+                return;
+            }
+            
+            // Check PlayerController
+            if (currentScene.playerController) {
+                testLog('✅ PlayerController exists', 'success');
+                testLog(`Can cast: ${currentScene.playerController.canCast()}`, 'info');
+                testLog(`Is casting: ${currentScene.playerController.isCasting}`, 'info');
+                testLog(`Is active: ${currentScene.playerController.isActive}`, 'info');
+                addTestResult('✅ PlayerController working', 'success');
+            } else {
+                testLog('❌ PlayerController not found', 'error');
+                addTestResult('❌ PlayerController not found', 'error');
+            }
+            
+            // Test event system
+            try {
+                testLog('Testing casting event...', 'info');
+                currentScene.events.emit('fishing:castComplete', {
+                    success: true,
+                    accuracy: 85.5,
+                    hitAccurateSection: true,
+                    castType: 'test'
+                });
+                testLog('✅ Event system working', 'success');
+                addTestResult('✅ Event system working', 'success');
+            } catch (error) {
+                testLog(`❌ Event system error: ${error.message}`, 'error');
+                addTestResult(`❌ Event system error: ${error.message}`, 'error');
+            }
+        };
+
+        window.validateJsonData = function() {
+            testLog('✅ Validating JSON data integrity...', 'info');
+            
+            try {
+                // Check fish data integrity
+                const allFish = gameDataLoader.getAllFish();
+                if (allFish && allFish.length > 0) {
+                    const undefinedFish = allFish.filter(fish => !fish.name || fish.name === 'undefined');
+                    if (undefinedFish.length > 0) {
+                        testLog(`🚨 Found ${undefinedFish.length} fish with undefined names`, 'error');
+                        addTestResult(`🚨 Found ${undefinedFish.length} undefined fish`, 'error');
+                    } else {
+                        testLog('✅ All fish have proper names', 'success');
+                        addTestResult('✅ All fish have proper names', 'success');
+                    }
+                    
+                    // Check for required fish
+                    const requiredFish = ['bluegill', 'bass', 'trout', 'pike'];
+                    const foundFish = requiredFish.filter(fishId => 
+                        allFish.some(fish => fish.id === fishId)
+                    );
+                    testLog(`Found ${foundFish.length}/${requiredFish.length} required fish`, 'info');
+                    addTestResult(`Found ${foundFish.length}/${requiredFish.length} required fish`, 
+                        foundFish.length === requiredFish.length ? 'success' : 'warning');
+                }
+                
+                // Check equipment data
+                const allRods = gameDataLoader.getAllRods();
+                if (allRods && allRods.length > 0) {
+                    testLog(`✅ Equipment data: ${allRods.length} rods loaded`, 'success');
+                    addTestResult(`✅ Equipment: ${allRods.length} rods`, 'success');
+                } else {
+                    testLog('❌ No equipment data loaded', 'error');
+                    addTestResult('❌ No equipment data', 'error');
+                }
+                
+                // Check lure data
+                const allLures = gameDataLoader.getAllLures();
+                if (allLures && allLures.length > 0) {
+                    testLog(`✅ Lure data: ${allLures.length} lures loaded`, 'success');
+                    addTestResult(`✅ Lures: ${allLures.length} lures`, 'success');
+                } else {
+                    testLog('❌ No lure data loaded', 'error');
+                    addTestResult('❌ No lure data', 'error');
+                }
+                
+            } catch (error) {
+                testLog(`❌ Validation error: ${error.message}`, 'error');
+                addTestResult(`❌ Validation error: ${error.message}`, 'error');
+            }
+        };
+
+        window.forceCleanInventory = function() {
+            testLog('🧹 Force cleaning inventory...', 'warning');
+            
+            try {
+                if (gameState && gameState.inventoryManager) {
+                    if (gameState.inventoryManager.forceCleanInventory) {
+                        gameState.inventoryManager.forceCleanInventory();
+                        testLog('✅ Inventory force cleaned', 'success');
+                        addTestResult('✅ Inventory force cleaned', 'success');
+                    } else {
+                        testLog('❌ Force clean method not available', 'error');
+                        addTestResult('❌ Force clean method not available', 'error');
+                    }
+                } else {
+                    testLog('❌ InventoryManager not available', 'error');
+                    addTestResult('❌ InventoryManager not available', 'error');
+                }
+            } catch (error) {
+                testLog(`❌ Force clean error: ${error.message}`, 'error');
+                addTestResult(`❌ Force clean error: ${error.message}`, 'error');
+            }
+        };
+
+        async function initGame() {
+            try {
+                testLog('🎮 Initializing game...', 'info');
+                document.getElementById('test-status').textContent = 'Initializing...';
+                
+                // Initialize GameState
+                gameState = GameState.getInstance();
+                await gameState.initialize();
+                testLog('✅ GameState initialized', 'success');
+                
+                // Load game data
+                await gameDataLoader.loadAllData();
+                testLog('✅ Game data loaded', 'success');
+                
+                // Game configuration
+                const config = {
+                    type: Phaser.AUTO,
+                    width: 1200,
+                    height: 800,
+                    parent: 'game-container',
+                    backgroundColor: '#2c3e50',
+                    physics: {
+                        default: 'arcade',
+                        arcade: {
+                            gravity: { y: 0 },
+                            debug: false
+                        }
+                    },
+                    scene: [MenuScene, GameScene],
+                    scale: {
+                        mode: Phaser.Scale.FIT,
+                        autoCenter: Phaser.Scale.CENTER_BOTH
+                    }
+                };
+
+                // Create game
+                game = new Phaser.Game(config);
+                
+                // Track current scene
+                game.events.on('ready', () => {
+                    testLog('🎮 Game ready', 'success');
+                    document.getElementById('test-status').textContent = 'Ready';
+                    
+                    // Start with GameScene for testing
+                    game.scene.start('GameScene');
+                    
+                    // Run initial tests
+                    setTimeout(() => {
+                        testDataLoading();
+                        checkForFallbackData();
+                        validateJsonData();
+                    }, 1000);
+                });
+                
+                // Listen for scene changes
+                game.events.on('step', () => {
+                    const activeScenes = game.scene.getScenes(true);
+                    if (activeScenes.length > 0) {
+                        const newScene = activeScenes[activeScenes.length - 1];
+                        if (newScene !== currentScene) {
+                            currentScene = newScene;
+                            testLog(`📍 Scene changed to: ${newScene.scene.key}`, 'info');
+                        }
+                    }
+                });
+                
+                testLog('✅ Game initialization completed', 'success');
+                
+            } catch (error) {
+                testLog(`❌ Error initializing game: ${error.message}`, 'error');
+                console.error('Game initialization error:', error);
+                document.getElementById('test-status').textContent = 'Error';
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            testLog('🚀 Starting data loading & casting test...', 'info');
+            initGame();
+        });
+
+        // Expose for debugging
+        window.game = game;
+        window.gameState = gameState;
+        window.gameDataLoader = gameDataLoader;
+        window.testLog = testLog;
+        
+    </script>
+</body>
+</html> 

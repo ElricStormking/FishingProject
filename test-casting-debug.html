@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casting Debug Test - Luxury Angler</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+        .debug-panel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            max-width: 300px;
+            z-index: 10000;
+        }
+        .debug-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .debug-button:hover {
+            background: #45a049;
+        }
+        .debug-button.danger {
+            background: #f44336;
+        }
+        .debug-button.danger:hover {
+            background: #da190b;
+        }
+        .debug-info {
+            font-size: 12px;
+            margin: 5px 0;
+            padding: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        #game-container {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-panel">
+        <h3>🎣 Casting Debug Tool</h3>
+        <div class="debug-info">
+            <strong>Status:</strong> <span id="debug-status">Initializing...</span>
+        </div>
+        <div class="debug-info">
+            <strong>Data Loader:</strong> <span id="data-status">Loading...</span>
+        </div>
+        <div class="debug-info">
+            <strong>Event Listeners:</strong> <span id="event-status">Checking...</span>
+        </div>
+        <div class="debug-info">
+            <strong>Casting State:</strong> <span id="casting-status">Ready</span>
+        </div>
+        
+        <button class="debug-button" onclick="debugCastingSystem()">🔍 Debug Casting</button>
+        <button class="debug-button" onclick="checkDataLoading()">📊 Check Data</button>
+        <button class="debug-button" onclick="testEventListeners()">🎧 Test Events</button>
+        <button class="debug-button danger" onclick="resetGame()">🔄 Reset Game</button>
+        
+        <div id="debug-log" style="max-height: 200px; overflow-y: auto; margin-top: 10px; font-size: 11px;">
+            <div>Debug log will appear here...</div>
+        </div>
+    </div>
+
+    <div id="game-container"></div>
+
+    <script type="module">
+        import Phaser from './node_modules/phaser/dist/phaser.esm.js';
+        import GameScene from './src/scenes/GameScene.js';
+        import MenuScene from './src/scenes/MenuScene.js';
+        import { gameDataLoader } from './src/scripts/DataLoader.js';
+        import GameState from './src/scripts/GameState.js';
+
+        let game;
+        let gameState;
+        let currentScene;
+
+        // Debug logging function
+        function debugLog(message) {
+            const logContainer = document.getElementById('debug-log');
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            console.log(`[CASTING DEBUG] ${message}`);
+        }
+
+        // Global debug functions
+        window.debugCastingSystem = function() {
+            debugLog('🔍 Debugging casting system...');
+            
+            if (!currentScene) {
+                debugLog('❌ No current scene available');
+                return;
+            }
+            
+            if (currentScene.scene.key !== 'GameScene') {
+                debugLog('❌ Not in GameScene, switching...');
+                game.scene.start('GameScene');
+                return;
+            }
+            
+            // Check PlayerController
+            if (currentScene.playerController) {
+                debugLog('✅ PlayerController exists');
+                debugLog(`   - Can cast: ${currentScene.playerController.canCast()}`);
+                debugLog(`   - Is casting: ${currentScene.playerController.isCasting}`);
+                debugLog(`   - Is reeling: ${currentScene.playerController.isReeling}`);
+                debugLog(`   - Is active: ${currentScene.playerController.isActive}`);
+                debugLog(`   - Is enabled: ${currentScene.playerController.enabled}`);
+            } else {
+                debugLog('❌ PlayerController not found');
+            }
+            
+            // Check event listeners
+            if (currentScene.events) {
+                const eventNames = currentScene.events.eventNames();
+                debugLog(`✅ Scene events: ${eventNames.length} registered`);
+                eventNames.forEach(name => {
+                    if (name.includes('fishing') || name.includes('cast')) {
+                        debugLog(`   - ${name}`);
+                    }
+                });
+            }
+            
+            document.getElementById('casting-status').textContent = 
+                currentScene.playerController ? 
+                (currentScene.playerController.canCast() ? 'Ready' : 'Blocked') : 
+                'No Controller';
+        };
+
+        window.checkDataLoading = function() {
+            debugLog('📊 Checking data loading status...');
+            
+            debugLog(`DataLoader loaded: ${gameDataLoader.loaded}`);
+            
+            if (gameDataLoader.loaded) {
+                const fishData = gameDataLoader.getAllFish();
+                debugLog(`Fish data: ${fishData ? fishData.length : 'null'} species`);
+                
+                if (fishData && fishData.length > 0) {
+                    debugLog(`First fish: ${fishData[0].name} (${fishData[0].id})`);
+                    
+                    // Check for undefined fish
+                    const undefinedFish = fishData.filter(f => !f.name || f.name === 'undefined');
+                    if (undefinedFish.length > 0) {
+                        debugLog(`⚠️ Found ${undefinedFish.length} undefined fish`);
+                    } else {
+                        debugLog('✅ All fish have proper names');
+                    }
+                }
+                
+                const lureData = gameDataLoader.getAllLures();
+                debugLog(`Lure data: ${lureData ? lureData.length : 'null'} lures`);
+                
+                const rodData = gameDataLoader.getAllRods();
+                debugLog(`Rod data: ${rodData ? rodData.length : 'null'} rods`);
+            }
+            
+            document.getElementById('data-status').textContent = 
+                gameDataLoader.loaded ? 'Loaded' : 'Failed';
+        };
+
+        window.testEventListeners = function() {
+            debugLog('🎧 Testing event listeners...');
+            
+            if (!currentScene) {
+                debugLog('❌ No current scene');
+                return;
+            }
+            
+            // Test casting event
+            debugLog('Testing fishing:castComplete event...');
+            currentScene.events.emit('fishing:castComplete', {
+                success: true,
+                accuracy: 85.5,
+                hitAccurateSection: true,
+                castType: 'test'
+            });
+            
+            setTimeout(() => {
+                debugLog('Event test completed');
+            }, 100);
+        };
+
+        window.resetGame = function() {
+            debugLog('🔄 Resetting game...');
+            
+            if (game) {
+                game.destroy(true);
+            }
+            
+            // Clear game state
+            if (gameState) {
+                gameState.reset();
+            }
+            
+            // Restart game
+            setTimeout(() => {
+                initGame();
+            }, 500);
+        };
+
+        async function initGame() {
+            try {
+                debugLog('🎮 Initializing game...');
+                document.getElementById('debug-status').textContent = 'Initializing...';
+                
+                // Initialize GameState
+                gameState = GameState.getInstance();
+                await gameState.initialize();
+                debugLog('✅ GameState initialized');
+                
+                // Load game data
+                await gameDataLoader.loadAllData();
+                debugLog('✅ Game data loaded');
+                
+                // Game configuration
+                const config = {
+                    type: Phaser.AUTO,
+                    width: 1200,
+                    height: 800,
+                    parent: 'game-container',
+                    backgroundColor: '#2c3e50',
+                    physics: {
+                        default: 'arcade',
+                        arcade: {
+                            gravity: { y: 0 },
+                            debug: false
+                        }
+                    },
+                    scene: [MenuScene, GameScene],
+                    scale: {
+                        mode: Phaser.Scale.FIT,
+                        autoCenter: Phaser.Scale.CENTER_BOTH
+                    }
+                };
+
+                // Create game
+                game = new Phaser.Game(config);
+                
+                // Track current scene
+                game.events.on('ready', () => {
+                    debugLog('🎮 Game ready');
+                    document.getElementById('debug-status').textContent = 'Ready';
+                    
+                    // Start with GameScene for testing
+                    game.scene.start('GameScene');
+                });
+                
+                // Listen for scene changes
+                game.events.on('step', () => {
+                    const activeScenes = game.scene.getScenes(true);
+                    if (activeScenes.length > 0) {
+                        const newScene = activeScenes[activeScenes.length - 1];
+                        if (newScene !== currentScene) {
+                            currentScene = newScene;
+                            debugLog(`📍 Scene changed to: ${newScene.scene.key}`);
+                            
+                            // Update event status
+                            if (newScene.events) {
+                                const eventCount = newScene.events.eventNames().length;
+                                document.getElementById('event-status').textContent = `${eventCount} events`;
+                            }
+                        }
+                    }
+                });
+                
+                debugLog('✅ Game initialization completed');
+                
+            } catch (error) {
+                debugLog(`❌ Error initializing game: ${error.message}`);
+                console.error('Game initialization error:', error);
+                document.getElementById('debug-status').textContent = 'Error';
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            debugLog('🚀 Starting casting debug test...');
+            initGame();
+            
+            // Update data status periodically
+            setInterval(() => {
+                checkDataLoading();
+                if (currentScene && currentScene.playerController) {
+                    debugCastingSystem();
+                }
+            }, 5000);
+        });
+
+        // Expose for debugging
+        window.game = game;
+        window.gameState = gameState;
+        window.gameDataLoader = gameDataLoader;
+        window.debugLog = debugLog;
+        
+    </script>
+</body>
+</html> 

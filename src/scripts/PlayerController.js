@@ -75,7 +75,6 @@ export default class PlayerController {
     setupEventListeners() {
         // Store references to event handlers for cleanup
         this.castHandler = (data) => {
-            console.log('PlayerController: Cast input received, canCast:', this.canCast(), 'isCasting:', this.isCasting, 'isReeling:', this.isReeling);
             if (data.isDown && this.canCast()) {
                 this.castLine();
             }
@@ -136,13 +135,29 @@ export default class PlayerController {
     disableCastingInput() {
         // Remove casting input handler to prevent interference during minigames
         this.scene.events.off('input:cast', this.castHandler);
-        console.log('PlayerController: Casting input disabled');
+        
+        // ONLY disable PlayerController's mouse handler, NOT the entire scene input
+        // This allows CastingMiniGame to attach its own input listener
+        this.scene.input.off('pointerdown', this.mouseHandler);
+        
+        // Store that we disabled input so we can re-enable it later
+        this.inputDisabled = true;
     }
 
     enableCastingInput() {
+        // Only re-enable if we previously disabled it
+        if (!this.inputDisabled) {
+            return;
+        }
+        
         // Re-enable casting input handler
         this.scene.events.on('input:cast', this.castHandler);
-        console.log('PlayerController: Casting input enabled');
+        
+        // Re-enable PlayerController's mouse input
+        this.scene.input.on('pointerdown', this.mouseHandler);
+        
+        // Clear the disabled flag
+        this.inputDisabled = false;
     }
 
     castLine() {
@@ -151,6 +166,9 @@ export default class PlayerController {
         try {
             this.isCasting = true;
             console.log('PlayerController: Starting cast minigame...');
+            
+            // IMMEDIATELY disable casting input to prevent interference
+            this.disableCastingInput();
             
             // Play casting preparation sound
             this.audioManager?.playSFX('cast_prepare');
@@ -172,53 +190,8 @@ export default class PlayerController {
             this.castMinigame = new CastingMiniGame(this.scene, {});
             this.castMinigame.start(playerStats, waterArea);
             
-            // Listen for cast completion
-            this.scene.events.on('fishing:castComplete', (data) => {
-                console.log('PlayerController: Cast completed with data:', data);
-                
-                if (data.success) {
-                    // Check if cast hit any fishing spots first
-                    const spotHit = this.scene.checkFishingSpotHit ? 
-                        this.scene.checkFishingSpotHit(this.scene.lure.x, this.scene.lure.y) : 
-                        { hit: false };
-                    
-                    let castType = 'normal';
-                    let rarityBonus = 0;
-                    let spotInfo = null;
-                    
-                    if (spotHit.hit) {
-                        // Hit a fishing spot
-                        castType = 'spot';
-                        rarityBonus = spotHit.rarityBonus;
-                        spotInfo = spotHit.spot;
-                        console.log(`PlayerController: Hit fishing spot: ${spotInfo.config.name} (+${rarityBonus}% rarity)`);
-                    } else if (data.hitAccurateSection) {
-                        // Hit the main hotspot
-                        castType = 'hotspot';
-                        rarityBonus = 30; // Main hotspot bonus
-                        console.log('PlayerController: Hit main hotspot (+30% rarity)');
-                    }
-                    
-                    // Clean up casting minigame first
-                    if (this.castMinigame) {
-                        this.castMinigame.destroy();
-                        this.castMinigame = null;
-                    }
-                    
-                    // Start luring phase instead of jumping to reeling
-                    console.log('PlayerController: Starting luring phase after successful cast');
-                    this.startLurePhase(data.accuracy, castType, data.hitAccurateSection);
-                } else {
-                    console.log('PlayerController: Cast failed, ending fishing attempt');
-                    this.isFishing = false;
-                    
-                    // Clean up casting minigame
-                    if (this.castMinigame) {
-                        this.castMinigame.destroy();
-                        this.castMinigame = null;
-                    }
-                }
-            });
+            // Listen for cast completion (use once to prevent multiple listeners)
+            this.scene.events.once('fishing:castComplete', this.onCastComplete.bind(this));
             
             // Update statistics
             this.gameState.trackCastAttempt();
@@ -253,49 +226,167 @@ export default class PlayerController {
         const player = this.gameState.player || {};
         const baseStats = player.attributes || {};
         
+        // Debug logging
+        console.log('PlayerController: Debug - player object:', player);
+        console.log('PlayerController: Debug - baseStats:', baseStats);
+        
         // Get all equipped items and their combined effects
         const equipmentEffects = this.getEquipmentEffects();
+        console.log('PlayerController: Debug - equipmentEffects:', equipmentEffects);
         
         // Get Time & Weather effects (Priority 1.4 integration)
         const timeWeatherEffects = this.getTimeWeatherEffects();
+        console.log('PlayerController: Debug - timeWeatherEffects:', timeWeatherEffects);
         
-        return {
+        // Helper function to safely add numbers and avoid NaN
+        const safeAdd = (...values) => {
+            return values.reduce((sum, val) => {
+                const num = Number(val) || 0;
+                return sum + (isNaN(num) ? 0 : num);
+            }, 0);
+        };
+        
+        // Helper function to get safe base value
+        const safeBase = (value, defaultValue = 5) => {
+            const num = Number(value);
+            return isNaN(num) ? defaultValue : num;
+        };
+        
+        // Helper function to get safe effect value (convert multipliers to additive bonuses)
+        const safeEffect = (value, isMultiplier = false) => {
+            const num = Number(value);
+            if (isNaN(num)) return 0;
+            if (isMultiplier) {
+                // Convert multiplier (like 1.2) to additive bonus (like +0.2 = +20%)
+                return (num - 1.0) * 100; // Convert to percentage points
+            }
+            return num;
+        };
+        
+        const finalStats = {
             // Casting stats
-            castAccuracy: (baseStats.castAccuracy || 5) + equipmentEffects.castAccuracy + timeWeatherEffects.castAccuracy,
-            castDistance: (baseStats.castDistance || 5) + equipmentEffects.castDistance + timeWeatherEffects.castDistance,
-            castPower: (baseStats.castPower || 5) + equipmentEffects.castPower + timeWeatherEffects.castPower,
+            castAccuracy: safeAdd(
+                safeBase(baseStats.castAccuracy, 5),
+                equipmentEffects.castAccuracy || 0,
+                safeEffect(timeWeatherEffects.castAccuracy, true)
+            ),
+            castDistance: safeAdd(
+                safeBase(baseStats.castDistance, 5),
+                equipmentEffects.castDistance || 0,
+                safeEffect(timeWeatherEffects.castDistance, true)
+            ),
+            castPower: safeAdd(
+                safeBase(baseStats.castPower, 5),
+                equipmentEffects.castPower || 0,
+                safeEffect(timeWeatherEffects.castPower, true)
+            ),
             
             // Detection and attraction stats
-            fishDetection: (baseStats.fishDetection || 5) + equipmentEffects.fishDetection + timeWeatherEffects.fishDetection,
-            attractionRadius: (baseStats.attractionRadius || 5) + equipmentEffects.attractionRadius + timeWeatherEffects.attractionRadius,
-            biteRate: (baseStats.biteRate || 5) + equipmentEffects.biteRate + timeWeatherEffects.biteRate,
-            rareFishChance: (baseStats.rareFishChance || 5) + equipmentEffects.rareFishChance + timeWeatherEffects.rareFishChance,
+            fishDetection: safeAdd(
+                safeBase(baseStats.fishDetection, 5),
+                equipmentEffects.fishDetection || 0,
+                safeEffect(timeWeatherEffects.fishDetection, true)
+            ),
+            attractionRadius: safeAdd(
+                safeBase(baseStats.attractionRadius, 5),
+                equipmentEffects.attractionRadius || 0,
+                safeEffect(timeWeatherEffects.attractionRadius, true)
+            ),
+            biteRate: safeAdd(
+                safeBase(baseStats.biteRate, 5),
+                equipmentEffects.biteRate || 0,
+                safeEffect(timeWeatherEffects.biteRate, true)
+            ),
+            rareFishChance: safeAdd(
+                safeBase(baseStats.rareFishChance, 5),
+                equipmentEffects.rareFishChance || 0,
+                safeEffect(timeWeatherEffects.rareFishChance, true)
+            ),
             
             // Luring stats
-            lureSuccess: (baseStats.lureSuccess || 5) + equipmentEffects.lureSuccess + timeWeatherEffects.lureSuccess,
-            lureControl: (baseStats.lureControl || 5) + equipmentEffects.lureControl + timeWeatherEffects.lureControl,
-            lureDurability: (baseStats.lureDurability || 5) + equipmentEffects.lureDurability + timeWeatherEffects.lureDurability,
+            lureSuccess: safeAdd(
+                safeBase(baseStats.lureSuccess, 5),
+                equipmentEffects.lureSuccess || 0,
+                safeEffect(timeWeatherEffects.lureSuccess, true)
+            ),
+            lureControl: safeAdd(
+                safeBase(baseStats.lureControl, 5),
+                equipmentEffects.lureControl || 0,
+                safeEffect(timeWeatherEffects.lureControl, true)
+            ),
+            lureDurability: safeAdd(
+                safeBase(baseStats.lureDurability, 5),
+                equipmentEffects.lureDurability || 0,
+                safeEffect(timeWeatherEffects.lureDurability, true)
+            ),
             
             // Reeling stats
-            reelSpeed: (baseStats.reelSpeed || 5) + equipmentEffects.reelSpeed + timeWeatherEffects.reelSpeed,
-            lineStrength: (baseStats.lineStrength || 5) + equipmentEffects.lineStrength + timeWeatherEffects.lineStrength,
-            tensionControl: (baseStats.tensionControl || 5) + equipmentEffects.tensionControl + timeWeatherEffects.tensionControl,
-            staminaDrain: (baseStats.staminaDrain || 5) + equipmentEffects.staminaDrain + timeWeatherEffects.staminaDrain,
+            reelSpeed: safeAdd(
+                safeBase(baseStats.reelSpeed, 5),
+                equipmentEffects.reelSpeed || 0,
+                safeEffect(timeWeatherEffects.reelSpeed, true)
+            ),
+            lineStrength: safeAdd(
+                safeBase(baseStats.lineStrength, 5),
+                equipmentEffects.lineStrength || 0,
+                safeEffect(timeWeatherEffects.lineStrength, true)
+            ),
+            tensionControl: safeAdd(
+                safeBase(baseStats.tensionControl, 5),
+                equipmentEffects.tensionControl || 0,
+                safeEffect(timeWeatherEffects.tensionControl, true)
+            ),
+            staminaDrain: safeAdd(
+                safeBase(baseStats.staminaDrain, 5),
+                equipmentEffects.staminaDrain || 0,
+                safeEffect(timeWeatherEffects.staminaDrain, true)
+            ),
             
             // QTE stats
-            qteWindow: (baseStats.qteWindow || 5) + equipmentEffects.qteWindow + timeWeatherEffects.qteWindow,
-            qtePrecision: (baseStats.qtePrecision || 5) + equipmentEffects.qtePrecision + timeWeatherEffects.qtePrecision,
+            qteWindow: safeAdd(
+                safeBase(baseStats.qteWindow, 5),
+                equipmentEffects.qteWindow || 0,
+                safeEffect(timeWeatherEffects.qteWindow, true)
+            ),
+            qtePrecision: safeAdd(
+                safeBase(baseStats.qtePrecision, 5),
+                equipmentEffects.qtePrecision || 0,
+                safeEffect(timeWeatherEffects.qtePrecision, true)
+            ),
             
             // Special effects
-            criticalChance: (baseStats.criticalChance || 0) + equipmentEffects.criticalChance + timeWeatherEffects.criticalChance,
-            experienceBonus: (baseStats.experienceBonus || 0) + equipmentEffects.experienceBonus + timeWeatherEffects.experienceBonus,
-            durabilityLoss: Math.max(0.1, (baseStats.durabilityLoss || 1) + equipmentEffects.durabilityLoss + timeWeatherEffects.durabilityLoss),
+            criticalChance: safeAdd(
+                safeBase(baseStats.criticalChance, 0),
+                equipmentEffects.criticalChance || 0,
+                safeEffect(timeWeatherEffects.criticalChance, true)
+            ),
+            experienceBonus: safeAdd(
+                safeBase(baseStats.experienceBonus, 0),
+                equipmentEffects.experienceBonus || 0,
+                safeEffect(timeWeatherEffects.experienceBonus, true)
+            ),
+            durabilityLoss: Math.max(0.1, safeAdd(
+                safeBase(baseStats.durabilityLoss, 1),
+                equipmentEffects.durabilityLoss || 0,
+                safeEffect(timeWeatherEffects.durabilityLoss, true)
+            )),
             
-            // Time & Weather specific effects
-            fishActivity: timeWeatherEffects.fishActivity,
-            lineVisibility: timeWeatherEffects.lineVisibility,
-            playerVisibility: timeWeatherEffects.playerVisibility
+            // Time & Weather specific effects (keep as-is for special cases)
+            fishActivity: timeWeatherEffects.fishActivity || 1.0,
+            lineVisibility: timeWeatherEffects.lineVisibility || 1.0,
+            playerVisibility: timeWeatherEffects.playerVisibility || 1.0
         };
+        
+        console.log('PlayerController: Debug - finalStats:', finalStats);
+        
+        // Check for any NaN values in final stats
+        Object.entries(finalStats).forEach(([key, value]) => {
+            if (isNaN(value)) {
+                console.error(`PlayerController: NaN detected in finalStats.${key}:`, value);
+            }
+        });
+        
+        return finalStats;
     }
 
     getEquipmentEffects() {
@@ -398,7 +489,7 @@ export default class PlayerController {
 
     getTimeWeatherEffects() {
         let effects = {
-            // Base fishing attributes
+            // Base fishing attributes (all start at 1.0 = no change)
             castAccuracy: 1.0,
             castDistance: 1.0,
             biteRate: 1.0,
@@ -418,107 +509,133 @@ export default class PlayerController {
             visibility: 1.0,
             focusLevel: 1.0,
             reactionTime: 1.0,
-            equipmentDurability: 1.0
+            equipmentDurability: 1.0,
+            
+            // Special effects
+            fishActivity: 1.0,
+            lineVisibility: 1.0,
+            playerVisibility: 1.0
         };
         
-        // Apply time period effects
-        if (this.gameState.timeManager) {
-            const periodEffects = this.gameState.timeManager.getFishActivityModifiers();
-            const currentPeriod = this.gameState.timeManager.getCurrentPeriod();
-            
-            // Apply period-specific bonuses
-            switch (currentPeriod) {
-                case 'DAWN':
-                case 'DUSK':
-                    effects.rareFishChance += 0.2; // +20% rare fish chance
-                    effects.fishDetection += 0.15; // +15% fish detection
-                    break;
-                case 'MORNING':
-                case 'EVENING':
-                    effects.biteRate += 0.1; // +10% bite rate
-                    effects.fishAwareness -= 0.05; // -5% fish awareness (less cautious)
-                    break;
-                case 'MIDDAY':
-                    effects.castAccuracy += 0.1; // +10% cast accuracy (good visibility)
-                    effects.visibility += 0.2; // +20% visibility
-                    break;
-                case 'NIGHT':
-                case 'LATE_NIGHT':
-                    effects.rareFishChance += 0.3; // +30% rare fish chance
-                    effects.castAccuracy -= 0.2; // -20% cast accuracy (dark)
-                    effects.fishAwareness -= 0.1; // -10% fish awareness (fish less cautious at night)
-                    effects.visibility -= 0.3; // -30% visibility
-                    break;
-            }
-            
-            // Apply base time effects
-            if (periodEffects) {
-                effects.biteRate *= periodEffects.biteRate || 1.0;
-                effects.biteSpeed *= periodEffects.biteFast || 1.0;
-                effects.rareFishChance *= periodEffects.rareChance || 1.0;
-            }
-        }
-        
-        // Apply weather effects
-        if (this.gameState.weatherManager) {
-            const weatherEffects = this.gameState.weatherManager.getLocationWeatherEffects();
-            const currentWeather = this.gameState.weatherManager.getCurrentWeather();
-            
-            if (currentWeather === 'RAINY') {
-                effects.biteRate *= 1.3; // +30% bite rate in rain
-                effects.lureSuccess += 0.2; // +20% lure success
-                effects.castAccuracy -= 0.05; // -5% cast accuracy
-                effects.fishDetection += 0.25; // +25% fish detection
-                effects.visibility -= 0.2; // -20% visibility in rain
-                effects.lineStrength -= 0.1; // -10% line strength (wet conditions)
-            }
-            
-            // Apply weather modifier effects
-            if (weatherEffects) {
-                effects.biteRate *= weatherEffects.fishActivity || 1.0;
-                effects.visibility *= weatherEffects.visibility || 1.0;
-                effects.castAccuracy *= weatherEffects.castAccuracy || 1.0;
-            }
-        }
-        
-        // Apply location-specific fishing modifiers
-        if (this.gameState.locationManager) {
-            const locationModifiers = this.gameState.locationManager.getLocationFishingModifiers();
-            
-            if (locationModifiers) {
-                effects.biteRate *= locationModifiers.biteRate || 1.0;
-                effects.lineStrength *= locationModifiers.lineStrength || 1.0;
-                effects.castDistance *= locationModifiers.castDistance || 1.0;
-                effects.lureSuccess *= locationModifiers.lureEffectiveness || 1.0;
-                effects.experienceBonus *= locationModifiers.experienceBonus || 1.0;
-            }
-            
-            // Apply location-specific special effects
-            const currentLocation = this.gameState.locationManager.getCurrentLocation();
-            if (currentLocation) {
-                switch (currentLocation.id) {
-                    case 'ocean_harbor':
-                        effects.castDistance += 0.2; // Can cast further in ocean
-                        effects.fishDetection += 0.1; // Seagulls help detect fish
+        try {
+            // Apply time period effects
+            if (this.gameState.timeManager) {
+                const periodEffects = this.gameState.timeManager.getFishActivityModifiers();
+                const currentPeriod = this.gameState.timeManager.getCurrentPeriod();
+                
+                // Apply period-specific bonuses
+                switch (currentPeriod) {
+                    case 'DAWN':
+                    case 'DUSK':
+                        effects.rareFishChance *= 1.2; // +20% rare fish chance
+                        effects.fishDetection *= 1.15; // +15% fish detection
                         break;
-                    case 'mountain_stream':
-                        effects.castDistance -= 0.3; // Limited casting space
-                        effects.lureControl += 0.2; // Better lure control in current
-                        effects.rareFishChance += 0.15; // More rare mountain fish
+                    case 'MORNING':
+                    case 'EVENING':
+                        effects.biteRate *= 1.1; // +10% bite rate
+                        effects.fishAwareness *= 0.95; // -5% fish awareness (less cautious)
                         break;
-                    case 'midnight_pond':
-                        effects.rareFishChance += 0.4; // Many rare nocturnal fish
-                        effects.castAccuracy -= 0.2; // Harder to see in darkness
-                        effects.lureSuccess += 0.3; // Lures glow in mystical water
+                    case 'MIDDAY':
+                        effects.castAccuracy *= 1.1; // +10% cast accuracy (good visibility)
+                        effects.visibility *= 1.2; // +20% visibility
                         break;
-                    case 'champions_cove':
-                        effects.experienceBonus += 1.0; // 100% XP bonus
-                        effects.rareFishChance += 0.5; // Tournament fish
-                        effects.equipmentDurability += 0.2; // Premium facilities
+                    case 'NIGHT':
+                    case 'LATE_NIGHT':
+                        effects.rareFishChance *= 1.3; // +30% rare fish chance
+                        effects.castAccuracy *= 0.8; // -20% cast accuracy (dark)
+                        effects.fishAwareness *= 0.9; // -10% fish awareness (fish less cautious at night)
+                        effects.visibility *= 0.7; // -30% visibility
                         break;
                 }
+                
+                // Apply base time effects
+                if (periodEffects) {
+                    effects.biteRate *= (periodEffects.biteRate || 1.0);
+                    effects.biteSpeed *= (periodEffects.biteFast || 1.0);
+                    effects.rareFishChance *= (periodEffects.rareChance || 1.0);
+                }
             }
+        } catch (error) {
+            console.warn('PlayerController: Error applying time effects:', error);
         }
+        
+        try {
+            // Apply weather effects
+            if (this.gameState.weatherManager) {
+                const weatherEffects = this.gameState.weatherManager.getLocationWeatherEffects();
+                const currentWeather = this.gameState.weatherManager.getCurrentWeather();
+                
+                if (currentWeather === 'RAINY') {
+                    effects.biteRate *= 1.3; // +30% bite rate in rain
+                    effects.lureSuccess *= 1.2; // +20% lure success
+                    effects.castAccuracy *= 0.95; // -5% cast accuracy
+                    effects.fishDetection *= 1.25; // +25% fish detection
+                    effects.visibility *= 0.8; // -20% visibility in rain
+                    effects.lineStrength *= 0.9; // -10% line strength (wet conditions)
+                }
+                
+                // Apply weather modifier effects
+                if (weatherEffects) {
+                    effects.biteRate *= (weatherEffects.fishActivity || 1.0);
+                    effects.visibility *= (weatherEffects.visibility || 1.0);
+                    effects.castAccuracy *= (weatherEffects.castAccuracy || 1.0);
+                }
+            }
+        } catch (error) {
+            console.warn('PlayerController: Error applying weather effects:', error);
+        }
+        
+        try {
+            // Apply location-specific fishing modifiers
+            if (this.gameState.locationManager) {
+                const locationModifiers = this.gameState.locationManager.getLocationFishingModifiers();
+                
+                if (locationModifiers) {
+                    effects.biteRate *= (locationModifiers.biteRate || 1.0);
+                    effects.lineStrength *= (locationModifiers.lineStrength || 1.0);
+                    effects.castDistance *= (locationModifiers.castDistance || 1.0);
+                    effects.lureSuccess *= (locationModifiers.lureEffectiveness || 1.0);
+                    effects.experienceBonus *= (locationModifiers.experienceBonus || 1.0);
+                }
+                
+                // Apply location-specific special effects
+                const currentLocation = this.gameState.locationManager.getCurrentLocation();
+                if (currentLocation) {
+                    switch (currentLocation.id) {
+                        case 'ocean_harbor':
+                            effects.castDistance *= 1.2; // Can cast further in ocean
+                            effects.fishDetection *= 1.1; // Seagulls help detect fish
+                            break;
+                        case 'mountain_stream':
+                            effects.castDistance *= 0.7; // Limited casting space
+                            effects.lureControl *= 1.2; // Better lure control in current
+                            effects.rareFishChance *= 1.15; // More rare mountain fish
+                            break;
+                        case 'midnight_pond':
+                            effects.rareFishChance *= 1.4; // Many rare nocturnal fish
+                            effects.castAccuracy *= 0.8; // Harder to see in darkness
+                            effects.lureSuccess *= 1.3; // Lures glow in mystical water
+                            break;
+                        case 'champions_cove':
+                            effects.experienceBonus *= 2.0; // 100% XP bonus
+                            effects.rareFishChance *= 1.5; // Tournament fish
+                            effects.equipmentDurability *= 1.2; // Premium facilities
+                            break;
+                    }
+                }
+            }
+        } catch (error) {
+            console.warn('PlayerController: Error applying location effects:', error);
+        }
+        
+        // Ensure all values are valid numbers
+        Object.keys(effects).forEach(key => {
+            const value = effects[key];
+            if (typeof value !== 'number' || isNaN(value) || !isFinite(value)) {
+                console.warn(`PlayerController: Invalid effect value for ${key}:`, value, 'defaulting to 1.0');
+                effects[key] = 1.0;
+            }
+        });
         
         return effects;
     }
@@ -747,7 +864,12 @@ export default class PlayerController {
         };
     }
 
-    onCastComplete(success, accuracy, hitAccurateSection, castType) {
+    onCastComplete(data) {
+        console.log('PlayerController: Cast completed with data:', data);
+        
+        // Extract values from data object
+        const { success, accuracy, hitAccurateSection, castType } = data;
+        
         this.isCasting = false;
         
         // IMMEDIATELY clean up casting minigame to prevent input interference
@@ -772,10 +894,32 @@ export default class PlayerController {
         }
         
         if (success) {
-            console.log(`PlayerController: Cast successful! Accuracy: ${accuracy.toFixed(1)}%, Type: ${castType}, Hit accurate section: ${hitAccurateSection}`);
+            // Check if cast hit any fishing spots first
+            const spotHit = this.scene.checkFishingSpotHit ? 
+                this.scene.checkFishingSpotHit(this.scene.lure.x, this.scene.lure.y) : 
+                { hit: false };
+            
+            let finalCastType = castType || 'normal';
+            let rarityBonus = 0;
+            let spotInfo = null;
+            
+            if (spotHit.hit) {
+                // Hit a fishing spot
+                finalCastType = 'spot';
+                rarityBonus = spotHit.rarityBonus;
+                spotInfo = spotHit.spot;
+                console.log(`PlayerController: Hit fishing spot: ${spotInfo.config.name} (+${rarityBonus}% rarity)`);
+            } else if (hitAccurateSection) {
+                // Hit the main hotspot
+                finalCastType = 'hotspot';
+                rarityBonus = 30; // Main hotspot bonus
+                console.log('PlayerController: Hit main hotspot (+30% rarity)');
+            }
+            
+            console.log(`PlayerController: Cast successful! Accuracy: ${accuracy.toFixed(1)}%, Type: ${finalCastType}, Hit accurate section: ${hitAccurateSection}`);
             
             // Proceed to lure phase with information about cast quality
-            this.startLurePhase(accuracy, castType, hitAccurateSection);
+            this.startLurePhase(accuracy, finalCastType, hitAccurateSection);
         } else {
             console.log('PlayerController: Cast failed!');
             this.cleanupCast();
@@ -823,12 +967,15 @@ export default class PlayerController {
         });
         
         // Listen for lure completion
-        this.scene.events.once('fishing:lureComplete', (data) => {
-            this.onLureComplete(data.success, data.fishHooked, data.finalInterest);
-        });
+        this.scene.events.once('fishing:lureComplete', this.onLureComplete.bind(this));
     }
 
-    onLureComplete(success, fishHooked, finalInterest) {
+    onLureComplete(data) {
+        console.log('PlayerController: Lure completed with data:', data);
+        
+        // Extract values from data object
+        const { success, fishHooked, finalInterest } = data;
+        
         // IMMEDIATELY clean up luring minigame to prevent input interference
         if (this.lureMinigame) {
             this.lureMinigame.destroy();
@@ -887,9 +1034,7 @@ export default class PlayerController {
         });
         
         // Listen for reel completion
-        this.scene.events.once('fishing:reelComplete', (data) => {
-            this.onReelComplete(data.success, data.reason, data.fish, data.finalStats);
-        });
+        this.scene.events.once('fishing:reelComplete', this.onReelComplete.bind(this));
         
         // Show instructions
         this.showReelingInstructions();
@@ -899,7 +1044,7 @@ export default class PlayerController {
         const instructions = this.scene.add.text(
             this.scene.cameras.main.width / 2,
             50,
-            'REELING PHASE\nClick to reel in the fish!\nKeep tension in the GREEN ZONE\nDON\'T let tension reach the top or line SNAPS!\nRespond to QTEs quickly!\n\nQTE Controls:\n• SPACEBAR for tapping/timing\n• ARROW KEYS for sequences\n• HOLD SPACEBAR for hold QTEs',
+            'REELING PHASE\n🖱️ LEFT CLICK to reel in the fish!\nKeep tension in the GREEN ZONE\nDON\'T let tension reach the top or line SNAPS!\nRespond to QTEs quickly!\n\nQTE Controls:\n• SPACEBAR for tapping/timing\n• ARROW KEYS for sequences\n• HOLD SPACEBAR for hold QTEs\n\n⚠️ If mouse doesn\'t work, check console for debug info',
             {
                 fontSize: '16px',
                 fill: '#ffffff',
@@ -1079,7 +1224,12 @@ export default class PlayerController {
         }
     }
 
-    onReelComplete(success, reason, fish, finalStats) {
+    onReelComplete(data) {
+        console.log('PlayerController: Reel completed with data:', data);
+        
+        // Extract values from data object
+        const { success, reason, fish, finalStats } = data;
+        
         console.log(`PlayerController: Reel complete - success: ${success}, reason: ${reason}`);
         
         try {
@@ -1415,8 +1565,6 @@ export default class PlayerController {
     }
 
     cleanupCast() {
-        console.log('PlayerController: Starting cast cleanup...');
-        
         this.isCasting = false;
         this.isReeling = false;
         
@@ -1430,7 +1578,6 @@ export default class PlayerController {
                     this.scene.events.off('fishing:qteComplete', this.activeQTEHandlers.qteComplete);
                 }
                 this.activeQTEHandlers = null;
-                console.log('PlayerController: QTE event listeners cleaned up');
             }
         } catch (error) {
             console.warn('PlayerController: Error cleaning up QTE event listeners:', error);
@@ -1478,8 +1625,7 @@ export default class PlayerController {
         } catch (error) {
             console.warn('PlayerController: Error cleaning up fishing line/lure:', error);
         }
-        
-        console.log('PlayerController: Cast cleanup complete');
+
     }
 
     handleMouseClick(pointer) {

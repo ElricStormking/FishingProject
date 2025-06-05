@@ -12,11 +12,23 @@ import QuestScene from './scenes/QuestScene.js';
 import CabinScene from './scenes/CabinScene.js';
 import AlbumScene from './scenes/AlbumScene.js';
 
+// Initialize Stagewise toolbar in development mode only
+if (import.meta.env.DEV) {
+    import('@stagewise/toolbar').then(({ initToolbar }) => {
+        const stagewiseConfig = {
+            plugins: []
+        };
+        initToolbar(stagewiseConfig);
+    }).catch(err => {
+        console.warn('Stagewise toolbar failed to load:', err);
+    });
+}
+
 const config = {
     type: Phaser.AUTO,
     width: 1280,
     height: 720,
-    backgroundColor: '#2c3e50',
+    backgroundColor: '#003366',
     physics: {
         default: 'arcade',
         arcade: {

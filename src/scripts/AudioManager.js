@@ -1,6 +1,10 @@
-// Import audio assets
-import BoatBGMusic from '../assets/audio/Boat_BG.mp3';
-import FishingBGMusic from '../assets/audio/Fishing_BG.mp3';
+// Audio asset paths - using dynamic imports to prevent build errors
+const AUDIO_PATHS = {
+    boat_bg: '/src/assets/audio/Boat_BG.mp3',
+    fishing_bg: '/src/assets/audio/Fishing_BG.mp3',
+    moonlit_serenade: '/src/assets/audio/moonlit-serenade-191481.mp3',
+    fishing_reel: '/src/assets/audio/fishing-reel-82246.mp3'
+};
 
 export class AudioManager {
     constructor(scene) {
@@ -54,16 +58,16 @@ export class AudioManager {
         // Define audio assets - only load real files that exist, use placeholders for others
         const audioAssets = {
             music: {
-                menu: { key: 'music_menu', url: 'placeholder', loop: true }, // No file - use placeholder
-                fishing: { key: 'music_fishing', url: FishingBGMusic, loop: true }, // Real file
-                boat: { key: 'music_boat', url: BoatBGMusic, loop: true }, // Real file
-                shop: { key: 'music_shop', url: 'placeholder', loop: true }, // No file - use placeholder
+                menu: { key: 'music_menu', url: AUDIO_PATHS.moonlit_serenade, loop: true }, // Use moonlit serenade for menu
+                fishing: { key: 'music_fishing', url: AUDIO_PATHS.fishing_bg, loop: true }, // Real file
+                boat: { key: 'music_boat', url: AUDIO_PATHS.boat_bg, loop: true }, // Real file
+                shop: { key: 'music_shop', url: AUDIO_PATHS.moonlit_serenade, loop: true }, // Use moonlit serenade for shop
                 victory: { key: 'music_victory', url: 'placeholder', loop: false } // No file - use placeholder
             },
             sfx: {
                 cast: { key: 'sfx_cast', url: 'placeholder' }, // No file - use placeholder
                 splash: { key: 'sfx_splash', url: 'placeholder' }, // No file - use placeholder
-                reel: { key: 'sfx_reel', url: 'placeholder' }, // No file - use placeholder
+                reel: { key: 'sfx_reel', url: AUDIO_PATHS.fishing_reel }, // Real file
                 catch: { key: 'sfx_catch', url: 'placeholder' }, // No file - use placeholder
                 fail: { key: 'sfx_fail', url: 'placeholder' }, // No file - use placeholder
                 button: { key: 'sfx_button', url: 'placeholder' }, // No file - use placeholder

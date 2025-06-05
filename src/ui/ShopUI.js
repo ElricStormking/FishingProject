@@ -17,6 +17,9 @@ export class ShopUI {
         this.scrollOffset = 0;
         this.maxScroll = 0;
         
+        // Create DOM button for selling all fish
+        this.createSellAllFishButton();
+        
         this.createUI();
         this.setupEventListeners();
         
@@ -375,20 +378,32 @@ export class ShopUI {
     }
 
     createScrollIndicators() {
-        // Scroll up indicator
+        // Scroll up indicator/button
         this.scrollUpIndicator = this.scene.add.text(this.x + this.width - 30, this.y + 110, '▲', {
-            fontSize: '16px',
+            fontSize: '20px',
             fill: '#3498db',
             fontFamily: 'Arial'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setDepth(15000);
+        
+        this.scrollUpIndicator.setInteractive({ useHandCursor: true });
+        this.scrollUpIndicator.on('pointerdown', () => this.scroll(-30));
+        this.scrollUpIndicator.on('pointerover', () => this.scrollUpIndicator.setTint(0x2980b9));
+        this.scrollUpIndicator.on('pointerout', () => this.scrollUpIndicator.clearTint());
+        
         this.container.add(this.scrollUpIndicator);
 
-        // Scroll down indicator
+        // Scroll down indicator/button
         this.scrollDownIndicator = this.scene.add.text(this.x + this.width - 30, this.y + this.height - 30, '▼', {
-            fontSize: '16px',
+            fontSize: '20px',
             fill: '#3498db',
             fontFamily: 'Arial'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setDepth(15000);
+        
+        this.scrollDownIndicator.setInteractive({ useHandCursor: true });
+        this.scrollDownIndicator.on('pointerdown', () => this.scroll(30));
+        this.scrollDownIndicator.on('pointerover', () => this.scrollDownIndicator.setTint(0x2980b9));
+        this.scrollDownIndicator.on('pointerout', () => this.scrollDownIndicator.clearTint());
+        
         this.container.add(this.scrollDownIndicator);
     }
 
@@ -497,6 +512,16 @@ export class ShopUI {
         this.isVisible = true;
         this.container.setVisible(true);
         
+        // Hide fish button when shop is open
+        if (this.scene.hideFishButton) {
+            this.scene.hideFishButton();
+        }
+        
+        // Show DOM button
+        if (this.sellAllFishButton) {
+            this.sellAllFishButton.style.display = 'block';
+        }
+        
         // Update money display
         this.moneyText.setText(`💰 Money: ${this.gameState.player.money} coins`);
         
@@ -517,10 +542,26 @@ export class ShopUI {
         this.scrollOffset = 0;
         this.scrollContainer.setY(0);
         
+        // Show fish button when shop is closed
+        if (this.scene.showFishButton) {
+            this.scene.showFishButton();
+        }
+        
+        // Hide DOM button
+        if (this.sellAllFishButton) {
+            this.sellAllFishButton.style.display = 'none';
+        }
+        
         console.log('ShopUI: Shop interface closed');
     }
 
     destroy() {
+        // Remove DOM button
+        if (this.sellAllFishButton && this.sellAllFishButton.parentNode) {
+            this.sellAllFishButton.parentNode.removeChild(this.sellAllFishButton);
+            this.sellAllFishButton = null;
+        }
+        
         if (this.container) {
             this.container.destroy();
         }
@@ -843,5 +884,52 @@ export class ShopUI {
         
         // Refresh the shop to show the new fish
         this.refreshShop();
+    }
+
+    createSellAllFishButton() {
+        // Create DOM button for selling all fish
+        this.sellAllFishButton = document.createElement('button');
+        this.sellAllFishButton.innerHTML = '🐟 Sell All Fishes';
+        this.sellAllFishButton.style.cssText = `
+            position: fixed;
+            top: 120px;
+            right: 20px;
+            z-index: 10000;
+            padding: 12px 20px;
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            display: none;
+        `;
+        
+        // Add hover effects
+        this.sellAllFishButton.addEventListener('mouseenter', () => {
+            this.sellAllFishButton.style.background = 'linear-gradient(45deg, #c0392b, #a93226)';
+            this.sellAllFishButton.style.transform = 'translateY(-2px)';
+            this.sellAllFishButton.style.boxShadow = '0 6px 12px rgba(0,0,0,0.4)';
+        });
+        
+        this.sellAllFishButton.addEventListener('mouseleave', () => {
+            this.sellAllFishButton.style.background = 'linear-gradient(45deg, #e74c3c, #c0392b)';
+            this.sellAllFishButton.style.transform = 'translateY(0)';
+            this.sellAllFishButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+        });
+        
+        // Add click handler
+        this.sellAllFishButton.addEventListener('click', () => {
+            this.sellAllFish();
+        });
+        
+        // Add to document
+        document.body.appendChild(this.sellAllFishButton);
+        
+        console.log('ShopUI: DOM Sell All Fish button created');
     }
 } 

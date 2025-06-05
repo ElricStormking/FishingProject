@@ -720,12 +720,23 @@ export class FishCollectionUI extends Phaser.GameObjects.Container {
     show() {
         this.isVisible = true;
         this.setVisible(true);
+        
+        // Hide fish button when fish collection is open
+        if (this.scene.hideFishButton) {
+            this.scene.hideFishButton();
+        }
+        
         this.refreshDisplay();
     }
     
     hide() {
         this.isVisible = false;
         this.setVisible(false);
+        
+        // Show fish button when fish collection is closed
+        if (this.scene.showFishButton) {
+            this.scene.showFishButton();
+        }
     }
     
     toggle() {

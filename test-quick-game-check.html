@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Game Check</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        .status {
+            background: #1a1a2e;
+            border: 2px solid #00aaff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .error { border-color: #ff6666; }
+        .success { border-color: #66ff66; }
+        .warning { border-color: #ffaa66; }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #00aaff;
+            border-radius: 10px;
+        }
+        .console-output {
+            background: #000;
+            color: #00ff00;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎣 Quick Game Check</h1>
+    
+    <div class="status" id="status">
+        <h3>Status: Checking...</h3>
+        <p>Loading game and checking for errors...</p>
+    </div>
+    
+    <div class="status">
+        <h3>Game Frame</h3>
+        <iframe src="http://localhost:5173" id="gameFrame"></iframe>
+    </div>
+    
+    <div class="status">
+        <h3>Console Output</h3>
+        <div class="console-output" id="consoleOutput">
+            Monitoring console for errors...
+        </div>
+    </div>
+    
+    <div class="status">
+        <h3>Test Results</h3>
+        <ul id="testResults">
+            <li>⏳ Game loading...</li>
+        </ul>
+    </div>
+    
+    <script>
+        const statusDiv = document.getElementById('status');
+        const consoleOutput = document.getElementById('consoleOutput');
+        const testResults = document.getElementById('testResults');
+        const gameFrame = document.getElementById('gameFrame');
+        
+        let testsPassed = 0;
+        let testsTotal = 5;
+        let consoleMessages = [];
+        
+        // Override console methods to capture output
+        const originalConsole = {
+            log: console.log,
+            warn: console.warn,
+            error: console.error
+        };
+        
+        function captureConsole(type, ...args) {
+            const message = args.join(' ');
+            consoleMessages.push(`[${type.toUpperCase()}] ${message}`);
+            consoleOutput.textContent = consoleMessages.slice(-20).join('\n');
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+            originalConsole[type](...args);
+        }
+        
+        console.log = (...args) => captureConsole('log', ...args);
+        console.warn = (...args) => captureConsole('warn', ...args);
+        console.error = (...args) => captureConsole('error', ...args);
+        
+        // Test functions
+        function updateTestResult(index, text, passed) {
+            const results = testResults.children;
+            if (results[index]) {
+                results[index].innerHTML = passed ? `✅ ${text}` : `❌ ${text}`;
+                if (passed) testsPassed++;
+            }
+        }
+        
+        function updateStatus() {
+            const percentage = Math.round((testsPassed / testsTotal) * 100);
+            if (testsPassed === testsTotal) {
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = `<h3>Status: ✅ All Tests Passed (${percentage}%)</h3><p>Game is working correctly!</p>`;
+            } else if (testsPassed > testsTotal / 2) {
+                statusDiv.className = 'status warning';
+                statusDiv.innerHTML = `<h3>Status: ⚠️ Partial Success (${percentage}%)</h3><p>Game is mostly working with some issues.</p>`;
+            } else {
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = `<h3>Status: ❌ Issues Detected (${percentage}%)</h3><p>Game has significant problems.</p>`;
+            }
+        }
+        
+        // Initialize test results
+        testResults.innerHTML = `
+            <li id="test0">⏳ Server responding...</li>
+            <li id="test1">⏳ Game loading...</li>
+            <li id="test2">⏳ No critical errors...</li>
+            <li id="test3">⏳ Data loading...</li>
+            <li id="test4">⏳ Audio system...</li>
+        `;
+        
+        // Test 1: Server responding
+        fetch('http://localhost:5173')
+            .then(response => {
+                updateTestResult(0, 'Server responding', response.ok);
+                updateStatus();
+            })
+            .catch(() => {
+                updateTestResult(0, 'Server responding', false);
+                updateStatus();
+            });
+        
+        // Test 2-5: Monitor console for specific messages
+        let gameLoadedDetected = false;
+        let dataLoadedDetected = false;
+        let audioInitDetected = false;
+        let criticalErrorDetected = false;
+        
+        setInterval(() => {
+            const recentMessages = consoleMessages.slice(-10).join(' ');
+            
+            // Test 2: Game loading
+            if (!gameLoadedDetected && (recentMessages.includes('Phaser') || recentMessages.includes('Game initialized'))) {
+                gameLoadedDetected = true;
+                updateTestResult(1, 'Game loading', true);
+                updateStatus();
+            }
+            
+            // Test 3: Critical errors
+            if (!criticalErrorDetected) {
+                const hasCriticalError = recentMessages.includes('TypeError') || 
+                                       recentMessages.includes('ReferenceError') ||
+                                       recentMessages.includes('Failed to load game');
+                updateTestResult(2, 'No critical errors', !hasCriticalError);
+                if (hasCriticalError) criticalErrorDetected = true;
+                updateStatus();
+            }
+            
+            // Test 4: Data loading
+            if (!dataLoadedDetected && (recentMessages.includes('Data Loaded') || recentMessages.includes('fallback data'))) {
+                dataLoadedDetected = true;
+                updateTestResult(3, 'Data loading', true);
+                updateStatus();
+            }
+            
+            // Test 5: Audio system
+            if (!audioInitDetected && recentMessages.includes('AudioManager')) {
+                audioInitDetected = true;
+                updateTestResult(4, 'Audio system', true);
+                updateStatus();
+            }
+        }, 1000);
+        
+        // Auto-refresh every 30 seconds
+        setTimeout(() => {
+            location.reload();
+        }, 30000);
+    </script>
+</body>
+</html> 

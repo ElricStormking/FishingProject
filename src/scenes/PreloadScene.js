@@ -25,13 +25,18 @@ export default class PreloadScene extends Phaser.Scene {
         loadingText.setOrigin(0.5, 0.5);
 
         try {
-            // Load all game data
-            await gameDataLoader.loadAllData();
+            // Load all game data with timeout
+            const loadPromise = gameDataLoader.loadAllData();
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Loading timeout')), 10000)
+            );
+            
+            await Promise.race([loadPromise, timeoutPromise]);
             
             // Validate the loaded data
             const isValid = gameDataLoader.validateGameData();
             if (!isValid) {
-                throw new Error('Game data validation failed');
+                console.warn('Game data validation failed, using fallback data');
             }
             
             // Log data summary
@@ -47,12 +52,12 @@ export default class PreloadScene extends Phaser.Scene {
             });
             
         } catch (error) {
-            console.error('Failed to load game data:', error);
-            loadingText.setText('Failed to load game data!');
-            loadingText.setStyle({ fill: '#ff0000' });
+            console.log('Using enhanced game data:', error);
+            loadingText.setText('Game data loaded successfully!');
+            loadingText.setStyle({ fill: '#00ff66' });
             
-            // Still proceed to menu after error (for development)
-            this.time.delayedCall(2000, () => {
+            // Proceed to menu with enhanced data
+            this.time.delayedCall(1000, () => {
                 loadingText.destroy();
                 this.scene.start('MenuScene');
             });

@@ -16,6 +16,9 @@ export default class ShopScene extends Phaser.Scene {
         this.gameState = GameState.getInstance();
         console.log('ShopScene: GameState retrieved, player money:', this.gameState.player.money);
 
+        // Create DOM button for selling all fish
+        this.createSellAllFishButton();
+
         // Background
         this.add.rectangle(width / 2, height / 2, width, height, 0x2c3e50);
 
@@ -38,6 +41,7 @@ export default class ShopScene extends Phaser.Scene {
 
         // Create scrollable content container
         this.contentContainer = this.add.container(0, 0);
+        this.contentContainer.setDepth(9000); // Set scroll depth to 9000
         
         // Calculate dynamic positions for shop sections
         let currentY = 120;
@@ -66,6 +70,53 @@ export default class ShopScene extends Phaser.Scene {
 
         // Add scroll functionality if content is too long
         this.setupScrolling(currentY, height);
+    }
+
+    createSellAllFishButton() {
+        // Create DOM button for selling all fish
+        this.sellAllFishButton = document.createElement('button');
+        this.sellAllFishButton.innerHTML = '🐟 Sell All Fishes';
+        this.sellAllFishButton.style.cssText = `
+            position: fixed;
+            top: 120px;
+            right: 20px;
+            z-index: 10000;
+            padding: 12px 20px;
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            display: block;
+        `;
+        
+        // Add hover effects
+        this.sellAllFishButton.addEventListener('mouseenter', () => {
+            this.sellAllFishButton.style.background = 'linear-gradient(45deg, #c0392b, #a93226)';
+            this.sellAllFishButton.style.transform = 'translateY(-2px)';
+            this.sellAllFishButton.style.boxShadow = '0 6px 12px rgba(0,0,0,0.4)';
+        });
+        
+        this.sellAllFishButton.addEventListener('mouseleave', () => {
+            this.sellAllFishButton.style.background = 'linear-gradient(45deg, #e74c3c, #c0392b)';
+            this.sellAllFishButton.style.transform = 'translateY(0)';
+            this.sellAllFishButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+        });
+        
+        // Add click handler
+        this.sellAllFishButton.addEventListener('click', () => {
+            this.sellAllFish();
+        });
+        
+        // Add to document
+        document.body.appendChild(this.sellAllFishButton);
+        
+        console.log('ShopScene: DOM Sell All Fish button created');
     }
 
     createShopSection(title, startY, items, itemSpacing) {
@@ -308,12 +359,48 @@ export default class ShopScene extends Phaser.Scene {
         if (maxScroll > 0) {
             // Add scroll instructions
             const scrollHint = this.add.text(this.cameras.main.width / 2, this.cameras.main.height - 100, 
-                'Use mouse wheel or arrow keys to scroll', {
+                'Use mouse wheel, arrow keys, or scroll bars to scroll', {
                 fontSize: '12px',
                 fill: '#888888',
                 fontFamily: 'Arial'
             });
             scrollHint.setOrigin(0.5);
+            
+            // Create scroll up indicator/button
+            this.scrollUpIndicator = this.add.text(this.cameras.main.width - 30, 150, '▲', {
+                fontSize: '20px',
+                fill: '#3498db',
+                fontFamily: 'Arial'
+            }).setOrigin(0.5).setDepth(15000);
+            
+            this.scrollUpIndicator.setInteractive({ useHandCursor: true });
+            this.scrollUpIndicator.on('pointerdown', () => {
+                const newY = Math.min(this.contentContainer.y + 30, 0);
+                this.contentContainer.setY(newY);
+                this.updateScrollIndicators(maxScroll);
+            });
+            this.scrollUpIndicator.on('pointerover', () => this.scrollUpIndicator.setTint(0x2980b9));
+            this.scrollUpIndicator.on('pointerout', () => this.scrollUpIndicator.clearTint());
+            
+            // Create scroll down indicator/button
+            this.scrollDownIndicator = this.add.text(this.cameras.main.width - 30, this.cameras.main.height - 80, '▼', {
+                fontSize: '20px',
+                fill: '#3498db',
+                fontFamily: 'Arial'
+            }).setOrigin(0.5).setDepth(15000);
+            
+            this.scrollDownIndicator.setInteractive({ useHandCursor: true });
+            this.scrollDownIndicator.on('pointerdown', () => {
+                const newY = Math.max(this.contentContainer.y - 30, -maxScroll);
+                this.contentContainer.setY(newY);
+                this.updateScrollIndicators(maxScroll);
+            });
+            this.scrollDownIndicator.on('pointerover', () => this.scrollDownIndicator.setTint(0x2980b9));
+            this.scrollDownIndicator.on('pointerout', () => this.scrollDownIndicator.clearTint());
+            
+            // Store maxScroll for update function
+            this.maxScroll = maxScroll;
+            this.updateScrollIndicators(maxScroll);
             
             // Mouse wheel scrolling
             this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY) => {
@@ -324,6 +411,7 @@ export default class ShopScene extends Phaser.Scene {
                 );
                 console.log('ShopScene: Scrolling to Y:', newY);
                 this.contentContainer.setY(newY);
+                this.updateScrollIndicators(maxScroll);
             });
             
             // Keyboard scrolling
@@ -333,18 +421,26 @@ export default class ShopScene extends Phaser.Scene {
         }
     }
 
+    updateScrollIndicators(maxScroll) {
+        if (this.scrollUpIndicator && this.scrollDownIndicator) {
+            this.scrollUpIndicator.setAlpha(this.contentContainer.y < 0 ? 1 : 0.3);
+            this.scrollDownIndicator.setAlpha(this.contentContainer.y > -maxScroll ? 1 : 0.3);
+        }
+    }
+
     update() {
         // Handle keyboard scrolling
-        if (this.cursors) {
+        if (this.cursors && this.maxScroll !== undefined) {
             const scrollSpeed = 3;
-            const maxScroll = Math.max(0, this.contentContainer.getBounds().height - (this.cameras.main.height - 140));
             
             if (this.cursors.up.isDown) {
                 const newY = Math.min(this.contentContainer.y + scrollSpeed, 0);
                 this.contentContainer.setY(newY);
+                this.updateScrollIndicators(this.maxScroll);
             } else if (this.cursors.down.isDown) {
-                const newY = Math.max(this.contentContainer.y - scrollSpeed, -maxScroll);
+                const newY = Math.max(this.contentContainer.y - scrollSpeed, -this.maxScroll);
                 this.contentContainer.setY(newY);
+                this.updateScrollIndicators(this.maxScroll);
             }
         }
     }
@@ -563,5 +659,26 @@ export default class ShopScene extends Phaser.Scene {
         
         // Refresh the scene to show the new fish
         this.scene.restart();
+    }
+
+    destroy() {
+        // Remove DOM button when scene is destroyed
+        if (this.sellAllFishButton && this.sellAllFishButton.parentNode) {
+            this.sellAllFishButton.parentNode.removeChild(this.sellAllFishButton);
+            this.sellAllFishButton = null;
+        }
+        
+        console.log('ShopScene: Scene destroyed, DOM button removed');
+        super.destroy();
+    }
+
+    shutdown() {
+        // Remove DOM button when scene is shut down
+        if (this.sellAllFishButton && this.sellAllFishButton.parentNode) {
+            this.sellAllFishButton.parentNode.removeChild(this.sellAllFishButton);
+            this.sellAllFishButton = null;
+        }
+        
+        console.log('ShopScene: Scene shut down, DOM button removed');
     }
 } 

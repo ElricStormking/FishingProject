@@ -1374,6 +1374,12 @@ export class PlayerProgressionUI {
     show() {
         this.isVisible = true;
         this.container.setVisible(true);
+        
+        // Hide fish button when player progression is open
+        if (this.scene.hideFishButton) {
+            this.scene.hideFishButton();
+        }
+        
         this.updateDisplay();
         
         // Animate in
@@ -1391,6 +1397,11 @@ export class PlayerProgressionUI {
     hide() {
         // Hide working upgrade buttons first
         this.hideAllWorkingUpgradeButtons();
+        
+        // Show fish button when player progression is closed
+        if (this.scene.showFishButton) {
+            this.scene.showFishButton();
+        }
         
         this.scene.tweens.add({
             targets: this.container,

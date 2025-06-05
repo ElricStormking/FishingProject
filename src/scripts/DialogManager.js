@@ -86,27 +86,54 @@ export default class DialogManager {
      * @param {string} npcId - The ID of the NPC to dialog with
      * @param {string} callingScene - The scene that initiated the dialog
      */
-    startDialog(npcId, callingScene) {
-        const npc = this.getNPC(npcId);
-        if (!npc) {
-            console.error(`NPC with ID '${npcId}' not found`);
-            return;
+    startDialog(npcId, callingScene = 'GameScene') {
+        try {
+            // Validate inputs
+            if (!npcId || typeof npcId !== 'string') {
+                console.error('DialogManager: Invalid npcId provided to startDialog:', npcId);
+                return false;
+            }
+
+            const npc = this.getNPC(npcId);
+            if (!npc) {
+                console.error(`DialogManager: NPC with ID '${npcId}' not found`);
+                return false;
+            }
+
+            // Check if scene manager is available
+            if (!this.gameScene || !this.gameScene.scene) {
+                console.error('DialogManager: GameScene or scene manager not available');
+                return false;
+            }
+
+            console.log(`DialogManager: Starting dialog with ${npc.name} from ${callingScene}`);
+            
+            // Add to active dialogs
+            this.activeDialogs.add(npcId);
+
+            // Start the dialog scene with error handling
+            try {
+                this.gameScene.scene.launch('DialogScene', {
+                    npcId: npcId, // Use npcId instead of npc for consistency
+                    script: npc.dialogScript,
+                    callingScene: callingScene,
+                    dialogManager: this // Pass DialogManager reference
+                });
+            } catch (sceneError) {
+                console.error('DialogManager: Error launching DialogScene:', sceneError);
+                this.activeDialogs.delete(npcId); // Clean up on error
+                return false;
+            }
+
+            // Set up event listeners for this dialog
+            this.setupDialogListeners(npcId, callingScene);
+            
+            return true;
+            
+        } catch (error) {
+            console.error('DialogManager: Error in startDialog:', error);
+            return false;
         }
-
-        console.log(`Starting dialog with ${npc.name}`);
-        
-        // Add to active dialogs
-        this.activeDialogs.add(npcId);
-
-        // Start the dialog scene
-        this.gameScene.scene.launch('DialogScene', {
-            npc: npcId,
-            script: npc.dialogScript,
-            callingScene: callingScene
-        });
-
-        // Set up event listeners for this dialog
-        this.setupDialogListeners(npcId, callingScene);
     }
 
     /**
@@ -115,33 +142,65 @@ export default class DialogManager {
      * @param {string} callingScene - The calling scene name
      */
     setupDialogListeners(npcId, callingScene) {
-        const dialogScene = this.gameScene.scene.get('DialogScene');
-        if (!dialogScene) return;
+        try {
+            // Wait a bit for DialogScene to be fully initialized
+            this.gameScene.time.delayedCall(100, () => {
+                const dialogScene = this.gameScene.scene.get('DialogScene');
+                if (!dialogScene) {
+                    console.warn('DialogManager: DialogScene not found when setting up listeners');
+                    return;
+                }
 
-        // Listen for romance meter changes
-        dialogScene.events.on('romance-update', (data) => {
-            this.updateRomanceMeter(data);
-        });
+                // Listen for romance meter changes
+                dialogScene.events.on('romance-update', (data) => {
+                    try {
+                        this.updateRomanceMeter(data);
+                    } catch (error) {
+                        console.error('DialogManager: Error updating romance meter:', error);
+                    }
+                });
 
-        // Listen for quest updates
-        dialogScene.events.on('quest-update', (data) => {
-            this.updateQuest(data);
-        });
+                // Listen for quest updates
+                dialogScene.events.on('quest-update', (data) => {
+                    try {
+                        this.updateQuest(data);
+                    } catch (error) {
+                        console.error('DialogManager: Error updating quest:', error);
+                    }
+                });
 
-        // Listen for achievement unlocks
-        dialogScene.events.on('achievement-unlock', (data) => {
-            this.unlockAchievement(data);
-        });
+                // Listen for achievement unlocks
+                dialogScene.events.on('achievement-unlock', (data) => {
+                    try {
+                        this.unlockAchievement(data);
+                    } catch (error) {
+                        console.error('DialogManager: Error unlocking achievement:', error);
+                    }
+                });
 
-        // Listen for inventory changes
-        dialogScene.events.on('inventory-update', (data) => {
-            this.updateInventory(data);
-        });
+                // Listen for inventory changes
+                dialogScene.events.on('inventory-update', (data) => {
+                    try {
+                        this.updateInventory(data);
+                    } catch (error) {
+                        console.error('DialogManager: Error updating inventory:', error);
+                    }
+                });
 
-        // Listen for dialog end
-        dialogScene.events.once('dialog-ended', () => {
-            this.endDialog(npcId);
-        });
+                // Listen for dialog end
+                dialogScene.events.once('dialog-ended', () => {
+                    try {
+                        this.endDialog(npcId);
+                    } catch (error) {
+                        console.error('DialogManager: Error ending dialog:', error);
+                    }
+                });
+                
+                console.log(`DialogManager: Event listeners set up for ${npcId} dialog`);
+            });
+        } catch (error) {
+            console.error('DialogManager: Error setting up dialog listeners:', error);
+        }
     }
 
     /**

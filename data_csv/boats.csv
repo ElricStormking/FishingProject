@@ -1,0 +1,11 @@
+boat_id,boat_name,rarity,equip_slot,crafting_efficiency,auto_fishing_yield,fish_detection,hotspot_stability,companion_slots,auto_fishing_efficiency,boat_durability,fishtank_storage,cost,crafting_material_1,crafting_material_2,crafting_material_3,crafting_time,description,unlock_level
+rowboat,Rowboat,1,boat,5,8,3,10,1,5,15,10,500,sardine,sardine,sardine,5,Simple wooden rowboat,1
+skiff,Skiff,2,boat,8,12,5,15,1,8,20,15,1000,bass,bass,bass,7,Small motorized fishing boat,8
+speedboat,Speedboat,3,boat,12,18,8,20,2,12,25,20,2000,tuna,tuna,tuna,9,Fast boat with twin engines,15
+yacht,Yacht,4,boat,18,25,12,30,3,18,35,30,4000,marlin,marlin,marlin,11,Luxury yacht with premium amenities,25
+luxury_liner,Luxury Liner,5,boat,25,35,18,40,5,25,50,50,6000,shark,shark,shark,13,Massive luxury cruise vessel,35
+elite_rowboat,Elite Rowboat,3,boat,10,15,6,18,2,10,25,18,2000,rowboat,rowboat,,15,Reinforced rowboat with modern fittings,12
+elite_skiff,Elite Skiff,4,boat,15,22,10,25,2,15,30,25,3000,skiff,skiff,,17,Upgraded skiff with fish finder,20
+elite_speedboat,Elite Speedboat,5,boat,20,30,15,35,3,20,40,35,5000,speedboat,speedboat,,19,High-performance racing boat,28
+elite_yacht,Elite Yacht,6,boat,30,45,22,50,4,30,60,45,8000,yacht,yacht,,21,Superyacht with advanced technology,38
+elite_luxury_liner,Elite Luxury Liner,6,boat,40,60,30,65,6,40,80,70,12000,luxury_liner,luxury_liner,,23,Ultimate floating palace,45 

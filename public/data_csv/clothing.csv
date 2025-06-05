@@ -1,0 +1,14 @@
+clothing_id,clothing_name,rarity,equip_slot,stat_1_name,stat_1_value,stat_2_name,stat_2_value,stat_3_name,stat_3_value,stat_4_name,stat_4_value,cost,crafting_material_1,crafting_material_2,crafting_time,description,unlock_level
+fishers_cap,Fisher's Cap,1,head,energy,5,castAccuracy,2,sunProtection,10,,,400,trout,trout,3,Classic fishing cap with sun protection,2
+sunglasses,Sunglasses,2,head,fishDetection,8,glareReduction,15,style,5,,,600,pike,pike,5,Polarized sunglasses for better vision,5
+fishing_vest,Fishing Vest,3,upper_body,storage,20,lureSuccess,5,convenience,10,,,800,salmon,salmon,7,Multi-pocket vest for tackle storage,8
+bikini_top,Bikini Top,2,upper_body,companionAffinity,10,style,15,comfort,8,,,1000,bass,bass,9,Stylish bikini top for luxury fishing,10
+sandals,Sandals,1,lower_body,boatSpeed,3,comfort,12,stability,5,,,1200,perch,perch,11,Non-slip deck sandals,3
+elite_fishers_cap,Elite Fisher's Cap,3,head,energy,12,castAccuracy,8,sunProtection,20,weatherResistance,10,1500,fishers_cap,fishers_cap,13,Premium cap with advanced materials,15
+elite_sunglasses,Elite Sunglasses,4,head,fishDetection,18,glareReduction,30,style,12,nightVision,5,2000,sunglasses,sunglasses,15,Designer sunglasses with fish-spotting tech,20
+elite_fishing_vest,Elite Fishing Vest,5,upper_body,storage,40,lureSuccess,15,convenience,20,organization,15,2500,fishing_vest,fishing_vest,17,Professional vest with smart organization,25
+elite_bikini_top,Elite Bikini Top,4,upper_body,companionAffinity,25,style,30,comfort,18,confidence,10,3000,bikini_top,bikini_top,19,Designer bikini with luxury materials,30
+master_fishers_cap,Master Fisher's Cap,5,head,energy,25,castAccuracy,18,sunProtection,40,weatherResistance,25,4000,elite_fishers_cap,elite_fishers_cap,23,Legendary cap worn by master anglers,35
+master_sunglasses,Master Sunglasses,6,head,fishDetection,35,glareReduction,50,style,25,nightVision,15,4500,elite_sunglasses,elite_sunglasses,25,High-tech glasses with fish tracking,40
+master_fishing_vest,Master Fishing Vest,6,upper_body,storage,70,lureSuccess,30,convenience,40,organization,30,5000,elite_fishing_vest,elite_fishing_vest,27,AI-powered vest with auto-organization,42
+master_bikini_top,Master Bikini Top,6,upper_body,companionAffinity,50,style,60,comfort,35,confidence,25,5500,elite_bikini_top,elite_bikini_top,29,Enchanted bikini that captivates all,45 

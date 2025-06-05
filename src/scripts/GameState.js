@@ -45,7 +45,132 @@ class GameState {
         // Initialize LocationManager
         this.locationManager = new LocationManager(this);
         
+        // Store reference to DataLoader for other components to access
+        this.gameDataLoader = gameDataLoader;
+        
         this.loadFromStorage();
+    }
+
+    /**
+     * Initialize the game state with proper data from DataLoader
+     */
+    async initialize() {
+        try {
+            console.log('GameState: Starting initialization...');
+            
+            // Load all game data first
+            await gameDataLoader.loadAllData();
+            console.log('GameState: Game data loaded successfully');
+            
+            // 🚨 DISABLED: Automatic sample fish generation to prevent undefined items
+            // Sample fish can be added manually through the inventory UI debug buttons if needed
+            console.log('GameState: Skipping automatic sample fish generation to prevent undefined items');
+            
+            console.log('GameState: Initialization completed');
+            
+        } catch (error) {
+            console.error('GameState: Error during initialization:', error);
+        }
+    }
+
+    /**
+     * 🚨 DISABLED: Add proper sample fish items using data from the DataLoader
+     * This method was creating undefined/placeholder items when fish IDs weren't found
+     */
+    async addProperSampleFish() {
+        console.log('GameState: ⚠️ addProperSampleFish() is DISABLED to prevent undefined items');
+        console.log('GameState: Sample fish can be added manually through inventory UI debug buttons if needed');
+        return; // Early return to prevent execution
+        
+        // 🚨 COMMENTED OUT: Original code that was creating undefined items
+        /*
+        try {
+            console.log('GameState: Adding proper sample fish items...');
+            
+            // Get fish data from the DataLoader
+            const allFish = gameDataLoader.getAllFish();
+            console.log('GameState: Retrieved fish data from DataLoader:', allFish);
+            console.log('GameState: Fish data length:', allFish ? allFish.length : 'null/undefined');
+            
+            if (allFish && allFish.length > 0) {
+                console.log('GameState: First few fish from DataLoader:', allFish.slice(0, 3));
+                
+                // Add some basic fish for crafting
+                const sampleFishIds = ['bluegill', 'perch', 'bass', 'trout', 'pike', 'salmon'];
+                console.log('GameState: Looking for fish with IDs:', sampleFishIds);
+                
+                sampleFishIds.forEach(fishId => {
+                    console.log(`GameState: Searching for fish with ID: ${fishId}`);
+                    const fishData = allFish.find(f => f.id === fishId);
+                    console.log(`GameState: Found fish data for ${fishId}:`, fishData);
+                    
+                    if (fishData) {
+                        const fishItem = {
+                            id: `fish_${fishId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                            fishId: fishData.id,
+                            name: fishData.name,
+                            rarity: fishData.rarity || 1,
+                            weight: fishData.weight || 1.0,
+                            value: fishData.coinValue || 100,
+                            description: fishData.description || `A ${fishData.name}`,
+                            caughtAt: new Date().toISOString(),
+                            quantity: Math.floor(Math.random() * 3) + 2, // 2-4 fish
+                            owned: true
+                        };
+                        
+                        console.log(`GameState: Created fish item:`, fishItem);
+                        
+                        // Add to inventory using the InventoryManager
+                        if (this.inventoryManager) {
+                            this.inventoryManager.addItem('fish', fishItem);
+                            console.log(`GameState: Added fish via InventoryManager: ${fishItem.name}`);
+                        } else {
+                            // Fallback: add directly to inventory
+                            this.inventory.fish.push(fishItem);
+                            console.log(`GameState: Added fish directly to inventory: ${fishItem.name}`);
+                        }
+                        
+                        console.log(`GameState: Added sample fish: ${fishItem.name} (${fishItem.quantity})`);
+                    } else {
+                        console.warn(`GameState: Could not find fish data for ID: ${fishId}`);
+                        
+                        // 🚨 THIS WAS THE PROBLEM: Creating placeholder items with undefined names
+                        const placeholderItem = {
+                            id: `fish_${fishId}_placeholder_${Date.now()}`,
+                            fishId: fishId,
+                            name: `MISSING: ${fishId}`,
+                            rarity: 1,
+                            weight: 1.0,
+                            value: 100,
+                            description: `Placeholder for missing fish: ${fishId}`,
+                            caughtAt: new Date().toISOString(),
+                            quantity: 1,
+                            owned: true
+                        };
+                        
+                        console.log(`GameState: Created placeholder item for missing fish:`, placeholderItem);
+                        
+                        if (this.inventoryManager) {
+                            this.inventoryManager.addItem('fish', placeholderItem);
+                        } else {
+                            this.inventory.fish.push(placeholderItem);
+                        }
+                    }
+                });
+                
+                console.log('GameState: Sample fish items added successfully');
+                console.log('GameState: Current fish inventory:', this.inventory.fish);
+            } else {
+                console.warn('GameState: No fish data available from DataLoader');
+                console.log('GameState: DataLoader loaded status:', gameDataLoader.loaded);
+                console.log('GameState: DataLoader fish data:', gameDataLoader.fishData);
+            }
+            
+        } catch (error) {
+            console.error('GameState: Error adding sample fish:', error);
+            console.error('GameState: Error stack:', error.stack);
+        }
+        */
     }
 
     initializeState() {
@@ -93,6 +218,7 @@ class GameState {
                     equipped: true, 
                     condition: 100,
                     durability: 100,
+                    equipSlot: 'rod',
                     stats: { 
                         castAccuracy: 5,
                         tensionStability: 8,
@@ -116,6 +242,7 @@ class GameState {
                     quantity: 5,
                     condition: 100,
                     durability: 100,
+                    equipSlot: 'lure',
                     stats: { 
                         biteRate: 20,
                         lureSuccess: 15,
@@ -153,15 +280,7 @@ class GameState {
             ],
             upgrades: [],
             fish: [
-                // Sample fish cards for testing crafting
-                { id: 'minnow', name: 'Minnow', rarity: 1, quantity: 5, owned: true },
-                { id: 'perch', name: 'Perch', rarity: 1, quantity: 4, owned: true },
-                { id: 'trout', name: 'Trout', rarity: 2, quantity: 5, owned: true },
-                { id: 'pike', name: 'Pike', rarity: 3, quantity: 2, owned: true },
-                { id: 'salmon', name: 'Salmon', rarity: 3, quantity: 2, owned: true },
-                { id: 'sardine', name: 'Sardine', rarity: 1, quantity: 6, owned: true },
-                { id: 'bass', name: 'Bass', rarity: 2, quantity: 4, owned: true },
-                { id: 'catfish', name: 'Catfish', rarity: 2, quantity: 3, owned: true }
+                // 🚨 CLEANED: No sample fish items to prevent undefined items
             ],
             consumables: [],
             materials: [],

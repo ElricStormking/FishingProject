@@ -3,6 +3,7 @@ import GameState from '../scripts/GameState.js';
 import GameLoop from '../scripts/GameLoop.js';
 import SceneManager from '../scripts/SceneManager.js';
 import TournamentManager from '../scripts/TournamentManager.js';
+import { QuestManager } from '../scripts/QuestManager.js';
 import { InventoryUI } from '../ui/InventoryUI.js';
 import { CraftingUI } from '../ui/CraftingUI.js';
 import { PlayerProgressionUI } from '../ui/PlayerProgressionUI.js';
@@ -97,6 +98,14 @@ export default class BoatMenuScene extends Phaser.Scene {
             this.tournamentManager = null;
         }
         
+        try {
+            this.questManager = new QuestManager(this);
+            console.log('BoatMenuScene: QuestManager initialized');
+        } catch (questError) {
+            console.error('BoatMenuScene: Error initializing QuestManager:', questError);
+            this.questManager = null;
+        }
+        
         // Initialize audio manager
         try {
             this.audioManager = this.gameState.getAudioManager(this);
@@ -147,6 +156,16 @@ export default class BoatMenuScene extends Phaser.Scene {
             this.updateStatus({
                 location: this.gameState?.player?.currentLocation || 'Starting Port'
             });
+            
+            // Ensure DOM FISH button exists (fallback for returns from fishing)
+            if (!this.domFishButton) {
+                const width = this.cameras.main.width;
+                const height = this.cameras.main.height;
+                const buttonY = height * 0.75;
+                const buttonSpacing = (width - 100) / 6;
+                this.createDOMFishButton(50 + buttonSpacing * 1, buttonY);
+                console.log('BoatMenuScene: Recreated DOM FISH button (fallback)');
+            }
         });
         
         // Show welcome back message if returning from fishing
@@ -392,14 +411,12 @@ export default class BoatMenuScene extends Phaser.Scene {
         this.buttons = {};
         
         // Travel button
-        this.buttons.travel = this.createActionButton(50 + buttonSpacing * 0, buttonY, 'TRAVEL', () => {
+        this.buttons.travel = this.createActionButton(150 + buttonSpacing * 0, buttonY, 'TRAVEL', () => {
             this.openTravelMenu();
         }, 0x00aaff);
         
-        // Fish button
-        this.buttons.fish = this.createActionButton(50 + buttonSpacing * 1, buttonY, 'FISH', () => {
-            this.startFishing();
-        }, 0x00cc66);
+        // Create DOM FISH button instead
+        this.createDOMFishButton(50 + buttonSpacing * 1, buttonY);
         
         // Cabin button
         this.buttons.cabin = this.createActionButton(50 + buttonSpacing * 2, buttonY, 'CABIN', () => {
@@ -724,6 +741,12 @@ export default class BoatMenuScene extends Phaser.Scene {
                 this.loadingStateManager.updateProgress('fishing_operation', 100, 'Starting fishing session...');
             }
             
+            // Clean up DOM FISH button before scene transition
+            if (this.domFishButton) {
+                this.domFishButton.remove();
+                this.domFishButton = null;
+            }
+            
             // Transition to GameScene for fishing with proper data
             this.time.delayedCall(1000, () => {
                 // Hide loading before scene transition
@@ -909,16 +932,22 @@ export default class BoatMenuScene extends Phaser.Scene {
                 console.warn('BoatMenuScene: GameLoop not available or enterInventory method missing');
             }
             
-            // Add sample items for testing (only if inventory is mostly empty)
+            // 🚨 FORCE CLEAN: Remove any undefined items immediately on scene start
             try {
-                const totalItems = Object.values(this.gameState.inventory || {}).reduce((sum, items) => sum + (items?.length || 0), 0);
-                if (totalItems < 10 && this.gameState.inventoryManager && typeof this.gameState.inventoryManager.addSampleItems === 'function') {
-                    console.log('BoatMenuScene: Adding sample items for testing');
-                    this.gameState.inventoryManager.addSampleItems();
+                if (this.gameState.inventoryManager && this.gameState.inventoryManager.forceCleanAllUndefinedItems) {
+                    const cleanedCount = this.gameState.inventoryManager.forceCleanAllUndefinedItems();
+                    if (cleanedCount > 0) {
+                        console.log(`BoatMenuScene: ✅ Cleaned ${cleanedCount} undefined items from inventory`);
+                        this.gameState.save(); // Save immediately after cleaning
+                    }
                 }
-            } catch (sampleError) {
-                console.warn('BoatMenuScene: Error adding sample items:', sampleError);
+            } catch (cleanError) {
+                console.error('BoatMenuScene: Error cleaning undefined items:', cleanError);
             }
+            
+            // 🚨 DISABLED: Automatic sample item generation to prevent undefined items
+            // Sample items can be added manually through the inventory UI debug buttons if needed
+            console.log('BoatMenuScene: Automatic sample item generation disabled to prevent undefined items');
             
             // Ensure both UIs are created and cross-referenced
             this.ensureUIsCreated();
@@ -1387,7 +1416,14 @@ export default class BoatMenuScene extends Phaser.Scene {
         
         // Update button states based on actual availability
         this.buttons.travel.button.setAlpha(actions.includes('travel') ? 1 : 0.5);
-        this.buttons.fish.button.setAlpha(actions.includes('fish') ? 1 : 0.5);
+        // this.buttons.fish.button.setAlpha(actions.includes('fish') ? 1 : 0.5);
+        
+        // Update DOM FISH button state
+        if (this.domFishButton) {
+            this.domFishButton.style.opacity = actions.includes('fish') ? '1' : '0.5';
+            this.domFishButton.disabled = !actions.includes('fish');
+        }
+        
         this.buttons.shop.button.setAlpha(actions.includes('shop') ? 1 : 0.5);
         
         // Disable shop button interaction if not at Starting Port
@@ -1770,6 +1806,12 @@ export default class BoatMenuScene extends Phaser.Scene {
     }
 
     destroy() {
+        // Clean up DOM FISH button
+        if (this.domFishButton) {
+            this.domFishButton.remove();
+            this.domFishButton = null;
+        }
+        
         if (this.inventoryUI) {
             this.inventoryUI.destroy();
         }
@@ -1790,6 +1832,10 @@ export default class BoatMenuScene extends Phaser.Scene {
         }
         if (this.shopUI) {
             this.shopUI.destroy();
+        }
+        if (this.questManager) {
+            // QuestManager doesn't have a destroy method, just clear the reference
+            this.questManager = null;
         }
         super.destroy();
     }
@@ -2011,10 +2057,101 @@ export default class BoatMenuScene extends Phaser.Scene {
                 this.gameState.currentFishingSession = null;
             }
             
+            // Recreate DOM FISH button if it was removed during fishing
+            if (!this.domFishButton) {
+                const width = this.cameras.main.width;
+                const height = this.cameras.main.height;
+                const buttonY = height * 0.75;
+                const buttonSpacing = (width - 100) / 6;
+                this.createDOMFishButton(50 + buttonSpacing * 1, buttonY);
+            }
+            
             console.log('BoatMenuScene: Fishing session results processed successfully');
             
         } catch (error) {
             console.error('BoatMenuScene: Error processing fishing session results:', error);
+        }
+    }
+
+    createDOMFishButton(x, y) {
+        // Create DOM button element
+        const fishButton = document.createElement('button');
+        fishButton.textContent = 'FISH';
+        fishButton.id = 'dom-fish-button';
+        
+        // Style the button to match Phaser button design
+        fishButton.style.cssText = `
+            position: absolute;
+            left: ${x - 60 + 270}px;
+            top: ${y - 20 + 200}px;
+            width: 120px;
+            height: 40px;
+            background: linear-gradient(to bottom, #00ff66, #00cc66);
+            border: 2px solid #00aa44;
+            border-radius: 10px;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px black;
+            cursor: pointer;
+            z-index: 1000;
+            pointer-events: auto;
+            transition: all 0.1s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        `;
+        
+        // Add hover effects
+        fishButton.addEventListener('mouseenter', () => {
+            fishButton.style.background = 'linear-gradient(to bottom, #00dd55, #00aa44)';
+            fishButton.style.transform = 'scale(1.05)';
+            fishButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.4)';
+        });
+        
+        fishButton.addEventListener('mouseleave', () => {
+            fishButton.style.background = 'linear-gradient(to bottom, #00ff66, #00cc66)';
+            fishButton.style.transform = 'scale(1)';
+            fishButton.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+        });
+        
+        // Add click effect and functionality
+        fishButton.addEventListener('mousedown', () => {
+            fishButton.style.transform = 'scale(0.95)';
+            fishButton.style.background = 'linear-gradient(to bottom, #00aa44, #008844)';
+        });
+        
+        fishButton.addEventListener('mouseup', () => {
+            fishButton.style.transform = 'scale(1.05)';
+            fishButton.style.background = 'linear-gradient(to bottom, #00dd55, #00aa44)';
+        });
+        
+        // Add click handler
+        fishButton.addEventListener('click', () => {
+            try {
+                this.startFishing();
+            } catch (error) {
+                console.error('DOM Fish Button: Error starting fishing:', error);
+            }
+        });
+        
+        // Add to DOM
+        document.body.appendChild(fishButton);
+        
+        // Store reference for cleanup
+        this.domFishButton = fishButton;
+        
+        console.log('BoatMenuScene: DOM FISH button created');
+    }
+
+    hideFishButton() {
+        if (this.domFishButton) {
+            this.domFishButton.style.display = 'none';
+        }
+    }
+
+    showFishButton() {
+        if (this.domFishButton) {
+            this.domFishButton.style.display = 'block';
         }
     }
 }

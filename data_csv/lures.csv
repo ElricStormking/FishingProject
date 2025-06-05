@@ -1,0 +1,19 @@
+lure_id,lure_name,lure_type,rarity,equip_slot,bite_rate,lure_success,durability,precision,cost,crafting_material_1,crafting_material_2,crafting_time,description,unlock_level
+basic_spinner,Basic Spinner,spinner,1,lure,20,15,5,5,300,perch,perch,2,Simple spinning lure for beginners,1
+silver_spinner,Silver Spinner,spinner,2,lure,25,20,8,7,500,bass,bass,4,Reflective spinner with enhanced flash,5
+gold_spinner,Gold Spinner,spinner,3,lure,30,25,12,10,800,pike,pike,6,Premium gold-plated spinner,10
+elite_spinner,Elite Spinner,spinner,4,lure,40,35,18,15,1500,basic_spinner,basic_spinner,12,High-performance spinner with perfect balance,20
+master_spinner,Master Spinner,spinner,5,lure,60,50,25,20,4000,elite_spinner,elite_spinner,22,Ultimate spinner with magnetic attraction,35
+legendary_spinner,Legendary Spinner,spinner,6,lure,80,65,35,30,8000,master_spinner,master_spinner,30,Mythical spinner that attracts legendary fish,50
+soft_worm,Soft Worm,soft_plastic,1,lure,25,20,8,6,500,catfish,catfish,4,Flexible worm that moves naturally,3
+grub_tail,Grub Tail,soft_plastic,2,lure,30,25,12,8,700,bass,bass,6,Curly tail creates enticing action,8
+shad_body,Shad Body,soft_plastic,3,lure,35,30,15,12,1000,salmon,salmon,8,Realistic baitfish imitation,15
+dry_fly,Dry Fly,fly,1,lure,30,25,6,8,700,trout,trout,6,Classic surface fly for trout,5
+wet_fly,Wet Fly,fly,2,lure,35,30,10,12,900,salmon,salmon,8,Subsurface fly that mimics emerging insects,12
+streamer_fly,Streamer Fly,fly,3,lure,40,35,14,15,1200,pike,pike,10,Large fly that imitates small fish,18
+basic_popper,Basic Popper,popper,1,lure,22,18,7,6,400,bass,bass,3,Simple surface popper for aggressive fish,2
+chugger_popper,Chugger Popper,popper,2,lure,28,23,11,9,600,pike,pike,5,Creates loud chugging sounds,7
+walker_popper,Walker Popper,popper,3,lure,34,28,16,13,900,salmon,salmon,7,Walks side-to-side on surface,14
+basic_spoon,Basic Spoon,spoon,1,lure,28,22,10,8,600,salmon,salmon,5,Classic metal spoon with wobbling action,4
+casting_spoon,Casting Spoon,spoon,2,lure,33,27,14,11,800,tuna,tuna,7,Heavy spoon for long-distance casting,9
+jigging_spoon,Jigging Spoon,spoon,3,lure,38,32,18,15,1100,pike,pike,9,Vertical jigging spoon for deep water,16 

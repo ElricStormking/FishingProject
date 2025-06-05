@@ -21,38 +21,165 @@ export class InventoryManager {
     /**
      * Initialize inventory structure with all expected categories
      */
-    initializeInventory() {
-        try {
+        initializeInventory() {
+        console.log('InventoryManager: Initializing inventory system...');
+        
+        // 🚨 FORCE CLEAN: Remove all undefined/invalid items immediately
+        this.forceCleanAllUndefinedItems();
+        
+        // Initialize empty inventory structure if needed
             if (!this.gameState.inventory) {
                 this.gameState.inventory = {};
             }
 
-            // Ensure all expected categories exist
-            const categories = ['rods', 'lures', 'boats', 'upgrades', 'fish', 'consumables', 'materials', 'clothing', 'bikini_assistants'];
+        // Initialize all inventory categories
+        const categories = ['rods', 'lures', 'bait', 'boats', 'upgrades', 'fish', 'consumables', 'materials', 'clothing', 'bikini_assistants'];
+        categories.forEach(category => {
+            if (!Array.isArray(this.gameState.inventory[category])) {
+                this.gameState.inventory[category] = [];
+            }
+        });
+
+        // Initialize equipment slots
+        if (!this.gameState.equipment) {
+            this.gameState.equipment = {};
+        }
+
+        // Initialize working slot areas for equipment UI
+        if (!this.gameState.workingSlots) {
+            this.gameState.workingSlots = {
+                rod: null,
+                lure: null,
+                boat: null,
+                head: null,
+                upper_body: null,
+                lower_body: null,
+                bikini_assistant: null
+            };
+        }
+
+        // Fix missing equipment slots
+        this.fixMissingEquipSlots();
+
+        // Initialize player stats if needed
+        this.initializePlayerStats();
+
+        // 🚨 SAFETY CHECK: Only add sample items if inventory is empty AND DataLoader is properly loaded
+        if (this.isInventoryEmpty()) {
+            console.log('InventoryManager: Inventory is empty, checking if we should add sample items...');
             
-            categories.forEach(category => {
-                if (!this.gameState.inventory[category]) {
-                    this.gameState.inventory[category] = [];
-                    console.log(`InventoryManager: Created empty category: ${category}`);
+            // 🚨 DISABLED: Automatic sample item generation to prevent undefined items
+            // Sample items can be added manually through the inventory UI debug buttons if needed
+            console.log('InventoryManager: Automatic sample item generation disabled to prevent undefined items');
+        } else {
+            console.log('InventoryManager: Inventory not empty, skipping sample items');
+        }
+
+        // Setup boost cleanup
+        this.setupBoostCleanup();
+
+        console.log('InventoryManager: Inventory system initialized successfully');
+    }
+
+    /**
+     * Clean up any undefined items from the inventory
+     */
+    cleanupUndefinedItems() {
+        console.log('InventoryManager: Starting comprehensive cleanup of undefined items...');
+        
+        let totalCleaned = 0;
+        
+        try {
+            // Check all inventory categories
+            Object.keys(this.gameState.inventory).forEach(category => {
+                const items = this.gameState.inventory[category];
+                if (Array.isArray(items)) {
+                    const originalLength = items.length;
+                    
+                    // Filter out undefined items with comprehensive checks
+                    this.gameState.inventory[category] = items.filter(item => {
+                        // Check if item exists
+                        if (!item || typeof item !== 'object') {
+                            console.log(`InventoryManager: Removing null/non-object item from ${category}:`, item);
+                            totalCleaned++;
+                            return false;
+                        }
+                        
+                        // Check name property
+                        if (!item.name || 
+                            typeof item.name !== 'string' || 
+                            item.name.trim() === '' ||
+                            item.name === 'undefined' ||
+                            item.name.toLowerCase().includes('undefined') ||
+                            item.name.toLowerCase().includes('null') ||
+                            item.name === 'null') {
+                            console.log(`InventoryManager: Removing item with invalid name from ${category}:`, item);
+                            totalCleaned++;
+                            return false;
+                        }
+                        
+                        // Check ID property
+                        if (!item.id || 
+                            typeof item.id !== 'string' || 
+                            item.id.trim() === '' ||
+                            item.id === 'undefined' ||
+                            item.id.toLowerCase().includes('undefined') ||
+                            item.id.toLowerCase().includes('null') ||
+                            item.id === 'null') {
+                            console.log(`InventoryManager: Removing item with invalid ID from ${category}:`, item);
+                            totalCleaned++;
+                            return false;
+                        }
+                        
+                        // Check for placeholder items
+                        if (item.name.startsWith('MISSING:') || 
+                            item.name.startsWith('Placeholder') ||
+                            item.description && item.description.includes('Placeholder')) {
+                            console.log(`InventoryManager: Removing placeholder item from ${category}:`, item);
+                            totalCleaned++;
+                            return false;
+                        }
+                        
+                        // Item is valid
+                        return true;
+                    });
+                    
+                    const newLength = this.gameState.inventory[category].length;
+                    if (originalLength !== newLength) {
+                        console.log(`InventoryManager: Cleaned ${originalLength - newLength} invalid items from ${category}`);
+                    }
                 }
             });
-
-            // Fix existing items that might be missing equipSlot
-            this.fixMissingEquipSlots();
-
-            // Add sample items if inventory is completely empty
-            const totalItems = Object.values(this.gameState.inventory)
-                .reduce((total, categoryItems) => total + (categoryItems ? categoryItems.length : 0), 0);
-
-            if (totalItems === 0) {
-                console.log('InventoryManager: Inventory is empty, adding sample items');
-                this.addSampleItems();
+            
+            console.log(`InventoryManager: ✅ Comprehensive cleanup completed. Total invalid items removed: ${totalCleaned}`);
+            
+            // Mark as dirty to save changes
+            if (totalCleaned > 0) {
+                this.gameState.markDirty();
             }
-
-            console.log('InventoryManager: Inventory structure initialized');
+            
+            // Emit cleanup event
+            this.emit('undefinedItemsCleanedUp', { totalCleaned });
+            
+            return totalCleaned;
+            
         } catch (error) {
-            console.error('InventoryManager: Error initializing inventory:', error);
+            console.error('InventoryManager: Error during undefined items cleanup:', error);
+            return 0;
         }
+    }
+
+    /**
+     * Check if inventory is empty (excluding fish which are managed by GameState)
+     */
+    isInventoryEmpty() {
+        const categories = ['rods', 'lures', 'bait', 'boats', 'upgrades', 'consumables', 'materials', 'clothing', 'bikini_assistants'];
+        const totalItems = categories.reduce((total, category) => {
+            const items = this.gameState.inventory[category];
+            return total + (Array.isArray(items) ? items.length : 0);
+        }, 0);
+        
+        return totalItems === 0;
     }
 
     /**
@@ -220,7 +347,7 @@ export class InventoryManager {
      */
     addItem(category, itemData, quantity = 1) {
         try {
-            // Validate inputs
+            // 🚨 ENHANCED VALIDATION: Comprehensive checks to prevent undefined items
             if (!category || typeof category !== 'string') {
                 console.error('InventoryManager: Invalid category provided:', category);
                 return false;
@@ -231,13 +358,53 @@ export class InventoryManager {
                 return false;
             }
             
+            // 🚨 CRITICAL: Prevent undefined items from being added
+            if (!itemData.name || itemData.name === 'undefined' || typeof itemData.name !== 'string') {
+                console.error('InventoryManager: Rejecting item with undefined or invalid name:', itemData);
+                return false;
+            }
+            
+            // 🚨 CRITICAL: Check for 'undefined' string in name
+            if (itemData.name.includes('undefined') || itemData.name.trim() === '') {
+                console.error('InventoryManager: Rejecting item with undefined/empty name:', itemData);
+                return false;
+            }
+            
+            if (!itemData.id || itemData.id === 'undefined') {
+                console.error('InventoryManager: Rejecting item with undefined or missing ID:', itemData);
+                return false;
+            }
+            
+            // 🚨 CRITICAL: Check for 'undefined' string in ID
+            if (itemData.id.includes('undefined') || itemData.id.trim() === '') {
+                console.error('InventoryManager: Rejecting item with undefined/empty ID:', itemData);
+                return false;
+            }
+            
+            // 🚨 VALIDATION: Ensure description exists and is valid
+            if (!itemData.description || typeof itemData.description !== 'string' || itemData.description.trim() === '') {
+                console.warn(`InventoryManager: Item ${itemData.name} missing description, adding default`);
+                itemData.description = `A ${category.slice(0, -1)} item`; // Remove 's' from category
+            }
+            
+            // 🚨 VALIDATION: Ensure rarity is valid
+            if (!itemData.rarity || typeof itemData.rarity !== 'number' || itemData.rarity < 1) {
+                console.warn(`InventoryManager: Item ${itemData.name} missing/invalid rarity, setting to 1`);
+                itemData.rarity = 1;
+            }
+            
+            console.log(`InventoryManager: ✅ VALIDATION PASSED - Adding item to ${category}:`, {
+                name: itemData.name,
+                id: itemData.id,
+                rarity: itemData.rarity,
+                description: itemData.description.substring(0, 50) + '...'
+            });
+            
             // Create category if it doesn't exist
             if (!this.gameState.inventory[category]) {
                 console.log(`InventoryManager: Creating new category: ${category}`);
                 this.gameState.inventory[category] = [];
             }
-
-            console.log(`InventoryManager: Adding item to ${category}:`, itemData);
 
             // Special handling for fish items to ensure proper structure
             let processedItemData = itemData;
@@ -263,7 +430,18 @@ export class InventoryManager {
             // Create proper item structure
             const item = this.validator.createItem(category, processedItemData);
             
-            console.log(`InventoryManager: Item after createItem:`, item);
+            // 🚨 FINAL VALIDATION: Double-check the created item
+            if (!item || !item.name || item.name === 'undefined' || !item.id || item.id === 'undefined') {
+                console.error('InventoryManager: ❌ CRITICAL - Validator created invalid item:', item);
+                console.error('InventoryManager: Original data:', itemData);
+                return false;
+            }
+            
+            console.log(`InventoryManager: ✅ Item after createItem validation:`, {
+                name: item.name,
+                id: item.id,
+                category: category
+            });
             
             // Validate item
             const validation = this.validator.validateItem(category, item);
@@ -293,7 +471,7 @@ export class InventoryManager {
                     this.gameState.markDirty();
                     this.emit('itemAdded', { category, item: existingItem, quantity: actualAdded });
                     
-                    console.log(`InventoryManager: Added ${actualAdded} to existing stack of ${item.id}`);
+                    console.log(`InventoryManager: ✅ Added ${actualAdded} to existing stack of ${item.name}`);
                     return actualAdded > 0;
                 }
             }
@@ -310,49 +488,30 @@ export class InventoryManager {
                 item.quantity = Math.min(quantity, this.validator.getMaxStackSize());
             }
 
+            // 🚨 FINAL CHECK: Ensure item is still valid before adding
+            if (!item.name || item.name === 'undefined' || !item.id || item.id === 'undefined') {
+                console.error('InventoryManager: ❌ CRITICAL - Item became invalid before adding to inventory:', item);
+                return false;
+            }
+
             // Add item to inventory
             item.owned = true;
             this.gameState.inventory[category].push(item);
             this.gameState.markDirty();
             
-            console.log(`InventoryManager: Successfully added ${item.name} to ${category}`);
+            console.log(`InventoryManager: ✅ SUCCESS - Added ${item.name} to ${category} inventory`);
             this.emit('itemAdded', { category, item, quantity: item.quantity || 1 });
             return true;
 
         } catch (error) {
-            console.error('InventoryManager: Error adding item:', error);
+            console.error('InventoryManager: ❌ ERROR adding item:', error);
             console.error('InventoryManager: Error stack:', error.stack);
             console.error('InventoryManager: Category:', category);
             console.error('InventoryManager: Item data:', itemData);
             console.error('InventoryManager: Quantity:', quantity);
             
-            // For fish items, try a fallback approach
-            if (category === 'fish' && itemData) {
-                console.warn('InventoryManager: Attempting fallback fish item creation');
-                try {
-                    const fallbackFish = {
-                        id: `fish_fallback_${Date.now()}`,
-                        fishId: 'unknown',
-                        name: 'Unknown Fish',
-                        rarity: 1,
-                        weight: 1.0,
-                        value: 100,
-                        description: 'A fish that was caught',
-                        caughtAt: new Date().toISOString(),
-                        quantity: 1,
-                        owned: true
-                    };
-                    
-                    this.gameState.inventory[category].push(fallbackFish);
-                    this.gameState.markDirty();
-                    console.log('InventoryManager: Fallback fish item created successfully');
-                    this.emit('itemAdded', { category, item: fallbackFish, quantity: 1 });
-                    return true;
-                } catch (fallbackError) {
-                    console.error('InventoryManager: Fallback fish creation also failed:', fallbackError);
-                }
-            }
-            
+            // 🚨 NO FALLBACK: Do not create any items if there's an error
+            console.error('InventoryManager: ❌ REJECTING item due to error - no fallback creation');
             return false;
         }
     }
@@ -836,445 +995,358 @@ export class InventoryManager {
     addSampleItems() {
         console.log('InventoryManager: Adding sample items for testing');
         
-        // Add sample lures - include all required properties: id, name, type, rarity, description, unlockLevel
-        const sampleLures = [
-            { 
-                id: 'spoon_lure', 
-                name: 'Spoon Lure', 
-                type: 'spoon',
-                rarity: 2, 
-                description: 'Shiny spoon lure for medium fish',
-                unlockLevel: 1
-            },
-            { 
-                id: 'fly_lure', 
-                name: 'Fly Lure', 
-                type: 'fly',
-                rarity: 2, 
-                description: 'Perfect for surface fishing',
-                unlockLevel: 1
-            },
-            { 
-                id: 'deep_diver', 
-                name: 'Deep Diver', 
-                type: 'deep',
-                rarity: 3, 
-                description: 'Reaches deep waters',
-                unlockLevel: 3
+        // 🚨 CRITICAL SAFETY CHECK: Prevent undefined items at all costs
+        try {
+            // 🚨 VALIDATION: Only add sample items if DataLoader has real data
+            if (!gameDataLoader || !gameDataLoader.loaded) {
+                console.error('InventoryManager: ❌ CRITICAL - DataLoader not ready, ABORTING sample item creation to prevent undefined items');
+                return;
             }
-        ];
-        
-        sampleLures.forEach(lure => {
-            this.addItem('lures', lure);
-        });
-        
-        // Add sample consumables - include all required properties: id, name, rarity, description, effect
-        const sampleConsumables = [
-            { 
-                id: 'energy_drink', 
-                name: 'Energy Drink', 
-                rarity: 1, 
-                description: 'Restores 25 energy',
-                effect: { type: 'energy', value: 25 },
-                quantity: 3
-            },
-            { 
-                id: 'lucky_charm', 
-                name: 'Lucky Charm', 
-                rarity: 3, 
-                description: 'Increases rare fish chance',
-                effect: { type: 'rareFishChance', value: 15, duration: 300000 }, // 5 minutes
-                quantity: 1
-            },
-            { 
-                id: 'repair_kit', 
-                name: 'Repair Kit', 
-                rarity: 2, 
-                description: 'Repairs damaged equipment',
-                effect: { type: 'repair', value: 50 },
-                quantity: 2
-            },
-            // New consumables for better testing
-            {
-                id: 'health_potion',
-                name: 'Health Potion',
-                rarity: 2,
-                description: 'Restores 40 health points',
-                effect: { type: 'health', value: 40 },
-                quantity: 5
-            },
-            {
-                id: 'experience_booster',
-                name: 'XP Booster',
-                rarity: 3,
-                description: 'Double experience for 10 minutes',
-                effect: { type: 'experienceMultiplier', value: 2, duration: 600000 }, // 10 minutes
-                quantity: 2
-            },
-            {
-                id: 'golden_lucky_coin',
-                name: 'Golden Lucky Coin',
-                rarity: 4,
-                description: 'Increases all luck stats for 15 minutes',
-                effect: { type: 'luck', value: 20, duration: 900000 }, // 15 minutes
-                quantity: 1
-            },
-            {
-                id: 'treasure_chest',
-                name: 'Treasure Chest',
-                rarity: 3,
-                description: 'Contains 500 coins',
-                effect: { type: 'money', value: 500 },
-                quantity: 1
-            },
-            {
-                id: 'super_energy_drink',
-                name: 'Super Energy Drink',
-                rarity: 3,
-                description: 'Fully restores energy',
-                effect: { type: 'energy', value: 100 },
-                quantity: 1
-            },
-            {
-                id: 'fishing_focus_pill',
-                name: 'Fishing Focus Pill',
-                rarity: 2,
-                description: 'Boosts rare fish chance for 3 minutes',
-                effect: { type: 'rareFishChance', value: 25, duration: 180000 }, // 3 minutes
-                quantity: 4
-            },
-            {
-                id: 'master_repair_kit',
-                name: 'Master Repair Kit',
-                rarity: 4,
-                description: 'Completely repairs all equipment',
-                effect: { type: 'repair', value: 100 },
-                quantity: 1
+            
+            // Get real data from DataLoader to ensure we're not using fallback
+            const realFish = gameDataLoader.getAllFish();
+            const realRods = gameDataLoader.getAllRods();
+            const realLures = gameDataLoader.getAllLures();
+            const realBoats = gameDataLoader.getAllBoats();
+            const realClothing = gameDataLoader.getAllClothing();
+            
+            console.log('InventoryManager: Real data available:', {
+                fish: realFish ? realFish.length : 0,
+                rods: realRods ? realRods.length : 0,
+                lures: realLures ? realLures.length : 0,
+                boats: realBoats ? realBoats.length : 0,
+                clothing: realClothing ? realClothing.length : 0
+            });
+            
+            // 🚨 CRITICAL: If no real data is available, create minimal safe items only
+            if ((!realRods || realRods.length === 0) && 
+                (!realLures || realLures.length === 0) && 
+                (!realBoats || realBoats.length === 0)) {
+                console.warn('InventoryManager: ⚠️ WARNING - No real equipment data available, creating minimal safe sample items only');
             }
-        ];
-        
-        sampleConsumables.forEach(consumable => {
-            this.addItem('consumables', consumable);
-        });
-        
-        // Add sample materials - include all required properties: id, name, rarity, description
-        const sampleMaterials = [
-            { 
-                id: 'wood', 
-                name: 'Wood', 
-                rarity: 1, 
-                description: 'Basic crafting material',
-                quantity: 20
-            },
-            { 
-                id: 'metal_scraps', 
-                name: 'Metal Scraps', 
-                rarity: 2, 
-                description: 'Used for advanced crafting',
-                quantity: 8
-            },
-            { 
-                id: 'rare_gems', 
-                name: 'Rare Gems', 
-                rarity: 4, 
-                description: 'Precious crafting component',
-                quantity: 2
-            },
-            // Enhancement stones for Equipment Enhancement System (Priority 1.7)
-            {
-                id: 'basic_stone',
-                name: 'Basic Enhancement Stone',
-                rarity: 1,
-                description: 'Basic stone for low-level enhancement',
-                quantity: 10,
-                successRate: 0.9,
-                bonusMultiplier: 1.0
-            },
-            {
-                id: 'advanced_stone',
-                name: 'Advanced Enhancement Stone',
-                rarity: 3,
-                description: 'Advanced stone with higher bonus',
-                quantity: 5,
-                successRate: 0.7,
-                bonusMultiplier: 1.2
-            },
-            {
-                id: 'master_stone',
-                name: 'Master Enhancement Stone',
-                rarity: 5,
-                description: 'Master stone for maximum enhancement',
-                quantity: 2,
-                successRate: 0.5,
-                bonusMultiplier: 1.5
-            },
-            // Protection items
-            {
-                id: 'protection_scroll',
-                name: 'Protection Scroll',
-                rarity: 2,
-                description: 'Prevents equipment destruction on failure',
-                quantity: 3,
-                preventBreak: true,
-                preventDowngrade: false
-            },
-            {
-                id: 'blessed_scroll',
-                name: 'Blessed Scroll',
-                rarity: 4,
-                description: 'Prevents all failure penalties',
-                quantity: 1,
-                preventBreak: true,
-                preventDowngrade: true
+            
+            // 🚨 VALIDATION: Check if we have real data before creating sample items
+            if (!realRods || realRods.length === 0) {
+                console.warn('InventoryManager: No real rod data available, creating basic sample rod');
+                // Create a basic sample rod with guaranteed valid properties
+                const basicRod = {
+                    id: `basic_sample_rod_${Date.now()}`,
+                    name: 'Basic Sample Rod',
+                    rarity: 1,
+                    equipSlot: 'rod',
+                    stats: { castAccuracy: 5, tensionStability: 3 },
+                    description: 'A basic fishing rod for testing',
+                    unlockLevel: 1,
+                    cost: 100,
+                    durability: 100,
+                    condition: 100,
+                    owned: true,
+                    equipped: false,
+                    quantity: 1
+                };
+                
+                // 🚨 VALIDATION: Double-check before adding
+                if (this.validateItemData(basicRod, 'rods')) {
+                    this.addValidatedItem('rods', basicRod);
+                } else {
+                    console.error('InventoryManager: ❌ CRITICAL - Basic rod failed validation, skipping');
+                }
+            } else {
+                // Use real rod data
+                const firstRod = realRods[0];
+                if (this.validateItemData(firstRod, 'rods')) {
+                    const rodItem = {
+                        ...firstRod,
+                        id: `rod_${firstRod.id}_sample_${Date.now()}`,
+                        owned: true,
+                        equipped: false,
+                        quantity: 1,
+                        equipSlot: 'rod'
+                    };
+                    
+                    // 🚨 VALIDATION: Double-check before adding
+                    if (this.validateItemData(rodItem, 'rods')) {
+                        this.addValidatedItem('rods', rodItem);
+                    } else {
+                        console.error('InventoryManager: ❌ CRITICAL - Real rod item failed validation, skipping');
+                    }
+                } else {
+                    console.error('InventoryManager: ❌ CRITICAL - Real rod data failed validation, skipping');
+                }
             }
-        ];
-        
-        sampleMaterials.forEach(material => {
-            this.addItem('materials', material);
-        });
-        
-        // Add sample upgrades - include all required properties: id, name, rarity, description, effect
-        const sampleUpgrades = [
-            { 
-                id: 'better_reel', 
-                name: 'Better Reel', 
-                rarity: 2, 
-                description: 'Improves reel speed',
-                effect: { type: 'reelSpeed', value: 10 }
-            },
-            { 
-                id: 'lucky_hook', 
-                name: 'Lucky Hook', 
-                rarity: 3, 
-                description: 'Increases bite rate',
-                effect: { type: 'biteRate', value: 15 }
+            
+            // Add sample lures with validation
+            if (!realLures || realLures.length === 0) {
+                console.warn('InventoryManager: No real lure data available, creating basic sample lures');
+                const basicLures = [
+                    {
+                        id: 'basic_sample_spoon',
+                        name: 'Basic Spoon Lure',
+                        type: 'spoon',
+                        rarity: 1,
+                        equipSlot: 'lure',
+                        description: 'A basic spoon lure for testing',
+                        unlockLevel: 1,
+                        cost: 50,
+                        stats: { attractionRadius: 5 }
+                    },
+                    {
+                        id: 'basic_sample_fly',
+                        name: 'Basic Fly Lure',
+                        type: 'fly',
+                        rarity: 1,
+                        equipSlot: 'lure',
+                        description: 'A basic fly lure for testing',
+                        unlockLevel: 1,
+                        cost: 30,
+                        stats: { surfaceLure: 10 }
+                    }
+                ];
+                
+                basicLures.forEach(lure => {
+                    this.addValidatedItem('lures', lure);
+                });
+            } else {
+                // Use real lure data (first 2 lures)
+                realLures.slice(0, 2).forEach((lure, index) => {
+                    if (this.validateItemData(lure, 'lures')) {
+                        const lureItem = {
+                            ...lure,
+                            id: `lure_${lure.id}_sample_${index}`,
+                            owned: true,
+                            equipped: false,
+                            quantity: 3,
+                            equipSlot: 'lure'
+                        };
+                        this.addValidatedItem('lures', lureItem);
+                    }
+                });
             }
-        ];
-        
-        sampleUpgrades.forEach(upgrade => {
-            this.addItem('upgrades', upgrade);
-        });
-        
-        // Add sample rods - include all required properties: id, name, rarity, stats, description, unlockLevel
-        const sampleRods = [
-            {
-                id: 'basic_rod',
-                name: 'Basic Fishing Rod',
-                rarity: 1,
-                equipSlot: 'rod',
-                stats: { castAccuracy: 5, tensionStability: 3 },
-                description: 'A simple fishing rod for beginners',
-                unlockLevel: 1
-            },
-            {
-                id: 'advanced_rod',
-                name: 'Advanced Carbon Rod',
-                rarity: 3,
-                equipSlot: 'rod',
-                stats: { castAccuracy: 15, tensionStability: 12, rareFishChance: 5 },
-                description: 'High-quality carbon fiber rod',
-                unlockLevel: 5
-            },
-            {
-                id: 'pro_rod',
-                name: 'Professional Rod',
-                rarity: 4,
-                equipSlot: 'rod',
-                stats: { castAccuracy: 25, tensionStability: 20, rareFishChance: 10 },
-                description: 'Professional grade fishing rod with premium components',
-                unlockLevel: 8
-            },
-            {
-                id: 'master_rod',
-                name: 'Master Angler Rod',
-                rarity: 5,
-                equipSlot: 'rod',
-                stats: { castAccuracy: 35, tensionStability: 30, rareFishChance: 15, criticalCatch: 5 },
-                description: 'The ultimate fishing rod for master anglers',
-                unlockLevel: 12
+            
+            // Add sample boats with validation
+            if (!realBoats || realBoats.length === 0) {
+                console.warn('InventoryManager: No real boat data available, creating basic sample boat');
+                const basicBoat = {
+                    id: 'basic_sample_boat',
+                    name: 'Basic Sample Boat',
+                    rarity: 1,
+                    equipSlot: 'boat',
+                    description: 'A basic boat for testing',
+                    unlockLevel: 1,
+                    cost: 1000,
+                    stats: { speed: 10, storage: 20 }
+                };
+                this.addValidatedItem('boats', basicBoat);
+            } else {
+                // Use real boat data
+                const firstBoat = realBoats[0];
+                if (this.validateItemData(firstBoat, 'boats')) {
+                    const boatItem = {
+                        ...firstBoat,
+                        id: `boat_${firstBoat.id}_sample`,
+                        owned: true,
+                        equipped: false,
+                        quantity: 1,
+                        equipSlot: 'boat'
+                    };
+                    this.addValidatedItem('boats', boatItem);
+                }
             }
-        ];
-        
-        sampleRods.forEach(rod => {
-            this.addItem('rods', rod);
-        });
-        
-        // Add more sample lures with different types
-        const moreSampleLures = [
-            { 
-                id: 'spinner_lure', 
-                name: 'Spinner Lure', 
-                type: 'spinner',
-                rarity: 2,
-                equipSlot: 'lure',
-                description: 'Rotating blade creates vibration and flash',
-                unlockLevel: 2,
-                stats: { attractionRadius: 10, vibration: 5 }
-            },
-            { 
-                id: 'crankbait', 
-                name: 'Crankbait', 
-                type: 'crank',
-                rarity: 3,
-                equipSlot: 'lure',
-                description: 'Dives deep and mimics injured fish',
-                unlockLevel: 4,
-                stats: { deepWater: 15, fishAttraction: 8 }
-            },
-            { 
-                id: 'golden_spoon', 
-                name: 'Golden Spoon', 
-                type: 'spoon',
-                rarity: 4,
-                equipSlot: 'lure',
-                description: 'Premium gold-plated spoon lure',
-                unlockLevel: 6,
-                stats: { flash: 20, rareFishChance: 8 }
-            },
-            { 
-                id: 'legendary_fly', 
-                name: 'Legendary Fly', 
-                type: 'fly',
-                rarity: 5,
-                equipSlot: 'lure',
-                description: 'Hand-crafted fly lure used by legendary anglers',
-                unlockLevel: 10,
-                stats: { precision: 25, rareFishChance: 12, surfaceLure: 30 }
+            
+            // Add sample clothing with validation
+            if (!realClothing || realClothing.length === 0) {
+                console.warn('InventoryManager: No real clothing data available, creating basic sample clothing');
+                const basicClothing = [
+                    {
+                        id: 'basic_sample_cap',
+                        name: 'Basic Sample Cap',
+                        equipSlot: 'head',
+                        rarity: 1,
+                        stats: { sunProtection: 5 },
+                        description: 'A basic cap for testing',
+                        unlockLevel: 1,
+                        cost: 25
+                    },
+                    {
+                        id: 'basic_sample_vest',
+                        name: 'Basic Sample Vest',
+                        equipSlot: 'upper_body',
+                        rarity: 1,
+                        stats: { comfort: 10 },
+                        description: 'A basic vest for testing',
+                        unlockLevel: 1,
+                        cost: 75
+                    }
+                ];
+                
+                basicClothing.forEach(clothing => {
+                    this.addValidatedItem('clothing', clothing);
+                });
+            } else {
+                // Use real clothing data (first 2 items)
+                realClothing.slice(0, 2).forEach((clothing, index) => {
+                    if (this.validateItemData(clothing, 'clothing')) {
+                        const clothingItem = {
+                            ...clothing,
+                            id: `clothing_${clothing.id}_sample_${index}`,
+                            owned: true,
+                            equipped: false,
+                            quantity: 1
+                        };
+                        this.addValidatedItem('clothing', clothingItem);
+                    }
+                });
             }
-        ];
+            
+            // Add sample consumables (these are always created manually since they're game mechanics)
+            const sampleConsumables = [
+                {
+                    id: 'energy_drink_sample',
+                    name: 'Energy Drink',
+                    rarity: 1,
+                    description: 'Restores 25 energy',
+                    effect: { type: 'energy', value: 25 },
+                    quantity: 3,
+                    cost: 50
+                },
+                {
+                    id: 'repair_kit_sample',
+                    name: 'Repair Kit',
+                    rarity: 2,
+                    description: 'Repairs damaged equipment',
+                    effect: { type: 'repair', value: 50 },
+                    quantity: 2,
+                    cost: 100
+                }
+            ];
+            
+            sampleConsumables.forEach(consumable => {
+                this.addValidatedItem('consumables', consumable);
+            });
+            
+            // Add sample materials
+            const sampleMaterials = [
+                {
+                    id: 'wood_sample',
+                    name: 'Wood',
+                    rarity: 1,
+                    description: 'Basic crafting material',
+                    quantity: 10,
+                    cost: 5
+                },
+                {
+                    id: 'metal_scraps_sample',
+                    name: 'Metal Scraps',
+                    rarity: 2,
+                    description: 'Used for advanced crafting',
+                    quantity: 5,
+                    cost: 20
+                }
+            ];
+            
+            sampleMaterials.forEach(material => {
+                this.addValidatedItem('materials', material);
+            });
+            
+            console.log('InventoryManager: Sample items added successfully with validation');
+            
+        } catch (error) {
+            console.error('InventoryManager: ❌ Error adding sample items:', error);
+        }
+    }
+
+    /**
+     * Validate item data before adding to inventory
+     * @param {object} itemData - Item data to validate
+     * @param {string} category - Item category
+     * @returns {boolean} - Whether item data is valid
+     */
+    validateItemData(itemData, category) {
+        if (!itemData) {
+            console.error(`InventoryManager: Item data is null/undefined for category ${category}`);
+            return false;
+        }
         
-        moreSampleLures.forEach(lure => {
-            this.addItem('lures', lure);
-        });
+        if (!itemData.name || typeof itemData.name !== 'string' || itemData.name.trim() === '') {
+            console.error(`InventoryManager: Invalid name for ${category} item:`, itemData);
+            return false;
+        }
         
-        // Add sample clothing items
-        const sampleClothing = [
-            {
-                id: 'basic_cap',
-                name: 'Basic Cap',
-                equipSlot: 'head',
-                rarity: 1,
-                stats: { sunProtection: 5 },
-                description: 'Simple fishing cap for sun protection',
-                unlockLevel: 1
-            },
-            {
-                id: 'fishing_hat',
-                name: 'Fishing Hat',
-                equipSlot: 'head',
-                rarity: 2,
-                stats: { sunProtection: 10, luck: 2 },
-                description: 'Professional fishing hat with lucky charms',
-                unlockLevel: 3
-            },
-            {
-                id: 'legendary_crown',
-                name: 'Angler\'s Crown',
-                equipSlot: 'head',
-                rarity: 5,
-                stats: { sunProtection: 25, luck: 10, rareFishChance: 15 },
-                description: 'Crown of the legendary master angler',
-                unlockLevel: 15
-            },
-            {
-                id: 'casual_shirt',
-                name: 'Casual Shirt',
-                equipSlot: 'upper_body',
-                rarity: 1,
-                stats: { comfort: 5 },
-                description: 'Comfortable casual fishing shirt',
-                unlockLevel: 1
-            },
-            {
-                id: 'fishing_vest',
-                name: 'Fishing Vest',
-                equipSlot: 'upper_body',
-                rarity: 3,
-                stats: { comfort: 15, storage: 20, waterResistant: 10 },
-                description: 'Multi-pocket fishing vest with waterproof coating',
-                unlockLevel: 5
-            },
-            {
-                id: 'angler_jacket',
-                name: 'Master Angler Jacket',
-                equipSlot: 'upper_body',
-                rarity: 4,
-                stats: { comfort: 25, storage: 35, waterResistant: 20, luck: 5 },
-                description: 'Premium jacket worn by professional anglers',
-                unlockLevel: 10
-            },
-            {
-                id: 'shorts',
-                name: 'Fishing Shorts',
-                equipSlot: 'lower_body',
-                rarity: 1,
-                stats: { mobility: 10 },
-                description: 'Lightweight shorts for easy movement',
-                unlockLevel: 1
-            },
-            {
-                id: 'waders',
-                name: 'Fishing Waders',
-                equipSlot: 'lower_body',
-                rarity: 3,
-                stats: { mobility: 5, waterResistant: 30, deepWaterAccess: 20 },
-                description: 'Waterproof waders for deep water fishing',
-                unlockLevel: 6
-            },
-            {
-                id: 'pro_pants',
-                name: 'Professional Fishing Pants',
-                equipSlot: 'lower_body',
-                rarity: 4,
-                stats: { mobility: 20, waterResistant: 15, storage: 10, comfort: 15 },
-                description: 'High-tech fishing pants with multiple features',
-                unlockLevel: 8
+        if (itemData.name === 'undefined' || itemData.name.includes('undefined')) {
+            console.error(`InventoryManager: Item has 'undefined' in name for ${category}:`, itemData);
+            return false;
+        }
+        
+        if (!itemData.id || typeof itemData.id !== 'string' || itemData.id.trim() === '') {
+            console.error(`InventoryManager: Invalid ID for ${category} item:`, itemData);
+            return false;
+        }
+        
+        if (itemData.id === 'undefined' || itemData.id.includes('undefined')) {
+            console.error(`InventoryManager: Item has 'undefined' in ID for ${category}:`, itemData);
+            return false;
+        }
+        
+        return true;
+    }
+
+    /**
+     * Add item with validation to prevent undefined items
+     * @param {string} category - Item category
+     * @param {object} itemData - Item data
+     * @returns {boolean} - Success status
+     */
+    addValidatedItem(category, itemData) {
+        // Pre-validate the item data
+        if (!this.validateItemData(itemData, category)) {
+            console.error(`InventoryManager: Rejecting invalid item for ${category}:`, itemData);
+            return false;
+        }
+        
+        // Ensure required properties exist
+        const validatedItem = {
+            ...itemData,
+            name: itemData.name.trim(),
+            id: itemData.id.trim(),
+            owned: true,
+            quantity: itemData.quantity || 1
+        };
+        
+        // Add category-specific required properties
+        if (category === 'rods' || category === 'lures' || category === 'boats' || category === 'clothing' || category === 'bikini_assistants') {
+            if (!validatedItem.equipSlot) {
+                // Auto-assign equipSlot based on category
+                switch (category) {
+                    case 'rods':
+                        validatedItem.equipSlot = 'rod';
+                        break;
+                    case 'lures':
+                        validatedItem.equipSlot = 'lure';
+                        break;
+                    case 'boats':
+                        validatedItem.equipSlot = 'boat';
+                        break;
+                    case 'bikini_assistants':
+                        validatedItem.equipSlot = 'bikini_assistant';
+                        break;
+                    case 'clothing':
+                        // For clothing, try to determine from name
+                        const name = validatedItem.name.toLowerCase();
+                        if (name.includes('cap') || name.includes('hat') || name.includes('crown')) {
+                            validatedItem.equipSlot = 'head';
+                        } else if (name.includes('vest') || name.includes('shirt') || name.includes('jacket')) {
+                            validatedItem.equipSlot = 'upper_body';
+                        } else {
+                            validatedItem.equipSlot = 'lower_body';
+                        }
+                        break;
+                }
             }
-        ];
+            validatedItem.equipped = false;
+        }
         
-        sampleClothing.forEach(clothing => {
-            this.addItem('clothing', clothing);
-        });
-        
-        // Add sample bikini assistants
-        const sampleBikiniAssistants = [
-            {
-                id: 'miku_assistant',
-                name: 'Miku',
-                rarity: 3,
-                equipSlot: 'bikini_assistant',
-                stats: { fishingBonus: 15, luckBonus: 10, experienceBonus: 5 },
-                description: 'Cheerful assistant who loves fishing and helps with catches',
-                unlockLevel: 5,
-                specialAbility: 'Increases rare fish chance by 10%'
-            },
-            {
-                id: 'luna_assistant', 
-                name: 'Luna',
-                rarity: 4,
-                equipSlot: 'bikini_assistant',
-                stats: { fishingBonus: 25, luckBonus: 15, experienceBonus: 10, nightFishing: 20 },
-                description: 'Mysterious night fishing expert with moon magic',
-                unlockLevel: 8,
-                specialAbility: 'Grants night fishing bonuses and moon-blessed catches'
-            },
-            {
-                id: 'sakura_assistant',
-                name: 'Sakura',
-                rarity: 5,
-                equipSlot: 'bikini_assistant',
-                stats: { fishingBonus: 35, luckBonus: 25, experienceBonus: 20, rareFishChance: 15 },
-                description: 'Legendary fishing master with cherry blossom powers',
-                unlockLevel: 12,
-                specialAbility: 'Master-level fishing assistance with legendary fish attraction'
-            }
-        ];
-        
-        sampleBikiniAssistants.forEach(assistant => {
-            this.addItem('bikini_assistants', assistant);
-        });
-        
-        console.log('InventoryManager: Sample items added successfully');
+        console.log(`InventoryManager: Adding validated ${category} item:`, validatedItem.name);
+        return this.addItem(category, validatedItem);
     }
 
     /**
@@ -1711,6 +1783,272 @@ export class InventoryManager {
             
         } catch (error) {
             console.error('InventoryManager: Error during manual refresh:', error);
+        }
+    }
+
+    /**
+     * 🚨 FORCE CLEAN: Remove all undefined/invalid items immediately on initialization
+     */
+    forceCleanAllUndefinedItems() {
+        console.log('InventoryManager: 🚨 FORCE CLEANING all undefined/invalid items...');
+        
+        try {
+            let totalRemoved = 0;
+            
+            // Ensure inventory exists
+            if (!this.gameState.inventory) {
+                this.gameState.inventory = {};
+                console.log('InventoryManager: Created empty inventory structure');
+                return 0;
+            }
+            
+            // Clean each category thoroughly
+            Object.keys(this.gameState.inventory).forEach(category => {
+                if (Array.isArray(this.gameState.inventory[category])) {
+                    const originalLength = this.gameState.inventory[category].length;
+                    
+                    // Filter out ALL invalid items
+                    this.gameState.inventory[category] = this.gameState.inventory[category].filter(item => {
+                        // Comprehensive validation
+                        if (!item || typeof item !== 'object') {
+                            console.log(`InventoryManager: 🗑️ Removing null/invalid object from ${category}`);
+                            totalRemoved++;
+                            return false;
+                        }
+                        
+                        // Check name
+                        if (!item.name || 
+                            typeof item.name !== 'string' || 
+                            item.name.trim() === '' ||
+                            item.name === 'undefined' ||
+                            item.name.includes('undefined') ||
+                            item.name.includes('null') ||
+                            item.name.startsWith('MISSING:') ||
+                            item.name.startsWith('Placeholder')) {
+                            console.log(`InventoryManager: 🗑️ Removing item with invalid name "${item.name}" from ${category}`);
+                            totalRemoved++;
+                            return false;
+                        }
+                        
+                        // Check ID
+                        if (!item.id || 
+                            typeof item.id !== 'string' || 
+                            item.id.trim() === '' ||
+                            item.id === 'undefined' ||
+                            item.id.includes('undefined') ||
+                            item.id.includes('null')) {
+                            console.log(`InventoryManager: 🗑️ Removing item with invalid ID "${item.id}" from ${category}`);
+                            totalRemoved++;
+                            return false;
+                        }
+                        
+                        // Check description for placeholders
+                        if (item.description && 
+                            (item.description.includes('Placeholder') || 
+                             item.description.includes('MISSING'))) {
+                            console.log(`InventoryManager: 🗑️ Removing placeholder item "${item.name}" from ${category}`);
+                            totalRemoved++;
+                            return false;
+                        }
+                        
+                        // Item is valid
+                        return true;
+                    });
+                    
+                    const removedCount = originalLength - this.gameState.inventory[category].length;
+                    if (removedCount > 0) {
+                        console.log(`InventoryManager: ✅ Cleaned ${removedCount} invalid items from ${category}`);
+                    }
+                } else {
+                    // Ensure category is an array
+                    this.gameState.inventory[category] = [];
+                    console.log(`InventoryManager: ✅ Reset ${category} to empty array`);
+                }
+            });
+            
+            console.log(`InventoryManager: ✅ FORCE CLEAN COMPLETED - Removed ${totalRemoved} invalid items total`);
+            
+            // Mark as dirty to save changes
+            if (totalRemoved > 0) {
+                this.gameState.markDirty();
+            }
+            
+            return totalRemoved;
+            
+        } catch (error) {
+            console.error('InventoryManager: ❌ Error during force clean:', error);
+            return 0;
+        }
+    }
+
+    /**
+     * Force clean and rebuild inventory with proper items
+     */
+    forceCleanInventory() {
+        console.log('InventoryManager: Force cleaning entire inventory...');
+        
+        try {
+            // Use the comprehensive force clean method
+            const cleanedCount = this.forceCleanAllUndefinedItems();
+            
+            // 🚨 DISABLED: Automatic sample item generation to prevent undefined items
+            // Sample items can be added manually through the inventory UI debug buttons if needed
+            console.log('InventoryManager: Skipping automatic sample item generation after force clean');
+            
+            console.log('InventoryManager: Force clean completed');
+            
+            // Emit event
+            this.emit('inventoryForceCleanCompleted', { cleanedCount });
+            
+            return true;
+            
+        } catch (error) {
+            console.error('InventoryManager: Error during force clean:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Add proper sample items using real data from DataLoader
+     */
+    addProperSampleItems() {
+        console.log('InventoryManager: Adding proper sample items using real DataLoader data...');
+        
+        try {
+            // 🚨 VALIDATION: Ensure DataLoader is available and loaded
+            if (!this.gameState.gameDataLoader || !this.gameState.gameDataLoader.loaded) {
+                console.error('InventoryManager: GameDataLoader not available or not loaded');
+                return;
+            }
+            
+            // Get real data from DataLoader
+            const allFish = this.gameState.gameDataLoader.getAllFish();
+            const allRods = this.gameState.gameDataLoader.getAllRods();
+            const allLures = this.gameState.gameDataLoader.getAllLures();
+            const allBoats = this.gameState.gameDataLoader.getAllBoats();
+            const allClothing = this.gameState.gameDataLoader.getAllClothing();
+            
+            console.log('InventoryManager: DataLoader data available:', {
+                fish: allFish ? allFish.length : 0,
+                rods: allRods ? allRods.length : 0,
+                lures: allLures ? allLures.length : 0,
+                boats: allBoats ? allBoats.length : 0,
+                clothing: allClothing ? allClothing.length : 0
+            });
+            
+            // 🚨 VALIDATION: Only add items if we have valid data
+            
+            // Add sample rods (only if we have real rod data)
+            if (allRods && allRods.length > 0) {
+                const sampleRod = allRods[0]; // Use first real rod
+                if (this.validateItemData(sampleRod, 'rods')) {
+                    const rodItem = {
+                        ...sampleRod,
+                        id: `rod_${sampleRod.id}_${Date.now()}`,
+                        owned: true,
+                        equipped: false,
+                        quantity: 1,
+                        equipSlot: 'rod'
+                    };
+                    
+                    console.log('InventoryManager: Adding validated rod:', rodItem.name);
+                    this.addValidatedItem('rods', rodItem);
+                } else {
+                    console.warn('InventoryManager: First rod failed validation, skipping');
+                }
+            } else {
+                console.warn('InventoryManager: No real rod data available');
+            }
+            
+            // Add sample lures (only if we have real lure data)
+            if (allLures && allLures.length > 0) {
+                const sampleLure = allLures[0]; // Use first real lure
+                if (this.validateItemData(sampleLure, 'lures')) {
+                    const lureItem = {
+                        ...sampleLure,
+                        id: `lure_${sampleLure.id}_${Date.now()}`,
+                        owned: true,
+                        equipped: false,
+                        quantity: 5,
+                        equipSlot: 'lure'
+                    };
+                    
+                    console.log('InventoryManager: Adding validated lure:', lureItem.name);
+                    this.addValidatedItem('lures', lureItem);
+                } else {
+                    console.warn('InventoryManager: First lure failed validation, skipping');
+                }
+            } else {
+                console.warn('InventoryManager: No real lure data available');
+            }
+            
+            // Add sample boats (only if we have real boat data)
+            if (allBoats && allBoats.length > 0) {
+                const sampleBoat = allBoats[0]; // Use first real boat
+                if (this.validateItemData(sampleBoat, 'boats')) {
+                    const boatItem = {
+                        ...sampleBoat,
+                        id: `boat_${sampleBoat.id}_${Date.now()}`,
+                        owned: true,
+                        equipped: false,
+                        quantity: 1,
+                        equipSlot: 'boat'
+                    };
+                    
+                    console.log('InventoryManager: Adding validated boat:', boatItem.name);
+                    this.addValidatedItem('boats', boatItem);
+                } else {
+                    console.warn('InventoryManager: First boat failed validation, skipping');
+                }
+            } else {
+                console.warn('InventoryManager: No real boat data available');
+            }
+            
+            // Add sample clothing (only if we have real clothing data)
+            if (allClothing && allClothing.length > 0) {
+                const sampleClothing = allClothing[0]; // Use first real clothing
+                if (this.validateItemData(sampleClothing, 'clothing')) {
+                    const clothingItem = {
+                        ...sampleClothing,
+                        id: `clothing_${sampleClothing.id}_${Date.now()}`,
+                        owned: true,
+                        equipped: false,
+                        quantity: 1
+                    };
+                    
+                    console.log('InventoryManager: Adding validated clothing:', clothingItem.name);
+                    this.addValidatedItem('clothing', clothingItem);
+                } else {
+                    console.warn('InventoryManager: First clothing item failed validation, skipping');
+                }
+            } else {
+                console.warn('InventoryManager: No real clothing data available');
+            }
+            
+            // Add basic consumables (these are always safe since they're manually created)
+            const basicConsumables = [
+                {
+                    id: `energy_drink_${Date.now()}`,
+                    name: 'Energy Drink',
+                    rarity: 1,
+                    description: 'Restores 25 energy',
+                    effect: { type: 'energy', value: 25 },
+                    quantity: 3,
+                    cost: 50
+                }
+            ];
+            
+            basicConsumables.forEach(consumable => {
+                if (this.validateItemData(consumable, 'consumables')) {
+                    console.log('InventoryManager: Adding validated consumable:', consumable.name);
+                    this.addValidatedItem('consumables', consumable);
+                }
+            });
+            
+            console.log('InventoryManager: ✅ Proper sample items added successfully with full validation');
+            
+        } catch (error) {
+            console.error('InventoryManager: ❌ Error adding proper sample items:', error);
         }
     }
 }

@@ -620,19 +620,19 @@ export default class GameScene extends Phaser.Scene {
         // Dialog shortcuts
         this.input.keyboard.on('keydown-D', () => {
             if (this.dialogManager) {
-                this.dialogManager.openDialog('mia');
+                this.dialogManager.startDialog('mia', 'GameScene');
             }
         });
 
         this.input.keyboard.on('keydown-F', () => {
             if (this.dialogManager) {
-                this.dialogManager.openDialog('sophie');
+                this.dialogManager.startDialog('sophie', 'GameScene');
             }
         });
 
         this.input.keyboard.on('keydown-G', () => {
             if (this.dialogManager) {
-                this.dialogManager.openDialog('luna');
+                this.dialogManager.startDialog('luna', 'GameScene');
             }
         });
 
@@ -787,6 +787,22 @@ export default class GameScene extends Phaser.Scene {
         const height = this.cameras.main.height;
         const fishingConfig = gameDataLoader.getFishingConfig();
         
+        // Provide fallback configuration if fishing config is null or incomplete
+        const defaultFishingConfig = {
+            fishCount: 8,
+            fishWaterAreaTop: 0.35,
+            fishWaterAreaBottom: 0.85,
+            fishSpeedRange: { min: -50, max: 50 },
+            fishVerticalSpeedRange: { min: -20, max: 20 },
+            fishBounce: 1,
+            fishScale: 0.8
+        };
+        
+        // Merge with loaded config or use defaults
+        const config = fishingConfig ? { ...defaultFishingConfig, ...fishingConfig } : defaultFishingConfig;
+        
+        console.log('GameScene: Using fishing config:', config);
+        
         // Check if fish texture exists, if not create a simple graphics fish
         const createFishSprite = (x, y) => {
             try {
@@ -819,24 +835,24 @@ export default class GameScene extends Phaser.Scene {
         };
         
         // Create regular fish scattered around the water
-        const regularFishCount = Math.floor(fishingConfig.fishCount * 0.6); // 60% regular fish
+        const regularFishCount = Math.floor(config.fishCount * 0.6); // 60% regular fish
         let hotspotFishCount = 0; // Initialize hotspot fish count
         
         for (let i = 0; i < regularFishCount; i++) {
             const fish = createFishSprite(
                 Phaser.Math.Between(100, width - 100),
-                Phaser.Math.Between(height * fishingConfig.fishWaterAreaTop, height * fishingConfig.fishWaterAreaBottom)
+                Phaser.Math.Between(height * config.fishWaterAreaTop, height * config.fishWaterAreaBottom)
             );
             
             if (fish && fish.body) {
                 fish.setVelocity(
-                    Phaser.Math.Between(fishingConfig.fishSpeedRange.min, fishingConfig.fishSpeedRange.max),
-                    Phaser.Math.Between(fishingConfig.fishVerticalSpeedRange.min, fishingConfig.fishVerticalSpeedRange.max)
+                    Phaser.Math.Between(config.fishSpeedRange.min, config.fishSpeedRange.max),
+                    Phaser.Math.Between(config.fishVerticalSpeedRange.min, config.fishVerticalSpeedRange.max)
                 );
                 
-                fish.setBounce(fishingConfig.fishBounce);
+                fish.setBounce(config.fishBounce);
                 fish.setCollideWorldBounds(true);
-                fish.setScale(fishingConfig.fishScale);
+                fish.setScale(config.fishScale);
                 fish.fishData = this.generateRandomFishData();
                 fish.fishType = 'regular';
             }
@@ -844,7 +860,7 @@ export default class GameScene extends Phaser.Scene {
         
         // Create hotspot fish - more fish near the hotspot
         if (this.hotspotPosition) {
-            hotspotFishCount = Math.floor(fishingConfig.fishCount * 0.4); // 40% hotspot fish
+            hotspotFishCount = Math.floor(config.fishCount * 0.4); // 40% hotspot fish
             
             for (let i = 0; i < hotspotFishCount; i++) {
                 // Position fish near the hotspot with some variance
@@ -855,7 +871,7 @@ export default class GameScene extends Phaser.Scene {
                 
                 // Ensure fish stays within water bounds
                 const clampedX = Phaser.Math.Clamp(fishX, 100, width - 100);
-                const clampedY = Phaser.Math.Clamp(fishY, height * fishingConfig.fishWaterAreaTop, height * fishingConfig.fishWaterAreaBottom);
+                const clampedY = Phaser.Math.Clamp(fishY, height * config.fishWaterAreaTop, height * config.fishWaterAreaBottom);
                 
                 const fish = createFishSprite(clampedX, clampedY);
                 
@@ -866,9 +882,9 @@ export default class GameScene extends Phaser.Scene {
                         Phaser.Math.Between(-20, 20)
                     );
                     
-                    fish.setBounce(fishingConfig.fishBounce);
+                    fish.setBounce(config.fishBounce);
                     fish.setCollideWorldBounds(true);
-                    fish.setScale(fishingConfig.fishScale * 1.2); // Slightly larger fish near hotspot
+                    fish.setScale(config.fishScale * 1.2); // Slightly larger fish near hotspot
                     fish.fishData = this.generateHotspotFishData(); // Better fish near hotspot
                     fish.fishType = 'hotspot';
                     
@@ -881,7 +897,7 @@ export default class GameScene extends Phaser.Scene {
         // Create fishing spot fish - fish near active fishing spots
         if (this.fishingSpots) {
             const activeSpots = this.fishingSpots.filter(spot => spot.isActive);
-            const spotFishCount = Math.floor(fishingConfig.fishCount * 0.2); // 20% spot fish
+            const spotFishCount = Math.floor(config.fishCount * 0.2); // 20% spot fish
             
             activeSpots.forEach(spot => {
                 const fishPerSpot = Math.floor(spotFishCount / Math.max(activeSpots.length, 1));
@@ -895,7 +911,7 @@ export default class GameScene extends Phaser.Scene {
                     
                     // Ensure fish stays within water bounds
                     const clampedX = Phaser.Math.Clamp(fishX, 100, width - 100);
-                    const clampedY = Phaser.Math.Clamp(fishY, height * fishingConfig.fishWaterAreaTop, height * fishingConfig.fishWaterAreaBottom);
+                    const clampedY = Phaser.Math.Clamp(fishY, height * config.fishWaterAreaTop, height * config.fishWaterAreaBottom);
                     
                     const fish = createFishSprite(clampedX, clampedY);
                     
@@ -907,9 +923,9 @@ export default class GameScene extends Phaser.Scene {
                             Phaser.Math.Between(-15, 15)
                         );
                         
-                        fish.setBounce(fishingConfig.fishBounce);
+                        fish.setBounce(config.fishBounce);
                         fish.setCollideWorldBounds(true);
-                        fish.setScale(fishingConfig.fishScale * 1.1); // Slightly larger fish near spots
+                        fish.setScale(config.fishScale * 1.1); // Slightly larger fish near spots
                         fish.fishData = this.generateSpotFishData(spot); // Spot-specific fish
                         fish.fishType = 'spot';
                         fish.spotId = spot.id;
@@ -1033,20 +1049,32 @@ export default class GameScene extends Phaser.Scene {
         const height = this.cameras.main.height;
         const uiConfig = gameDataLoader.getUIConfig();
         
+        // Provide fallback UI configuration if config is null or incomplete
+        const defaultUIConfig = {
+            crosshairSize: 10,
+            crosshairLineLength: 15,
+            crosshairColor: 0xffffff,
+            crosshairAlpha: 0.8,
+            crosshairLineWidth: 2
+        };
+        
+        // Merge with loaded config or use defaults
+        const config = uiConfig ? { ...defaultUIConfig, ...uiConfig } : defaultUIConfig;
+        
         // Create a more advanced crosshair with animated elements
         this.crosshair = this.add.container(width / 2, height / 2);
         this.crosshair.setDepth(this.DEPTH_LAYERS.GAME_ELEMENTS);
         
         // Outer ring
         const outerRing = this.add.graphics();
-        outerRing.lineStyle(uiConfig.crosshairLineWidth, parseInt(uiConfig.crosshairColor), uiConfig.crosshairAlpha);
-        outerRing.strokeCircle(0, 0, uiConfig.crosshairSize + 5);
+        outerRing.lineStyle(config.crosshairLineWidth, parseInt(config.crosshairColor), config.crosshairAlpha);
+        outerRing.strokeCircle(0, 0, config.crosshairSize + 5);
         this.crosshair.add(outerRing);
         
         // Inner circle
         const innerCircle = this.add.graphics();
-        innerCircle.lineStyle(uiConfig.crosshairLineWidth, parseInt(uiConfig.crosshairColor), uiConfig.crosshairAlpha);
-        innerCircle.strokeCircle(0, 0, uiConfig.crosshairSize);
+        innerCircle.lineStyle(config.crosshairLineWidth, parseInt(config.crosshairColor), config.crosshairAlpha);
+        innerCircle.strokeCircle(0, 0, config.crosshairSize);
         this.crosshair.add(innerCircle);
         
         // Crosshair lines

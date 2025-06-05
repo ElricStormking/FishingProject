@@ -1,0 +1,9 @@
+weather_type,fish_detection_mod,bite_rate_mod,visibility_mod,rare_fish_chance_mod,description
+sunny,10,0,20,0,Clear sunny weather improves visibility
+cloudy,0,5,0,0,Overcast conditions slightly improve bite rates
+rainy,-5,10,-10,0,Rain increases fish activity but reduces visibility
+stormy,-15,15,-25,5,Storms greatly increase activity and rare fish chances
+misty,-10,5,-30,3,Mist reduces visibility but fish are more active
+clear_night,-10,20,0,10,Clear nights are ideal for nocturnal fishing
+perfect,5,10,10,5,Perfect conditions for tournament fishing
+challenge,-20,25,-20,15,Challenging conditions reward skilled anglers 

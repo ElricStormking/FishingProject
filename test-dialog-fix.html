@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dialog System Fix Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .test-info {
+            background: rgba(52, 152, 219, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        .controls {
+            background: rgba(46, 204, 113, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2ecc71;
+        }
+        .key {
+            display: inline-block;
+            background: rgba(255,255,255,0.1);
+            padding: 5px 10px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        #gameContainer {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #34495e;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛠️ Dialog System Fix Test</h1>
+        
+        <div class="test-info">
+            <h3>🎯 Test Scenario: Dialog System Error Fixes</h3>
+            <p><strong>Fixed Issues:</strong></p>
+            <ul>
+                <li>✅ GameScene dialog shortcuts now call <code>startDialog()</code> instead of <code>openDialog()</code></li>
+                <li>✅ DialogScene has improved DialogManager fallback logic</li>
+                <li>✅ DialogScene can find DialogManager from multiple sources</li>
+            </ul>
+            <p><strong>Expected:</strong> No "DialogManager not found" or "openDialog is not a function" errors</p>
+        </div>
+
+        <div class="controls">
+            <h3>🎮 Test Controls</h3>
+            <p><strong>Dialog Shortcuts (should work without errors):</strong></p>
+            <div class="key"><strong>D Key:</strong> Dialog with Mia</div>
+            <div class="key"><strong>F Key:</strong> Dialog with Sophie</div>
+            <div class="key"><strong>G Key:</strong> Dialog with Luna</div>
+            <div class="key"><strong>ESC Key:</strong> Close dialog</div>
+            <p><strong>Check console for:</strong> ✅ No dialog-related errors</p>
+        </div>
+
+        <div id="gameContainer"></div>
+        
+        <div class="status" id="testStatus">
+            <strong>Test Status:</strong> Initializing...
+        </div>
+    </div>
+
+    <script type="module">
+        import Phaser from './src/libs/phaser.min.js';
+        import GameScene from './src/scenes/GameScene.js';
+        import DialogScene from './src/scenes/DialogScene.js';
+        import MenuScene from './src/scenes/MenuScene.js';
+        import HUDScene from './src/scenes/HUDScene.js';
+        import BoatMenuScene from './src/scenes/BoatMenuScene.js';
+
+        const config = {
+            type: Phaser.AUTO,
+            width: 1200,
+            height: 600,
+            parent: 'gameContainer',
+            backgroundColor: '#2c3e50',
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },
+                    debug: false
+                }
+            },
+            scene: [
+                MenuScene,
+                GameScene,
+                DialogScene,
+                HUDScene,
+                BoatMenuScene
+            ]
+        };
+
+        const game = new Phaser.Game(config);
+        
+        // Test status tracking
+        const statusElement = document.getElementById('testStatus');
+        let testResults = {
+            gameStarted: false,
+            dialogManagerFound: false,
+            dialogShortcutsWork: false,
+            noErrors: true
+        };
+
+        function updateStatus() {
+            const results = Object.entries(testResults).map(([key, value]) => {
+                const icon = value ? '✅' : '❌';
+                const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                return `${icon} ${label}`;
+            }).join(' | ');
+            
+            statusElement.innerHTML = `<strong>Test Results:</strong> ${results}`;
+        }
+
+        // Monitor console for errors
+        const originalError = console.error;
+        console.error = function(...args) {
+            const message = args.join(' ');
+            if (message.includes('dialog') || message.includes('Dialog')) {
+                testResults.noErrors = false;
+                updateStatus();
+                console.log('❌ Dialog error detected:', message);
+            }
+            originalError.apply(console, args);
+        };
+
+        // Monitor game initialization
+        game.events.on('ready', () => {
+            testResults.gameStarted = true;
+            updateStatus();
+            console.log('🎮 Dialog Fix Test Started');
+            
+            // Check if GameScene has DialogManager
+            setTimeout(() => {
+                const gameScene = game.scene.getScene('GameScene');
+                if (gameScene && gameScene.dialogManager) {
+                    testResults.dialogManagerFound = true;
+                    console.log('✅ DialogManager found in GameScene');
+                } else {
+                    console.log('❌ DialogManager not found in GameScene');
+                }
+                updateStatus();
+            }, 2000);
+            
+            // Test dialog shortcuts after a delay
+            setTimeout(() => {
+                console.log('🧪 Testing dialog shortcuts...');
+                
+                // Simulate D key press for Mia dialog
+                const gameScene = game.scene.getScene('GameScene');
+                if (gameScene && gameScene.input && gameScene.input.keyboard) {
+                    try {
+                        // Test if dialog shortcuts work without errors
+                        if (gameScene.dialogManager && typeof gameScene.dialogManager.startDialog === 'function') {
+                            console.log('✅ Dialog shortcuts should work - startDialog method exists');
+                            testResults.dialogShortcutsWork = true;
+                        } else {
+                            console.log('❌ Dialog shortcuts may not work - startDialog method missing');
+                        }
+                    } catch (error) {
+                        console.log('❌ Error testing dialog shortcuts:', error);
+                        testResults.noErrors = false;
+                    }
+                }
+                updateStatus();
+            }, 3000);
+        });
+
+        // Start with GameScene for testing
+        setTimeout(() => {
+            if (game.scene.getScene('MenuScene')) {
+                game.scene.start('GameScene');
+            }
+        }, 1000);
+
+        updateStatus();
+    </script>
+</body>
+</html> 

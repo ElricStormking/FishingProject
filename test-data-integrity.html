@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Integrity Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .pass { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .fail { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Data Integrity Test - Post CSV Creation</h1>
+    <p>Testing that all original JSON data files are still working correctly...</p>
+    
+    <div id="results"></div>
+
+    <script type="module">
+        const results = document.getElementById('results');
+        
+        function addResult(test, status, message, data = null) {
+            const div = document.createElement('div');
+            div.className = `test-result ${status}`;
+            div.innerHTML = `
+                <strong>${status === 'pass' ? '✅' : status === 'fail' ? '❌' : 'ℹ️'} ${test}</strong><br>
+                ${message}
+                ${data ? `<pre>${JSON.stringify(data, null, 2)}</pre>` : ''}
+            `;
+            results.appendChild(div);
+        }
+
+        async function testDataIntegrity() {
+            try {
+                // Test 1: Import attributes.json
+                addResult('Loading attributes.json', 'info', 'Importing player attributes...');
+                const attributesModule = await import('./src/data/attributes.json');
+                const attributes = attributesModule.default;
+                
+                if (attributes && attributes.playerAttributes) {
+                    const attrCount = Object.keys(attributes.playerAttributes.levelingAttributes).length;
+                    addResult('Attributes Data', 'pass', `Successfully loaded ${attrCount} leveling attributes`);
+                } else {
+                    addResult('Attributes Data', 'fail', 'Failed to load attributes structure');
+                }
+
+                // Test 2: Import fish.json
+                addResult('Loading fish.json', 'info', 'Importing fish database...');
+                const fishModule = await import('./src/data/fish.json');
+                const fishData = fishModule.default;
+                
+                if (fishData && fishData.fishSpecies) {
+                    const fishCount = fishData.fishSpecies.length;
+                    const sampleFish = fishData.fishSpecies[0];
+                    addResult('Fish Database', 'pass', `Successfully loaded ${fishCount} fish species`, {
+                        sample: sampleFish.name,
+                        rarity: sampleFish.rarity,
+                        coinValue: sampleFish.coinValue
+                    });
+                } else {
+                    addResult('Fish Database', 'fail', 'Failed to load fish species');
+                }
+
+                // Test 3: Import equipment.json
+                addResult('Loading equipment.json', 'info', 'Importing equipment data...');
+                const equipmentModule = await import('./src/data/equipment.json');
+                const equipment = equipmentModule.default;
+                
+                if (equipment && equipment.fishingRods) {
+                    const rodCount = equipment.fishingRods.length;
+                    const boatCount = equipment.boats.length;
+                    const clothingCount = equipment.clothing.length;
+                    addResult('Equipment Data', 'pass', `Successfully loaded ${rodCount} rods, ${boatCount} boats, ${clothingCount} clothing items`);
+                } else {
+                    addResult('Equipment Data', 'fail', 'Failed to load equipment structure');
+                }
+
+                // Test 4: Import LocationData.js
+                addResult('Loading LocationData.js', 'info', 'Importing location data...');
+                const locationModule = await import('./src/data/LocationData.js');
+                const { LOCATION_DATA, getLocationById, getAllLocations } = locationModule;
+                
+                if (LOCATION_DATA) {
+                    const locationCount = Object.keys(LOCATION_DATA).length;
+                    const allLocations = getAllLocations();
+                    const testLocation = getLocationById('beginner_lake_dock');
+                    
+                    addResult('Location Data', 'pass', `Successfully loaded ${locationCount} locations with utility functions`, {
+                        totalLocations: allLocations.length,
+                        testLocation: testLocation ? testLocation.name : 'Not found'
+                    });
+                } else {
+                    addResult('Location Data', 'fail', 'Failed to load location data');
+                }
+
+                // Test 5: Import gameConfig.json
+                addResult('Loading gameConfig.json', 'info', 'Importing game configuration...');
+                const configModule = await import('./src/data/gameConfig.json');
+                const gameConfig = configModule.default;
+                
+                if (gameConfig && gameConfig.fishing) {
+                    const configKeys = Object.keys(gameConfig).length;
+                    addResult('Game Config', 'pass', `Successfully loaded ${configKeys} configuration sections`, {
+                        baseCatchChance: gameConfig.fishing.baseCatchChance,
+                        fishCount: gameConfig.fishing.fishCount
+                    });
+                } else {
+                    addResult('Game Config', 'fail', 'Failed to load game configuration');
+                }
+
+                // Test 6: Import inventorySchema.json
+                addResult('Loading inventorySchema.json', 'info', 'Importing inventory schema...');
+                const schemaModule = await import('./src/data/inventorySchema.json');
+                const schema = schemaModule.default;
+                
+                if (schema && schema.itemCategories) {
+                    const categoryCount = Object.keys(schema.itemCategories).length;
+                    addResult('Inventory Schema', 'pass', `Successfully loaded ${categoryCount} item categories`);
+                } else {
+                    addResult('Inventory Schema', 'fail', 'Failed to load inventory schema');
+                }
+
+                // Final summary
+                addResult('Test Complete', 'pass', 'All data files are loading correctly! CSV creation did not affect game data integrity.');
+
+            } catch (error) {
+                addResult('Critical Error', 'fail', `Failed to load data: ${error.message}`);
+                console.error('Data integrity test failed:', error);
+            }
+        }
+
+        // Run the test
+        testDataIntegrity();
+    </script>
+</body>
+</html> 

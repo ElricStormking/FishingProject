@@ -1,0 +1,11 @@
+rod_id,rod_name,rarity,equip_slot,cast_accuracy,tension_stability,rare_fish_chance,casting_range,reel_speed,struggle_resistance,cost,crafting_material_1,crafting_material_2,crafting_time,description,unlock_level
+bamboo_rod,Bamboo Rod,1,rod,5,8,2,10,5,3,200,minnow,minnow,2,Traditional bamboo rod for beginners,1
+fiberglass_rod,Fiberglass Rod,2,rod,8,12,4,15,8,6,400,perch,perch,4,Flexible fiberglass construction,5
+carbon_rod,Carbon Rod,3,rod,12,16,6,20,12,9,800,trout,trout,6,Lightweight carbon fiber rod,10
+steel_rod,Steel Rod,4,rod,16,20,8,25,15,12,1200,pike,pike,8,Durable steel construction,15
+titanium_rod,Titanium Rod,5,rod,25,28,15,35,15,15,2000,salmon,salmon,10,Premium titanium alloy rod,20
+elite_bamboo_rod,Elite Bamboo Rod,3,rod,15,18,7,22,10,8,1000,bamboo_rod,bamboo_rod,12,Masterfully crafted bamboo rod,12
+elite_fiberglass_rod,Elite Fiberglass Rod,4,rod,20,24,10,28,18,12,2000,fiberglass_rod,fiberglass_rod,14,Enhanced fiberglass with precision guides,18
+elite_carbon_rod,Elite Carbon Rod,5,rod,28,32,18,40,22,18,3000,carbon_rod,carbon_rod,16,High-modulus carbon fiber,25
+elite_steel_rod,Elite Steel Rod,6,rod,35,40,25,50,28,25,4000,steel_rod,steel_rod,18,Forged steel with titanium guides,30
+elite_titanium_rod,Elite Titanium Rod,6,rod,45,50,35,65,35,30,6000,titanium_rod,titanium_rod,20,Aerospace-grade titanium construction,35 

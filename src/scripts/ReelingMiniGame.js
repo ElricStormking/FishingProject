@@ -300,6 +300,33 @@ export class ReelingMiniGame {
         instructions.setDepth(1005);
         this.uiContainer.add(instructions);
         
+        // Add visual indicator that reeling is active and ready for mouse input
+        this.reelingActiveIndicator = this.scene.add.text(
+            width - 20,
+            height - 100,
+            '🎣 REELING ACTIVE\n🖱️ LEFT CLICK to REEL!',
+            {
+                fontSize: '14px',
+                fill: '#00ff00',
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: { x: 8, y: 4 },
+                align: 'right'
+            }
+        ).setOrigin(1, 0).setDepth(2000);
+        this.uiContainer.add(this.reelingActiveIndicator);
+        
+        // Animate the active indicator to make it more visible
+        if (this.scene.tweens) {
+            this.scene.tweens.add({
+                targets: this.reelingActiveIndicator,
+                alpha: 0.7,
+                duration: 500,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+        }
+        
         this.updateProgressBar();
     }
 
@@ -722,9 +749,17 @@ export class ReelingMiniGame {
     }
 
     setupInputHandling() {
-        // Mouse input for reeling
+        // Mouse input for reeling with enhanced debugging
         this.mouseHandler = (pointer) => {
-            if (!this.isActive) return;
+            console.log('ReelingMiniGame: Mouse click detected! Pointer:', pointer);
+            console.log('ReelingMiniGame: Current state - isActive:', this.isActive, 'activeQTE:', !!this.activeQTE);
+            
+            if (!this.isActive) {
+                console.log('ReelingMiniGame: Mouse click ignored - game not active');
+                return;
+            }
+            
+            console.log('ReelingMiniGame: Processing mouse click for reeling');
             this.handleInput('reel', { pointer: pointer });
         };
         
@@ -788,12 +823,55 @@ export class ReelingMiniGame {
             }
         };
         
-        // Use DOM events for keyboard input to match QTEDebugTool implementation
-        this.scene.input.on('pointerdown', this.mouseHandler);
-        document.addEventListener('keydown', this.keyDownHandler);
-        document.addEventListener('keyup', this.keyUpHandler);
-        
-        console.log('ReelingMiniGame: Consolidated input handling set up with DOM events');
+        // Enhanced input setup with debugging
+        try {
+            console.log('ReelingMiniGame: Setting up input handlers...');
+            console.log('ReelingMiniGame: Scene input object:', this.scene.input);
+            console.log('ReelingMiniGame: Scene input enabled:', this.scene.input?.enabled);
+            
+            // Ensure scene input is enabled
+            if (this.scene.input && !this.scene.input.enabled) {
+                console.log('ReelingMiniGame: Scene input was disabled, enabling it...');
+                this.scene.input.enabled = true;
+            }
+            
+            // Attach mouse handler
+            if (this.scene.input) {
+                this.scene.input.on('pointerdown', this.mouseHandler);
+                console.log('ReelingMiniGame: Mouse handler attached successfully');
+                
+                // Test if input is working by adding a temporary test listener
+                const testHandler = (pointer) => {
+                    console.log('ReelingMiniGame: TEST - Input working! Pointer at:', pointer.x, pointer.y);
+                    console.log('ReelingMiniGame: TEST - Pointer button:', pointer.button);
+                    console.log('ReelingMiniGame: TEST - Pointer isDown:', pointer.isDown);
+                };
+                this.scene.input.once('pointerdown', testHandler);
+                console.log('ReelingMiniGame: Test input listener added');
+            } else {
+                console.error('ReelingMiniGame: Scene input not available');
+            }
+            
+            // Add global click test for debugging
+            this.globalClickTest = (event) => {
+                console.log('ReelingMiniGame: GLOBAL CLICK TEST - DOM click detected at:', event.clientX, event.clientY);
+                // Try to manually trigger the handleInput method
+                if (this.isActive) {
+                    console.log('ReelingMiniGame: Manually triggering reel input from DOM event');
+                    this.handleInput('reel', { pointer: { x: event.clientX, y: event.clientY, button: 0 } });
+                }
+            };
+            document.addEventListener('click', this.globalClickTest);
+            console.log('ReelingMiniGame: Global DOM click listener added for testing');
+            
+            // Use DOM events for keyboard input to match QTEDebugTool implementation
+            document.addEventListener('keydown', this.keyDownHandler);
+            document.addEventListener('keyup', this.keyUpHandler);
+            
+            console.log('ReelingMiniGame: Consolidated input handling set up with DOM events and enhanced debugging');
+        } catch (error) {
+            console.error('ReelingMiniGame: Error setting up input handlers:', error);
+        }
     }
 
     updateTensionMeter() {
@@ -2464,13 +2542,13 @@ export class ReelingMiniGame {
                     // Visual shake effect
                     this.fishPosition.x += Phaser.Math.Between(-2, 2);
                     this.fishPosition.y += Phaser.Math.Between(-2, 2);
-                }
+            }
             },
             repeat: 15,
             callbackScope: this
         });
-    }
-
+        }
+        
     /**
      * Start spiral movement pattern
      * @param {number} intensity - Movement intensity
@@ -2699,6 +2777,13 @@ export class ReelingMiniGame {
         if (this.keyUpHandler && document) {
             document.removeEventListener('keyup', this.keyUpHandler);
             this.keyUpHandler = null;
+        }
+        
+        // Clean up global click test listener
+        if (this.globalClickTest && document) {
+            document.removeEventListener('click', this.globalClickTest);
+            this.globalClickTest = null;
+            console.log('ReelingMiniGame: Global click test listener removed');
         }
         
         console.log('ReelingMiniGame: Input event listeners cleaned up');
