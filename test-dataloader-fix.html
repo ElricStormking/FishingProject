@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataLoader Fix Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .pass { background-color: #2d5a27; }
+        .fail { background-color: #5a2727; }
+        .info { background-color: #27355a; }
+        pre {
+            background-color: #2a2a2a;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        button {
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0052a3;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 DataLoader Fix Test</h1>
+    <p>Testing that all DataLoader errors are fixed after CSV conversion</p>
+
+    <button onclick="testDataLoader()">🔍 Test DataLoader</button>
+    <button onclick="testSpecificData()">📊 Test Specific Data</button>
+    <button onclick="clearResults()">🧹 Clear Results</button>
+
+    <div id="results"></div>
+
+    <script type="module">
+        import { gameDataLoader } from './src/scripts/DataLoader.js';
+
+        function addResult(title, status, message, details = null) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${status}`;
+            
+            let content = `<strong>${title}:</strong> ${message}`;
+            if (details) {
+                content += `<pre>${JSON.stringify(details, null, 2)}</pre>`;
+            }
+            
+            resultDiv.innerHTML = content;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        window.testDataLoader = async function() {
+            addResult('Test Start', 'info', 'Testing DataLoader with converted CSV data...');
+            
+            try {
+                // Test data loading
+                await gameDataLoader.loadAllData();
+                addResult('Data Loading', 'pass', 'All data loaded successfully!');
+                
+                // Test validation
+                const isValid = gameDataLoader.validateGameData();
+                addResult('Data Validation', isValid ? 'pass' : 'fail', `Data validation: ${isValid ? 'PASSED' : 'FAILED'}`);
+                
+                // Test fallback detection
+                const fallbackReport = gameDataLoader.checkForFallbackData();
+                if (fallbackReport.usingFallback) {
+                    addResult('Fallback Check', 'fail', 'Using fallback data!', fallbackReport);
+                } else {
+                    addResult('Fallback Check', 'pass', 'All real JSON data confirmed!', fallbackReport);
+                }
+                
+                // Get data summary
+                const summary = gameDataLoader.getDataSummary();
+                addResult('Data Summary', 'info', 'Successfully loaded data:', summary);
+                
+            } catch (error) {
+                addResult('Data Loading', 'fail', `Error: ${error.message}`);
+                console.error('DataLoader test error:', error);
+            }
+        };
+
+        window.testSpecificData = async function() {
+            addResult('Specific Tests', 'info', 'Testing specific data structures...');
+            
+            try {
+                // Test fish data
+                const allFish = gameDataLoader.getAllFish();
+                if (allFish && allFish.length > 0) {
+                    addResult('Fish Data', 'pass', `${allFish.length} fish species loaded`, {
+                        sampleFish: allFish[0],
+                        totalSpecies: allFish.length
+                    });
+                } else {
+                    addResult('Fish Data', 'fail', 'No fish data available');
+                }
+                
+                // Test struggle styles
+                const sampleFish = gameDataLoader.getFishById('bass');
+                if (sampleFish && sampleFish.struggleStyle) {
+                    const struggleStyle = gameDataLoader.getStruggleStyle(sampleFish.struggleStyle);
+                    if (struggleStyle) {
+                        addResult('Struggle Styles', 'pass', `Struggle style "${struggleStyle.name}" found for bass`);
+                    } else {
+                        addResult('Struggle Styles', 'fail', `Struggle style "${sampleFish.struggleStyle}" not found`);
+                    }
+                } else {
+                    addResult('Struggle Styles', 'fail', 'No struggle style data for bass');
+                }
+                
+                // Test attributes
+                const fishAttributes = gameDataLoader.attributeData?.fishAttributes;
+                const playerAttributes = gameDataLoader.attributeData?.playerAttributes;
+                const attributeModifiers = gameDataLoader.attributeData?.attributeModifiers;
+                
+                if (fishAttributes && playerAttributes && attributeModifiers) {
+                    addResult('Attributes', 'pass', 'All attribute sections loaded', {
+                        fishAttributes: Object.keys(fishAttributes),
+                        playerCategories: Object.keys(playerAttributes),
+                        modifierTypes: Object.keys(attributeModifiers)
+                    });
+                } else {
+                    addResult('Attributes', 'fail', 'Missing attribute sections', {
+                        fishAttributes: !!fishAttributes,
+                        playerAttributes: !!playerAttributes,
+                        attributeModifiers: !!attributeModifiers
+                    });
+                }
+                
+                // Test equipment
+                const allRods = gameDataLoader.getAllRods();
+                const allBoats = gameDataLoader.getAllBoats();
+                if (allRods && allBoats) {
+                    addResult('Equipment', 'pass', `Equipment loaded: ${allRods.length} rods, ${allBoats.length} boats`);
+                } else {
+                    addResult('Equipment', 'fail', 'Missing equipment data');
+                }
+                
+            } catch (error) {
+                addResult('Specific Tests', 'fail', `Error: ${error.message}`);
+                console.error('Specific test error:', error);
+            }
+        };
+
+        window.clearResults = function() {
+            document.getElementById('results').innerHTML = '';
+        };
+
+        // Auto-run basic test on load
+        setTimeout(() => {
+            testDataLoader();
+        }, 1000);
+    </script>
+</body>
+</html> 

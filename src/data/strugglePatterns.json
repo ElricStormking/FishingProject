@@ -1,0 +1,276 @@
+{
+  "strugglePatterns": [
+    {
+      "id": "gentle_pull",
+      "name": "Gentle Pull",
+      "description": "Slow steady resistance - perfect for beginners",
+      "patterns": [
+        {
+          "direction": "left",
+          "intensity": 2,
+          "duration": 1000
+        },
+        {
+          "direction": "right",
+          "intensity": 1,
+          "duration": 800
+        },
+        {
+          "direction": "left",
+          "intensity": 2,
+          "duration": 600
+        }
+      ]
+    },
+    {
+      "id": "rapid_thrashing",
+      "name": "Rapid Thrashing",
+      "description": "Quick erratic movements in all directions",
+      "patterns": [
+        {
+          "direction": "left",
+          "intensity": 4,
+          "duration": 300
+        },
+        {
+          "direction": "right",
+          "intensity": 4,
+          "duration": 300
+        },
+        {
+          "direction": "up",
+          "intensity": 3,
+          "duration": 400
+        },
+        {
+          "direction": "down",
+          "intensity": 3,
+          "duration": 400
+        }
+      ]
+    },
+    {
+      "id": "steady_pull",
+      "name": "Steady Pull",
+      "description": "Consistent resistance in one direction",
+      "patterns": [
+        {
+          "direction": "left",
+          "intensity": 3,
+          "duration": 1200
+        },
+        {
+          "direction": "right",
+          "intensity": 2,
+          "duration": 800
+        },
+        {
+          "direction": "left",
+          "intensity": 4,
+          "duration": 1000
+        }
+      ]
+    },
+    {
+      "id": "jumping_escape",
+      "name": "Jumping Escape",
+      "description": "Fish leaps out of water trying to escape",
+      "patterns": [
+        {
+          "direction": "up",
+          "intensity": 6,
+          "duration": 800
+        },
+        {
+          "direction": "down",
+          "intensity": 4,
+          "duration": 600
+        },
+        {
+          "direction": "left",
+          "intensity": 5,
+          "duration": 700
+        },
+        {
+          "direction": "up",
+          "intensity": 7,
+          "duration": 900
+        }
+      ]
+    },
+    {
+      "id": "violent_thrashing",
+      "name": "Violent Thrashing",
+      "description": "Aggressive shaking that can snap the line",
+      "patterns": [
+        {
+          "direction": "left",
+          "intensity": 7,
+          "duration": 500
+        },
+        {
+          "direction": "right",
+          "intensity": 8,
+          "duration": 400
+        },
+        {
+          "direction": "up",
+          "intensity": 6,
+          "duration": 600
+        },
+        {
+          "direction": "down",
+          "intensity": 7,
+          "duration": 500
+        }
+      ]
+    },
+    {
+      "id": "deep_dive",
+      "name": "Deep Dive",
+      "description": "Fish dives straight down with force",
+      "patterns": [
+        {
+          "direction": "down",
+          "intensity": 6,
+          "duration": 1000
+        },
+        {
+          "direction": "left",
+          "intensity": 4,
+          "duration": 600
+        },
+        {
+          "direction": "down",
+          "intensity": 8,
+          "duration": 1200
+        }
+      ]
+    },
+    {
+      "id": "bulldogging",
+      "name": "Bulldogging",
+      "description": "Fish uses its weight to resist being pulled up",
+      "patterns": [
+        {
+          "direction": "down",
+          "intensity": 7,
+          "duration": 1500
+        },
+        {
+          "direction": "left",
+          "intensity": 6,
+          "duration": 1000
+        },
+        {
+          "direction": "down",
+          "intensity": 9,
+          "duration": 1800
+        }
+      ]
+    },
+    {
+      "id": "long_sprint",
+      "name": "Long Sprint",
+      "description": "Sustained high-speed run in one direction",
+      "patterns": [
+        {
+          "direction": "left",
+          "intensity": 8,
+          "duration": 2000
+        },
+        {
+          "direction": "right",
+          "intensity": 6,
+          "duration": 1000
+        },
+        {
+          "direction": "left",
+          "intensity": 9,
+          "duration": 2500
+        }
+      ]
+    },
+    {
+      "id": "power_run",
+      "name": "Power Run",
+      "description": "Explosive bursts of power and speed",
+      "patterns": [
+        {
+          "direction": "left",
+          "intensity": 9,
+          "duration": 800
+        },
+        {
+          "direction": "right",
+          "intensity": 10,
+          "duration": 600
+        },
+        {
+          "direction": "left",
+          "intensity": 8,
+          "duration": 1000
+        },
+        {
+          "direction": "right",
+          "intensity": 10,
+          "duration": 800
+        }
+      ]
+    },
+    {
+      "id": "aerial_acrobatics",
+      "name": "Aerial Acrobatics",
+      "description": "Spectacular jumps and tail walks",
+      "patterns": [
+        {
+          "direction": "up",
+          "intensity": 9,
+          "duration": 700
+        },
+        {
+          "direction": "left",
+          "intensity": 7,
+          "duration": 500
+        },
+        {
+          "direction": "up",
+          "intensity": 10,
+          "duration": 800
+        },
+        {
+          "direction": "right",
+          "intensity": 8,
+          "duration": 600
+        }
+      ]
+    },
+    {
+      "id": "circle_fighting",
+      "name": "Circle Fighting",
+      "description": "Fish swims in circles to create slack",
+      "patterns": [
+        {
+          "direction": "left",
+          "intensity": 6,
+          "duration": 800
+        },
+        {
+          "direction": "up",
+          "intensity": 6,
+          "duration": 800
+        },
+        {
+          "direction": "right",
+          "intensity": 6,
+          "duration": 800
+        },
+        {
+          "direction": "down",
+          "intensity": 6,
+          "duration": 800
+        }
+      ]
+    }
+  ]
+}

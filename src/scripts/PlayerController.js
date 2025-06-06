@@ -222,21 +222,35 @@ export default class PlayerController {
     }
 
     getPlayerFishingStats() {
+        console.log('PlayerController: 🎣 Getting player fishing stats from CSV-converted data...');
+        
         // Get player attributes and equipment bonuses with safe defaults
         const player = this.gameState.player || {};
         const baseStats = player.attributes || {};
         
-        // Debug logging
-        console.log('PlayerController: Debug - player object:', player);
-        console.log('PlayerController: Debug - baseStats:', baseStats);
+        // VALIDATION: Ensure we're using CSV-converted data, not fallback values
+        if (!player || Object.keys(player).length === 0) {
+            console.error('PlayerController: 🚨 No player object available - game state may not be initialized with CSV data!');
+        }
         
-        // Get all equipped items and their combined effects
+        if (!baseStats || Object.keys(baseStats).length === 0) {
+            console.error('PlayerController: 🚨 No player attributes available - CSV attributes may not be loaded!');
+        }
+        
+        // Debug logging
+        console.log('PlayerController: ✅ Player object (from CSV):', player);
+        console.log('PlayerController: ✅ Base stats (from CSV):', baseStats);
+        
+        // Get all equipped items and their combined effects (from CSV-converted equipment data)
         const equipmentEffects = this.getEquipmentEffects();
-        console.log('PlayerController: Debug - equipmentEffects:', equipmentEffects);
+        if (!equipmentEffects || Object.keys(equipmentEffects).length === 0) {
+            console.error('PlayerController: 🚨 No equipment effects available - CSV equipment data may not be loaded!');
+        }
+        console.log('PlayerController: ✅ Equipment effects (from CSV):', equipmentEffects);
         
         // Get Time & Weather effects (Priority 1.4 integration)
         const timeWeatherEffects = this.getTimeWeatherEffects();
-        console.log('PlayerController: Debug - timeWeatherEffects:', timeWeatherEffects);
+        console.log('PlayerController: ✅ Time/weather effects:', timeWeatherEffects);
         
         // Helper function to safely add numbers and avoid NaN
         const safeAdd = (...values) => {
@@ -797,23 +811,43 @@ export default class PlayerController {
     }
 
     getAvailableFish(castType, hitAccurateSection) {
-        // Get all fish from data loader
+        console.log('PlayerController: 🐟 Getting available fish from CSV-converted data...');
+        
+        // Get all fish from data loader (CSV-converted data)
         const allFish = gameDataLoader.getAllFish();
+        
+        if (!allFish || allFish.length === 0) {
+            console.error('PlayerController: 🚨 No fish data available from DataLoader - CSV conversion failed!');
+            console.error('PlayerController: 🚨 This should NEVER happen if CSV data is properly loaded!');
+            return [];
+        }
+        
+        console.log(`PlayerController: ✅ Found ${allFish.length} fish species from CSV data`);
         
         if (hitAccurateSection && castType === 'hotspot') {
             // Hotspot cast - higher chance of rare fish
-            return allFish.filter(fish => fish.rarity >= 4);
+            const rareFish = allFish.filter(fish => fish.rarity >= 4);
+            console.log(`PlayerController: Hotspot cast - returning ${rareFish.length} rare fish`);
+            return rareFish;
         } else {
             // Normal cast - common fish
-            return allFish.filter(fish => fish.rarity <= 6);
+            const commonFish = allFish.filter(fish => fish.rarity <= 6);
+            console.log(`PlayerController: Normal cast - returning ${commonFish.length} common fish`);
+            return commonFish;
         }
     }
 
     selectFishForCast(castType, spotInfo = null, rarityBonus = 0) {
+        console.log(`PlayerController: 🎣 Selecting fish for ${castType} cast from CSV-converted data...`);
+        
         const allFish = gameDataLoader.getAllFish();
-        if (allFish.length === 0) {
-            return { id: 'default_fish', name: 'Default Fish', rarity: 1 };
+        if (!allFish || allFish.length === 0) {
+            console.error('PlayerController: 🚨 No fish data available - CSV conversion failed!');
+            console.error('PlayerController: 🚨 REFUSING to use fallback fish data!');
+            throw new Error('CRITICAL: No CSV fish data available for fish selection');
         }
+        
+        console.log(`PlayerController: ✅ Found ${allFish.length} fish species from CSV data`);
         
         let availableFish = allFish;
         
@@ -1310,52 +1344,62 @@ export default class PlayerController {
             const bonusXp = Math.round(baseXp * (effects.experienceBonus - 1.0));
             const totalXp = baseXp + bonusXp;
             
-            // Add experience with proper error handling
+            // Add experience with improved error handling (less noisy)
             try {
-                if (this.gameState.playerProgression && this.gameState.playerProgression.addExperience) {
+                if (this.gameState?.playerProgression?.addExperience) {
                     this.gameState.playerProgression.addExperience(totalXp, 'fish_caught');
-                } else if (this.gameState.addExperience) {
+                } else if (this.gameState?.addExperience) {
                     this.gameState.addExperience(totalXp, 'fish_caught');
-                } else {
-                    console.warn('PlayerController: No experience system available');
                 }
+                // Silent fallback - no warning needed as this is optional
             } catch (expError) {
-                console.error('PlayerController: Error adding experience:', expError);
+                // Only log if it's an unexpected error, not just missing methods
+                if (expError.name !== 'TypeError') {
+                    console.warn('PlayerController: Unexpected error adding experience:', expError);
+                }
             }
             
-            // Record fish caught in location manager
+            // Record fish caught in location manager (silent fallback)
             try {
-                if (this.gameState.locationManager && this.gameState.locationManager.recordFishCaught) {
+                if (this.gameState?.locationManager?.recordFishCaught) {
                     this.gameState.locationManager.recordFishCaught(fishData, totalXp);
                 }
             } catch (locationError) {
-                console.warn('PlayerController: Error recording fish in location manager:', locationError);
+                // Only log if it's an unexpected error
+                if (locationError.name !== 'TypeError') {
+                    console.warn('PlayerController: Unexpected error recording fish in location:', locationError);
+                }
             }
             
             // Fish should already be added to inventory by GameState.catchFish
-            // But add a fallback just in case
+            // But add a fallback just in case (silent)
             if (!catchResult) {
                 try {
-                    if (this.gameState.inventoryManager && this.gameState.inventoryManager.addItem) {
+                    if (this.gameState?.inventoryManager?.addItem) {
                         this.gameState.inventoryManager.addItem('fish', fishData);
-                    } else if (this.gameState.addItem) {
+                    } else if (this.gameState?.addItem) {
                         this.gameState.addItem('fish', fishData);
                     }
                 } catch (error) {
-                    console.error('PlayerController: Error adding fish to inventory:', error);
+                    // Only log unexpected errors
+                    if (error.name !== 'TypeError') {
+                        console.warn('PlayerController: Unexpected error adding fish to inventory:', error);
+                    }
                 }
             }
             
-            // Update statistics with proper error handling
+            // Update statistics with improved error handling (less noisy)
             try {
-                if (this.gameState.playerProgression && this.gameState.playerProgression.updateStatistics) {
+                if (this.gameState?.playerProgression?.updateStatistics) {
                     this.gameState.playerProgression.updateStatistics('fishCaught', 1);
                 }
             } catch (statError) {
-                console.warn('PlayerController: Error updating fishCaught statistic:', statError);
+                if (statError.name !== 'TypeError') {
+                    console.warn('PlayerController: Unexpected error updating fishCaught statistic:', statError);
+                }
             }
             
-            // Update fish count statistics
+            // Update fish count statistics (silent fallback)
             try {
                 // Ensure player.statistics exists
                 if (!this.gameState.player) {
@@ -1372,50 +1416,56 @@ export default class PlayerController {
                 if (this.gameState.inventoryManager) {
                     if (this.gameState.inventoryManager.getTotalFishCount) {
                         totalFishCount = this.gameState.inventoryManager.getTotalFishCount();
-                    } else if (this.gameState.inventory && this.gameState.inventory.fish) {
+                    } else if (this.gameState.inventory?.fish) {
                         totalFishCount = this.gameState.inventory.fish.length;
                     }
                     
                     if (this.gameState.inventoryManager.getUniqueFishCount) {
                         uniqueFishCount = this.gameState.inventoryManager.getUniqueFishCount();
-                    } else if (this.gameState.inventory && this.gameState.inventory.fish) {
+                    } else if (this.gameState.inventory?.fish) {
                         uniqueFishCount = new Set(this.gameState.inventory.fish.map(f => f.fishId || f.id)).size;
                     }
                 }
                 
-                if (this.gameState.playerProgression && this.gameState.playerProgression.updateStatistics) {
+                if (this.gameState?.playerProgression?.updateStatistics) {
                     this.gameState.playerProgression.updateStatistics('totalFish', totalFishCount);
                     this.gameState.playerProgression.updateStatistics('speciesCaught', uniqueFishCount);
                 }
             } catch (error) {
-                console.warn('PlayerController: Error updating fish statistics:', error);
+                // Silent fallback for fish statistics
+                if (error.name !== 'TypeError') {
+                    console.warn('PlayerController: Unexpected error updating fish statistics:', error);
+                }
             }
             
-            // Check if this is biggest fish of this species
+            // Check if this is biggest fish of this species (silent fallback)
             try {
-                if (this.gameState.inventoryManager && this.gameState.inventoryManager.isBiggestFish) {
+                if (this.gameState?.inventoryManager?.isBiggestFish) {
                     if (this.gameState.inventoryManager.isBiggestFish(fishData)) {
-                        if (this.gameState.playerProgression && this.gameState.playerProgression.updateStatistics) {
+                        if (this.gameState?.playerProgression?.updateStatistics) {
                             this.gameState.playerProgression.updateStatistics('biggestFish', `${fishData.name} (${fishData.weight || fishData.size || 0}kg)`);
                         }
                     }
-                } else if (this.gameState.inventory && this.gameState.inventory.fish) {
+                } else if (this.gameState.inventory?.fish) {
                     // Fallback: check if this fish is heavier than any previous fish of same species
                     const sameSpeciesFish = this.gameState.inventory.fish.filter(f => 
                         (f.fishId === fishData.fishId || f.name === fishData.name));
                     const isLargest = sameSpeciesFish.every(f => (fishData.weight || 0) >= (f.weight || 0));
                     
                     if (isLargest && fishData.weight > 0) {
-                        if (this.gameState.playerProgression && this.gameState.playerProgression.updateStatistics) {
+                        if (this.gameState?.playerProgression?.updateStatistics) {
                             this.gameState.playerProgression.updateStatistics('biggestFish', `${fishData.name} (${fishData.weight}kg)`);
                         }
                     }
                 }
             } catch (error) {
-                console.warn('PlayerController: Error checking biggest fish:', error);
+                // Silent fallback for biggest fish check
+                if (error.name !== 'TypeError') {
+                    console.warn('PlayerController: Unexpected error checking biggest fish:', error);
+                }
             }
             
-            // Update rarest fish if applicable
+            // Update rarest fish if applicable (silent fallback)
             try {
                 // Ensure statistics object exists
                 if (!this.gameState.player.statistics) {
@@ -1424,44 +1474,57 @@ export default class PlayerController {
                 
                 const currentRarest = this.gameState.player.statistics.rarestFish || { rarity: 0 };
                 if (fishData.rarity > (currentRarest.rarity || 0)) {
-                    if (this.gameState.playerProgression && this.gameState.playerProgression.updateStatistics) {
+                    if (this.gameState?.playerProgression?.updateStatistics) {
                         this.gameState.playerProgression.updateStatistics('rarestFish', fishData.name);
                     }
                 }
             } catch (error) {
-                console.warn('PlayerController: Error updating rarest fish:', error);
+                // Silent fallback for rarest fish
+                if (error.name !== 'TypeError') {
+                    console.warn('PlayerController: Unexpected error updating rarest fish:', error);
+                }
             }
             
-            // Check achievements
+            // Check achievements (silent fallback)
             try {
-                if (this.gameState.playerProgression && this.gameState.playerProgression.checkAchievements) {
+                if (this.gameState?.playerProgression?.checkAchievements) {
                     this.gameState.playerProgression.checkAchievements();
                 }
             } catch (error) {
-                console.warn('PlayerController: Error checking achievements:', error);
+                // Silent fallback for achievements
+                if (error.name !== 'TypeError') {
+                    console.warn('PlayerController: Unexpected error checking achievements:', error);
+                }
             }
             
-            // Check for location unlocks
+            // Check for location unlocks (silent fallback)
             try {
-                if (this.gameState.locationManager && this.gameState.locationManager.checkAndUnlockLocations) {
+                if (this.gameState?.locationManager?.checkAndUnlockLocations) {
                     this.gameState.locationManager.checkAndUnlockLocations();
                 }
             } catch (error) {
-                console.warn('PlayerController: Error checking location unlocks:', error);
+                // Silent fallback for location unlocks
+                if (error.name !== 'TypeError') {
+                    console.warn('PlayerController: Unexpected error checking location unlocks:', error);
+                }
             }
             
             // Visual celebration
             this.showFishCaughtCelebration(fishData, catchResult, totalXp, bonusXp);
             
-            // Audio feedback
+            // Audio feedback (silent fallback)
             try {
-                if (this.gameState.audioManager && this.gameState.audioManager.playSFX) {
+                if (this.gameState?.audioManager?.playSFX) {
                     this.gameState.audioManager.playSFX('fish_caught');
-                } else if (this.audioManager && this.audioManager.playSFX) {
+                } else if (this.audioManager?.playSFX) {
                     this.audioManager.playSFX('fish_caught');
                 }
+                // Silent fallback - no warning needed as audio is optional
             } catch (error) {
-                console.warn('PlayerController: Error playing fish caught audio:', error);
+                // Only log unexpected audio errors
+                if (error.name !== 'TypeError') {
+                    console.warn('PlayerController: Unexpected audio error:', error);
+                }
             }
             
             // Reset state

@@ -460,6 +460,9 @@ export default class GameScene extends Phaser.Scene {
             
             console.log('GameScene: Quest Manager initialized successfully');
             
+            // Connect QuestManager to fishing events - THIS WAS MISSING!
+            this.setupQuestEventListeners();
+            
             // Debug quest system status (with error handling)
             try {
                 if (this.questManager && typeof this.questManager.getDebugStatus === 'function') {
@@ -619,18 +622,19 @@ export default class GameScene extends Phaser.Scene {
 
         // Dialog shortcuts
         this.input.keyboard.on('keydown-D', () => {
-            if (this.dialogManager) {
-                this.dialogManager.startDialog('mia', 'GameScene');
-            }
+            console.log('GameScene: Opening Mia dialog (D key pressed)');
+            this.openMiaDialog();
         });
 
         this.input.keyboard.on('keydown-F', () => {
+            console.log('GameScene: Opening Sophie dialog (F key pressed)');
             if (this.dialogManager) {
                 this.dialogManager.startDialog('sophie', 'GameScene');
             }
         });
 
         this.input.keyboard.on('keydown-G', () => {
+            console.log('GameScene: Opening Luna dialog (G key pressed)');
             if (this.dialogManager) {
                 this.dialogManager.startDialog('luna', 'GameScene');
             }
@@ -709,6 +713,9 @@ export default class GameScene extends Phaser.Scene {
 
         // Create Quest UI button
         this.createQuestButton();
+        
+        // Create Test Mia button for debugging
+        this.createTestMiaButton();
 
         // Crosshair for aiming using configuration
         this.createCrosshair();
@@ -787,50 +794,45 @@ export default class GameScene extends Phaser.Scene {
         const height = this.cameras.main.height;
         const fishingConfig = gameDataLoader.getFishingConfig();
         
-        // Provide fallback configuration if fishing config is null or incomplete
-        const defaultFishingConfig = {
-            fishCount: 8,
-            fishWaterAreaTop: 0.35,
-            fishWaterAreaBottom: 0.85,
-            fishSpeedRange: { min: -50, max: 50 },
-            fishVerticalSpeedRange: { min: -20, max: 20 },
-            fishBounce: 1,
-            fishScale: 0.8
+        // Use configuration from DataLoader only
+        const config = {
+            fishCount: fishingConfig?.fishCount || 8,
+            fishWaterAreaTop: fishingConfig?.fishWaterAreaTop || 0.35,
+            fishWaterAreaBottom: fishingConfig?.fishWaterAreaBottom || 0.85,
+            fishSpeedRange: fishingConfig?.fishSpeedRange || { min: -50, max: 50 },
+            fishVerticalSpeedRange: fishingConfig?.fishVerticalSpeedRange || { min: -20, max: 20 },
+            fishBounce: fishingConfig?.fishBounce || 1,
+            fishScale: fishingConfig?.fishScale || 0.8
         };
-        
-        // Merge with loaded config or use defaults
-        const config = fishingConfig ? { ...defaultFishingConfig, ...fishingConfig } : defaultFishingConfig;
         
         console.log('GameScene: Using fishing config:', config);
         
-        // Check if fish texture exists, if not create a simple graphics fish
+        // Create fish sprites using graphics (no texture dependency)
         const createFishSprite = (x, y) => {
             try {
-                // Try to create fish sprite first
-                if (this.textures.exists('fish')) {
-                    return this.fishGroup.create(x, y, 'fish');
-                } else {
-                    // Create a simple graphics fish as fallback
-                    const fish = this.add.graphics();
-                    fish.fillStyle(0x4ECDC4, 1);
-                    fish.fillEllipse(0, 0, 20, 10);
-                    fish.fillStyle(0x2C3E50, 1);
-                    fish.fillCircle(5, 0, 2); // Eye
-                    fish.setPosition(x, y);
-                    
-                    // Add physics body manually
-                    this.physics.add.existing(fish);
-                    this.fishGroup.add(fish);
-                    
-                    return fish;
-                }
-            } catch (error) {
-                console.warn('GameScene: Error creating fish sprite, using fallback');
-                // Create minimal fallback
-                const fish = this.add.circle(x, y, 5, 0x4ECDC4);
+                // Create a graphics fish sprite
+                const fish = this.add.graphics();
+                fish.fillStyle(0x4ECDC4, 1);
+                fish.fillEllipse(0, 0, 20, 10);
+                fish.fillStyle(0x2C3E50, 1);
+                fish.fillCircle(5, 0, 2); // Eye
+                fish.setPosition(x, y);
+                
+                // Add physics body and verify it was created
                 this.physics.add.existing(fish);
+                
+                // Ensure physics body was created properly
+                if (!fish.body) {
+                    console.warn('GameScene: Failed to create physics body for fish, skipping...');
+                    fish.destroy();
+                    return null;
+                }
+                
                 this.fishGroup.add(fish);
                 return fish;
+            } catch (error) {
+                console.error('GameScene: Error creating fish sprite:', error);
+                return null;
             }
         };
         
@@ -844,17 +846,26 @@ export default class GameScene extends Phaser.Scene {
                 Phaser.Math.Between(height * config.fishWaterAreaTop, height * config.fishWaterAreaBottom)
             );
             
-            if (fish && fish.body) {
-                fish.setVelocity(
-                    Phaser.Math.Between(config.fishSpeedRange.min, config.fishSpeedRange.max),
-                    Phaser.Math.Between(config.fishVerticalSpeedRange.min, config.fishVerticalSpeedRange.max)
-                );
-                
-                fish.setBounce(config.fishBounce);
-                fish.setCollideWorldBounds(true);
-                fish.setScale(config.fishScale);
-                fish.fishData = this.generateRandomFishData();
-                fish.fishType = 'regular';
+            // Only proceed if fish was created successfully with physics body
+            if (fish && fish.body && typeof fish.setVelocity === 'function') {
+                try {
+                    fish.setVelocity(
+                        Phaser.Math.Between(config.fishSpeedRange.min, config.fishSpeedRange.max),
+                        Phaser.Math.Between(config.fishVerticalSpeedRange.min, config.fishVerticalSpeedRange.max)
+                    );
+                    
+                    fish.setBounce(config.fishBounce);
+                    fish.setCollideWorldBounds(true);
+                    fish.setScale(config.fishScale);
+                    fish.fishData = this.generateRandomFishData();
+                    fish.fishType = 'regular';
+                } catch (error) {
+                    console.warn('GameScene: Error setting up regular fish:', error);
+                    fish.destroy();
+                }
+            } else if (fish) {
+                // Clean up fish that couldn't be properly configured
+                fish.destroy();
             }
         }
         
@@ -875,21 +886,28 @@ export default class GameScene extends Phaser.Scene {
                 
                 const fish = createFishSprite(clampedX, clampedY);
                 
-                if (fish && fish.body) {
-                    // Hotspot fish move slower and more randomly
-                    fish.setVelocity(
-                        Phaser.Math.Between(-30, 30),
-                        Phaser.Math.Between(-20, 20)
-                    );
-                    
-                    fish.setBounce(config.fishBounce);
-                    fish.setCollideWorldBounds(true);
-                    fish.setScale(config.fishScale * 1.2); // Slightly larger fish near hotspot
-                    fish.fishData = this.generateHotspotFishData(); // Better fish near hotspot
-                    fish.fishType = 'hotspot';
-                    
-                    // Add attraction behavior to hotspot
-                    this.addHotspotAttraction(fish);
+                if (fish && fish.body && typeof fish.setVelocity === 'function') {
+                    try {
+                        // Hotspot fish move slower and more randomly
+                        fish.setVelocity(
+                            Phaser.Math.Between(-30, 30),
+                            Phaser.Math.Between(-20, 20)
+                        );
+                        
+                        fish.setBounce(config.fishBounce);
+                        fish.setCollideWorldBounds(true);
+                        fish.setScale(config.fishScale * 1.2); // Slightly larger fish near hotspot
+                        fish.fishData = this.generateHotspotFishData(); // Better fish near hotspot
+                        fish.fishType = 'hotspot';
+                        
+                        // Add attraction behavior to hotspot
+                        this.addHotspotAttraction(fish);
+                    } catch (error) {
+                        console.warn('GameScene: Error setting up hotspot fish:', error);
+                        fish.destroy();
+                    }
+                } else if (fish) {
+                    fish.destroy();
                 }
             }
         }
@@ -915,23 +933,30 @@ export default class GameScene extends Phaser.Scene {
                     
                     const fish = createFishSprite(clampedX, clampedY);
                     
-                    if (fish && fish.body) {
-                        // Spot fish move in patterns based on spot type
-                        const baseSpeed = spot.type === 'current_break' ? 40 : 25;
-                        fish.setVelocity(
-                            Phaser.Math.Between(-baseSpeed, baseSpeed),
-                            Phaser.Math.Between(-15, 15)
-                        );
-                        
-                        fish.setBounce(config.fishBounce);
-                        fish.setCollideWorldBounds(true);
-                        fish.setScale(config.fishScale * 1.1); // Slightly larger fish near spots
-                        fish.fishData = this.generateSpotFishData(spot); // Spot-specific fish
-                        fish.fishType = 'spot';
-                        fish.spotId = spot.id;
-                        
-                        // Add attraction behavior to spot
-                        this.addSpotAttraction(fish, spot);
+                    if (fish && fish.body && typeof fish.setVelocity === 'function') {
+                        try {
+                            // Spot fish move in patterns based on spot type
+                            const baseSpeed = spot.type === 'current_break' ? 40 : 25;
+                            fish.setVelocity(
+                                Phaser.Math.Between(-baseSpeed, baseSpeed),
+                                Phaser.Math.Between(-15, 15)
+                            );
+                            
+                            fish.setBounce(config.fishBounce);
+                            fish.setCollideWorldBounds(true);
+                            fish.setScale(config.fishScale * 1.1); // Slightly larger fish near spots
+                            fish.fishData = this.generateSpotFishData(spot); // Spot-specific fish
+                            fish.fishType = 'spot';
+                            fish.spotId = spot.id;
+                            
+                            // Add attraction behavior to spot
+                            this.addSpotAttraction(fish, spot);
+                        } catch (error) {
+                            console.warn('GameScene: Error setting up spot fish:', error);
+                            fish.destroy();
+                        }
+                    } else if (fish) {
+                        fish.destroy();
                     }
                 }
             });
@@ -941,35 +966,62 @@ export default class GameScene extends Phaser.Scene {
     }
 
     generateRandomFishData() {
-        const allFish = gameDataLoader.getAllFish();
-        if (allFish.length === 0) {
-            return { id: 'basic_fish', name: 'Basic Fish', rarity: 1 };
+        try {
+            const allFish = gameDataLoader.getAllFish();
+            if (!allFish || allFish.length === 0) {
+                console.error('GameScene: 🚨 No fish data available from DataLoader - CSV conversion may have failed!');
+                console.error('GameScene: 🚨 This should NOT happen if CSV data is properly loaded');
+                return null;
+            }
+            const selectedFish = Phaser.Utils.Array.GetRandom(allFish);
+            console.log(`GameScene: Selected random fish: ${selectedFish.name} (rarity: ${selectedFish.rarity})`);
+            return selectedFish;
+        } catch (error) {
+            console.error('GameScene: Error generating random fish data:', error);
+            return null;
         }
-        return Phaser.Utils.Array.GetRandom(allFish);
     }
 
     generateHotspotFishData() {
-        const allFish = gameDataLoader.getAllFish();
-        if (allFish.length === 0) {
-            return { id: 'rare_fish', name: 'Rare Fish', rarity: 5 };
+        try {
+            const allFish = gameDataLoader.getAllFish();
+            if (!allFish || allFish.length === 0) {
+                console.error('GameScene: 🚨 No fish data available for hotspot - CSV conversion may have failed!');
+                return null;
+            }
+            
+            // Filter for higher rarity fish (rarity 4+) for hotspot
+            const rareFish = allFish.filter(fish => fish.rarity >= 4);
+            if (rareFish.length > 0) {
+                const selectedFish = Phaser.Utils.Array.GetRandom(rareFish);
+                console.log(`GameScene: Selected hotspot fish: ${selectedFish.name} (rarity: ${selectedFish.rarity})`);
+                return selectedFish;
+            }
+            
+            // Use any available fish if no rare fish found
+            const selectedFish = Phaser.Utils.Array.GetRandom(allFish);
+            console.log(`GameScene: Selected fallback hotspot fish: ${selectedFish.name} (rarity: ${selectedFish.rarity})`);
+            return selectedFish;
+        } catch (error) {
+            console.error('GameScene: Error generating hotspot fish data:', error);
+            return null;
         }
-        
-        // Filter for higher rarity fish (rarity 4+) for hotspot
-        const rareFish = allFish.filter(fish => fish.rarity >= 4);
-        if (rareFish.length > 0) {
-            return Phaser.Utils.Array.GetRandom(rareFish);
-        }
-        
-        // Fallback to any fish
-        return Phaser.Utils.Array.GetRandom(allFish);
     }
 
     generateSpotFishData(spot) {
-        const allFish = gameDataLoader.getAllFish();
-        if (allFish.length === 0) {
-            return { id: 'basic_fish', name: 'Basic Fish', rarity: 1 };
+        try {
+            const allFish = gameDataLoader.getAllFish();
+            if (!allFish || allFish.length === 0) {
+                console.error('GameScene: 🚨 No fish data available for fishing spot - CSV conversion may have failed!');
+                return null;
+            }
+            const selectedFish = Phaser.Utils.Array.GetRandom(allFish);
+            console.log(`GameScene: Selected spot fish for ${spot.type}: ${selectedFish.name} (rarity: ${selectedFish.rarity})`);
+            return selectedFish;
+        } catch (error) {
+            console.error('GameScene: Error generating spot fish data:', error);
+            return null;
         }
-        return Phaser.Utils.Array.GetRandom(allFish);
     }
 
     addHotspotAttraction(fish) {
@@ -977,28 +1029,32 @@ export default class GameScene extends Phaser.Scene {
         const attractionTimer = this.time.addEvent({
             delay: Phaser.Math.Between(3000, 8000), // Every 3-8 seconds
             callback: () => {
-                if (fish.active && this.hotspotPosition) {
-                    // Calculate direction to hotspot
-                    const dx = this.hotspotPosition.x - fish.x;
-                    const dy = this.hotspotPosition.y - fish.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    
-                    // If fish is far from hotspot, attract it
-                    if (distance > 200) {
-                        const speed = 40;
-                        fish.setVelocity(
-                            (dx / distance) * speed,
-                            (dy / distance) * speed
-                        );
-                    } else {
-                        // If close to hotspot, swim in circles around it
-                        const angle = Phaser.Math.Angle.Between(this.hotspotPosition.x, this.hotspotPosition.y, fish.x, fish.y);
-                        const circleSpeed = 30;
-                        fish.setVelocity(
-                            Math.cos(angle + Math.PI/2) * circleSpeed,
-                            Math.sin(angle + Math.PI/2) * circleSpeed
-                        );
+                try {
+                    if (fish.active && fish.body && this.hotspotPosition && typeof fish.setVelocity === 'function') {
+                        // Calculate direction to hotspot
+                        const dx = this.hotspotPosition.x - fish.x;
+                        const dy = this.hotspotPosition.y - fish.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        // If fish is far from hotspot, attract it
+                        if (distance > 200) {
+                            const speed = 40;
+                            fish.setVelocity(
+                                (dx / distance) * speed,
+                                (dy / distance) * speed
+                            );
+                        } else {
+                            // If close to hotspot, swim in circles around it
+                            const angle = Phaser.Math.Angle.Between(this.hotspotPosition.x, this.hotspotPosition.y, fish.x, fish.y);
+                            const circleSpeed = 30;
+                            fish.setVelocity(
+                                Math.cos(angle + Math.PI/2) * circleSpeed,
+                                Math.sin(angle + Math.PI/2) * circleSpeed
+                            );
+                        }
                     }
+                } catch (error) {
+                    console.warn('GameScene: Error in hotspot attraction behavior:', error);
                 }
             },
             loop: true
@@ -1013,28 +1069,32 @@ export default class GameScene extends Phaser.Scene {
         const attractionTimer = this.time.addEvent({
             delay: Phaser.Math.Between(3000, 8000), // Every 3-8 seconds
             callback: () => {
-                if (fish.active && spot) {
-                    // Calculate direction to spot
-                    const dx = spot.x - fish.x;
-                    const dy = spot.y - fish.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    
-                    // If fish is far from spot, attract it
-                    if (distance > 200) {
-                        const speed = 40;
-                        fish.setVelocity(
-                            (dx / distance) * speed,
-                            (dy / distance) * speed
-                        );
-                    } else {
-                        // If close to spot, swim in circles around it
-                        const angle = Phaser.Math.Angle.Between(spot.x, spot.y, fish.x, fish.y);
-                        const circleSpeed = 30;
-                        fish.setVelocity(
-                            Math.cos(angle + Math.PI/2) * circleSpeed,
-                            Math.sin(angle + Math.PI/2) * circleSpeed
-                        );
+                try {
+                    if (fish.active && fish.body && spot && typeof fish.setVelocity === 'function') {
+                        // Calculate direction to spot
+                        const dx = spot.x - fish.x;
+                        const dy = spot.y - fish.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        // If fish is far from spot, attract it
+                        if (distance > 200) {
+                            const speed = 40;
+                            fish.setVelocity(
+                                (dx / distance) * speed,
+                                (dy / distance) * speed
+                            );
+                        } else {
+                            // If close to spot, swim in circles around it
+                            const angle = Phaser.Math.Angle.Between(spot.x, spot.y, fish.x, fish.y);
+                            const circleSpeed = 30;
+                            fish.setVelocity(
+                                Math.cos(angle + Math.PI/2) * circleSpeed,
+                                Math.sin(angle + Math.PI/2) * circleSpeed
+                            );
+                        }
                     }
+                } catch (error) {
+                    console.warn('GameScene: Error in spot attraction behavior:', error);
                 }
             },
             loop: true
@@ -1049,17 +1109,14 @@ export default class GameScene extends Phaser.Scene {
         const height = this.cameras.main.height;
         const uiConfig = gameDataLoader.getUIConfig();
         
-        // Provide fallback UI configuration if config is null or incomplete
-        const defaultUIConfig = {
-            crosshairSize: 10,
-            crosshairLineLength: 15,
-            crosshairColor: 0xffffff,
-            crosshairAlpha: 0.8,
-            crosshairLineWidth: 2
+        // Use UI configuration from DataLoader only
+        const config = {
+            crosshairSize: uiConfig?.crosshairSize || 10,
+            crosshairLineLength: uiConfig?.crosshairLineLength || 15,
+            crosshairColor: uiConfig?.crosshairColor || 0xffffff,
+            crosshairAlpha: uiConfig?.crosshairAlpha || 0.8,
+            crosshairLineWidth: uiConfig?.crosshairLineWidth || 2
         };
-        
-        // Merge with loaded config or use defaults
-        const config = uiConfig ? { ...defaultUIConfig, ...uiConfig } : defaultUIConfig;
         
         // Create a more advanced crosshair with animated elements
         this.crosshair = this.add.container(width / 2, height / 2);
@@ -1079,16 +1136,16 @@ export default class GameScene extends Phaser.Scene {
         
         // Crosshair lines
         const lines = this.add.graphics();
-        lines.lineStyle(uiConfig.crosshairLineWidth, parseInt(uiConfig.crosshairColor), uiConfig.crosshairAlpha);
-        lines.moveTo(-uiConfig.crosshairLineLength, 0);
-        lines.lineTo(uiConfig.crosshairLineLength, 0);
-        lines.moveTo(0, -uiConfig.crosshairLineLength);
-        lines.lineTo(0, uiConfig.crosshairLineLength);
+        lines.lineStyle(config.crosshairLineWidth, parseInt(config.crosshairColor), config.crosshairAlpha);
+        lines.moveTo(-config.crosshairLineLength, 0);
+        lines.lineTo(config.crosshairLineLength, 0);
+        lines.moveTo(0, -config.crosshairLineLength);
+        lines.lineTo(0, config.crosshairLineLength);
         this.crosshair.add(lines);
         
         // Add a dot in the center
         const centerDot = this.add.graphics();
-        centerDot.fillStyle(parseInt(uiConfig.crosshairColor), uiConfig.crosshairAlpha);
+        centerDot.fillStyle(parseInt(config.crosshairColor), config.crosshairAlpha);
         centerDot.fillCircle(0, 0, 2);
         this.crosshair.add(centerDot);
         
@@ -1105,7 +1162,7 @@ export default class GameScene extends Phaser.Scene {
         });
         
         // Add a targeting text indicator
-        this.targetingText = this.add.text(0, -uiConfig.crosshairSize - 20, 'TARGETING', {
+        this.targetingText = this.add.text(0, -config.crosshairSize - 20, 'TARGETING', {
             fontSize: '12px',
             fontFamily: UITheme.fonts.primary,
             color: UITheme.colors.text,
@@ -1117,7 +1174,7 @@ export default class GameScene extends Phaser.Scene {
         this.crosshair.add(this.targetingText);
         
         // Add distance indicator
-        this.distanceText = this.add.text(0, uiConfig.crosshairSize + 15, '0m', {
+        this.distanceText = this.add.text(0, config.crosshairSize + 15, '0m', {
             fontSize: '12px',
             fontFamily: UITheme.fonts.primary,
             color: UITheme.colors.text,
@@ -2116,6 +2173,64 @@ export default class GameScene extends Phaser.Scene {
     }
 
     /**
+     * Setup event listeners to connect fishing events to QuestManager
+     * This was the MISSING PIECE preventing quest completion!
+     */
+    setupQuestEventListeners() {
+        if (!this.questManager) {
+            console.warn('GameScene: Cannot setup quest event listeners - QuestManager not available');
+            return;
+        }
+
+        console.log('GameScene: Setting up quest event listeners...');
+
+        // ✅ FIX: Connect fishing events to quest hooks
+        // Listen for cast completion
+        this.events.on('fishing:castComplete', (data) => {
+            console.log('GameScene: Cast completed, notifying QuestManager:', data);
+            this.questManager.onCast(data);
+        });
+
+        // Listen for fish caught events
+        this.events.on('fishing:catchSuccess', (data) => {
+            console.log('GameScene: Fish caught, notifying QuestManager:', data);
+            this.questManager.onFishCaught(data.fish || data);
+        });
+
+        // Alternative event listeners for different fish caught event names
+        this.events.on('fishing:fishCaught', (data) => {
+            console.log('GameScene: Fish caught (alt event), notifying QuestManager:', data);
+            this.questManager.onFishCaught(data.fish || data);
+        });
+
+        // Listen for PlayerController fish success events
+        this.events.on('player:fishCaught', (data) => {
+            console.log('GameScene: Player caught fish, notifying QuestManager:', data);
+            this.questManager.onFishCaught(data.fish || data);
+        });
+
+        // Listen for boat menu access
+        this.events.on('boat:menuAccessed', () => {
+            console.log('GameScene: Boat menu accessed, notifying QuestManager');
+            this.questManager.onBoatMenuAccessed();
+        });
+
+        // Listen for dialog completion events
+        this.events.on('dialog:completed', (data) => {
+            console.log('GameScene: Dialog completed, notifying QuestManager:', data);
+            this.questManager.onDialogCompleted(data.npcId, data);
+        });
+
+        // Listen for romance meter changes
+        this.events.on('romance:meterChanged', (data) => {
+            console.log('GameScene: Romance meter changed, notifying QuestManager:', data);
+            this.questManager.onRomanceMeterChanged(data.npcId, data.newValue);
+        });
+
+        console.log('GameScene: Quest event listeners setup complete');
+    }
+
+    /**
      * Setup RenJs integration with QuestManager
      */
     setupRenJsQuestIntegration() {
@@ -2358,6 +2473,70 @@ export default class GameScene extends Phaser.Scene {
         return '🌤️'; // Default
     }
 
+    createTestMiaButton() {
+        const { width, height } = this.cameras.main;
+        
+        // Create test button for Mia
+        const testMiaButton = this.add.rectangle(width - 150, 80, 120, 35, 0x9c27b0, 0.9);
+        testMiaButton.setStrokeStyle(2, 0xe91e63, 1);
+        testMiaButton.setDepth(this.getUIDepth('ui_buttons'));
+        testMiaButton.setInteractive();
+        
+        const testMiaText = this.add.text(width - 150, 80, '💗 Meet Mia', {
+            fontSize: '14px',
+            fill: '#ffffff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        testMiaText.setDepth(this.getUIDepth('ui_text'));
+        
+        testMiaButton.on('pointerdown', () => {
+            console.log('GameScene: Test Mia button clicked');
+            this.scene.launch('CabinScene', {
+                callingScene: 'GameScene',
+                selectedNPC: 'mia'
+            });
+        });
+        
+        testMiaButton.on('pointerover', () => {
+            testMiaButton.setFillStyle(0xad36b0, 1);
+        });
+        
+        testMiaButton.on('pointerout', () => {
+            testMiaButton.setFillStyle(0x9c27b0, 0.9);
+        });
+        
+        console.log('GameScene: Test Mia button created');
+    }
+
+    openMiaDialog() {
+        console.log('GameScene: Opening Mia dialog');
+        
+        try {
+            // Check if DialogManager is available
+            if (!this.dialogManager) {
+                console.warn('GameScene: DialogManager not available, launching DialogScene directly');
+                this.scene.launch('DialogScene', {
+                    npc: 'mia',
+                    script: 'sample_assistant.md',
+                    callingScene: 'GameScene'
+                });
+                return;
+            }
+            
+            // Use DialogManager to start dialog
+            this.dialogManager.startDialog('mia', 'GameScene');
+            
+        } catch (error) {
+            console.error('GameScene: Error opening Mia dialog:', error);
+            // Fallback: Launch CabinScene with Mia selected
+            console.log('GameScene: Fallback - opening CabinScene with Mia selected');
+            this.scene.launch('CabinScene', {
+                callingScene: 'GameScene',
+                selectedNPC: 'mia'
+            });
+        }
+    }
+
     returnToBoat() {
         console.log('GameScene: Returning to boat');
         
@@ -2368,6 +2547,9 @@ export default class GameScene extends Phaser.Scene {
                 return;
             }
             this.returningToBoat = true;
+            
+            // ✅ FIX: Emit boat menu access event for quest system
+            this.events.emit('boat:menuAccessed');
             
             // Play return sound
             try {

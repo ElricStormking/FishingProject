@@ -1,0 +1,68 @@
+{
+  "weatherModifiers": [
+    {
+      "type": "sunny",
+      "fishDetectionMod": 10,
+      "biteRateMod": 0,
+      "visibilityMod": 20,
+      "rareFishChanceMod": 0,
+      "description": "Clear sunny weather improves visibility"
+    },
+    {
+      "type": "cloudy",
+      "fishDetectionMod": 0,
+      "biteRateMod": 5,
+      "visibilityMod": 0,
+      "rareFishChanceMod": 0,
+      "description": "Overcast conditions slightly improve bite rates"
+    },
+    {
+      "type": "rainy",
+      "fishDetectionMod": -5,
+      "biteRateMod": 10,
+      "visibilityMod": -10,
+      "rareFishChanceMod": 0,
+      "description": "Rain increases fish activity but reduces visibility"
+    },
+    {
+      "type": "stormy",
+      "fishDetectionMod": -15,
+      "biteRateMod": 15,
+      "visibilityMod": -25,
+      "rareFishChanceMod": 5,
+      "description": "Storms greatly increase activity and rare fish chances"
+    },
+    {
+      "type": "misty",
+      "fishDetectionMod": -10,
+      "biteRateMod": 5,
+      "visibilityMod": -30,
+      "rareFishChanceMod": 3,
+      "description": "Mist reduces visibility but fish are more active"
+    },
+    {
+      "type": "clear_night",
+      "fishDetectionMod": -10,
+      "biteRateMod": 20,
+      "visibilityMod": 0,
+      "rareFishChanceMod": 10,
+      "description": "Clear nights are ideal for nocturnal fishing"
+    },
+    {
+      "type": "perfect",
+      "fishDetectionMod": 5,
+      "biteRateMod": 10,
+      "visibilityMod": 10,
+      "rareFishChanceMod": 5,
+      "description": "Perfect conditions for tournament fishing"
+    },
+    {
+      "type": "challenge",
+      "fishDetectionMod": -20,
+      "biteRateMod": 25,
+      "visibilityMod": -20,
+      "rareFishChanceMod": 15,
+      "description": "Challenging conditions reward skilled anglers"
+    }
+  ]
+}

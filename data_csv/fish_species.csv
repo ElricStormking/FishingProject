@@ -6,20 +6,20 @@ perch,Yellow Perch,2,2,3,4,2,0.5,5,3,7,3,morning,afternoon,evening,sunny|cloudy,
 sunfish,Sunfish,1,2,4,3,2,0.4,5,2,8,3,morning,afternoon,,sunny,60,12,A bright active fish that loves sunny weather,shallow_water,rapid_thrashing
 catfish,Channel Catfish,3,6,3,4,6,5.2,3,8,9,7,night,dawn,,rainy,300,45,A bottom-dwelling fish with incredible strength,muddy_bottom,bulldogging
 pike,Northern Pike,4,5,7,6,6,3.5,7,5,6,5,morning,evening,,sunny,400,60,An aggressive predator with sharp teeth,deep_water,violent_thrashing
-walleye,Walleye,3,3,5,6,4,2.1,6,6,8,5,dusk,night,,cloudy,250,40,A nocturnal predator with excellent eyesight,mid_water,steady_fight
-crappie,Black Crappie,2,2,4,5,3,0.8,5,4,8,3,morning,evening,,cloudy,120,25,A schooling fish that travels in groups,shallow_water,quick_darts
-carp,Common Carp,3,5,4,5,7,6.5,4,6,7,8,morning,afternoon,evening,cloudy|rainy,280,42,A hardy fish with impressive endurance,lake,long_fight
+walleye,Walleye,3,3,5,6,4,2.1,6,6,8,5,dusk,night,,cloudy,250,40,A nocturnal predator with excellent eyesight,mid_water,steady_pull
+crappie,Black Crappie,2,2,4,5,3,0.8,5,4,8,3,morning,evening,,cloudy,120,25,A schooling fish that travels in groups,shallow_water,rapid_thrashing
+carp,Common Carp,3,5,4,5,7,6.5,4,6,7,8,morning,afternoon,evening,cloudy|rainy,280,42,A hardy fish with impressive endurance,lake,long_sprint
 sea_bass,Striped Sea Bass,2,4,5,4,5,3.2,6,5,7,6,morning,afternoon,,sunny|cloudy,320,48,A common harbor fish with distinctive stripes,saltwater,steady_pull
-mackerel,Atlantic Mackerel,1,2,6,3,3,0.9,8,3,6,4,morning,afternoon,,sunny,80,15,A fast-moving schooling fish,saltwater,rapid_swimming
-flounder,Summer Flounder,2,3,3,7,4,2.5,3,8,8,5,afternoon,evening,,cloudy,180,32,A flatfish that hides on the sea floor,saltwater,bottom_struggle
-cod,Atlantic Cod,3,4,4,5,5,4.8,4,7,7,6,morning,evening,,cloudy|rainy,380,55,A valuable commercial fish species,saltwater,heavy_pull
+mackerel,Atlantic Mackerel,1,2,6,3,3,0.9,8,3,6,4,morning,afternoon,,sunny,80,15,A fast-moving schooling fish,saltwater,power_run
+flounder,Summer Flounder,2,3,3,7,4,2.5,3,8,8,5,afternoon,evening,,cloudy,180,32,A flatfish that hides on the sea floor,saltwater,bulldogging
+cod,Atlantic Cod,3,4,4,5,5,4.8,4,7,7,6,morning,evening,,cloudy|rainy,380,55,A valuable commercial fish species,saltwater,deep_dive
 salmon,Atlantic Salmon,4,4,5,7,7,4.8,8,6,8,8,dawn,dusk,,rainy,600,85,A powerful migratory fish with incredible endurance,saltwater,long_sprint
 tuna,Yellowfin Tuna,6,8,8,7,10,45.0,9,7,6,9,morning,afternoon,,sunny,1200,150,A massive ocean predator with incredible power,saltwater,power_run
 shark,Small Shark,5,6,9,6,8,25.0,8,7,4,8,dawn,dusk,night,cloudy,1500,200,A dangerous predator requiring skill to catch,saltwater,circle_fighting
 sailfish,Atlantic Sailfish,7,7,8,8,8,28.0,10,6,5,7,morning,afternoon,,sunny,1800,250,The fastest fish in the ocean - a tournament favorite,saltwater,aerial_acrobatics
-moonfish,Celestial Moonfish,4,3,4,8,4,2.2,7,3,9,5,night,,,clear_night,600,90,A rare fish that glows with soft moonlight,mystical_pond,lunar_spiral
-ghost_pike,Spectral Pike,7,5,7,10,7,4.2,8,6,5,8,late_night,,,misty_night,1200,180,A translucent pike that phases in and out of reality,mystical_pond,phase_shifting
-golden_trout,Golden Trout,7,3,5,9,6,2.5,8,3,10,7,dawn,,,sunny,1500,220,A legendary high-altitude trout with golden coloration,mountain_stream,ethereal_dance
-tournament_bass,Tournament Bass,5,5,8,6,8,6.5,7,5,8,8,morning,afternoon,,perfect,1000,150,A championship-quality bass bred for competition,tournament_waters,champion_fight
-golden_salmon,Golden Salmon,7,5,7,8,9,8.8,9,6,7,9,dawn,dusk,,perfect,1800,250,A legendary salmon with golden scales,tournament_waters,golden_run
-leviathan,The Leviathan,10,10,10,10,10,200.0,8,10,1,10,dawn,dusk,,challenge,25000,2000,The ultimate challenge - a sea monster of legend,tournament_waters,legendary_battle 
+moonfish,Celestial Moonfish,4,3,4,8,4,2.2,7,3,9,5,night,,,clear_night,600,90,A rare fish that glows with soft moonlight,mystical_pond,circle_fighting
+ghost_pike,Spectral Pike,7,5,7,10,7,4.2,8,6,5,8,late_night,,,misty_night,1200,180,A translucent pike that phases in and out of reality,mystical_pond,jumping_escape
+golden_trout,Golden Trout,7,3,5,9,6,2.5,8,3,10,7,dawn,,,sunny,1500,220,A legendary high-altitude trout with golden coloration,mountain_stream,aerial_acrobatics
+tournament_bass,Tournament Bass,5,5,8,6,8,6.5,7,5,8,8,morning,afternoon,,perfect,1000,150,A championship-quality bass bred for competition,tournament_waters,violent_thrashing
+golden_salmon,Golden Salmon,7,5,7,8,9,8.8,9,6,7,9,dawn,dusk,,perfect,1800,250,A legendary salmon with golden scales,tournament_waters,long_sprint
+leviathan,The Leviathan,10,10,10,10,10,200.0,8,10,1,10,dawn,dusk,,challenge,25000,2000,The ultimate challenge - a sea monster of legend,tournament_waters,power_run

@@ -86,10 +86,11 @@ export default class CabinScene extends Phaser.Scene {
         this.gameScene = this.scene.get('GameScene');
         this.dialogManager = this.gameScene?.dialogManager;
         
-        // If DialogManager not available from GameScene, create a minimal fallback
+        // If DialogManager not available from GameScene, create a robust fallback
         if (!this.dialogManager) {
-            console.warn('CabinScene: DialogManager not available from GameScene, creating fallback');
+            console.log('CabinScene: DialogManager not available from GameScene, creating enhanced fallback');
             this.dialogManager = this.createFallbackDialogManager();
+            console.log('CabinScene: Fallback DialogManager created with', this.dialogManager.npcs.size, 'NPCs');
         }
 
         // Initialize UI
@@ -97,10 +98,11 @@ export default class CabinScene extends Phaser.Scene {
         this.setupEventListeners();
         
         // Auto-select first NPC if none selected
-        if (!this.selectedNPC) {
+        if (!this.selectedNPC && this.dialogManager && this.dialogManager.npcs) {
             const npcs = Array.from(this.dialogManager.npcs.keys());
             if (npcs.length > 0) {
                 this.selectedNPC = npcs[0];
+                console.log('CabinScene: Auto-selected NPC in create():', this.selectedNPC);
             }
         }
         
@@ -316,6 +318,9 @@ export default class CabinScene extends Phaser.Scene {
         this.createChatPanel();       // Center panel - Chat messages
         this.createRomancePanel();    // Right panel - Romance details and actions
         
+        // ADD MIA'S CENTER PORTRAIT DISPLAY
+        this.createCenterMiaPortrait();
+        
         // Bottom input area
         this.createInputArea();
         
@@ -392,7 +397,7 @@ export default class CabinScene extends Phaser.Scene {
         
         // NPC list container
         this.npcListContainer = this.add.container(15, panelY + 50);
-        this.cabinContainer.add(this.npcListContainer);
+        console.log(`CabinScene: Created NPC list container at position (15, ${panelY + 50})`);
         
         this.refreshNPCList();
     }
@@ -401,13 +406,52 @@ export default class CabinScene extends Phaser.Scene {
         // Clear existing list
         this.npcListContainer.removeAll(true);
         
+        // Clean up any direct portraits from previous refresh
+        if (this.directPortraits) {
+            this.directPortraits.forEach(portrait => {
+                if (portrait && portrait.destroy) {
+                    portrait.destroy();
+                }
+            });
+            this.directPortraits = [];
+        }
+        
+        // Clean up any absolute portraits from previous refresh
+        if (this.absolutePortraits) {
+            this.absolutePortraits.forEach(portrait => {
+                if (portrait && portrait.destroy) {
+                    portrait.destroy();
+                }
+            });
+            this.absolutePortraits = [];
+        }
+        
+        if (!this.dialogManager || !this.dialogManager.npcs) {
+            console.warn('CabinScene: DialogManager or NPCs not available for list refresh');
+            return;
+        }
+        
         const npcs = Array.from(this.dialogManager.npcs.values());
+        console.log('CabinScene: Refreshing NPC list with', npcs.length, 'NPCs:', npcs.map(n => n.name));
+        
         const itemHeight = 90;
         
         npcs.forEach((npc, index) => {
             const y = index * (itemHeight + 10);
-            this.createNPCListItem(npc, 0, y);
+            const npcItem = this.createNPCListItem(npc, 0, y);
+            if (npcItem) {
+                this.npcListContainer.add(npcItem);
+                console.log(`CabinScene: Added ${npc.name} to NPC list at position ${y}. Container has ${this.npcListContainer.list.length} items`);
+            } else {
+                console.error(`CabinScene: Failed to create NPC item for ${npc.name}`);
+            }
         });
+        
+        // Auto-select first NPC if none selected and NPCs are available
+        if (!this.selectedNPC && npcs.length > 0) {
+            this.selectedNPC = npcs[0].id;
+            console.log('CabinScene: Auto-selected NPC:', this.selectedNPC);
+        }
     }
 
     createNPCListItem(npc, x, y) {
@@ -431,27 +475,68 @@ export default class CabinScene extends Phaser.Scene {
         
         itemBg.fillRoundedRect(0, 0, itemWidth, itemHeight, 8);
         itemBg.strokeRoundedRect(0, 0, itemWidth, itemHeight, 8);
+        itemBg.setDepth(1); // Background depth
         npcItem.add(itemBg);
         
-        // NPC portrait (brass frame)
-        const portraitFrame = this.add.graphics();
-        portraitFrame.fillStyle(0xb8860b, 0.9);
-        portraitFrame.fillCircle(30, 25, 20);
-        npcItem.add(portraitFrame);
+        // NPC portrait with enhanced fallbacks (prioritize actual images)
+        const portraitKeys = [
+            `mia-portrait`,           // Actual Mia portrait image (highest priority)
+            `portrait-mia`,           // Alternative actual portrait name
+            `mia-full`,               // Another Mia variant
+            `mia-portrait-alt`,       // Alternative path test
+            `mia-portrait-public`,    // Public path test
+            `${npc.id}-portrait`,     // Generated in PreloadScene
+            `portrait-${npc.id}`,     // Alternative generated name
+            `mia-normal`,             // Mia variant
+            `npc-assistant-1`,        // Generic assistant
+            npc.portrait              // NPC's assigned portrait
+        ].filter(key => key); // Remove undefined keys
         
-        const portraitBg = this.add.graphics();
-        portraitBg.fillStyle(0x8B4513, 0.8);
-        portraitBg.fillCircle(30, 25, 16);
-        npcItem.add(portraitBg);
+        // Debug: check which textures are available
+        const availableTextures = portraitKeys.filter(key => this.textures.exists(key));
+        console.log(`CabinScene: Available textures for ${npc.name}:`, availableTextures);
         
-        // NPC initial
-        const npcInitial = this.add.text(30, 25, npc.name[0], {
-            fontSize: '20px',
-            fontFamily: 'Georgia, serif',
-            fill: '#ffd700',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-        npcItem.add(npcInitial);
+        let portraitAdded = false;
+        
+        // SIMPLIFIED APPROACH: Create Mia portrait directly on scene at absolute world coordinates
+        if (npc.id === 'mia') {
+            for (const key of portraitKeys) {
+                if (this.textures.exists(key) && (key.includes('mia-portrait') || key.includes('portrait-mia') || key.includes('mia-full'))) {
+                    try {
+                        console.log(`🎯 CabinScene: Creating Mia portrait with key '${key}' using ABSOLUTE positioning`);
+                        
+                        // Calculate exact world position where the portrait should appear
+                        // NPC list container is at (15, panelY + 50), item is at (0, y), portrait should be at (30, 42) within item
+                        const worldX = 15 + 0 + 30;  // container.x + item.x + portrait.x
+                        const worldY = (110 + 50) + y + 42;  // container.y + item.y + portrait.y
+                        
+                        // Create portrait directly on the main scene (not in any container)
+                        const miaPortrait = this.add.image(worldX, worldY, key);
+                        miaPortrait.setOrigin(0.5);
+                        miaPortrait.setDisplaySize(50, 60);
+                        miaPortrait.setVisible(true);
+                        miaPortrait.setAlpha(1);
+                        miaPortrait.setDepth(20000);  // Extremely high depth to ensure visibility
+                        
+                        console.log(`✅ CabinScene: Mia portrait '${key}' created with ABSOLUTE positioning - world coordinates: (${worldX}, ${worldY}), depth: ${miaPortrait.depth}`);
+                        
+                        // Store reference for cleanup
+                        if (!this.absolutePortraits) this.absolutePortraits = [];
+                        this.absolutePortraits.push(miaPortrait);
+                        
+                        portraitAdded = true;
+                        break;
+                    } catch (error) {
+                        console.error(`❌ CabinScene: Error creating absolute portrait with key '${key}':`, error);
+                    }
+                }
+            }
+        }
+        
+        // If no actual image was found for any NPC, just log it - NO FALLBACK
+        if (!portraitAdded) {
+            console.log(`❌ CabinScene: No actual portrait image found for ${npc.name}. Available keys:`, portraitKeys.filter(key => this.textures.exists(key)));
+        }
         
         // NPC name
         const nameText = this.add.text(55, 15, npc.name, {
@@ -460,6 +545,7 @@ export default class CabinScene extends Phaser.Scene {
             fill: '#ffd700',
             fontStyle: 'bold'
         });
+        nameText.setDepth(10);  // Above background but below portrait
         npcItem.add(nameText);
         
         // Relationship status
@@ -468,6 +554,7 @@ export default class CabinScene extends Phaser.Scene {
             fontFamily: 'Georgia, serif',
             fill: '#daa520'
         });
+        relationshipText.setDepth(10);
         npcItem.add(relationshipText);
         
         // Quest Indicator Logic
@@ -487,7 +574,7 @@ export default class CabinScene extends Phaser.Scene {
             }
 
             if (questIndicatorIcon) {
-                questIndicatorIcon.setOrigin(0.5).setDepth(npcItem.depth + 1);
+                questIndicatorIcon.setOrigin(0.5).setDepth(20);  // Above everything
                 npcItem.add(questIndicatorIcon);
             }
         }
@@ -497,11 +584,13 @@ export default class CabinScene extends Phaser.Scene {
         const meterFrame = this.add.graphics();
         meterFrame.fillStyle(0xb8860b, 0.8);
         meterFrame.fillRoundedRect(53, 46, 154, 16, 8);
+        meterFrame.setDepth(5);  // Above background
         npcItem.add(meterFrame);
         
         const meterBg = this.add.graphics();
         meterBg.fillStyle(0x654321, 0.8);
         meterBg.fillRoundedRect(55, 48, 150, 12, 6);
+        meterBg.setDepth(6);  // Above meter frame
         npcItem.add(meterBg);
         
         const meterFill = this.add.graphics();
@@ -517,6 +606,7 @@ export default class CabinScene extends Phaser.Scene {
         
         meterFill.fillStyle(fillColor, 0.9);
         meterFill.fillRoundedRect(55, 48, fillWidth, 12, 6);
+        meterFill.setDepth(7);  // Above meter background
         npcItem.add(meterFill);
         
         // Romance meter percentage
@@ -525,17 +615,20 @@ export default class CabinScene extends Phaser.Scene {
             fontFamily: 'Georgia, serif',
             fill: '#ffd700'
         }).setOrigin(0.5);
+        percentText.setDepth(10);
         npcItem.add(percentText);
         
         // Presence indicator (lantern style)
         const presenceFrame = this.add.graphics();
         presenceFrame.fillStyle(0xb8860b, 0.9);
         presenceFrame.fillCircle(220, 20, 6);
+        presenceFrame.setDepth(8);
         npcItem.add(presenceFrame);
         
         const statusDot = this.add.graphics();
         statusDot.fillStyle(0xffd700, 0.9); // Golden = present in cabin
         statusDot.fillCircle(220, 20, 4);
+        statusDot.setDepth(9);
         npcItem.add(statusDot);
         
         // Make interactive
@@ -567,7 +660,8 @@ export default class CabinScene extends Phaser.Scene {
             }
         });
         
-        this.npcListContainer.add(npcItem);
+        // Return the NPC item container so it can be added to the list
+        return npcItem;
     }
 
     createChatPanel() {
@@ -596,7 +690,6 @@ export default class CabinScene extends Phaser.Scene {
         
         // Chat messages area
         this.chatMessagesContainer = this.add.container(panelX + 10, panelY + 60);
-        this.cabinContainer.add(this.chatMessagesContainer);
         
         // Create scroll area for messages
         this.chatScrollY = 0;
@@ -678,7 +771,6 @@ export default class CabinScene extends Phaser.Scene {
         
         // Romance details container
         this.romanceDetailsContainer = this.add.container(panelX + 15, panelY + 50);
-        this.cabinContainer.add(this.romanceDetailsContainer);
         
         this.refreshRomancePanel();
     }
@@ -687,10 +779,23 @@ export default class CabinScene extends Phaser.Scene {
         // Clear existing content
         this.romanceDetailsContainer.removeAll(true);
         
-        if (!this.selectedNPC) return;
+        if (!this.selectedNPC) {
+            console.log('CabinScene: No NPC selected for romance panel');
+            return;
+        }
+        
+        if (!this.dialogManager || !this.dialogManager.getNPC) {
+            console.warn('CabinScene: DialogManager not available for romance panel');
+            return;
+        }
         
         const npc = this.dialogManager.getNPC(this.selectedNPC);
-        if (!npc) return;
+        if (!npc) {
+            console.warn('CabinScene: NPC not found for romance panel:', this.selectedNPC);
+            return;
+        }
+        
+        console.log('CabinScene: Refreshing romance panel for', npc.name);
         
         let y = 0;
         
@@ -707,14 +812,43 @@ export default class CabinScene extends Phaser.Scene {
         portraitBg.fillRoundedRect(88, y + 3, 74, 94, 8);
         this.romanceDetailsContainer.add(portraitBg);
         
-        // NPC name in portrait
-        const portraitName = this.add.text(125, y + 50, npc.name[0], {
-            fontSize: '36px',
-            fontFamily: 'Georgia, serif',
-            fill: '#ffd700',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-        this.romanceDetailsContainer.add(portraitName);
+        // Try to use actual portrait for the romance panel
+        let portraitAdded = false;
+        const romancePortraitKeys = ['mia-portrait', 'portrait-mia', 'mia-full'];
+        
+        for (const key of romancePortraitKeys) {
+            if (key && this.textures.exists(key)) {
+                try {
+                    const romancePortrait = this.add.image(125, y + 50, key);
+                    romancePortrait.setDisplaySize(70, 90);
+                    romancePortrait.setOrigin(0.5);
+                    romancePortrait.setDepth(15000);
+                    
+                    // Make sure it's visible
+                    romancePortrait.setVisible(true);
+                    romancePortrait.setAlpha(1);
+                    
+                    this.romanceDetailsContainer.add(romancePortrait);
+                    portraitAdded = true;
+                    console.log(`🔍 CabinScene: Romance portrait '${key}' positioned at (${romancePortrait.x}, ${romancePortrait.y}) size ${romancePortrait.displayWidth}x${romancePortrait.displayHeight}`);
+                    console.log(`CabinScene: Added romance portrait '${key}' for ${npc.name} with depth 15000`);
+                    break;
+                } catch (error) {
+                    console.error(`CabinScene: Error creating romance portrait:`, error);
+                }
+            }
+        }
+        
+        // Fallback to initial if no portrait found
+        if (!portraitAdded) {
+            const portraitName = this.add.text(125, y + 50, npc.name[0], {
+                fontSize: '36px',
+                fontFamily: 'Georgia, serif',
+                fill: '#ffd700',
+                fontStyle: 'bold'
+            }).setOrigin(0.5);
+            this.romanceDetailsContainer.add(portraitName);
+        }
         
         y += 120;
         
@@ -1051,6 +1185,7 @@ export default class CabinScene extends Phaser.Scene {
         const panelX = 300;
         const panelY = 110;
         
+        console.log('CabinScene: Updating chat header for selected NPC:', this.selectedNPC);
         this.createChatHeader(panelX, panelY, width - 600);
     }
 
@@ -1723,6 +1858,7 @@ export default class CabinScene extends Phaser.Scene {
             fallbackManager.npcs.set(npc.id, npc);
         });
 
+        console.log('CabinScene: Fallback DialogManager initialized with NPCs:', Array.from(fallbackManager.npcs.keys()));
         return fallbackManager;
     }
 
@@ -1876,5 +2012,116 @@ export default class CabinScene extends Phaser.Scene {
         
         const npcResponses = responses[npc.id] || responses.mia;
         return npcResponses[Math.floor(Math.random() * npcResponses.length)];
+    }
+
+    /**
+     * Create a large center portrait display for Mia in the cabin
+     */
+    createCenterMiaPortrait() {
+        const { width, height } = this.cameras.main;
+        
+        // Position in the center-left area (chat panel area)
+        const centerX = width / 2;
+        const centerY = height / 2;
+        
+        console.log('CabinScene: Creating center Mia portrait display');
+        
+        // Create decorative frame for the portrait
+        const portraitFrame = this.add.graphics();
+        portraitFrame.fillStyle(0xb8860b, 0.9); // Brass frame
+        portraitFrame.fillRoundedRect(centerX - 122, centerY - 172, 244, 344, 15);
+        portraitFrame.lineStyle(4, 0xdaa520, 1);
+        portraitFrame.strokeRoundedRect(centerX - 122, centerY - 172, 244, 344, 15);
+        portraitFrame.setDepth(15000);
+        
+        // Inner wood frame
+        const innerFrame = this.add.graphics();
+        innerFrame.fillStyle(0x8B4513, 0.8);
+        innerFrame.fillRoundedRect(centerX - 115, centerY - 165, 230, 330, 10);
+        innerFrame.setDepth(15001);
+        
+        // Try to load Mia's actual portrait
+        const portraitKeys = [
+            'mia-portrait', 
+            'portrait-mia', 
+            'mia-full',
+            'mia-portrait-alt',
+            'mia-portrait-public'
+        ];
+        let portraitAdded = false;
+        
+        // Debug: Check all available textures
+        console.log('CabinScene: Checking for center Mia portrait keys:', portraitKeys);
+        
+        for (const key of portraitKeys) {
+            console.log(`CabinScene: Checking center texture key '${key}' - exists: ${this.textures.exists(key)}`);
+            if (this.textures.exists(key)) {
+                try {
+                    console.log(`🎯 CabinScene: Creating center Mia portrait with key '${key}'`);
+                    
+                    // Get texture info for debugging
+                    const texture = this.textures.get(key);
+                    console.log(`🔍 CabinScene: Center texture '${key}' info:`, {
+                        source: texture.source?.[0]?.image?.src || 'unknown',
+                        width: texture.source?.[0]?.width || 'unknown',
+                        height: texture.source?.[0]?.height || 'unknown',
+                        type: texture.source?.[0]?.image ? 'image' : 'canvas'
+                    });
+                    
+                    const centerMiaPortrait = this.add.image(centerX, centerY, key);
+                    centerMiaPortrait.setDisplaySize(220, 320);
+                    centerMiaPortrait.setOrigin(0.5);
+                    centerMiaPortrait.setDepth(15002);
+                    centerMiaPortrait.setVisible(true);
+                    centerMiaPortrait.setAlpha(1);
+                    
+                    console.log(`✅ CabinScene: Center Mia portrait '${key}' created successfully - size: ${centerMiaPortrait.displayWidth}x${centerMiaPortrait.displayHeight}, position: (${centerMiaPortrait.x}, ${centerMiaPortrait.y}), depth: ${centerMiaPortrait.depth}`);
+                    
+                    portraitAdded = true;
+                    break;
+                } catch (error) {
+                    console.error(`❌ CabinScene: Error creating center portrait with key '${key}':`, error);
+                }
+            }
+        }
+        
+        // Fallback if no actual portrait found
+        if (!portraitAdded) {
+            console.log('CabinScene: No actual center portrait found, creating fallback');
+            const fallbackText = this.add.text(centerX, centerY, '💃 MIA 💃', {
+                fontSize: '48px',
+                fontFamily: 'Georgia, serif',
+                fill: '#ffd700',
+                fontStyle: 'bold',
+                stroke: '#8B4513',
+                strokeThickness: 3
+            });
+            fallbackText.setOrigin(0.5);
+            fallbackText.setDepth(15002);
+        }
+        
+        // Add cabin title below the portrait
+        const titleText = this.add.text(centerX, centerY + 190, '~ Bikini Assistant Mia ~', {
+            fontSize: '20px',
+            fontFamily: 'Georgia, serif',
+            fill: '#ffd700',
+            fontStyle: 'bold italic',
+            stroke: '#8B4513',
+            strokeThickness: 2
+        });
+        titleText.setOrigin(0.5);
+        titleText.setDepth(15003);
+        
+        // Add cabin atmosphere text
+        const atmosphereText = this.add.text(centerX, centerY + 210, 'Relaxing in the Cozy Cabin', {
+            fontSize: '14px',
+            fontFamily: 'Georgia, serif',
+            fill: '#daa520',
+            fontStyle: 'italic'
+        });
+        atmosphereText.setOrigin(0.5);
+        atmosphereText.setDepth(15003);
+        
+        console.log('CabinScene: Center Mia portrait display created');
     }
 } 

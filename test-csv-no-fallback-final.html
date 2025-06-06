@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CSV Data Verification - No Fallback Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #1a1a1a; 
+            color: #ffffff;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #333;
+            border-radius: 5px;
+            background: #2a2a2a;
+        }
+        .pass { color: #4CAF50; }
+        .fail { color: #f44336; }
+        .warn { color: #ff9800; }
+        .info { color: #2196F3; }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .pass-bg { background: rgba(76, 175, 80, 0.1); }
+        .fail-bg { background: rgba(244, 67, 54, 0.1); }
+        .warn-bg { background: rgba(255, 152, 0, 0.1); }
+    </style>
+</head>
+<body>
+    <h1>🎣 CSV Data Verification - No Fallback Test</h1>
+    <p>This test verifies that all CSV data is properly converted and no fallback data is being used.</p>
+    
+    <div id="test-results"></div>
+    
+    <script type="module">
+        import { gameDataLoader } from './src/scripts/DataLoader.js';
+        
+        const results = document.getElementById('test-results');
+        
+        function createTestSection(title) {
+            const section = document.createElement('div');
+            section.className = 'test-section';
+            section.innerHTML = `<h3>${title}</h3>`;
+            results.appendChild(section);
+            return section;
+        }
+        
+        function addTestResult(section, message, status) {
+            const result = document.createElement('div');
+            result.className = `test-result ${status}-bg`;
+            result.innerHTML = `<span class="${status}">${status.toUpperCase()}</span> ${message}`;
+            section.appendChild(result);
+        }
+        
+        async function runTests() {
+            // Section 1: DataLoader Initialization Test
+            const initSection = createTestSection('🔧 DataLoader Initialization');
+            
+            try {
+                await gameDataLoader.loadAllData();
+                addTestResult(initSection, 'DataLoader successfully loaded all data', 'pass');
+                
+                // Check for fallback data usage
+                const fallbackCheck = gameDataLoader.checkForFallbackData();
+                if (fallbackCheck.usingFallback) {
+                    addTestResult(initSection, `🚨 FALLBACK DATA DETECTED: ${fallbackCheck.fallbackFiles.join(', ')}`, 'fail');
+                    fallbackCheck.warnings.forEach(warning => {
+                        addTestResult(initSection, warning, 'warn');
+                    });
+                } else {
+                    addTestResult(initSection, '✅ No fallback data detected - all CSV data loaded successfully', 'pass');
+                }
+                
+            } catch (error) {
+                addTestResult(initSection, `Failed to load data: ${error.message}`, 'fail');
+                return; // Stop testing if data loading fails
+            }
+            
+            // Section 2: Fish Data Test
+            const fishSection = createTestSection('🐟 Fish Data (CSV Converted)');
+            
+            const allFish = gameDataLoader.getAllFish();
+            if (!allFish || allFish.length === 0) {
+                addTestResult(fishSection, '🚨 No fish data available - CSV conversion failed!', 'fail');
+            } else {
+                addTestResult(fishSection, `✅ Found ${allFish.length} fish species from CSV data`, 'pass');
+                
+                // Check first fish for proper structure
+                const firstFish = allFish[0];
+                if (firstFish.name && firstFish.name !== 'undefined') {
+                    addTestResult(fishSection, `✅ First fish: ${firstFish.name} (rarity: ${firstFish.rarity})`, 'pass');
+                } else {
+                    addTestResult(fishSection, `🚨 First fish has invalid name: ${firstFish.name}`, 'fail');
+                }
+                
+                // Check for undefined names
+                const undefinedFish = allFish.filter(fish => !fish.name || fish.name === 'undefined');
+                if (undefinedFish.length > 0) {
+                    addTestResult(fishSection, `🚨 Found ${undefinedFish.length} fish with undefined names`, 'fail');
+                } else {
+                    addTestResult(fishSection, '✅ All fish have proper names', 'pass');
+                }
+                
+                // Check rarity levels
+                const rarityLevels = [...new Set(allFish.map(fish => fish.rarity))].sort();
+                addTestResult(fishSection, `✅ Fish rarity levels: ${rarityLevels.join(', ')}`, 'pass');
+            }
+            
+            // Section 3: Equipment Data Test
+            const equipSection = createTestSection('⚙️ Equipment Data (CSV Converted)');
+            
+            const allRods = gameDataLoader.getAllRods();
+            const allBoats = gameDataLoader.getAllBoats();
+            const allClothing = gameDataLoader.getAllClothing();
+            
+            if (!allRods || allRods.length === 0) {
+                addTestResult(equipSection, '🚨 No fishing rod data available - CSV conversion failed!', 'fail');
+            } else {
+                addTestResult(equipSection, `✅ Found ${allRods.length} fishing rods from CSV data`, 'pass');
+            }
+            
+            if (!allBoats || allBoats.length === 0) {
+                addTestResult(equipSection, '⚠️ No boat data available - this may be expected', 'warn');
+            } else {
+                addTestResult(equipSection, `✅ Found ${allBoats.length} boats from CSV data`, 'pass');
+            }
+            
+            if (!allClothing || allClothing.length === 0) {
+                addTestResult(equipSection, '⚠️ No clothing data available - this may be expected', 'warn');
+            } else {
+                addTestResult(equipSection, `✅ Found ${allClothing.length} clothing items from CSV data`, 'pass');
+            }
+            
+            // Section 4: Lure Data Test
+            const lureSection = createTestSection('🎣 Lure Data (CSV Converted)');
+            
+            const allLures = gameDataLoader.getAllLures();
+            if (!allLures || allLures.length === 0) {
+                addTestResult(lureSection, '🚨 No lure data available - CSV conversion failed!', 'fail');
+            } else {
+                addTestResult(lureSection, `✅ Found ${allLures.length} lures from CSV data`, 'pass');
+                
+                const firstLure = allLures[0];
+                addTestResult(lureSection, `✅ First lure: ${firstLure.name} (type: ${firstLure.lureType})`, 'pass');
+            }
+            
+            // Section 5: Configuration Data Test
+            const configSection = createTestSection('⚙️ Configuration Data (CSV Converted)');
+            
+            const boatConfig = gameDataLoader.getBoatConfig();
+            if (!boatConfig) {
+                addTestResult(configSection, '🚨 No boat configuration available - CSV conversion failed!', 'fail');
+            } else {
+                addTestResult(configSection, '✅ Boat configuration loaded from CSV data', 'pass');
+                
+                // Check specific boat properties
+                const requiredProps = ['deckColor', 'deckHeight', 'sideColor', 'sideWidth'];
+                const missingProps = requiredProps.filter(prop => !boatConfig.hasOwnProperty(prop));
+                
+                if (missingProps.length > 0) {
+                    addTestResult(configSection, `🚨 Missing boat properties: ${missingProps.join(', ')}`, 'fail');
+                } else {
+                    addTestResult(configSection, '✅ All required boat properties present', 'pass');
+                    addTestResult(configSection, `✅ Deck color: ${boatConfig.deckColor}`, 'info');
+                }
+            }
+            
+            const fishingConfig = gameDataLoader.getFishingConfig();
+            if (!fishingConfig) {
+                addTestResult(configSection, '🚨 No fishing configuration available - CSV conversion failed!', 'fail');
+            } else {
+                addTestResult(configSection, '✅ Fishing configuration loaded from CSV data', 'pass');
+                addTestResult(configSection, `✅ Fish count: ${fishingConfig.fishCount}`, 'info');
+            }
+            
+            // Section 6: Attributes Data Test
+            const attrSection = createTestSection('📊 Attributes Data (CSV Converted)');
+            
+            const playerAttr = gameDataLoader.getPlayerAttribute('castAccuracy');
+            if (!playerAttr) {
+                addTestResult(attrSection, '🚨 No player attributes available - CSV conversion failed!', 'fail');
+            } else {
+                addTestResult(attrSection, '✅ Player attributes loaded from CSV data', 'pass');
+                addTestResult(attrSection, `✅ Cast accuracy attribute available`, 'info');
+            }
+            
+            // Section 7: Struggle Styles Test
+            const struggleSection = createTestSection('🎮 Struggle Styles (CSV Converted)');
+            
+            const struggleStyle = gameDataLoader.getStruggleStyle('gentle_pull');
+            if (!struggleStyle) {
+                addTestResult(struggleSection, '🚨 No struggle styles available - CSV conversion failed!', 'fail');
+            } else {
+                addTestResult(struggleSection, '✅ Struggle styles loaded from CSV data', 'pass');
+                addTestResult(struggleSection, `✅ Gentle pull style: ${struggleStyle.name}`, 'info');
+            }
+            
+            // Section 8: Data Summary
+            const summarySection = createTestSection('📈 Data Summary');
+            
+            const summary = gameDataLoader.getDataSummary();
+            addTestResult(summarySection, `Fish species: ${summary.fish}`, 'info');
+            addTestResult(summarySection, `Lures: ${summary.lures}`, 'info');
+            addTestResult(summarySection, `Fishing rods: ${summary.rods}`, 'info');
+            addTestResult(summarySection, `Boats: ${summary.boats}`, 'info');
+            addTestResult(summarySection, `Clothing items: ${summary.clothing}`, 'info');
+            addTestResult(summarySection, `Struggle styles: ${summary.struggleStyles}`, 'info');
+            
+            // Section 9: Final Verification
+            const finalSection = createTestSection('🏁 Final Verification');
+            
+            // Test that all critical functions return valid data
+            const criticalTests = [
+                { name: 'getAllFish()', func: () => gameDataLoader.getAllFish() },
+                { name: 'getAllLures()', func: () => gameDataLoader.getAllLures() },
+                { name: 'getAllRods()', func: () => gameDataLoader.getAllRods() },
+                { name: 'getBoatConfig()', func: () => gameDataLoader.getBoatConfig() },
+                { name: 'getFishingConfig()', func: () => gameDataLoader.getFishingConfig() }
+            ];
+            
+            let allTestsPassed = true;
+            
+            criticalTests.forEach(test => {
+                try {
+                    const result = test.func();
+                    if (result && (Array.isArray(result) ? result.length > 0 : Object.keys(result).length > 0)) {
+                        addTestResult(finalSection, `✅ ${test.name} returns valid data`, 'pass');
+                    } else {
+                        addTestResult(finalSection, `🚨 ${test.name} returns empty/invalid data`, 'fail');
+                        allTestsPassed = false;
+                    }
+                } catch (error) {
+                    addTestResult(finalSection, `🚨 ${test.name} failed: ${error.message}`, 'fail');
+                    allTestsPassed = false;
+                }
+            });
+            
+            if (allTestsPassed) {
+                addTestResult(finalSection, '🎉 ALL TESTS PASSED - CSV data system is working perfectly!', 'pass');
+                addTestResult(finalSection, '✅ No fallback data is being used', 'pass');
+                addTestResult(finalSection, '✅ Game is ready to run with CSV-converted data', 'pass');
+            } else {
+                addTestResult(finalSection, '❌ SOME TESTS FAILED - Please check CSV conversion', 'fail');
+            }
+        }
+        
+        // Run tests when page loads
+        runTests().catch(error => {
+            const errorSection = createTestSection('💥 Critical Error');
+            addTestResult(errorSection, `Test suite failed: ${error.message}`, 'fail');
+            console.error('Test error:', error);
+        });
+    </script>
+</body>
+</html> 

@@ -2896,7 +2896,7 @@ export class ReelingMiniGame {
         let actualWeight = 2.5; // Default weight
         
         try {
-            if (this.selectedFish && this.gameState.fishDatabase) {
+            if (this.selectedFish && this.gameState?.fishDatabase) {
                 // Use FishDatabase to calculate weight with variation
                 actualWeight = this.gameState.fishDatabase.calculateFishWeight(this.selectedFish);
             } else if (this.fishProperties) {
@@ -2904,7 +2904,10 @@ export class ReelingMiniGame {
                 actualWeight = this.fishProperties.weight || 2.5;
             }
         } catch (error) {
-            console.warn('ReelingMiniGame: Error calculating fish weight:', error);
+            // Only log unexpected errors, not just missing methods
+            if (error.name !== 'TypeError') {
+                console.warn('ReelingMiniGame: Unexpected error calculating fish weight:', error);
+            }
             actualWeight = 2.5;
         }
         
@@ -2977,20 +2980,24 @@ export class ReelingMiniGame {
             };
         }
         
-        // Award perfect reel bonus if applicable
+        // Award perfect reel bonus if applicable (silent fallback)
         try {
-            if (perfectCatch && this.gameState.trackPerfectReel) {
+            if (perfectCatch && this.gameState?.trackPerfectReel) {
                 this.gameState.trackPerfectReel();
             }
         } catch (error) {
-            console.warn('ReelingMiniGame: Error tracking perfect reel:', error);
+            // Only log unexpected errors, not just missing methods
+            if (error.name !== 'TypeError') {
+                console.warn('ReelingMiniGame: Unexpected error tracking perfect reel:', error);
+            }
         }
         
         // Show catch celebration with error handling
         try {
             this.showCatchCelebration(catchResult);
         } catch (error) {
-            console.error('ReelingMiniGame: Error showing celebration:', error);
+            // Only log if it's a critical error
+            console.warn('ReelingMiniGame: Could not show celebration, continuing...:', error.message);
         }
         
         // Complete the minigame with proper fish data structure
@@ -3038,7 +3045,7 @@ export class ReelingMiniGame {
     
     showCatchCelebration(catchResult) {
         if (!catchResult || !catchResult.fish) {
-            console.warn('ReelingMiniGame: No catch result or fish data for celebration');
+            // Silent fallback - celebration is optional
             return;
         }
         

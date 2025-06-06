@@ -18,164 +18,43 @@ export default class BoatMenuScene extends Phaser.Scene {
     }
 
     create(data) {
-        const width = this.cameras.main.width;
-        const height = this.cameras.main.height;
+        const { width, height } = this.cameras.main;
         
-        console.log('BoatMenuScene: Created with data:', data);
+        console.log('BoatMenuScene: Creating scene with dimensions:', width, 'x', height);
         
-        // Handle return from fishing session
-        if (data && data.returnedFromFishing) {
-            console.log('BoatMenuScene: Returned from fishing session');
-            
-            // Handle error recovery mode
-            if (data.errorRecovery) {
-                console.log('BoatMenuScene: Running in error recovery mode');
-                this.showErrorMessage('Returned from fishing due to an error. Game state may have been restored.');
-            }
-            
-            // Process fishing session data if available
-            if (data.fishingSessionData) {
-                console.log('BoatMenuScene: Processing fishing session data:', data.fishingSessionData);
-                this.processFishingSessionResults(data.fishingSessionData);
-            }
-        }
+        // Store data for later use
+        this.gameStateData = data;
         
-        // Get game state and managers with error handling
-        try {
+        // Get game state
             this.gameState = GameState.getInstance();
             
-            // Validate game state
-            if (!this.gameState) {
-                throw new Error('Failed to get GameState instance');
-            }
-            
-            console.log('BoatMenuScene: GameState obtained successfully');
-            
-            // Initialize player stats to prevent undefined errors
-            this.initializePlayerStats();
-            
-            // Restart auto-save if it was stopped
-            this.gameState.startAutoSave();
-            
-        } catch (gameStateError) {
-            console.error('BoatMenuScene: Critical error with GameState:', gameStateError);
-            this.showErrorMessage('Game state error: ' + gameStateError.message);
-            
-            // Try to recover by reloading the page as last resort
-            this.time.delayedCall(3000, () => {
-                console.log('BoatMenuScene: Attempting page reload for recovery');
-                window.location.reload();
-            });
-            return;
-        }
-        
-        // Initialize managers with error handling
-        try {
-            this.sceneManager = SceneManager.getInstance();
-            this.sceneManager.setCurrentScene(this);
-            console.log('BoatMenuScene: SceneManager initialized');
-        } catch (sceneManagerError) {
-            console.error('BoatMenuScene: Error initializing SceneManager:', sceneManagerError);
-            this.sceneManager = null;
-        }
-        
-        try {
-            this.gameLoop = new GameLoop(this);
-            console.log('BoatMenuScene: GameLoop initialized');
-        } catch (gameLoopError) {
-            console.error('BoatMenuScene: Error initializing GameLoop:', gameLoopError);
-            this.gameLoop = null;
-        }
-        
-        try {
-            this.tournamentManager = new TournamentManager(this.gameState);
-            console.log('BoatMenuScene: TournamentManager initialized');
-            
-            // Emit tournament manager ready event for achievement system
-            this.events.emit('tournamentManagerReady', this.tournamentManager);
-        } catch (tournamentError) {
-            console.error('BoatMenuScene: Error initializing TournamentManager:', tournamentError);
-            this.tournamentManager = null;
-        }
-        
-        try {
-            this.questManager = new QuestManager(this);
-            console.log('BoatMenuScene: QuestManager initialized');
-        } catch (questError) {
-            console.error('BoatMenuScene: Error initializing QuestManager:', questError);
-            this.questManager = null;
-        }
-        
-        // Initialize audio manager
-        try {
+        // Initialize audio manager for this scene
             this.audioManager = this.gameState.getAudioManager(this);
             if (this.audioManager) {
                 this.audioManager.setSceneAudio('BoatMenuScene');
-                console.log('BoatMenuScene: AudioManager initialized');
-            }
-        } catch (audioError) {
-            console.error('BoatMenuScene: Error initializing AudioManager:', audioError);
-            this.audioManager = null;
+            console.log('BoatMenuScene: Audio manager initialized');
         }
         
-        // Initialize LoadingStateManager with error handling
-        try {
-            this.loadingStateManager = new LoadingStateManager(this);
-            console.log('BoatMenuScene: LoadingStateManager initialized');
-        } catch (loadingError) {
-            console.error('BoatMenuScene: Error initializing LoadingStateManager:', loadingError);
-            this.loadingStateManager = null;
-        }
-        
-        // Create scene visuals
+        // Create visual elements
         this.createSceneBackground(width, height);
-        
-        // UI Elements
         this.createStatusDisplay(width, height);
         this.createActionButtons(width, height);
         this.createProgressDisplay(width, height);
-        
-        // Create UI components with enhanced error handling
-        this.createUIComponents();
-        
-        // Setup event listeners
-        this.setupEventListeners();
-        
-        // Create action buttons
         this.createPlayerButton(width, height);
         this.createCollectionButton(width, height);
         
-        // Initialize game loop
-        if (this.gameLoop) {
-            this.gameLoop.enterBoatMenu();
-        }
+        // ADD MIA'S PORTRAIT IN THE MIDDLE
+        this.createMiaPortraitDisplay(width, height);
         
-        // Ensure initial status is displayed correctly
-        this.time.delayedCall(100, () => {
-            // Force initial status update to ensure location is shown correctly
-            this.updateStatus({
-                location: this.gameState?.player?.currentLocation || 'Starting Port'
-            });
-            
-            // Ensure DOM FISH button exists (fallback for returns from fishing)
-            if (!this.domFishButton) {
-                const width = this.cameras.main.width;
-                const height = this.cameras.main.height;
-                const buttonY = height * 0.75;
-                const buttonSpacing = (width - 100) / 6;
-                this.createDOMFishButton(50 + buttonSpacing * 1, buttonY);
-                console.log('BoatMenuScene: Recreated DOM FISH button (fallback)');
-            }
-        });
+        // Setup interactions
+        this.setupEventListeners();
         
-        // Show welcome back message if returning from fishing
-        if (data && data.returnedFromFishing && !data.errorRecovery) {
-            this.time.delayedCall(1000, () => {
-                this.showSuccessMessage('Welcome back from your fishing trip!');
-            });
-        }
+        // Initialize components
+        this.ensureUIsCreated();
+        this.initializePlayerStats();
+        this.createUIComponents();
         
-        console.log('BoatMenuScene: Scene creation completed');
+        console.log('BoatMenuScene: Scene created successfully');
     }
 
     createSceneBackground(width, height) {
@@ -415,8 +294,8 @@ export default class BoatMenuScene extends Phaser.Scene {
             this.openTravelMenu();
         }, 0x00aaff);
         
-        // Create DOM FISH button instead
-        this.createDOMFishButton(50 + buttonSpacing * 1, buttonY);
+        // Create DOM FISH button in lower right position (moved left 200px total)
+        this.createDOMFishButton(width - 330, buttonY + 160);
         
         // Cabin button
         this.buttons.cabin = this.createActionButton(50 + buttonSpacing * 2, buttonY, 'CABIN', () => {
@@ -2073,74 +1952,190 @@ export default class BoatMenuScene extends Phaser.Scene {
         }
     }
 
+    /**
+     * Create DOM-based FISH button for enhanced interaction
+     */
     createDOMFishButton(x, y) {
-        // Create DOM button element
-        const fishButton = document.createElement('button');
-        fishButton.textContent = 'FISH';
-        fishButton.id = 'dom-fish-button';
+        console.log('BoatMenuScene: Creating DOM FISH button at', x, y);
         
-        // Style the button to match Phaser button design
-        fishButton.style.cssText = `
-            position: absolute;
-            left: ${x - 60 + 270}px;
-            top: ${y - 20 + 200}px;
-            width: 120px;
-            height: 40px;
-            background: linear-gradient(to bottom, #00ff66, #00cc66);
-            border: 2px solid #00aa44;
-            border-radius: 10px;
-            color: white;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            font-weight: bold;
-            text-shadow: 1px 1px 2px black;
-            cursor: pointer;
-            z-index: 1000;
-            pointer-events: auto;
-            transition: all 0.1s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        // Remove existing button if it exists
+        if (this.domFishButton) {
+            this.domFishButton.remove();
+            this.domFishButton = null;
+        }
+        
+        // Create the DOM button
+        this.domFishButton = document.createElement('button');
+        this.domFishButton.innerHTML = '🎣 FISH';
+        this.domFishButton.id = 'boatmenu-fish-button';
+        
+        // Enhanced styling for underwater theme
+        Object.assign(this.domFishButton.style, {
+            position: 'absolute',
+            left: x + 'px',
+            top: y + 'px',
+            width: '120px',
+            height: '50px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            fontFamily: 'Arial Black, Arial, sans-serif',
+            color: '#ffffff',
+            background: 'linear-gradient(135deg, #0077be 0%, #004d7a 50%, #002a44 100%)',
+            border: '3px solid #00bfff',
+            borderRadius: '15px',
+            cursor: 'pointer',
+            zIndex: '1000',
+            boxShadow: '0 6px 15px rgba(0, 119, 190, 0.4), inset 0 2px 5px rgba(255, 255, 255, 0.2)',
+            textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
+            transform: 'translateX(-50%)',
+            transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+            backgroundSize: '200% 200%',
+            animation: 'ocean-wave 3s ease-in-out infinite alternate'
+        });
+        
+        // Add ocean wave animation
+        const waveAnimation = `
+            @keyframes ocean-wave {
+                0% { background-position: 0% 50%; }
+                100% { background-position: 100% 50%; }
+            }
         `;
         
-        // Add hover effects
-        fishButton.addEventListener('mouseenter', () => {
-            fishButton.style.background = 'linear-gradient(to bottom, #00dd55, #00aa44)';
-            fishButton.style.transform = 'scale(1.05)';
-            fishButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.4)';
+        if (!document.querySelector('#ocean-wave-animation')) {
+            const style = document.createElement('style');
+            style.id = 'ocean-wave-animation';
+            style.textContent = waveAnimation;
+            document.head.appendChild(style);
+        }
+        
+        // Enhanced hover effects
+        this.domFishButton.addEventListener('mouseenter', () => {
+            Object.assign(this.domFishButton.style, {
+                transform: 'translateX(-50%) translateY(-3px) scale(1.05)',
+                boxShadow: '0 8px 20px rgba(0, 191, 255, 0.6), inset 0 3px 8px rgba(255, 255, 255, 0.3)',
+                background: 'linear-gradient(135deg, #00bfff 0%, #0077be 50%, #004d7a 100%)',
+                borderColor: '#40e0d0'
+            });
         });
         
-        fishButton.addEventListener('mouseleave', () => {
-            fishButton.style.background = 'linear-gradient(to bottom, #00ff66, #00cc66)';
-            fishButton.style.transform = 'scale(1)';
-            fishButton.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+        this.domFishButton.addEventListener('mouseleave', () => {
+            Object.assign(this.domFishButton.style, {
+                transform: 'translateX(-50%) translateY(0) scale(1)',
+                boxShadow: '0 6px 15px rgba(0, 119, 190, 0.4), inset 0 2px 5px rgba(255, 255, 255, 0.2)',
+                background: 'linear-gradient(135deg, #0077be 0%, #004d7a 50%, #002a44 100%)',
+                borderColor: '#00bfff'
+            });
         });
         
-        // Add click effect and functionality
-        fishButton.addEventListener('mousedown', () => {
-            fishButton.style.transform = 'scale(0.95)';
-            fishButton.style.background = 'linear-gradient(to bottom, #00aa44, #008844)';
+        // Click event
+        this.domFishButton.addEventListener('click', () => {
+            console.log('BoatMenuScene: DOM FISH button clicked');
+            this.startFishing();
         });
         
-        fishButton.addEventListener('mouseup', () => {
-            fishButton.style.transform = 'scale(1.05)';
-            fishButton.style.background = 'linear-gradient(to bottom, #00dd55, #00aa44)';
-        });
+        // Add to document
+        document.body.appendChild(this.domFishButton);
+        console.log('BoatMenuScene: DOM FISH button created and added to document');
+    }
+
+    /**
+     * Create Mia's portrait display in the center of the screen
+     */
+    createMiaPortraitDisplay(width, height) {
+        console.log('BoatMenuScene: Creating Mia portrait display on right side');
         
-        // Add click handler
-        fishButton.addEventListener('click', () => {
-            try {
-                this.startFishing();
+        // Right side position
+        const portraitX = width - 150;  // 150px from right edge
+        const portraitY = height / 2;   // Centered vertically
+        
+        // Create background frame for the portrait
+        const portraitFrame = this.add.graphics();
+        portraitFrame.fillStyle(0xffd700, 0.9); // Gold frame
+        portraitFrame.fillRoundedRect(portraitX - 102, portraitY - 152, 204, 304, 15);
+        portraitFrame.lineStyle(4, 0xb8860b, 1);
+        portraitFrame.strokeRoundedRect(portraitX - 102, portraitY - 152, 204, 304, 15);
+        portraitFrame.setDepth(5000);
+        
+        // Inner frame
+        const innerFrame = this.add.graphics();
+        innerFrame.fillStyle(0x8B4513, 0.8);
+        innerFrame.fillRoundedRect(portraitX - 95, portraitY - 145, 190, 290, 10);
+        innerFrame.setDepth(5001);
+        
+        // Try to load Mia's actual portrait
+        const portraitKeys = [
+            'mia-portrait', 
+            'portrait-mia', 
+            'mia-full',
+            'mia-portrait-alt',
+            'mia-portrait-public'
+        ];
+        let portraitAdded = false;
+        
+        // Debug: Check all available textures
+        console.log('BoatMenuScene: All available textures:', Object.keys(this.textures.list));
+        console.log('BoatMenuScene: Checking for Mia portrait keys:', portraitKeys);
+        
+        for (const key of portraitKeys) {
+            console.log(`BoatMenuScene: Checking texture key '${key}' - exists: ${this.textures.exists(key)}`);
+            if (this.textures.exists(key)) {
+                try {
+                    console.log(`🎯 BoatMenuScene: Creating Mia portrait with key '${key}'`);
+                    
+                    // Get texture info for debugging
+                    const texture = this.textures.get(key);
+                    console.log(`🔍 BoatMenuScene: Texture '${key}' info:`, {
+                        source: texture.source?.[0]?.image?.src || 'unknown',
+                        width: texture.source?.[0]?.width || 'unknown',
+                        height: texture.source?.[0]?.height || 'unknown',
+                        type: texture.source?.[0]?.image ? 'image' : 'canvas'
+                    });
+                    
+                    const miaPortrait = this.add.image(portraitX, portraitY, key);
+                    miaPortrait.setDisplaySize(180, 280);
+                    miaPortrait.setOrigin(0.5);
+                    miaPortrait.setDepth(5002);
+                    miaPortrait.setVisible(true);
+                    miaPortrait.setAlpha(1);
+                    
+                    console.log(`✅ BoatMenuScene: Mia portrait '${key}' created successfully on right side - size: ${miaPortrait.displayWidth}x${miaPortrait.displayHeight}, position: (${miaPortrait.x}, ${miaPortrait.y}), depth: ${miaPortrait.depth}`);
+                    
+                    portraitAdded = true;
+                    break;
             } catch (error) {
-                console.error('DOM Fish Button: Error starting fishing:', error);
+                    console.error(`❌ BoatMenuScene: Error creating portrait with key '${key}':`, error);
+                }
             }
+        }
+        
+        // Fallback if no actual portrait found
+        if (!portraitAdded) {
+            console.log('BoatMenuScene: No actual portrait found, creating fallback');
+            const fallbackText = this.add.text(portraitX, portraitY, 'MIA', {
+                fontSize: '64px',
+                fontFamily: 'Georgia, serif',
+                fill: '#ffd700',
+                fontStyle: 'bold',
+                stroke: '#8B4513',
+                strokeThickness: 3
+            });
+            fallbackText.setOrigin(0.5);
+            fallbackText.setDepth(5002);
+        }
+        
+        // Add title below the portrait
+        const titleText = this.add.text(portraitX, portraitY + 180, 'Bikini Assistant Mia', {
+            fontSize: '24px',
+            fontFamily: 'Georgia, serif',
+            fill: '#ffd700',
+            fontStyle: 'bold',
+            stroke: '#8B4513',
+            strokeThickness: 2
         });
+        titleText.setOrigin(0.5);
+        titleText.setDepth(5003);
         
-        // Add to DOM
-        document.body.appendChild(fishButton);
-        
-        // Store reference for cleanup
-        this.domFishButton = fishButton;
-        
-        console.log('BoatMenuScene: DOM FISH button created');
+        console.log('BoatMenuScene: Mia portrait display created on right side of screen');
     }
 
     hideFishButton() {

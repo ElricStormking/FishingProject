@@ -1,0 +1,67 @@
+{
+  "timeModifiers": [
+    {
+      "period": "dawn",
+      "biteRateMod": 15,
+      "rareFishChanceMod": 5,
+      "fishDetectionMod": 0,
+      "description": "Early morning prime fishing time"
+    },
+    {
+      "period": "morning",
+      "biteRateMod": 10,
+      "rareFishChanceMod": 0,
+      "fishDetectionMod": 5,
+      "description": "Good visibility and moderate activity"
+    },
+    {
+      "period": "noon",
+      "biteRateMod": 0,
+      "rareFishChanceMod": 0,
+      "fishDetectionMod": 10,
+      "description": "Bright conditions but lower activity"
+    },
+    {
+      "period": "afternoon",
+      "biteRateMod": 5,
+      "rareFishChanceMod": 0,
+      "fishDetectionMod": 5,
+      "description": "Moderate fishing conditions"
+    },
+    {
+      "period": "evening",
+      "biteRateMod": 10,
+      "rareFishChanceMod": 3,
+      "fishDetectionMod": 0,
+      "description": "Activity increases as day ends"
+    },
+    {
+      "period": "dusk",
+      "biteRateMod": 20,
+      "rareFishChanceMod": 8,
+      "fishDetectionMod": 0,
+      "description": "Prime time as fish feed before dark"
+    },
+    {
+      "period": "night",
+      "biteRateMod": 25,
+      "rareFishChanceMod": 10,
+      "fishDetectionMod": -10,
+      "description": "High activity but reduced visibility"
+    },
+    {
+      "period": "midnight",
+      "biteRateMod": 30,
+      "rareFishChanceMod": 15,
+      "fishDetectionMod": -20,
+      "description": "Peak nocturnal activity"
+    },
+    {
+      "period": "late_night",
+      "biteRateMod": 25,
+      "rareFishChanceMod": 12,
+      "fishDetectionMod": -15,
+      "description": "Late night feeding patterns"
+    }
+  ]
+}

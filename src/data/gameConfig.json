@@ -12,18 +12,7 @@
     "fishingLineAlpha": 0.8,
     "lureScale": 0.8,
     "fishScale": 0.8,
-    "fishCount": 8,
-    "fishSpeedRange": {
-      "min": -30,
-      "max": 30
-    },
-    "fishVerticalSpeedRange": {
-      "min": -20,
-      "max": 20
-    },
-    "fishBounce": 1,
-    "fishWaterAreaTop": 0.4,
-    "fishWaterAreaBottom": 0.75
+    "fishCount": 8
   },
   "spawning": {
     "baseSpawnChance": 100,
@@ -46,26 +35,6 @@
     "crosshairAlpha": 0.8,
     "crosshairLineWidth": 2
   },
-  "boat": {
-    "deckHeight": 0.15,
-    "deckColor": "0x8B4513",
-    "sideWidth": 40,
-    "sideColor": "0x654321",
-    "frontEdgeHeight": 8,
-    "frontEdgeColor": "0x5D4037",
-    "plankSpacing": 60,
-    "plankColor": "0x5D4037",
-    "plankAlpha": 0.3,
-    "rodHolderColor": "0x424242",
-    "rodHolderRadius": 8,
-    "rodHolderHeight": 20,
-    "tackleBoxColor": "0x37474F",
-    "tackleBoxWidth": 60,
-    "tackleBoxHeight": 30,
-    "tackleBoxBorderColor": "0x263238",
-    "rodColor": "0x8D6E63",
-    "rodWidth": 4
-  },
   "experience": {
     "baseExperiencePerFish": 10,
     "levelUpThreshold": 100,
@@ -81,11 +50,22 @@
     "realTimeToGameTime": 1000,
     "autoSaveInterval": 30000
   },
-  "graphics": {
-    "fishAnimationDuration": 1000,
-    "fishAnimationHeight": 50,
-    "splashEffectDuration": 800,
-    "rippleEffectDuration": 1200,
-    "rippleMaxRadius": 50
+  "boat": {
+    "deckColor": "0x8B4513",
+    "deckHeight": 0.18,
+    "sideColor": "0x654321",
+    "sideWidth": 80,
+    "frontEdgeColor": "0x5D4037",
+    "frontEdgeHeight": 5,
+    "plankSpacing": 40,
+    "plankColor": "0x654321",
+    "plankAlpha": 0.3,
+    "rodHolderColor": "0x795548",
+    "rodHolderRadius": 8,
+    "rodHolderHeight": 30,
+    "tackleBoxColor": "0x4E342E",
+    "tackleBoxWidth": 60,
+    "tackleBoxHeight": 40,
+    "tackleBoxBorderColor": "0x3E2723"
   }
-} 
+}

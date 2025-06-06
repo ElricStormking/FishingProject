@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>No Fallback Data Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .pass { background-color: #2d5a27; }
+        .fail { background-color: #5a2727; }
+        .info { background-color: #27355a; }
+        pre {
+            background-color: #2a2a2a;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚫 No Fallback Data Test</h1>
+    <p>This test verifies that all CSV-converted JSON data is loading correctly without any fallback data.</p>
+    
+    <button onclick="runNoFallbackTest()">🔍 Run No Fallback Test</button>
+    <button onclick="testDataLoaderIntegrity()">📊 Test DataLoader Integrity</button>
+    <button onclick="testGameSceneData()">🎮 Test GameScene Data</button>
+    <button onclick="clearResults()">🧹 Clear Results</button>
+    
+    <div id="test-results"></div>
+
+    <script type="module">
+        import { gameDataLoader } from './src/scripts/DataLoader.js';
+        
+        window.gameDataLoader = gameDataLoader;
+        
+        window.runNoFallbackTest = async function() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<div class="info">🔍 Starting No Fallback Data Test...</div>';
+            
+            try {
+                // Initialize the data loader
+                resultsDiv.innerHTML += '<div class="info">📥 Loading all data from DataLoader...</div>';
+                await gameDataLoader.loadAllData();
+                
+                // Check for fallback data
+                const fallbackCheck = gameDataLoader.checkForFallbackData();
+                
+                if (fallbackCheck.usingFallback) {
+                    resultsDiv.innerHTML += '<div class="fail">❌ FALLBACK DATA DETECTED!</div>';
+                    resultsDiv.innerHTML += `<div class="fail">Fallback files: ${fallbackCheck.fallbackFiles.join(', ')}</div>`;
+                    fallbackCheck.warnings.forEach(warning => {
+                        resultsDiv.innerHTML += `<div class="fail">${warning}</div>`;
+                    });
+                } else {
+                    resultsDiv.innerHTML += '<div class="pass">✅ NO FALLBACK DATA - All data loaded from CSV conversions!</div>';
+                    resultsDiv.innerHTML += `<div class="pass">Successfully loaded: ${fallbackCheck.realFiles.join(', ')}</div>`;
+                    
+                    if (fallbackCheck.warnings.length > 0) {
+                        fallbackCheck.warnings.forEach(warning => {
+                            resultsDiv.innerHTML += `<div class="info">${warning}</div>`;
+                        });
+                    }
+                }
+                
+                // Get data summary
+                const summary = gameDataLoader.getDataSummary();
+                resultsDiv.innerHTML += '<div class="info">📊 Data Summary:</div>';
+                resultsDiv.innerHTML += `<pre>${JSON.stringify(summary, null, 2)}</pre>`;
+                
+                resultsDiv.innerHTML += '<div class="pass">✅ No Fallback Data Test Completed!</div>';
+                
+            } catch (error) {
+                resultsDiv.innerHTML += `<div class="fail">❌ Error during test: ${error.message}</div>`;
+                console.error('Test error:', error);
+            }
+        };
+        
+        window.testDataLoaderIntegrity = async function() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML += '<div class="info">🔍 Testing DataLoader integrity...</div>';
+            
+            try {
+                // Test fish data
+                const allFish = gameDataLoader.getAllFish();
+                if (allFish && allFish.length > 0) {
+                    resultsDiv.innerHTML += `<div class="pass">✅ Fish data: ${allFish.length} species loaded</div>`;
+                    resultsDiv.innerHTML += `<div class="info">Sample fish: ${allFish[0].name}</div>`;
+                } else {
+                    resultsDiv.innerHTML += '<div class="fail">❌ No fish data loaded</div>';
+                }
+                
+                // Test equipment data
+                const allRods = gameDataLoader.getAllRods();
+                if (allRods && allRods.length > 0) {
+                    resultsDiv.innerHTML += `<div class="pass">✅ Rod data: ${allRods.length} rods loaded</div>`;
+                    resultsDiv.innerHTML += `<div class="info">Sample rod: ${allRods[0].name}</div>`;
+                } else {
+                    resultsDiv.innerHTML += '<div class="fail">❌ No rod data loaded</div>';
+                }
+                
+                // Test lure data
+                const allLures = gameDataLoader.getAllLures();
+                if (allLures && allLures.length > 0) {
+                    resultsDiv.innerHTML += `<div class="pass">✅ Lure data: ${allLures.length} lures loaded</div>`;
+                    resultsDiv.innerHTML += `<div class="info">Sample lure: ${allLures[0].name}</div>`;
+                } else {
+                    resultsDiv.innerHTML += '<div class="fail">❌ No lure data loaded</div>';
+                }
+                
+                // Test config data
+                const fishingConfig = gameDataLoader.getFishingConfig();
+                if (fishingConfig) {
+                    resultsDiv.innerHTML += '<div class="pass">✅ Fishing config loaded</div>';
+                    resultsDiv.innerHTML += `<pre>Config sample: ${JSON.stringify(fishingConfig, null, 2).substring(0, 200)}...</pre>`;
+                } else {
+                    resultsDiv.innerHTML += '<div class="fail">❌ No fishing config loaded</div>';
+                }
+                
+                resultsDiv.innerHTML += '<div class="pass">✅ DataLoader Integrity Test Completed!</div>';
+                
+            } catch (error) {
+                resultsDiv.innerHTML += `<div class="fail">❌ DataLoader test error: ${error.message}</div>`;
+                console.error('DataLoader test error:', error);
+            }
+        };
+        
+        window.testGameSceneData = function() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML += '<div class="info">🎮 Testing GameScene data usage...</div>';
+            
+            try {
+                // Test if GameScene would have data available
+                const fishingConfig = gameDataLoader.getFishingConfig();
+                const uiConfig = gameDataLoader.getUIConfig();
+                const allFish = gameDataLoader.getAllFish();
+                
+                if (fishingConfig) {
+                    resultsDiv.innerHTML += '<div class="pass">✅ GameScene can access fishing config</div>';
+                } else {
+                    resultsDiv.innerHTML += '<div class="fail">❌ GameScene cannot access fishing config</div>';
+                }
+                
+                if (uiConfig) {
+                    resultsDiv.innerHTML += '<div class="pass">✅ GameScene can access UI config</div>';
+                } else {
+                    resultsDiv.innerHTML += '<div class="fail">❌ GameScene cannot access UI config</div>';
+                }
+                
+                if (allFish && allFish.length > 0) {
+                    resultsDiv.innerHTML += '<div class="pass">✅ GameScene can access fish data for population</div>';
+                } else {
+                    resultsDiv.innerHTML += '<div class="fail">❌ GameScene cannot access fish data</div>';
+                }
+                
+                resultsDiv.innerHTML += '<div class="pass">✅ GameScene Data Test Completed!</div>';
+                
+            } catch (error) {
+                resultsDiv.innerHTML += `<div class="fail">❌ GameScene test error: ${error.message}</div>`;
+                console.error('GameScene test error:', error);
+            }
+        };
+        
+        window.clearResults = function() {
+            document.getElementById('test-results').innerHTML = '';
+        };
+        
+        // Auto-run test when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                window.runNoFallbackTest();
+            }, 1000);
+        });
+    </script>
+</body>
+</html> 

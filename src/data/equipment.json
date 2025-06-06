@@ -14,7 +14,10 @@
         "struggleResistance": 3
       },
       "cost": 200,
-      "craftingMaterials": ["minnow", "minnow"],
+      "craftingMaterials": [
+        "minnow",
+        "minnow"
+      ],
       "craftingTime": 2,
       "description": "Traditional bamboo rod for beginners",
       "unlockLevel": 1
@@ -33,7 +36,10 @@
         "struggleResistance": 6
       },
       "cost": 400,
-      "craftingMaterials": ["perch", "perch"],
+      "craftingMaterials": [
+        "perch",
+        "perch"
+      ],
       "craftingTime": 4,
       "description": "Flexible fiberglass construction",
       "unlockLevel": 5
@@ -52,7 +58,10 @@
         "struggleResistance": 9
       },
       "cost": 800,
-      "craftingMaterials": ["trout", "trout"],
+      "craftingMaterials": [
+        "trout",
+        "trout"
+      ],
       "craftingTime": 6,
       "description": "Lightweight carbon fiber rod",
       "unlockLevel": 10
@@ -71,7 +80,10 @@
         "struggleResistance": 12
       },
       "cost": 1200,
-      "craftingMaterials": ["pike", "pike"],
+      "craftingMaterials": [
+        "pike",
+        "pike"
+      ],
       "craftingTime": 8,
       "description": "Durable steel construction",
       "unlockLevel": 15
@@ -90,7 +102,10 @@
         "struggleResistance": 15
       },
       "cost": 2000,
-      "craftingMaterials": ["salmon", "salmon"],
+      "craftingMaterials": [
+        "salmon",
+        "salmon"
+      ],
       "craftingTime": 10,
       "description": "Premium titanium alloy rod",
       "unlockLevel": 20
@@ -109,7 +124,10 @@
         "struggleResistance": 8
       },
       "cost": 1000,
-      "craftingMaterials": ["bamboo_rod", "bamboo_rod"],
+      "craftingMaterials": [
+        "bamboo_rod",
+        "bamboo_rod"
+      ],
       "craftingTime": 12,
       "description": "Masterfully crafted bamboo rod",
       "unlockLevel": 12
@@ -128,7 +146,10 @@
         "struggleResistance": 12
       },
       "cost": 2000,
-      "craftingMaterials": ["fiberglass_rod", "fiberglass_rod"],
+      "craftingMaterials": [
+        "fiberglass_rod",
+        "fiberglass_rod"
+      ],
       "craftingTime": 14,
       "description": "Enhanced fiberglass with precision guides",
       "unlockLevel": 18
@@ -147,7 +168,10 @@
         "struggleResistance": 18
       },
       "cost": 3000,
-      "craftingMaterials": ["carbon_rod", "carbon_rod"],
+      "craftingMaterials": [
+        "carbon_rod",
+        "carbon_rod"
+      ],
       "craftingTime": 16,
       "description": "High-modulus carbon fiber",
       "unlockLevel": 25
@@ -166,7 +190,10 @@
         "struggleResistance": 25
       },
       "cost": 4000,
-      "craftingMaterials": ["steel_rod", "steel_rod"],
+      "craftingMaterials": [
+        "steel_rod",
+        "steel_rod"
+      ],
       "craftingTime": 18,
       "description": "Forged steel with titanium guides",
       "unlockLevel": 30
@@ -185,7 +212,10 @@
         "struggleResistance": 30
       },
       "cost": 6000,
-      "craftingMaterials": ["titanium_rod", "titanium_rod"],
+      "craftingMaterials": [
+        "titanium_rod",
+        "titanium_rod"
+      ],
       "craftingTime": 20,
       "description": "Aerospace-grade titanium construction",
       "unlockLevel": 35
@@ -202,13 +232,17 @@
         "autoFishingYield": 8,
         "fishDetection": 3,
         "hotspotStability": 10,
-        "companionSlotCapacity": 1,
+        "companionSlots": 1,
         "autoFishingEfficiency": 5,
         "boatDurability": 15,
         "fishtankStorage": 10
       },
       "cost": 500,
-      "craftingMaterials": ["sardine", "sardine", "sardine"],
+      "craftingMaterials": [
+        "sardine",
+        "sardine",
+        "sardine"
+      ],
       "craftingTime": 5,
       "description": "Simple wooden rowboat",
       "unlockLevel": 1
@@ -223,13 +257,17 @@
         "autoFishingYield": 12,
         "fishDetection": 5,
         "hotspotStability": 15,
-        "companionSlotCapacity": 1,
+        "companionSlots": 1,
         "autoFishingEfficiency": 8,
         "boatDurability": 20,
         "fishtankStorage": 15
       },
       "cost": 1000,
-      "craftingMaterials": ["bass", "bass", "bass"],
+      "craftingMaterials": [
+        "bass",
+        "bass",
+        "bass"
+      ],
       "craftingTime": 7,
       "description": "Small motorized fishing boat",
       "unlockLevel": 8
@@ -244,13 +282,17 @@
         "autoFishingYield": 18,
         "fishDetection": 8,
         "hotspotStability": 20,
-        "companionSlotCapacity": 2,
+        "companionSlots": 2,
         "autoFishingEfficiency": 12,
         "boatDurability": 25,
         "fishtankStorage": 20
       },
       "cost": 2000,
-      "craftingMaterials": ["tuna", "tuna", "tuna"],
+      "craftingMaterials": [
+        "tuna",
+        "tuna",
+        "tuna"
+      ],
       "craftingTime": 9,
       "description": "Fast boat with twin engines",
       "unlockLevel": 15
@@ -265,13 +307,17 @@
         "autoFishingYield": 25,
         "fishDetection": 12,
         "hotspotStability": 30,
-        "companionSlotCapacity": 3,
+        "companionSlots": 3,
         "autoFishingEfficiency": 18,
         "boatDurability": 35,
         "fishtankStorage": 30
       },
       "cost": 4000,
-      "craftingMaterials": ["marlin", "marlin", "marlin"],
+      "craftingMaterials": [
+        "marlin",
+        "marlin",
+        "marlin"
+      ],
       "craftingTime": 11,
       "description": "Luxury yacht with premium amenities",
       "unlockLevel": 25
@@ -286,13 +332,17 @@
         "autoFishingYield": 35,
         "fishDetection": 18,
         "hotspotStability": 40,
-        "companionSlotCapacity": 5,
+        "companionSlots": 5,
         "autoFishingEfficiency": 25,
         "boatDurability": 50,
         "fishtankStorage": 50
       },
       "cost": 6000,
-      "craftingMaterials": ["shark", "shark", "shark"],
+      "craftingMaterials": [
+        "shark",
+        "shark",
+        "shark"
+      ],
       "craftingTime": 13,
       "description": "Massive luxury cruise vessel",
       "unlockLevel": 35
@@ -307,13 +357,16 @@
         "autoFishingYield": 15,
         "fishDetection": 6,
         "hotspotStability": 18,
-        "companionSlotCapacity": 2,
+        "companionSlots": 2,
         "autoFishingEfficiency": 10,
         "boatDurability": 25,
         "fishtankStorage": 18
       },
       "cost": 2000,
-      "craftingMaterials": ["rowboat", "rowboat"],
+      "craftingMaterials": [
+        "rowboat",
+        "rowboat"
+      ],
       "craftingTime": 15,
       "description": "Reinforced rowboat with modern fittings",
       "unlockLevel": 12
@@ -328,13 +381,16 @@
         "autoFishingYield": 22,
         "fishDetection": 10,
         "hotspotStability": 25,
-        "companionSlotCapacity": 2,
+        "companionSlots": 2,
         "autoFishingEfficiency": 15,
         "boatDurability": 30,
         "fishtankStorage": 25
       },
       "cost": 3000,
-      "craftingMaterials": ["skiff", "skiff"],
+      "craftingMaterials": [
+        "skiff",
+        "skiff"
+      ],
       "craftingTime": 17,
       "description": "Upgraded skiff with fish finder",
       "unlockLevel": 20
@@ -349,13 +405,16 @@
         "autoFishingYield": 30,
         "fishDetection": 15,
         "hotspotStability": 35,
-        "companionSlotCapacity": 3,
+        "companionSlots": 3,
         "autoFishingEfficiency": 20,
         "boatDurability": 40,
         "fishtankStorage": 35
       },
       "cost": 5000,
-      "craftingMaterials": ["speedboat", "speedboat"],
+      "craftingMaterials": [
+        "speedboat",
+        "speedboat"
+      ],
       "craftingTime": 19,
       "description": "High-performance racing boat",
       "unlockLevel": 28
@@ -370,13 +429,16 @@
         "autoFishingYield": 45,
         "fishDetection": 22,
         "hotspotStability": 50,
-        "companionSlotCapacity": 4,
+        "companionSlots": 4,
         "autoFishingEfficiency": 30,
         "boatDurability": 60,
         "fishtankStorage": 45
       },
       "cost": 8000,
-      "craftingMaterials": ["yacht", "yacht"],
+      "craftingMaterials": [
+        "yacht",
+        "yacht"
+      ],
       "craftingTime": 21,
       "description": "Superyacht with advanced technology",
       "unlockLevel": 38
@@ -391,13 +453,16 @@
         "autoFishingYield": 60,
         "fishDetection": 30,
         "hotspotStability": 65,
-        "companionSlotCapacity": 6,
+        "companionSlots": 6,
         "autoFishingEfficiency": 40,
         "boatDurability": 80,
         "fishtankStorage": 70
       },
       "cost": 12000,
-      "craftingMaterials": ["luxury_liner", "luxury_liner"],
+      "craftingMaterials": [
+        "luxury_liner",
+        "luxury_liner"
+      ],
       "craftingTime": 23,
       "description": "Ultimate floating palace",
       "unlockLevel": 45
@@ -415,7 +480,10 @@
         "sunProtection": 10
       },
       "cost": 400,
-      "craftingMaterials": ["trout", "trout"],
+      "craftingMaterials": [
+        "trout",
+        "trout"
+      ],
       "craftingTime": 3,
       "description": "Classic fishing cap with sun protection",
       "unlockLevel": 2
@@ -431,7 +499,10 @@
         "style": 5
       },
       "cost": 600,
-      "craftingMaterials": ["pike", "pike"],
+      "craftingMaterials": [
+        "pike",
+        "pike"
+      ],
       "craftingTime": 5,
       "description": "Polarized sunglasses for better vision",
       "unlockLevel": 5
@@ -447,7 +518,10 @@
         "convenience": 10
       },
       "cost": 800,
-      "craftingMaterials": ["salmon", "salmon"],
+      "craftingMaterials": [
+        "salmon",
+        "salmon"
+      ],
       "craftingTime": 7,
       "description": "Multi-pocket vest for tackle storage",
       "unlockLevel": 8
@@ -463,7 +537,10 @@
         "comfort": 8
       },
       "cost": 1000,
-      "craftingMaterials": ["bass", "bass"],
+      "craftingMaterials": [
+        "bass",
+        "bass"
+      ],
       "craftingTime": 9,
       "description": "Stylish bikini top for luxury fishing",
       "unlockLevel": 10
@@ -479,7 +556,10 @@
         "stability": 5
       },
       "cost": 1200,
-      "craftingMaterials": ["perch", "perch"],
+      "craftingMaterials": [
+        "perch",
+        "perch"
+      ],
       "craftingTime": 11,
       "description": "Non-slip deck sandals",
       "unlockLevel": 3
@@ -496,7 +576,10 @@
         "weatherResistance": 10
       },
       "cost": 1500,
-      "craftingMaterials": ["fishers_cap", "fishers_cap"],
+      "craftingMaterials": [
+        "fishers_cap",
+        "fishers_cap"
+      ],
       "craftingTime": 13,
       "description": "Premium cap with advanced materials",
       "unlockLevel": 15
@@ -513,7 +596,10 @@
         "nightVision": 5
       },
       "cost": 2000,
-      "craftingMaterials": ["sunglasses", "sunglasses"],
+      "craftingMaterials": [
+        "sunglasses",
+        "sunglasses"
+      ],
       "craftingTime": 15,
       "description": "Designer sunglasses with fish-spotting tech",
       "unlockLevel": 20
@@ -530,7 +616,10 @@
         "organization": 15
       },
       "cost": 2500,
-      "craftingMaterials": ["fishing_vest", "fishing_vest"],
+      "craftingMaterials": [
+        "fishing_vest",
+        "fishing_vest"
+      ],
       "craftingTime": 17,
       "description": "Professional vest with smart organization",
       "unlockLevel": 25
@@ -547,27 +636,13 @@
         "confidence": 10
       },
       "cost": 3000,
-      "craftingMaterials": ["bikini_top", "bikini_top"],
+      "craftingMaterials": [
+        "bikini_top",
+        "bikini_top"
+      ],
       "craftingTime": 19,
       "description": "Designer bikini with luxury materials",
       "unlockLevel": 30
-    },
-    {
-      "id": "elite_sandals",
-      "name": "Elite Sandals",
-      "rarity": 3,
-      "equipSlot": "lower_body",
-      "stats": {
-        "boatSpeed": 8,
-        "comfort": 25,
-        "stability": 15,
-        "durability": 12
-      },
-      "cost": 3500,
-      "craftingMaterials": ["sandals", "sandals"],
-      "craftingTime": 21,
-      "description": "Premium deck shoes with grip technology",
-      "unlockLevel": 18
     },
     {
       "id": "master_fishers_cap",
@@ -578,11 +653,13 @@
         "energy": 25,
         "castAccuracy": 18,
         "sunProtection": 40,
-        "weatherResistance": 25,
-        "luck": 5
+        "weatherResistance": 25
       },
       "cost": 4000,
-      "craftingMaterials": ["elite_fishers_cap", "elite_fishers_cap"],
+      "craftingMaterials": [
+        "elite_fishers_cap",
+        "elite_fishers_cap"
+      ],
       "craftingTime": 23,
       "description": "Legendary cap worn by master anglers",
       "unlockLevel": 35
@@ -596,11 +673,13 @@
         "fishDetection": 35,
         "glareReduction": 50,
         "style": 25,
-        "nightVision": 15,
-        "thermalVision": 10
+        "nightVision": 15
       },
       "cost": 4500,
-      "craftingMaterials": ["elite_sunglasses", "elite_sunglasses"],
+      "craftingMaterials": [
+        "elite_sunglasses",
+        "elite_sunglasses"
+      ],
       "craftingTime": 25,
       "description": "High-tech glasses with fish tracking",
       "unlockLevel": 40
@@ -614,11 +693,13 @@
         "storage": 70,
         "lureSuccess": 30,
         "convenience": 40,
-        "organization": 30,
-        "autoSort": 20
+        "organization": 30
       },
       "cost": 5000,
-      "craftingMaterials": ["elite_fishing_vest", "elite_fishing_vest"],
+      "craftingMaterials": [
+        "elite_fishing_vest",
+        "elite_fishing_vest"
+      ],
       "craftingTime": 27,
       "description": "AI-powered vest with auto-organization",
       "unlockLevel": 42
@@ -632,32 +713,396 @@
         "companionAffinity": 50,
         "style": 60,
         "comfort": 35,
-        "confidence": 25,
-        "charisma": 15
+        "confidence": 25
       },
       "cost": 5500,
-      "craftingMaterials": ["elite_bikini_top", "elite_bikini_top"],
+      "craftingMaterials": [
+        "elite_bikini_top",
+        "elite_bikini_top"
+      ],
       "craftingTime": 29,
       "description": "Enchanted bikini that captivates all",
       "unlockLevel": 45
+    }
+  ],
+  "lures": [
+    {
+      "id": "basic_spinner",
+      "name": "Basic Spinner",
+      "lureType": "spinner",
+      "rarity": 1,
+      "equipSlot": "lure",
+      "stats": {
+        "biteRate": 20,
+        "lureSuccess": 15,
+        "durability": 5,
+        "precision": 5
+      },
+      "cost": 300,
+      "craftingMaterials": [
+        "perch",
+        "perch"
+      ],
+      "craftingTime": 2,
+      "description": "Simple spinning lure for beginners",
+      "unlockLevel": 1
     },
     {
-      "id": "master_sandals",
-      "name": "Master Sandals",
-      "rarity": 5,
-      "equipSlot": "lower_body",
+      "id": "silver_spinner",
+      "name": "Silver Spinner",
+      "lureType": "spinner",
+      "rarity": 2,
+      "equipSlot": "lure",
       "stats": {
-        "boatSpeed": 20,
-        "comfort": 50,
-        "stability": 30,
-        "durability": 25,
-        "waterWalk": 10
+        "biteRate": 25,
+        "lureSuccess": 20,
+        "durability": 8,
+        "precision": 7
       },
-      "cost": 6000,
-      "craftingMaterials": ["elite_sandals", "elite_sandals"],
-      "craftingTime": 31,
-      "description": "Mystical sandals that glide on water",
-      "unlockLevel": 48
+      "cost": 500,
+      "craftingMaterials": [
+        "bass",
+        "bass"
+      ],
+      "craftingTime": 4,
+      "description": "Reflective spinner with enhanced flash",
+      "unlockLevel": 5
+    },
+    {
+      "id": "gold_spinner",
+      "name": "Gold Spinner",
+      "lureType": "spinner",
+      "rarity": 3,
+      "equipSlot": "lure",
+      "stats": {
+        "biteRate": 30,
+        "lureSuccess": 25,
+        "durability": 12,
+        "precision": 10
+      },
+      "cost": 800,
+      "craftingMaterials": [
+        "pike",
+        "pike"
+      ],
+      "craftingTime": 6,
+      "description": "Premium gold-plated spinner",
+      "unlockLevel": 10
+    },
+    {
+      "id": "elite_spinner",
+      "name": "Elite Spinner",
+      "lureType": "spinner",
+      "rarity": 4,
+      "equipSlot": "lure",
+      "stats": {
+        "biteRate": 40,
+        "lureSuccess": 35,
+        "durability": 18,
+        "precision": 15
+      },
+      "cost": 1500,
+      "craftingMaterials": [
+        "basic_spinner",
+        "basic_spinner"
+      ],
+      "craftingTime": 12,
+      "description": "High-performance spinner with perfect balance",
+      "unlockLevel": 20
+    },
+    {
+      "id": "master_spinner",
+      "name": "Master Spinner",
+      "lureType": "spinner",
+      "rarity": 5,
+      "equipSlot": "lure",
+      "stats": {
+        "biteRate": 60,
+        "lureSuccess": 50,
+        "durability": 25,
+        "precision": 20
+      },
+      "cost": 4000,
+      "craftingMaterials": [
+        "elite_spinner",
+        "elite_spinner"
+      ],
+      "craftingTime": 22,
+      "description": "Ultimate spinner with magnetic attraction",
+      "unlockLevel": 35
+    },
+    {
+      "id": "legendary_spinner",
+      "name": "Legendary Spinner",
+      "lureType": "spinner",
+      "rarity": 6,
+      "equipSlot": "lure",
+      "stats": {
+        "biteRate": 80,
+        "lureSuccess": 65,
+        "durability": 35,
+        "precision": 30
+      },
+      "cost": 8000,
+      "craftingMaterials": [
+        "master_spinner",
+        "master_spinner"
+      ],
+      "craftingTime": 30,
+      "description": "Mythical spinner that attracts legendary fish",
+      "unlockLevel": 50
+    },
+    {
+      "id": "soft_worm",
+      "name": "Soft Worm",
+      "lureType": "soft_plastic",
+      "rarity": 1,
+      "equipSlot": "lure",
+      "stats": {
+        "biteRate": 25,
+        "lureSuccess": 20,
+        "durability": 8,
+        "precision": 6
+      },
+      "cost": 500,
+      "craftingMaterials": [
+        "catfish",
+        "catfish"
+      ],
+      "craftingTime": 4,
+      "description": "Flexible worm that moves naturally",
+      "unlockLevel": 3
+    },
+    {
+      "id": "grub_tail",
+      "name": "Grub Tail",
+      "lureType": "soft_plastic",
+      "rarity": 2,
+      "equipSlot": "lure",
+      "stats": {
+        "biteRate": 30,
+        "lureSuccess": 25,
+        "durability": 12,
+        "precision": 8
+      },
+      "cost": 700,
+      "craftingMaterials": [
+        "bass",
+        "bass"
+      ],
+      "craftingTime": 6,
+      "description": "Curly tail creates enticing action",
+      "unlockLevel": 8
+    },
+    {
+      "id": "shad_body",
+      "name": "Shad Body",
+      "lureType": "soft_plastic",
+      "rarity": 3,
+      "equipSlot": "lure",
+      "stats": {
+        "biteRate": 35,
+        "lureSuccess": 30,
+        "durability": 15,
+        "precision": 12
+      },
+      "cost": 1000,
+      "craftingMaterials": [
+        "salmon",
+        "salmon"
+      ],
+      "craftingTime": 8,
+      "description": "Realistic baitfish imitation",
+      "unlockLevel": 15
+    },
+    {
+      "id": "dry_fly",
+      "name": "Dry Fly",
+      "lureType": "fly",
+      "rarity": 1,
+      "equipSlot": "lure",
+      "stats": {
+        "biteRate": 30,
+        "lureSuccess": 25,
+        "durability": 6,
+        "precision": 8
+      },
+      "cost": 700,
+      "craftingMaterials": [
+        "trout",
+        "trout"
+      ],
+      "craftingTime": 6,
+      "description": "Classic surface fly for trout",
+      "unlockLevel": 5
+    },
+    {
+      "id": "wet_fly",
+      "name": "Wet Fly",
+      "lureType": "fly",
+      "rarity": 2,
+      "equipSlot": "lure",
+      "stats": {
+        "biteRate": 35,
+        "lureSuccess": 30,
+        "durability": 10,
+        "precision": 12
+      },
+      "cost": 900,
+      "craftingMaterials": [
+        "salmon",
+        "salmon"
+      ],
+      "craftingTime": 8,
+      "description": "Subsurface fly that mimics emerging insects",
+      "unlockLevel": 12
+    },
+    {
+      "id": "streamer_fly",
+      "name": "Streamer Fly",
+      "lureType": "fly",
+      "rarity": 3,
+      "equipSlot": "lure",
+      "stats": {
+        "biteRate": 40,
+        "lureSuccess": 35,
+        "durability": 14,
+        "precision": 15
+      },
+      "cost": 1200,
+      "craftingMaterials": [
+        "pike",
+        "pike"
+      ],
+      "craftingTime": 10,
+      "description": "Large fly that imitates small fish",
+      "unlockLevel": 18
+    },
+    {
+      "id": "basic_popper",
+      "name": "Basic Popper",
+      "lureType": "popper",
+      "rarity": 1,
+      "equipSlot": "lure",
+      "stats": {
+        "biteRate": 22,
+        "lureSuccess": 18,
+        "durability": 7,
+        "precision": 6
+      },
+      "cost": 400,
+      "craftingMaterials": [
+        "bass",
+        "bass"
+      ],
+      "craftingTime": 3,
+      "description": "Simple surface popper for aggressive fish",
+      "unlockLevel": 2
+    },
+    {
+      "id": "chugger_popper",
+      "name": "Chugger Popper",
+      "lureType": "popper",
+      "rarity": 2,
+      "equipSlot": "lure",
+      "stats": {
+        "biteRate": 28,
+        "lureSuccess": 23,
+        "durability": 11,
+        "precision": 9
+      },
+      "cost": 600,
+      "craftingMaterials": [
+        "pike",
+        "pike"
+      ],
+      "craftingTime": 5,
+      "description": "Creates loud chugging sounds",
+      "unlockLevel": 7
+    },
+    {
+      "id": "walker_popper",
+      "name": "Walker Popper",
+      "lureType": "popper",
+      "rarity": 3,
+      "equipSlot": "lure",
+      "stats": {
+        "biteRate": 34,
+        "lureSuccess": 28,
+        "durability": 16,
+        "precision": 13
+      },
+      "cost": 900,
+      "craftingMaterials": [
+        "salmon",
+        "salmon"
+      ],
+      "craftingTime": 7,
+      "description": "Walks side-to-side on surface",
+      "unlockLevel": 14
+    },
+    {
+      "id": "basic_spoon",
+      "name": "Basic Spoon",
+      "lureType": "spoon",
+      "rarity": 1,
+      "equipSlot": "lure",
+      "stats": {
+        "biteRate": 28,
+        "lureSuccess": 22,
+        "durability": 10,
+        "precision": 8
+      },
+      "cost": 600,
+      "craftingMaterials": [
+        "salmon",
+        "salmon"
+      ],
+      "craftingTime": 5,
+      "description": "Classic metal spoon with wobbling action",
+      "unlockLevel": 4
+    },
+    {
+      "id": "casting_spoon",
+      "name": "Casting Spoon",
+      "lureType": "spoon",
+      "rarity": 2,
+      "equipSlot": "lure",
+      "stats": {
+        "biteRate": 33,
+        "lureSuccess": 27,
+        "durability": 14,
+        "precision": 11
+      },
+      "cost": 800,
+      "craftingMaterials": [
+        "tuna",
+        "tuna"
+      ],
+      "craftingTime": 7,
+      "description": "Heavy spoon for long-distance casting",
+      "unlockLevel": 9
+    },
+    {
+      "id": "jigging_spoon",
+      "name": "Jigging Spoon",
+      "lureType": "spoon",
+      "rarity": 3,
+      "equipSlot": "lure",
+      "stats": {
+        "biteRate": 38,
+        "lureSuccess": 32,
+        "durability": 18,
+        "precision": 15
+      },
+      "cost": 1100,
+      "craftingMaterials": [
+        "pike",
+        "pike"
+      ],
+      "craftingTime": 9,
+      "description": "Vertical jigging spoon for deep water",
+      "unlockLevel": 16
     }
   ]
-} 
+}

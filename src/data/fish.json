@@ -13,11 +13,17 @@
       "depthPreference": 2,
       "baitPreference": 9,
       "endurance": 2,
-      "activeTimePeriod": ["morning", "afternoon"],
-      "weatherPreference": ["sunny", "cloudy"],
+      "activeTimePeriod": [
+        "morning",
+        "afternoon"
+      ],
+      "weatherPreference": [
+        "sunny",
+        "cloudy"
+      ],
       "coinValue": 40,
       "experienceValue": 8,
-      "description": "A small, colorful fish perfect for beginners",
+      "description": "A small colorful fish perfect for beginners",
       "habitat": "shallow_water",
       "struggleStyle": "gentle_pull"
     },
@@ -34,8 +40,14 @@
       "depthPreference": 4,
       "baitPreference": 7,
       "endurance": 6,
-      "activeTimePeriod": ["morning", "afternoon"],
-      "weatherPreference": ["sunny", "cloudy"],
+      "activeTimePeriod": [
+        "morning",
+        "afternoon"
+      ],
+      "weatherPreference": [
+        "sunny",
+        "cloudy"
+      ],
       "coinValue": 350,
       "experienceValue": 50,
       "description": "A popular sport fish with strong fighting ability",
@@ -55,8 +67,14 @@
       "depthPreference": 4,
       "baitPreference": 10,
       "endurance": 4,
-      "activeTimePeriod": ["dawn", "dusk"],
-      "weatherPreference": ["cloudy", "rainy"],
+      "activeTimePeriod": [
+        "dawn",
+        "dusk"
+      ],
+      "weatherPreference": [
+        "cloudy",
+        "rainy"
+      ],
       "coinValue": 200,
       "experienceValue": 35,
       "description": "A prized freshwater fish that prefers fly lures",
@@ -76,8 +94,15 @@
       "depthPreference": 3,
       "baitPreference": 7,
       "endurance": 3,
-      "activeTimePeriod": ["morning", "afternoon", "evening"],
-      "weatherPreference": ["sunny", "cloudy"],
+      "activeTimePeriod": [
+        "morning",
+        "afternoon",
+        "evening"
+      ],
+      "weatherPreference": [
+        "sunny",
+        "cloudy"
+      ],
       "coinValue": 100,
       "experienceValue": 20,
       "description": "A striped freshwater fish with moderate fighting spirit",
@@ -97,11 +122,16 @@
       "depthPreference": 2,
       "baitPreference": 8,
       "endurance": 3,
-      "activeTimePeriod": ["morning", "afternoon"],
-      "weatherPreference": ["sunny"],
+      "activeTimePeriod": [
+        "morning",
+        "afternoon"
+      ],
+      "weatherPreference": [
+        "sunny"
+      ],
       "coinValue": 60,
       "experienceValue": 12,
-      "description": "A bright, active fish that loves sunny weather",
+      "description": "A bright active fish that loves sunny weather",
       "habitat": "shallow_water",
       "struggleStyle": "rapid_thrashing"
     },
@@ -118,8 +148,13 @@
       "depthPreference": 8,
       "baitPreference": 9,
       "endurance": 7,
-      "activeTimePeriod": ["night", "dawn"],
-      "weatherPreference": ["rainy"],
+      "activeTimePeriod": [
+        "night",
+        "dawn"
+      ],
+      "weatherPreference": [
+        "rainy"
+      ],
       "coinValue": 300,
       "experienceValue": 45,
       "description": "A bottom-dwelling fish with incredible strength",
@@ -139,8 +174,13 @@
       "depthPreference": 5,
       "baitPreference": 6,
       "endurance": 5,
-      "activeTimePeriod": ["morning", "evening"],
-      "weatherPreference": ["sunny"],
+      "activeTimePeriod": [
+        "morning",
+        "evening"
+      ],
+      "weatherPreference": [
+        "sunny"
+      ],
       "coinValue": 400,
       "experienceValue": 60,
       "description": "An aggressive predator with sharp teeth",
@@ -160,13 +200,18 @@
       "depthPreference": 6,
       "baitPreference": 8,
       "endurance": 5,
-      "activeTimePeriod": ["dusk", "night"],
-      "weatherPreference": ["cloudy"],
+      "activeTimePeriod": [
+        "dusk",
+        "night"
+      ],
+      "weatherPreference": [
+        "cloudy"
+      ],
       "coinValue": 250,
       "experienceValue": 40,
       "description": "A nocturnal predator with excellent eyesight",
       "habitat": "mid_water",
-      "struggleStyle": "steady_fight"
+      "struggleStyle": "steady_pull"
     },
     {
       "id": "crappie",
@@ -181,13 +226,18 @@
       "depthPreference": 4,
       "baitPreference": 8,
       "endurance": 3,
-      "activeTimePeriod": ["morning", "evening"],
-      "weatherPreference": ["cloudy"],
+      "activeTimePeriod": [
+        "morning",
+        "evening"
+      ],
+      "weatherPreference": [
+        "cloudy"
+      ],
       "coinValue": 120,
       "experienceValue": 25,
       "description": "A schooling fish that travels in groups",
       "habitat": "shallow_water",
-      "struggleStyle": "quick_darts"
+      "struggleStyle": "rapid_thrashing"
     },
     {
       "id": "carp",
@@ -202,15 +252,21 @@
       "depthPreference": 6,
       "baitPreference": 7,
       "endurance": 8,
-      "activeTimePeriod": ["morning", "afternoon", "evening"],
-      "weatherPreference": ["cloudy", "rainy"],
+      "activeTimePeriod": [
+        "morning",
+        "afternoon",
+        "evening"
+      ],
+      "weatherPreference": [
+        "cloudy",
+        "rainy"
+      ],
       "coinValue": 280,
       "experienceValue": 42,
       "description": "A hardy fish with impressive endurance",
       "habitat": "lake",
-      "struggleStyle": "long_fight"
+      "struggleStyle": "long_sprint"
     },
-
     {
       "id": "sea_bass",
       "name": "Striped Sea Bass",
@@ -224,8 +280,14 @@
       "depthPreference": 5,
       "baitPreference": 7,
       "endurance": 6,
-      "activeTimePeriod": ["morning", "afternoon"],
-      "weatherPreference": ["sunny", "cloudy"],
+      "activeTimePeriod": [
+        "morning",
+        "afternoon"
+      ],
+      "weatherPreference": [
+        "sunny",
+        "cloudy"
+      ],
       "coinValue": 320,
       "experienceValue": 48,
       "description": "A common harbor fish with distinctive stripes",
@@ -245,13 +307,18 @@
       "depthPreference": 3,
       "baitPreference": 6,
       "endurance": 4,
-      "activeTimePeriod": ["morning", "afternoon"],
-      "weatherPreference": ["sunny"],
+      "activeTimePeriod": [
+        "morning",
+        "afternoon"
+      ],
+      "weatherPreference": [
+        "sunny"
+      ],
       "coinValue": 80,
       "experienceValue": 15,
       "description": "A fast-moving schooling fish",
       "habitat": "saltwater",
-      "struggleStyle": "rapid_swimming"
+      "struggleStyle": "power_run"
     },
     {
       "id": "flounder",
@@ -266,13 +333,18 @@
       "depthPreference": 8,
       "baitPreference": 8,
       "endurance": 5,
-      "activeTimePeriod": ["afternoon", "evening"],
-      "weatherPreference": ["cloudy"],
+      "activeTimePeriod": [
+        "afternoon",
+        "evening"
+      ],
+      "weatherPreference": [
+        "cloudy"
+      ],
       "coinValue": 180,
       "experienceValue": 32,
       "description": "A flatfish that hides on the sea floor",
       "habitat": "saltwater",
-      "struggleStyle": "bottom_struggle"
+      "struggleStyle": "bulldogging"
     },
     {
       "id": "cod",
@@ -287,13 +359,19 @@
       "depthPreference": 7,
       "baitPreference": 7,
       "endurance": 6,
-      "activeTimePeriod": ["morning", "evening"],
-      "weatherPreference": ["cloudy", "rainy"],
+      "activeTimePeriod": [
+        "morning",
+        "evening"
+      ],
+      "weatherPreference": [
+        "cloudy",
+        "rainy"
+      ],
       "coinValue": 380,
       "experienceValue": 55,
       "description": "A valuable commercial fish species",
       "habitat": "saltwater",
-      "struggleStyle": "heavy_pull"
+      "struggleStyle": "deep_dive"
     },
     {
       "id": "salmon",
@@ -308,8 +386,13 @@
       "depthPreference": 6,
       "baitPreference": 8,
       "endurance": 8,
-      "activeTimePeriod": ["dawn", "dusk"],
-      "weatherPreference": ["rainy"],
+      "activeTimePeriod": [
+        "dawn",
+        "dusk"
+      ],
+      "weatherPreference": [
+        "rainy"
+      ],
       "coinValue": 600,
       "experienceValue": 85,
       "description": "A powerful migratory fish with incredible endurance",
@@ -324,60 +407,23 @@
       "aggressiveness": 8,
       "elusiveness": 7,
       "strength": 10,
-      "weight": 45.0,
+      "weight": 45,
       "speed": 9,
       "depthPreference": 7,
       "baitPreference": 6,
       "endurance": 9,
-      "activeTimePeriod": ["morning", "afternoon"],
-      "weatherPreference": ["sunny"],
+      "activeTimePeriod": [
+        "morning",
+        "afternoon"
+      ],
+      "weatherPreference": [
+        "sunny"
+      ],
       "coinValue": 1200,
       "experienceValue": 150,
       "description": "A massive ocean predator with incredible power",
       "habitat": "saltwater",
       "struggleStyle": "power_run"
-    },
-    {
-      "id": "snapper",
-      "name": "Red Snapper",
-      "rarity": 3,
-      "size": 3,
-      "aggressiveness": 6,
-      "elusiveness": 5,
-      "strength": 5,
-      "weight": 3.8,
-      "speed": 5,
-      "depthPreference": 6,
-      "baitPreference": 7,
-      "endurance": 5,
-      "activeTimePeriod": ["afternoon", "evening"],
-      "weatherPreference": ["sunny"],
-      "coinValue": 420,
-      "experienceValue": 62,
-      "description": "An aggressive biter with excellent flavor",
-      "habitat": "saltwater",
-      "struggleStyle": "head_shaking"
-    },
-    {
-      "id": "grouper",
-      "name": "Black Grouper",
-      "rarity": 4,
-      "size": 6,
-      "aggressiveness": 5,
-      "elusiveness": 6,
-      "strength": 8,
-      "weight": 15.5,
-      "speed": 3,
-      "depthPreference": 8,
-      "baitPreference": 6,
-      "endurance": 7,
-      "activeTimePeriod": ["morning", "evening"],
-      "weatherPreference": ["cloudy"],
-      "coinValue": 750,
-      "experienceValue": 110,
-      "description": "A large reef fish with incredible strength",
-      "habitat": "saltwater",
-      "struggleStyle": "rock_fighting"
     },
     {
       "id": "shark",
@@ -387,60 +433,24 @@
       "aggressiveness": 9,
       "elusiveness": 6,
       "strength": 8,
-      "weight": 25.0,
+      "weight": 25,
       "speed": 8,
       "depthPreference": 7,
       "baitPreference": 4,
       "endurance": 8,
-      "activeTimePeriod": ["dawn", "dusk", "night"],
-      "weatherPreference": ["cloudy"],
+      "activeTimePeriod": [
+        "dawn",
+        "dusk",
+        "night"
+      ],
+      "weatherPreference": [
+        "cloudy"
+      ],
       "coinValue": 1500,
       "experienceValue": 200,
       "description": "A dangerous predator requiring skill to catch",
       "habitat": "saltwater",
       "struggleStyle": "circle_fighting"
-    },
-    {
-      "id": "halibut",
-      "name": "Pacific Halibut",
-      "rarity": 4,
-      "size": 8,
-      "aggressiveness": 4,
-      "elusiveness": 7,
-      "strength": 9,
-      "weight": 35.0,
-      "speed": 2,
-      "depthPreference": 9,
-      "baitPreference": 7,
-      "endurance": 9,
-      "activeTimePeriod": ["morning", "afternoon"],
-      "weatherPreference": ["cloudy"],
-      "coinValue": 1000,
-      "experienceValue": 140,
-      "description": "A giant flatfish with massive size potential",
-      "habitat": "saltwater",
-      "struggleStyle": "dead_weight"
-    },
-    {
-      "id": "mahi_mahi",
-      "name": "Mahi-Mahi",
-      "rarity": 4,
-      "size": 4,
-      "aggressiveness": 7,
-      "elusiveness": 6,
-      "strength": 6,
-      "weight": 8.5,
-      "speed": 9,
-      "depthPreference": 5,
-      "baitPreference": 6,
-      "endurance": 6,
-      "activeTimePeriod": ["morning", "afternoon"],
-      "weatherPreference": ["sunny"],
-      "coinValue": 650,
-      "experienceValue": 95,
-      "description": "A colorful tropical fish with acrobatic fights",
-      "habitat": "saltwater",
-      "struggleStyle": "jumping_escape"
     },
     {
       "id": "sailfish",
@@ -450,209 +460,23 @@
       "aggressiveness": 8,
       "elusiveness": 8,
       "strength": 8,
-      "weight": 28.0,
+      "weight": 28,
       "speed": 10,
       "depthPreference": 6,
       "baitPreference": 5,
       "endurance": 7,
-      "activeTimePeriod": ["morning", "afternoon"],
-      "weatherPreference": ["sunny"],
+      "activeTimePeriod": [
+        "morning",
+        "afternoon"
+      ],
+      "weatherPreference": [
+        "sunny"
+      ],
       "coinValue": 1800,
       "experienceValue": 250,
       "description": "The fastest fish in the ocean - a tournament favorite",
       "habitat": "saltwater",
       "struggleStyle": "aerial_acrobatics"
-    },
-
-    {
-      "id": "brook_trout",
-      "name": "Brook Trout",
-      "rarity": 2,
-      "size": 2,
-      "aggressiveness": 5,
-      "elusiveness": 6,
-      "strength": 3,
-      "weight": 0.8,
-      "speed": 6,
-      "depthPreference": 3,
-      "baitPreference": 9,
-      "endurance": 4,
-      "activeTimePeriod": ["dawn", "dusk"],
-      "weatherPreference": ["cloudy", "rainy"],
-      "coinValue": 180,
-      "experienceValue": 30,
-      "description": "A beautiful native mountain trout",
-      "habitat": "mountain_stream",
-      "struggleStyle": "current_fighting"
-    },
-    {
-      "id": "brown_trout",
-      "name": "Brown Trout",
-      "rarity": 3,
-      "size": 3,
-      "aggressiveness": 4,
-      "elusiveness": 8,
-      "strength": 5,
-      "weight": 2.2,
-      "speed": 7,
-      "depthPreference": 4,
-      "baitPreference": 8,
-      "endurance": 5,
-      "activeTimePeriod": ["dawn", "evening"],
-      "weatherPreference": ["cloudy"],
-      "coinValue": 320,
-      "experienceValue": 50,
-      "description": "A wary trout that requires stealth to catch",
-      "habitat": "mountain_stream",
-      "struggleStyle": "cautious_escape"
-    },
-    {
-      "id": "cutthroat_trout",
-      "name": "Cutthroat Trout",
-      "rarity": 4,
-      "size": 3,
-      "aggressiveness": 6,
-      "elusiveness": 7,
-      "strength": 5,
-      "weight": 2.8,
-      "speed": 7,
-      "depthPreference": 4,
-      "baitPreference": 9,
-      "endurance": 6,
-      "activeTimePeriod": ["dawn", "dusk"],
-      "weatherPreference": ["rainy"],
-      "coinValue": 450,
-      "experienceValue": 70,
-      "description": "A rare trout found only in pristine mountain waters",
-      "habitat": "mountain_stream",
-      "struggleStyle": "aggressive_jumps"
-    },
-    {
-      "id": "mountain_whitefish",
-      "name": "Mountain Whitefish",
-      "rarity": 2,
-      "size": 2,
-      "aggressiveness": 3,
-      "elusiveness": 5,
-      "strength": 3,
-      "weight": 1.2,
-      "speed": 5,
-      "depthPreference": 5,
-      "baitPreference": 7,
-      "endurance": 6,
-      "activeTimePeriod": ["morning", "afternoon"],
-      "weatherPreference": ["sunny", "cloudy"],
-      "coinValue": 150,
-      "experienceValue": 25,
-      "description": "A hardy fish that thrives in fast currents",
-      "habitat": "mountain_stream",
-      "struggleStyle": "current_riding"
-    },
-    {
-      "id": "bull_trout",
-      "name": "Bull Trout",
-      "rarity": 5,
-      "size": 5,
-      "aggressiveness": 8,
-      "elusiveness": 7,
-      "strength": 8,
-      "weight": 8.5,
-      "speed": 6,
-      "depthPreference": 6,
-      "baitPreference": 6,
-      "endurance": 8,
-      "activeTimePeriod": ["dawn", "dusk"],
-      "weatherPreference": ["rainy"],
-      "coinValue": 900,
-      "experienceValue": 130,
-      "description": "An apex predator of mountain streams",
-      "habitat": "mountain_stream",
-      "struggleStyle": "power_struggle"
-    },
-    {
-      "id": "golden_trout",
-      "name": "Golden Trout",
-      "rarity": 7,
-      "size": 3,
-      "aggressiveness": 5,
-      "elusiveness": 9,
-      "strength": 6,
-      "weight": 2.5,
-      "speed": 8,
-      "depthPreference": 3,
-      "baitPreference": 10,
-      "endurance": 7,
-      "activeTimePeriod": ["dawn"],
-      "weatherPreference": ["sunny"],
-      "coinValue": 1500,
-      "experienceValue": 220,
-      "description": "A legendary high-altitude trout with golden coloration",
-      "habitat": "mountain_stream",
-      "struggleStyle": "ethereal_dance"
-    },
-    {
-      "id": "arctic_grayling",
-      "name": "Arctic Grayling",
-      "rarity": 4,
-      "size": 2,
-      "aggressiveness": 6,
-      "elusiveness": 7,
-      "strength": 4,
-      "weight": 1.5,
-      "speed": 7,
-      "depthPreference": 3,
-      "baitPreference": 9,
-      "endurance": 5,
-      "activeTimePeriod": ["morning", "evening"],
-      "weatherPreference": ["cloudy"],
-      "coinValue": 380,
-      "experienceValue": 60,
-      "description": "A distinctive fish with a large, colorful dorsal fin",
-      "habitat": "mountain_stream",
-      "struggleStyle": "fin_display"
-    },
-    {
-      "id": "mountain_sucker",
-      "name": "Mountain Sucker",
-      "rarity": 3,
-      "size": 2,
-      "aggressiveness": 2,
-      "elusiveness": 6,
-      "strength": 4,
-      "weight": 0.9,
-      "speed": 3,
-      "depthPreference": 8,
-      "baitPreference": 8,
-      "endurance": 7,
-      "activeTimePeriod": ["morning", "afternoon", "evening"],
-      "weatherPreference": ["any"],
-      "coinValue": 220,
-      "experienceValue": 35,
-      "description": "A bottom-feeding fish adapted to rocky streams",
-      "habitat": "mountain_stream",
-      "struggleStyle": "rock_holding"
-    },
-
-    {
-      "id": "night_bass",
-      "name": "Midnight Bass",
-      "rarity": 2,
-      "size": 4,
-      "aggressiveness": 5,
-      "elusiveness": 6,
-      "strength": 5,
-      "weight": 3.5,
-      "speed": 6,
-      "depthPreference": 4,
-      "baitPreference": 7,
-      "endurance": 6,
-      "activeTimePeriod": ["night", "late_night"],
-      "weatherPreference": ["clear_night"],
-      "coinValue": 400,
-      "experienceValue": 65,
-      "description": "A nocturnal variant of bass with enhanced night vision",
-      "habitat": "mystical_pond",
-      "struggleStyle": "shadow_diving"
     },
     {
       "id": "moonfish",
@@ -667,76 +491,17 @@
       "depthPreference": 3,
       "baitPreference": 9,
       "endurance": 5,
-      "activeTimePeriod": ["night"],
-      "weatherPreference": ["clear_night"],
+      "activeTimePeriod": [
+        "night"
+      ],
+      "weatherPreference": [
+        "clear_night"
+      ],
       "coinValue": 600,
       "experienceValue": 90,
       "description": "A rare fish that glows with soft moonlight",
       "habitat": "mystical_pond",
-      "struggleStyle": "lunar_spiral"
-    },
-    {
-      "id": "shadow_carp",
-      "name": "Shadow Carp",
-      "rarity": 3,
-      "size": 5,
-      "aggressiveness": 3,
-      "elusiveness": 7,
-      "strength": 6,
-      "weight": 4.8,
-      "speed": 4,
-      "depthPreference": 7,
-      "baitPreference": 6,
-      "endurance": 8,
-      "activeTimePeriod": ["night", "late_night"],
-      "weatherPreference": ["misty_night"],
-      "coinValue": 480,
-      "experienceValue": 75,
-      "description": "A dark carp that seems to merge with shadows",
-      "habitat": "mystical_pond",
-      "struggleStyle": "shadow_blend"
-    },
-    {
-      "id": "starlight_trout",
-      "name": "Starlight Trout",
-      "rarity": 5,
-      "size": 3,
-      "aggressiveness": 6,
-      "elusiveness": 9,
-      "strength": 5,
-      "weight": 2.8,
-      "speed": 8,
-      "depthPreference": 4,
-      "baitPreference": 10,
-      "endurance": 6,
-      "activeTimePeriod": ["late_night"],
-      "weatherPreference": ["clear_night"],
-      "coinValue": 850,
-      "experienceValue": 125,
-      "description": "A mystical trout that sparkles like stars",
-      "habitat": "mystical_pond",
-      "struggleStyle": "stellar_dance"
-    },
-    {
-      "id": "vampire_fish",
-      "name": "Vampire Fish",
-      "rarity": 4,
-      "size": 2,
-      "aggressiveness": 9,
-      "elusiveness": 6,
-      "strength": 6,
-      "weight": 1.8,
-      "speed": 9,
-      "depthPreference": 5,
-      "baitPreference": 4,
-      "endurance": 7,
-      "activeTimePeriod": ["night", "late_night"],
-      "weatherPreference": ["misty_night"],
-      "coinValue": 720,
-      "experienceValue": 110,
-      "description": "An aggressive night hunter with razor-sharp teeth",
-      "habitat": "mystical_pond",
-      "struggleStyle": "blood_frenzy"
+      "struggleStyle": "circle_fighting"
     },
     {
       "id": "ghost_pike",
@@ -751,99 +516,43 @@
       "depthPreference": 6,
       "baitPreference": 5,
       "endurance": 8,
-      "activeTimePeriod": ["late_night"],
-      "weatherPreference": ["misty_night"],
+      "activeTimePeriod": [
+        "late_night"
+      ],
+      "weatherPreference": [
+        "misty_night"
+      ],
       "coinValue": 1200,
       "experienceValue": 180,
       "description": "A translucent pike that phases in and out of reality",
       "habitat": "mystical_pond",
-      "struggleStyle": "phase_shifting"
+      "struggleStyle": "jumping_escape"
     },
     {
-      "id": "luna_catfish",
-      "name": "Luna Catfish",
-      "rarity": 3,
-      "size": 4,
-      "aggressiveness": 4,
-      "elusiveness": 5,
-      "strength": 7,
-      "weight": 5.5,
-      "speed": 3,
-      "depthPreference": 8,
-      "baitPreference": 8,
-      "endurance": 9,
-      "activeTimePeriod": ["night"],
-      "weatherPreference": ["clear_night"],
-      "coinValue": 520,
-      "experienceValue": 80,
-      "description": "A mystical catfish whose activity follows lunar phases",
-      "habitat": "mystical_pond",
-      "struggleStyle": "lunar_pull"
-    },
-    {
-      "id": "twilight_perch",
-      "name": "Twilight Perch",
-      "rarity": 2,
-      "size": 2,
+      "id": "golden_trout",
+      "name": "Golden Trout",
+      "rarity": 7,
+      "size": 3,
       "aggressiveness": 5,
-      "elusiveness": 5,
-      "strength": 3,
-      "weight": 0.9,
-      "speed": 6,
+      "elusiveness": 9,
+      "strength": 6,
+      "weight": 2.5,
+      "speed": 8,
       "depthPreference": 3,
-      "baitPreference": 7,
-      "endurance": 4,
-      "activeTimePeriod": ["dusk", "night"],
-      "weatherPreference": ["clear_night"],
-      "coinValue": 280,
-      "experienceValue": 45,
-      "description": "A perch that becomes active during twilight hours",
-      "habitat": "mystical_pond",
-      "struggleStyle": "dusk_dance"
+      "baitPreference": 10,
+      "endurance": 7,
+      "activeTimePeriod": [
+        "dawn"
+      ],
+      "weatherPreference": [
+        "sunny"
+      ],
+      "coinValue": 1500,
+      "experienceValue": 220,
+      "description": "A legendary high-altitude trout with golden coloration",
+      "habitat": "mountain_stream",
+      "struggleStyle": "aerial_acrobatics"
     },
-    {
-      "id": "spectral_eel",
-      "name": "Spectral Eel",
-      "rarity": 5,
-      "size": 4,
-      "aggressiveness": 6,
-      "elusiveness": 9,
-      "strength": 5,
-      "weight": 3.2,
-      "speed": 7,
-      "depthPreference": 9,
-      "baitPreference": 6,
-      "endurance": 8,
-      "activeTimePeriod": ["late_night"],
-      "weatherPreference": ["misty_night"],
-      "coinValue": 780,
-      "experienceValue": 115,
-      "description": "An ethereal eel that moves through water and mist",
-      "habitat": "mystical_pond",
-      "struggleStyle": "ethereal_coil"
-    },
-    {
-      "id": "cosmic_bass",
-      "name": "Cosmic Bass",
-      "rarity": 8,
-      "size": 4,
-      "aggressiveness": 8,
-      "elusiveness": 9,
-      "strength": 8,
-      "weight": 4.5,
-      "speed": 9,
-      "depthPreference": 5,
-      "baitPreference": 3,
-      "endurance": 9,
-      "activeTimePeriod": ["late_night"],
-      "weatherPreference": ["clear_night"],
-      "coinValue": 2000,
-      "experienceValue": 300,
-      "description": "A transcendent bass that bends reality itself",
-      "habitat": "mystical_pond",
-      "struggleStyle": "reality_warp"
-    },
-
     {
       "id": "tournament_bass",
       "name": "Tournament Bass",
@@ -857,13 +566,18 @@
       "depthPreference": 5,
       "baitPreference": 8,
       "endurance": 8,
-      "activeTimePeriod": ["morning", "afternoon"],
-      "weatherPreference": ["perfect"],
+      "activeTimePeriod": [
+        "morning",
+        "afternoon"
+      ],
+      "weatherPreference": [
+        "perfect"
+      ],
       "coinValue": 1000,
       "experienceValue": 150,
       "description": "A championship-quality bass bred for competition",
       "habitat": "tournament_waters",
-      "struggleStyle": "champion_fight"
+      "struggleStyle": "violent_thrashing"
     },
     {
       "id": "golden_salmon",
@@ -878,160 +592,18 @@
       "depthPreference": 6,
       "baitPreference": 7,
       "endurance": 9,
-      "activeTimePeriod": ["dawn", "dusk"],
-      "weatherPreference": ["perfect"],
+      "activeTimePeriod": [
+        "dawn",
+        "dusk"
+      ],
+      "weatherPreference": [
+        "perfect"
+      ],
       "coinValue": 1800,
       "experienceValue": 250,
       "description": "A legendary salmon with golden scales",
       "habitat": "tournament_waters",
-      "struggleStyle": "golden_run"
-    },
-    {
-      "id": "diamond_trout",
-      "name": "Diamond Trout",
-      "rarity": 8,
-      "size": 4,
-      "aggressiveness": 6,
-      "elusiveness": 10,
-      "strength": 7,
-      "weight": 4.2,
-      "speed": 10,
-      "depthPreference": 4,
-      "baitPreference": 10,
-      "endurance": 8,
-      "activeTimePeriod": ["dawn"],
-      "weatherPreference": ["perfect"],
-      "coinValue": 2500,
-      "experienceValue": 350,
-      "description": "The perfect specimen - crystalline beauty incarnate",
-      "habitat": "tournament_waters",
-      "struggleStyle": "perfect_form"
-    },
-    {
-      "id": "champion_pike",
-      "name": "Champion Pike",
-      "rarity": 7,
-      "size": 7,
-      "aggressiveness": 9,
-      "elusiveness": 7,
-      "strength": 9,
-      "weight": 12.5,
-      "speed": 8,
-      "depthPreference": 6,
-      "baitPreference": 6,
-      "endurance": 8,
-      "activeTimePeriod": ["morning", "evening"],
-      "weatherPreference": ["perfect", "challenge"],
-      "coinValue": 2000,
-      "experienceValue": 280,
-      "description": "A record-breaking pike of legendary proportions",
-      "habitat": "tournament_waters",
-      "struggleStyle": "record_breaking"
-    },
-    {
-      "id": "royal_tuna",
-      "name": "Royal Bluefin Tuna",
-      "rarity": 6,
-      "size": 9,
-      "aggressiveness": 9,
-      "elusiveness": 7,
-      "strength": 10,
-      "weight": 85.0,
-      "speed": 10,
-      "depthPreference": 7,
-      "baitPreference": 5,
-      "endurance": 10,
-      "activeTimePeriod": ["morning", "afternoon"],
-      "weatherPreference": ["perfect"],
-      "coinValue": 3000,
-      "experienceValue": 400,
-      "description": "The ultimate tuna - a championship fish",
-      "habitat": "tournament_waters",
-      "struggleStyle": "royal_power"
-    },
-    {
-      "id": "platinum_marlin",
-      "name": "Platinum Marlin",
-      "rarity": 8,
-      "size": 9,
-      "aggressiveness": 10,
-      "elusiveness": 8,
-      "strength": 10,
-      "weight": 150.0,
-      "speed": 10,
-      "depthPreference": 8,
-      "baitPreference": 4,
-      "endurance": 9,
-      "activeTimePeriod": ["afternoon"],
-      "weatherPreference": ["challenge"],
-      "coinValue": 5000,
-      "experienceValue": 600,
-      "description": "The ultimate catch - perfection given form",
-      "habitat": "tournament_waters",
-      "struggleStyle": "transcendent_battle"
-    },
-    {
-      "id": "emperor_grouper",
-      "name": "Emperor Grouper",
-      "rarity": 7,
-      "size": 8,
-      "aggressiveness": 7,
-      "elusiveness": 8,
-      "strength": 10,
-      "weight": 45.0,
-      "speed": 4,
-      "depthPreference": 9,
-      "baitPreference": 6,
-      "endurance": 10,
-      "activeTimePeriod": ["morning", "evening"],
-      "weatherPreference": ["perfect"],
-      "coinValue": 2800,
-      "experienceValue": 380,
-      "description": "A massive grouper worthy of royal recognition",
-      "habitat": "tournament_waters",
-      "struggleStyle": "imperial_strength"
-    },
-    {
-      "id": "phoenix_fish",
-      "name": "Phoenix Fish",
-      "rarity": 9,
-      "size": 6,
-      "aggressiveness": 8,
-      "elusiveness": 10,
-      "strength": 8,
-      "weight": 8.8,
-      "speed": 9,
-      "depthPreference": 5,
-      "baitPreference": 2,
-      "endurance": 10,
-      "activeTimePeriod": ["dawn", "dusk"],
-      "weatherPreference": ["challenge"],
-      "coinValue": 8000,
-      "experienceValue": 800,
-      "description": "A mythical fish said to grant rebirth to worthy anglers",
-      "habitat": "tournament_waters",
-      "struggleStyle": "phoenix_rising"
-    },
-    {
-      "id": "dragon_carp",
-      "name": "Ancient Dragon Carp",
-      "rarity": 9,
-      "size": 7,
-      "aggressiveness": 6,
-      "elusiveness": 10,
-      "strength": 9,
-      "weight": 25.0,
-      "speed": 6,
-      "depthPreference": 8,
-      "baitPreference": 1,
-      "endurance": 10,
-      "activeTimePeriod": ["dawn"],
-      "weatherPreference": ["perfect"],
-      "coinValue": 10000,
-      "experienceValue": 1000,
-      "description": "A legendary carp said to possess ancient wisdom",
-      "habitat": "tournament_waters",
-      "struggleStyle": "ancient_power"
+      "struggleStyle": "long_sprint"
     },
     {
       "id": "leviathan",
@@ -1041,528 +613,352 @@
       "aggressiveness": 10,
       "elusiveness": 10,
       "strength": 10,
-      "weight": 200.0,
+      "weight": 200,
       "speed": 8,
       "depthPreference": 10,
       "baitPreference": 1,
       "endurance": 10,
-      "activeTimePeriod": ["dawn", "dusk"],
-      "weatherPreference": ["challenge"],
+      "activeTimePeriod": [
+        "dawn",
+        "dusk"
+      ],
+      "weatherPreference": [
+        "challenge"
+      ],
       "coinValue": 25000,
       "experienceValue": 2000,
       "description": "The ultimate challenge - a sea monster of legend",
       "habitat": "tournament_waters",
-      "struggleStyle": "legendary_battle"
+      "struggleStyle": "power_run"
     }
   ],
   "struggleStyles": [
     {
       "id": "gentle_pull",
       "name": "Gentle Pull",
-      "description": "Slow, steady resistance - perfect for beginners",
-      "pattern": [
-        { "direction": "left", "intensity": 2, "duration": 1000 },
-        { "direction": "right", "intensity": 1, "duration": 800 },
-        { "direction": "left", "intensity": 2, "duration": 600 }
+      "description": "Slow steady resistance - perfect for beginners",
+      "intensityPattern": "variable",
+      "qteTypes": [
+        "DASH",
+        "THRASH"
+      ],
+      "patterns": [
+        {
+          "direction": "left",
+          "intensity": 2,
+          "duration": 1000
+        },
+        {
+          "direction": "right",
+          "intensity": 1,
+          "duration": 800
+        },
+        {
+          "direction": "left",
+          "intensity": 2,
+          "duration": 600
+        }
       ]
     },
     {
       "id": "rapid_thrashing",
       "name": "Rapid Thrashing",
-      "description": "Quick, erratic movements in all directions",
-      "pattern": [
-        { "direction": "left", "intensity": 4, "duration": 300 },
-        { "direction": "right", "intensity": 4, "duration": 300 },
-        { "direction": "up", "intensity": 3, "duration": 400 },
-        { "direction": "down", "intensity": 3, "duration": 400 }
+      "description": "Quick erratic movements in all directions",
+      "intensityPattern": "variable",
+      "qteTypes": [
+        "DASH",
+        "THRASH"
+      ],
+      "patterns": [
+        {
+          "direction": "left",
+          "intensity": 4,
+          "duration": 300
+        },
+        {
+          "direction": "right",
+          "intensity": 4,
+          "duration": 300
+        },
+        {
+          "direction": "up",
+          "intensity": 3,
+          "duration": 400
+        },
+        {
+          "direction": "down",
+          "intensity": 3,
+          "duration": 400
+        }
       ]
     },
     {
       "id": "steady_pull",
       "name": "Steady Pull",
       "description": "Consistent resistance in one direction",
-      "pattern": [
-        { "direction": "left", "intensity": 3, "duration": 1200 },
-        { "direction": "right", "intensity": 2, "duration": 800 },
-        { "direction": "left", "intensity": 4, "duration": 1000 }
+      "intensityPattern": "variable",
+      "qteTypes": [
+        "DASH",
+        "THRASH"
+      ],
+      "patterns": [
+        {
+          "direction": "left",
+          "intensity": 3,
+          "duration": 1200
+        },
+        {
+          "direction": "right",
+          "intensity": 2,
+          "duration": 800
+        },
+        {
+          "direction": "left",
+          "intensity": 4,
+          "duration": 1000
+        }
       ]
     },
     {
       "id": "jumping_escape",
       "name": "Jumping Escape",
       "description": "Fish leaps out of water trying to escape",
-      "pattern": [
-        { "direction": "up", "intensity": 6, "duration": 800 },
-        { "direction": "down", "intensity": 4, "duration": 600 },
-        { "direction": "left", "intensity": 5, "duration": 700 },
-        { "direction": "up", "intensity": 7, "duration": 900 }
+      "intensityPattern": "variable",
+      "qteTypes": [
+        "DASH",
+        "THRASH"
+      ],
+      "patterns": [
+        {
+          "direction": "up",
+          "intensity": 6,
+          "duration": 800
+        },
+        {
+          "direction": "down",
+          "intensity": 4,
+          "duration": 600
+        },
+        {
+          "direction": "left",
+          "intensity": 5,
+          "duration": 700
+        },
+        {
+          "direction": "up",
+          "intensity": 7,
+          "duration": 900
+        }
       ]
     },
     {
       "id": "violent_thrashing",
       "name": "Violent Thrashing",
       "description": "Aggressive shaking that can snap the line",
-      "pattern": [
-        { "direction": "left", "intensity": 7, "duration": 500 },
-        { "direction": "right", "intensity": 8, "duration": 400 },
-        { "direction": "up", "intensity": 6, "duration": 600 },
-        { "direction": "down", "intensity": 7, "duration": 500 }
+      "intensityPattern": "variable",
+      "qteTypes": [
+        "DASH",
+        "THRASH"
+      ],
+      "patterns": [
+        {
+          "direction": "left",
+          "intensity": 7,
+          "duration": 500
+        },
+        {
+          "direction": "right",
+          "intensity": 8,
+          "duration": 400
+        },
+        {
+          "direction": "up",
+          "intensity": 6,
+          "duration": 600
+        },
+        {
+          "direction": "down",
+          "intensity": 7,
+          "duration": 500
+        }
       ]
     },
     {
       "id": "deep_dive",
       "name": "Deep Dive",
       "description": "Fish dives straight down with force",
-      "pattern": [
-        { "direction": "down", "intensity": 6, "duration": 1000 },
-        { "direction": "left", "intensity": 4, "duration": 600 },
-        { "direction": "down", "intensity": 8, "duration": 1200 }
+      "intensityPattern": "variable",
+      "qteTypes": [
+        "DASH",
+        "THRASH"
+      ],
+      "patterns": [
+        {
+          "direction": "down",
+          "intensity": 6,
+          "duration": 1000
+        },
+        {
+          "direction": "left",
+          "intensity": 4,
+          "duration": 600
+        },
+        {
+          "direction": "down",
+          "intensity": 8,
+          "duration": 1200
+        }
       ]
     },
     {
       "id": "bulldogging",
       "name": "Bulldogging",
       "description": "Fish uses its weight to resist being pulled up",
-      "pattern": [
-        { "direction": "down", "intensity": 7, "duration": 1500 },
-        { "direction": "left", "intensity": 6, "duration": 1000 },
-        { "direction": "down", "intensity": 9, "duration": 1800 }
+      "intensityPattern": "variable",
+      "qteTypes": [
+        "DASH",
+        "THRASH"
+      ],
+      "patterns": [
+        {
+          "direction": "down",
+          "intensity": 7,
+          "duration": 1500
+        },
+        {
+          "direction": "left",
+          "intensity": 6,
+          "duration": 1000
+        },
+        {
+          "direction": "down",
+          "intensity": 9,
+          "duration": 1800
+        }
       ]
     },
     {
       "id": "long_sprint",
       "name": "Long Sprint",
       "description": "Sustained high-speed run in one direction",
-      "pattern": [
-        { "direction": "left", "intensity": 8, "duration": 2000 },
-        { "direction": "right", "intensity": 6, "duration": 1000 },
-        { "direction": "left", "intensity": 9, "duration": 2500 }
+      "intensityPattern": "variable",
+      "qteTypes": [
+        "DASH",
+        "THRASH"
+      ],
+      "patterns": [
+        {
+          "direction": "left",
+          "intensity": 8,
+          "duration": 2000
+        },
+        {
+          "direction": "right",
+          "intensity": 6,
+          "duration": 1000
+        },
+        {
+          "direction": "left",
+          "intensity": 9,
+          "duration": 2500
+        }
       ]
     },
     {
       "id": "power_run",
       "name": "Power Run",
       "description": "Explosive bursts of power and speed",
-      "pattern": [
-        { "direction": "left", "intensity": 9, "duration": 800 },
-        { "direction": "right", "intensity": 10, "duration": 600 },
-        { "direction": "left", "intensity": 8, "duration": 1000 },
-        { "direction": "right", "intensity": 10, "duration": 800 }
+      "intensityPattern": "variable",
+      "qteTypes": [
+        "DASH",
+        "THRASH"
+      ],
+      "patterns": [
+        {
+          "direction": "left",
+          "intensity": 9,
+          "duration": 800
+        },
+        {
+          "direction": "right",
+          "intensity": 10,
+          "duration": 600
+        },
+        {
+          "direction": "left",
+          "intensity": 8,
+          "duration": 1000
+        },
+        {
+          "direction": "right",
+          "intensity": 10,
+          "duration": 800
+        }
       ]
     },
     {
       "id": "aerial_acrobatics",
       "name": "Aerial Acrobatics",
       "description": "Spectacular jumps and tail walks",
-      "pattern": [
-        { "direction": "up", "intensity": 9, "duration": 700 },
-        { "direction": "left", "intensity": 7, "duration": 500 },
-        { "direction": "up", "intensity": 10, "duration": 800 },
-        { "direction": "right", "intensity": 8, "duration": 600 },
-        { "direction": "up", "intensity": 9, "duration": 900 }
+      "intensityPattern": "variable",
+      "qteTypes": [
+        "DASH",
+        "THRASH"
+      ],
+      "patterns": [
+        {
+          "direction": "up",
+          "intensity": 9,
+          "duration": 700
+        },
+        {
+          "direction": "left",
+          "intensity": 7,
+          "duration": 500
+        },
+        {
+          "direction": "up",
+          "intensity": 10,
+          "duration": 800
+        },
+        {
+          "direction": "right",
+          "intensity": 8,
+          "duration": 600
+        }
       ]
     },
     {
       "id": "circle_fighting",
       "name": "Circle Fighting",
       "description": "Fish swims in circles to create slack",
-      "pattern": [
-        { "direction": "left", "intensity": 6, "duration": 800 },
-        { "direction": "up", "intensity": 6, "duration": 800 },
-        { "direction": "right", "intensity": 6, "duration": 800 },
-        { "direction": "down", "intensity": 6, "duration": 800 }
-      ]
-    },
-
-    {
-      "id": "quick_darts",
-      "name": "Quick Darts",
-      "description": "Fast, short bursts in random directions",
-      "pattern": [
-        { "direction": "left", "intensity": 5, "duration": 400 },
-        { "direction": "right", "intensity": 5, "duration": 300 },
-        { "direction": "up", "intensity": 4, "duration": 350 },
-        { "direction": "left", "intensity": 6, "duration": 450 }
-      ]
-    },
-    {
-      "id": "long_fight",
-      "name": "Endurance Fight",
-      "description": "Sustained resistance testing angler stamina",
-      "pattern": [
-        { "direction": "left", "intensity": 5, "duration": 1800 },
-        { "direction": "right", "intensity": 4, "duration": 1500 },
-        { "direction": "left", "intensity": 6, "duration": 2000 }
-      ]
-    },
-    {
-      "id": "rapid_swimming",
-      "name": "Rapid Swimming",
-      "description": "High-speed swimming in multiple directions",
-      "pattern": [
-        { "direction": "left", "intensity": 7, "duration": 500 },
-        { "direction": "right", "intensity": 8, "duration": 400 },
-        { "direction": "left", "intensity": 7, "duration": 600 }
-      ]
-    },
-    {
-      "id": "bottom_struggle",
-      "name": "Bottom Struggle",
-      "description": "Hugs the bottom and uses cover for resistance",
-      "pattern": [
-        { "direction": "down", "intensity": 5, "duration": 1000 },
-        { "direction": "left", "intensity": 4, "duration": 800 },
-        { "direction": "down", "intensity": 6, "duration": 1200 }
-      ]
-    },
-    {
-      "id": "heavy_pull",
-      "name": "Heavy Pull",
-      "description": "Consistent heavy resistance",
-      "pattern": [
-        { "direction": "left", "intensity": 6, "duration": 1200 },
-        { "direction": "right", "intensity": 5, "duration": 1000 },
-        { "direction": "left", "intensity": 7, "duration": 1400 }
-      ]
-    },
-    {
-      "id": "head_shaking",
-      "name": "Head Shaking",
-      "description": "Violent head movements to dislodge hook",
-      "pattern": [
-        { "direction": "left", "intensity": 6, "duration": 300 },
-        { "direction": "right", "intensity": 6, "duration": 300 },
-        { "direction": "left", "intensity": 7, "duration": 400 },
-        { "direction": "right", "intensity": 7, "duration": 400 }
-      ]
-    },
-    {
-      "id": "rock_fighting",
-      "name": "Rock Fighting",
-      "description": "Uses rocks and cover to break the line",
-      "pattern": [
-        { "direction": "down", "intensity": 7, "duration": 800 },
-        { "direction": "left", "intensity": 8, "duration": 600 },
-        { "direction": "down", "intensity": 9, "duration": 1000 }
-      ]
-    },
-    {
-      "id": "dead_weight",
-      "name": "Dead Weight",
-      "description": "Uses massive weight as primary defense",
-      "pattern": [
-        { "direction": "down", "intensity": 8, "duration": 2000 },
-        { "direction": "left", "intensity": 5, "duration": 1200 },
-        { "direction": "down", "intensity": 9, "duration": 2500 }
-      ]
-    },
-
-    {
-      "id": "current_fighting",
-      "name": "Current Fighting",
-      "description": "Uses stream current to aid escape",
-      "pattern": [
-        { "direction": "left", "intensity": 6, "duration": 1000 },
-        { "direction": "down", "intensity": 4, "duration": 800 },
-        { "direction": "left", "intensity": 7, "duration": 1200 }
-      ]
-    },
-    {
-      "id": "cautious_escape",
-      "name": "Cautious Escape",
-      "description": "Careful, calculated escape attempts",
-      "pattern": [
-        { "direction": "left", "intensity": 4, "duration": 1500 },
-        { "direction": "right", "intensity": 5, "duration": 1000 },
-        { "direction": "up", "intensity": 6, "duration": 800 }
-      ]
-    },
-    {
-      "id": "aggressive_jumps",
-      "name": "Aggressive Jumps",
-      "description": "Multiple aggressive jumping attempts",
-      "pattern": [
-        { "direction": "up", "intensity": 7, "duration": 600 },
-        { "direction": "left", "intensity": 6, "duration": 500 },
-        { "direction": "up", "intensity": 8, "duration": 700 },
-        { "direction": "right", "intensity": 6, "duration": 500 }
-      ]
-    },
-    {
-      "id": "current_riding",
-      "name": "Current Riding",
-      "description": "Rides the current to minimize effort",
-      "pattern": [
-        { "direction": "left", "intensity": 3, "duration": 1200 },
-        { "direction": "down", "intensity": 2, "duration": 1000 },
-        { "direction": "left", "intensity": 4, "duration": 1500 }
-      ]
-    },
-    {
-      "id": "power_struggle",
-      "name": "Power Struggle",
-      "description": "Raw power battle against angler",
-      "pattern": [
-        { "direction": "left", "intensity": 8, "duration": 1000 },
-        { "direction": "right", "intensity": 9, "duration": 800 },
-        { "direction": "down", "intensity": 8, "duration": 1200 }
-      ]
-    },
-    {
-      "id": "ethereal_dance",
-      "name": "Ethereal Dance",
-      "description": "Graceful, otherworldly movement pattern",
-      "pattern": [
-        { "direction": "up", "intensity": 6, "duration": 800 },
-        { "direction": "left", "intensity": 5, "duration": 700 },
-        { "direction": "right", "intensity": 5, "duration": 700 },
-        { "direction": "up", "intensity": 7, "duration": 900 }
-      ]
-    },
-    {
-      "id": "fin_display",
-      "name": "Fin Display",
-      "description": "Shows off distinctive fin while fighting",
-      "pattern": [
-        { "direction": "up", "intensity": 5, "duration": 1000 },
-        { "direction": "left", "intensity": 6, "duration": 600 },
-        { "direction": "up", "intensity": 6, "duration": 1200 }
-      ]
-    },
-    {
-      "id": "rock_holding",
-      "name": "Rock Holding",
-      "description": "Grips rocks with sucker mouth",
-      "pattern": [
-        { "direction": "down", "intensity": 6, "duration": 1500 },
-        { "direction": "left", "intensity": 3, "duration": 800 },
-        { "direction": "down", "intensity": 7, "duration": 1800 }
-      ]
-    },
-
-    {
-      "id": "shadow_diving",
-      "name": "Shadow Diving",
-      "description": "Dives into darkness to escape",
-      "pattern": [
-        { "direction": "down", "intensity": 5, "duration": 1000 },
-        { "direction": "left", "intensity": 4, "duration": 800 },
-        { "direction": "down", "intensity": 6, "duration": 1200 }
-      ]
-    },
-    {
-      "id": "lunar_spiral",
-      "name": "Lunar Spiral",
-      "description": "Swims in mystical spiral patterns",
-      "pattern": [
-        { "direction": "left", "intensity": 5, "duration": 600 },
-        { "direction": "up", "intensity": 4, "duration": 600 },
-        { "direction": "right", "intensity": 5, "duration": 600 },
-        { "direction": "down", "intensity": 4, "duration": 600 }
-      ]
-    },
-    {
-      "id": "shadow_blend",
-      "name": "Shadow Blend",
-      "description": "Merges with shadows to confuse angler",
-      "pattern": [
-        { "direction": "left", "intensity": 4, "duration": 1200 },
-        { "direction": "right", "intensity": 3, "duration": 1000 },
-        { "direction": "left", "intensity": 5, "duration": 1400 }
-      ]
-    },
-    {
-      "id": "stellar_dance",
-      "name": "Stellar Dance",
-      "description": "Dances like stars in the night sky",
-      "pattern": [
-        { "direction": "up", "intensity": 6, "duration": 800 },
-        { "direction": "left", "intensity": 5, "duration": 700 },
-        { "direction": "up", "intensity": 7, "duration": 900 },
-        { "direction": "right", "intensity": 5, "duration": 700 }
-      ]
-    },
-    {
-      "id": "blood_frenzy",
-      "name": "Blood Frenzy",
-      "description": "Aggressive, predatory fighting style",
-      "pattern": [
-        { "direction": "left", "intensity": 8, "duration": 400 },
-        { "direction": "right", "intensity": 9, "duration": 300 },
-        { "direction": "up", "intensity": 7, "duration": 500 },
-        { "direction": "left", "intensity": 8, "duration": 400 }
-      ]
-    },
-    {
-      "id": "phase_shifting",
-      "name": "Phase Shifting",
-      "description": "Phases between dimensions while fighting",
-      "pattern": [
-        { "direction": "left", "intensity": 7, "duration": 600 },
-        { "direction": "right", "intensity": 6, "duration": 800 },
-        { "direction": "up", "intensity": 8, "duration": 500 },
-        { "direction": "down", "intensity": 7, "duration": 700 }
-      ]
-    },
-    {
-      "id": "lunar_pull",
-      "name": "Lunar Pull",
-      "description": "Fighting rhythm follows moon phases",
-      "pattern": [
-        { "direction": "left", "intensity": 5, "duration": 1000 },
-        { "direction": "right", "intensity": 6, "duration": 800 },
-        { "direction": "left", "intensity": 7, "duration": 1200 }
-      ]
-    },
-    {
-      "id": "dusk_dance",
-      "name": "Dusk Dance",
-      "description": "Graceful twilight movements",
-      "pattern": [
-        { "direction": "up", "intensity": 4, "duration": 800 },
-        { "direction": "left", "intensity": 5, "duration": 600 },
-        { "direction": "right", "intensity": 5, "duration": 600 }
-      ]
-    },
-    {
-      "id": "ethereal_coil",
-      "name": "Ethereal Coil",
-      "description": "Coils through dimensions",
-      "pattern": [
-        { "direction": "left", "intensity": 6, "duration": 700 },
-        { "direction": "down", "intensity": 5, "duration": 800 },
-        { "direction": "right", "intensity": 6, "duration": 700 },
-        { "direction": "up", "intensity": 5, "duration": 800 }
-      ]
-    },
-    {
-      "id": "reality_warp",
-      "name": "Reality Warp",
-      "description": "Bends reality to escape capture",
-      "pattern": [
-        { "direction": "up", "intensity": 9, "duration": 500 },
-        { "direction": "left", "intensity": 8, "duration": 600 },
-        { "direction": "down", "intensity": 9, "duration": 500 },
-        { "direction": "right", "intensity": 8, "duration": 600 }
-      ]
-    },
-
-    {
-      "id": "champion_fight",
-      "name": "Champion Fight",
-      "description": "Championship-level fighting technique",
-      "pattern": [
-        { "direction": "left", "intensity": 8, "duration": 800 },
-        { "direction": "right", "intensity": 7, "duration": 700 },
-        { "direction": "up", "intensity": 8, "duration": 900 },
-        { "direction": "left", "intensity": 9, "duration": 1000 }
-      ]
-    },
-    {
-      "id": "golden_run",
-      "name": "Golden Run",
-      "description": "Majestic, powerful swimming display",
-      "pattern": [
-        { "direction": "left", "intensity": 9, "duration": 1200 },
-        { "direction": "right", "intensity": 8, "duration": 1000 },
-        { "direction": "left", "intensity": 10, "duration": 1500 }
-      ]
-    },
-    {
-      "id": "perfect_form",
-      "name": "Perfect Form",
-      "description": "Flawless, textbook fighting technique",
-      "pattern": [
-        { "direction": "up", "intensity": 8, "duration": 800 },
-        { "direction": "left", "intensity": 9, "duration": 700 },
-        { "direction": "right", "intensity": 9, "duration": 700 },
-        { "direction": "up", "intensity": 10, "duration": 900 }
-      ]
-    },
-    {
-      "id": "record_breaking",
-      "name": "Record Breaking",
-      "description": "Fighting style worthy of world records",
-      "pattern": [
-        { "direction": "left", "intensity": 9, "duration": 1000 },
-        { "direction": "up", "intensity": 8, "duration": 800 },
-        { "direction": "right", "intensity": 10, "duration": 1200 },
-        { "direction": "down", "intensity": 9, "duration": 1000 }
-      ]
-    },
-    {
-      "id": "royal_power",
-      "name": "Royal Power",
-      "description": "Majestic display of raw power",
-      "pattern": [
-        { "direction": "left", "intensity": 10, "duration": 1500 },
-        { "direction": "right", "intensity": 9, "duration": 1200 },
-        { "direction": "left", "intensity": 10, "duration": 1800 }
-      ]
-    },
-    {
-      "id": "transcendent_battle",
-      "name": "Transcendent Battle",
-      "description": "A battle that transcends mortal limits",
-      "pattern": [
-        { "direction": "up", "intensity": 10, "duration": 1000 },
-        { "direction": "left", "intensity": 10, "duration": 900 },
-        { "direction": "down", "intensity": 10, "duration": 1100 },
-        { "direction": "right", "intensity": 10, "duration": 900 }
-      ]
-    },
-    {
-      "id": "imperial_strength",
-      "name": "Imperial Strength",
-      "description": "Strength befitting an emperor",
-      "pattern": [
-        { "direction": "down", "intensity": 9, "duration": 1800 },
-        { "direction": "left", "intensity": 8, "duration": 1200 },
-        { "direction": "down", "intensity": 10, "duration": 2000 }
-      ]
-    },
-    {
-      "id": "phoenix_rising",
-      "name": "Phoenix Rising",
-      "description": "Rises from defeat like a phoenix",
-      "pattern": [
-        { "direction": "up", "intensity": 9, "duration": 1200 },
-        { "direction": "left", "intensity": 7, "duration": 800 },
-        { "direction": "up", "intensity": 10, "duration": 1500 },
-        { "direction": "right", "intensity": 8, "duration": 1000 }
-      ]
-    },
-    {
-      "id": "ancient_power",
-      "name": "Ancient Power",
-      "description": "Power accumulated over millennia",
-      "pattern": [
-        { "direction": "left", "intensity": 8, "duration": 2000 },
-        { "direction": "right", "intensity": 9, "duration": 1500 },
-        { "direction": "down", "intensity": 10, "duration": 2500 }
-      ]
-    },
-    {
-      "id": "legendary_battle",
-      "name": "Legendary Battle",
-      "description": "A battle that will become legend",
-      "pattern": [
-        { "direction": "left", "intensity": 10, "duration": 1200 },
-        { "direction": "up", "intensity": 10, "duration": 1000 },
-        { "direction": "right", "intensity": 10, "duration": 1200 },
-        { "direction": "down", "intensity": 10, "duration": 1000 },
-        { "direction": "left", "intensity": 10, "duration": 1500 }
-      ]
-    },
-    {
-      "id": "steady_fight",
-      "name": "Steady Fight",
-      "description": "Consistent, reliable resistance",
-      "pattern": [
-        { "direction": "left", "intensity": 4, "duration": 1000 },
-        { "direction": "right", "intensity": 4, "duration": 1000 },
-        { "direction": "left", "intensity": 5, "duration": 1200 }
+      "intensityPattern": "variable",
+      "qteTypes": [
+        "DASH",
+        "THRASH"
+      ],
+      "patterns": [
+        {
+          "direction": "left",
+          "intensity": 6,
+          "duration": 800
+        },
+        {
+          "direction": "up",
+          "intensity": 6,
+          "duration": 800
+        },
+        {
+          "direction": "right",
+          "intensity": 6,
+          "duration": 800
+        },
+        {
+          "direction": "down",
+          "intensity": 6,
+          "duration": 800
+        }
       ]
     }
   ]
-} 
+}

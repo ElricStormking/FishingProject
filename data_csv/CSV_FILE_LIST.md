@@ -19,10 +19,17 @@
 12. **weather_modifiers.csv** - Weather effects on fishing
 13. **time_modifiers.csv** - Time of day effects
 
+## Converters
+
+14. **json_to_csv_converter.js** - Converts JSON files to CSV format
+15. **csv_to_json_converter.js** - Converts CSV files back to JSON format  
+16. **test_conversion_integrity.js** - Tests conversion data integrity
+
 ## Documentation
 
-14. **README_CSV_GUIDE.md** - Comprehensive guide for using the CSV files
-15. **CSV_FILE_LIST.md** - This file
+17. **README_CSV_GUIDE.md** - Comprehensive guide for using the CSV files
+18. **CSV_FILE_LIST.md** - This file
+19. **CONVERTER_USAGE_GUIDE.md** - How to use the CSV ↔ JSON converters
 
 ## How to Use
 

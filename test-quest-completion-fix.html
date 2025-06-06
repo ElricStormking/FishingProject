@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest Completion Fix Test - Luxury Angler</title>
+    <style>
+        body {
+            margin: 0;
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        #gameContainer {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+        }
+        #debugPanel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 5px;
+            z-index: 1000;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .debug-section {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 3px;
+        }
+        .debug-section h3 {
+            margin: 0 0 10px 0;
+            color: #4CAF50;
+        }
+        .quest-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 3px;
+        }
+        .quest-objective {
+            margin-left: 15px;
+            font-size: 0.9em;
+            color: #ccc;
+        }
+        .quest-objective.completed {
+            color: #4CAF50;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 2px;
+            font-size: 12px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .status-text {
+            color: #FFD700;
+            font-weight: bold;
+        }
+        .error-text {
+            color: #FF6B6B;
+        }
+        .success-text {
+            color: #4CAF50;
+        }
+        #console {
+            background: #111;
+            border: 1px solid #333;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 11px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer"></div>
+    
+    <div id="debugPanel">
+        <h2>🎯 Quest Completion Test</h2>
+        
+        <div class="debug-section">
+            <h3>Test Actions</h3>
+            <button onclick="testCastEvent()">🎣 Trigger Cast</button>
+            <button onclick="testFishCaught()">🐟 Catch Fish</button>
+            <button onclick="testBoatMenu()">⛵ Access Boat Menu</button>
+            <button onclick="testDialog()">💬 Complete Dialog</button>
+            <button onclick="refreshQuests()">🔄 Refresh Quests</button>
+        </div>
+        
+        <div class="debug-section">
+            <h3>Quest Status</h3>
+            <div id="questStatus">Loading quests...</div>
+        </div>
+        
+        <div class="debug-section">
+            <h3>Event Log</h3>
+            <div id="console"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import './src/scripts/phaser.min.js';
+        import GameState from './src/scripts/GameState.js';
+        import { gameDataLoader } from './src/scripts/DataLoader.js';
+        import { QuestManager } from './src/scripts/QuestManager.js';
+
+        let game;
+        let gameState;
+        let currentScene;
+        let questManager;
+
+        // Console logging
+        function debugLog(message) {
+            const console = document.getElementById('console');
+            const timestamp = new Date().toLocaleTimeString();
+            console.textContent += `[${timestamp}] ${message}\n`;
+            console.scrollTop = console.scrollHeight;
+            console.log(message);
+        }
+
+        // Initialize game
+        async function initGame() {
+            debugLog('🎮 Initializing Quest Completion Test...');
+            
+            try {
+                // Load game data first
+                debugLog('📂 Loading game data...');
+                await gameDataLoader.loadAllData();
+                debugLog('✅ Game data loaded successfully');
+
+                // Initialize GameState
+                gameState = GameState.getInstance();
+                await gameState.initialize();
+                debugLog('✅ GameState initialized');
+
+                // Create a minimal scene for testing
+                class TestScene extends Phaser.Scene {
+                    constructor() {
+                        super({ key: 'TestScene' });
+                    }
+
+                    create() {
+                        debugLog('🎮 Test scene created');
+                        
+                        // Initialize quest manager
+                        this.questManager = new QuestManager(this);
+                        questManager = this.questManager;
+                        
+                        // Set up event listeners for quest testing
+                        this.setupQuestEventListeners();
+                        
+                        debugLog('✅ QuestManager initialized with event listeners');
+                        
+                        // Store references
+                        this.gameState = gameState;
+                        gameState.questManager = this.questManager;
+                        
+                        // Initial quest refresh
+                        refreshQuests();
+                    }
+                    
+                    setupQuestEventListeners() {
+                        debugLog('🔗 Setting up quest event listeners...');
+                        
+                        // Listen for cast completion
+                        this.events.on('fishing:castComplete', (data) => {
+                            debugLog('🎣 Cast completed, notifying QuestManager');
+                            this.questManager.onCast(data);
+                            refreshQuests();
+                        });
+
+                        // Listen for fish caught events
+                        this.events.on('fishing:catchSuccess', (data) => {
+                            debugLog('🐟 Fish caught, notifying QuestManager');
+                            this.questManager.onFishCaught(data.fish || data);
+                            refreshQuests();
+                        });
+
+                        // Listen for boat menu access
+                        this.events.on('boat:menuAccessed', () => {
+                            debugLog('⛵ Boat menu accessed, notifying QuestManager');
+                            this.questManager.onBoatMenuAccessed();
+                            refreshQuests();
+                        });
+
+                        // Listen for dialog completion
+                        this.events.on('dialog:completed', (data) => {
+                            debugLog('💬 Dialog completed, notifying QuestManager');
+                            this.questManager.onDialogCompleted(data.npcId, data);
+                            refreshQuests();
+                        });
+                        
+                        debugLog('✅ Quest event listeners setup complete');
+                    }
+                }
+
+                // Game configuration
+                const config = {
+                    type: Phaser.AUTO,
+                    width: 800,
+                    height: 600,
+                    parent: 'gameContainer',
+                    backgroundColor: '#1e3a8a',
+                    scene: TestScene,
+                    physics: {
+                        default: 'arcade',
+                        arcade: { gravity: { y: 0 } }
+                    }
+                };
+
+                // Create game
+                game = new Phaser.Game(config);
+                currentScene = game.scene.getScene('TestScene');
+                
+                debugLog('✅ Quest test environment ready!');
+
+            } catch (error) {
+                debugLog(`❌ Error: ${error.message}`);
+                console.error('Initialization error:', error);
+            }
+        }
+
+        // Test functions
+        window.testCastEvent = function() {
+            debugLog('🎣 Testing cast event...');
+            if (!currentScene) {
+                debugLog('❌ No scene available');
+                return;
+            }
+            
+            currentScene.events.emit('fishing:castComplete', {
+                success: true,
+                accuracy: 85.5,
+                hitAccurateSection: true,
+                castType: 'hotspot'
+            });
+        };
+
+        window.testFishCaught = function() {
+            debugLog('🐟 Testing fish caught event...');
+            if (!currentScene) {
+                debugLog('❌ No scene available');
+                return;
+            }
+            
+            currentScene.events.emit('fishing:catchSuccess', {
+                fish: {
+                    id: 'test_fish',
+                    name: 'Test Fish',
+                    rarity: 3,
+                    size: 5,
+                    weight: 2.5
+                }
+            });
+        };
+
+        window.testBoatMenu = function() {
+            debugLog('⛵ Testing boat menu access...');
+            if (!currentScene) {
+                debugLog('❌ No scene available');
+                return;
+            }
+            
+            currentScene.events.emit('boat:menuAccessed');
+        };
+
+        window.testDialog = function() {
+            debugLog('💬 Testing dialog completion...');
+            if (!currentScene) {
+                debugLog('❌ No scene available');
+                return;
+            }
+            
+            currentScene.events.emit('dialog:completed', {
+                npcId: 'mia',
+                dialogId: 'test_dialog',
+                choiceId: 'fishing_tips'
+            });
+        };
+
+        window.refreshQuests = function() {
+            if (!questManager) {
+                document.getElementById('questStatus').innerHTML = 
+                    '<span class="error-text">❌ QuestManager not available</span>';
+                return;
+            }
+
+            try {
+                const activeQuests = questManager.getActiveQuests();
+                const completedQuests = questManager.getCompletedQuests();
+                const availableQuests = questManager.getAvailableQuests();
+
+                let html = '';
+                
+                // Active quests
+                if (activeQuests.length > 0) {
+                    html += '<h4 class="status-text">📋 Active Quests:</h4>';
+                    activeQuests.forEach(quest => {
+                        html += `<div class="quest-item">
+                            <strong>${quest.title}</strong><br>
+                            <small>${quest.description}</small>`;
+                        
+                        quest.objectives.forEach(obj => {
+                            const status = obj.completed ? '✅' : '⏳';
+                            const cssClass = obj.completed ? 'completed' : '';
+                            let objText = `${status} ${obj.description}`;
+                            if (obj.target) {
+                                objText += ` (${obj.progress || 0}/${obj.target})`;
+                            }
+                            html += `<div class="quest-objective ${cssClass}">${objText}</div>`;
+                        });
+                        
+                        html += '</div>';
+                    });
+                }
+
+                // Available quests
+                if (availableQuests.length > 0) {
+                    html += '<h4 class="status-text">📌 Available Quests:</h4>';
+                    availableQuests.forEach(quest => {
+                        html += `<div class="quest-item">
+                            <strong>${quest.title}</strong><br>
+                            <small>${quest.description}</small>
+                        </div>`;
+                    });
+                }
+
+                // Completed quests
+                if (completedQuests.length > 0) {
+                    html += '<h4 class="success-text">✅ Completed Quests:</h4>';
+                    completedQuests.forEach(quest => {
+                        html += `<div class="quest-item">
+                            <strong>${quest.title}</strong><br>
+                            <small>Completed!</small>
+                        </div>`;
+                    });
+                }
+
+                if (!html) {
+                    html = '<span class="error-text">❌ No quests found</span>';
+                }
+
+                document.getElementById('questStatus').innerHTML = html;
+                
+                debugLog(`📊 Quest update: ${activeQuests.length} active, ${availableQuests.length} available, ${completedQuests.length} completed`);
+
+            } catch (error) {
+                debugLog(`❌ Error refreshing quests: ${error.message}`);
+                document.getElementById('questStatus').innerHTML = 
+                    `<span class="error-text">❌ Error: ${error.message}</span>`;
+            }
+        };
+
+        // Start the test
+        initGame();
+
+        // Refresh quests every 5 seconds to show real-time updates
+        setInterval(refreshQuests, 5000);
+    </script>
+</body>
+</html> 

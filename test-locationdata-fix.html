@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LocationData Export Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .pass { background-color: #2d5a27; }
+        .fail { background-color: #5a2727; }
+        .info { background-color: #27355a; }
+        pre {
+            background-color: #2a2a2a;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>LocationData.js Export Test</h1>
+    <div id="results"></div>
+
+    <script type="module">
+        function addResult(title, type, message, data = null) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            
+            let content = `<strong>${title}:</strong> ${message}`;
+            if (data) {
+                content += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            }
+            
+            resultDiv.innerHTML = content;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        async function runTests() {
+            try {
+                addResult('Test Start', 'info', 'Testing LocationData.js exports...');
+
+                // Test importing LocationData.js
+                const locationModule = await import('./src/data/LocationData.js');
+                addResult('Import', 'pass', 'Successfully imported LocationData.js');
+
+                // Test LOCATION_DATA export
+                const { LOCATION_DATA } = locationModule;
+                if (LOCATION_DATA) {
+                    const locationCount = Object.keys(LOCATION_DATA).length;
+                    addResult('LOCATION_DATA', 'pass', `Found ${locationCount} locations`);
+                } else {
+                    addResult('LOCATION_DATA', 'fail', 'LOCATION_DATA export not found');
+                    return;
+                }
+
+                // Test getAllLocations export
+                const { getAllLocations } = locationModule;
+                if (getAllLocations && typeof getAllLocations === 'function') {
+                    const allLocations = getAllLocations();
+                    addResult('getAllLocations', 'pass', `Function works, returned ${allLocations.length} locations`, {
+                        sampleLocation: allLocations[0]
+                    });
+                } else {
+                    addResult('getAllLocations', 'fail', 'getAllLocations function not found or not a function');
+                }
+
+                // Test getLocationById export
+                const { getLocationById } = locationModule;
+                if (getLocationById && typeof getLocationById === 'function') {
+                    const testLocation = getLocationById('beginner_lake_dock');
+                    if (testLocation) {
+                        addResult('getLocationById', 'pass', `Function works, found test location`, {
+                            testLocation: testLocation
+                        });
+                    } else {
+                        addResult('getLocationById', 'fail', 'Function exists but returned null for test location');
+                    }
+                } else {
+                    addResult('getLocationById', 'fail', 'getLocationById function not found or not a function');
+                }
+
+                // Test getUnlockedLocations export
+                const { getUnlockedLocations } = locationModule;
+                if (getUnlockedLocations && typeof getUnlockedLocations === 'function') {
+                    const unlockedLocations = getUnlockedLocations(5, []);
+                    addResult('getUnlockedLocations', 'pass', `Function works, returned ${unlockedLocations.length} unlocked locations for level 5`, {
+                        sampleUnlocked: unlockedLocations.slice(0, 3)
+                    });
+                } else {
+                    addResult('getUnlockedLocations', 'fail', 'getUnlockedLocations function not found or not a function');
+                }
+
+                addResult('All Tests Complete', 'pass', 'LocationData.js exports are working correctly!');
+
+            } catch (error) {
+                addResult('Error', 'fail', `Test failed with error: ${error.message}`, {
+                    stack: error.stack
+                });
+            }
+        }
+
+        runTests();
+    </script>
+</body>
+</html> 

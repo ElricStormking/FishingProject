@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Final CSV Data Integrity Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #1a1a1a; 
+            color: #ffffff;
+        }
+        .test-group {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #333;
+            border-radius: 5px;
+            background: #2a2a2a;
+        }
+        .pass { color: #4CAF50; }
+        .fail { color: #f44336; }
+        .warn { color: #ff9800; }
+        .info { color: #2196F3; }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .pass-bg { background: rgba(76, 175, 80, 0.1); }
+        .fail-bg { background: rgba(244, 67, 54, 0.1); }
+        .warn-bg { background: rgba(255, 152, 0, 0.1); }
+        .data-summary {
+            background: #333;
+            padding: 10px;
+            border-radius: 3px;
+            margin: 10px 0;
+        }
+        .boat-config {
+            background: #1a3a5a;
+            padding: 10px;
+            border-radius: 3px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Final CSV Data Integrity Test</h1>
+    <p>Testing all converted data to ensure no fallback data is being used</p>
+    
+    <div id="test-results"></div>
+
+    <script type="module">
+        import { gameDataLoader } from './src/scripts/DataLoader.js';
+
+        const results = document.getElementById('test-results');
+
+        function addResult(testName, passed, message, type = 'test') {
+            const div = document.createElement('div');
+            div.className = `test-result ${passed ? 'pass-bg' : 'fail-bg'}`;
+            
+            const status = passed ? '✅ PASS' : '❌ FAIL';
+            const statusClass = passed ? 'pass' : 'fail';
+            
+            div.innerHTML = `
+                <strong class="${statusClass}">${status}</strong> 
+                <strong>${testName}:</strong> ${message}
+            `;
+            
+            results.appendChild(div);
+        }
+
+        function addInfo(message) {
+            const div = document.createElement('div');
+            div.className = 'test-result';
+            div.innerHTML = `<span class="info">ℹ️ ${message}</span>`;
+            results.appendChild(div);
+        }
+
+        function addDataSummary(title, data) {
+            const div = document.createElement('div');
+            div.className = 'data-summary';
+            div.innerHTML = `<strong>${title}:</strong><br><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            results.appendChild(div);
+        }
+
+        async function runTests() {
+            try {
+                addInfo('Starting comprehensive data integrity test...');
+                
+                // Test 1: Load all data
+                addInfo('Loading all game data...');
+                await gameDataLoader.loadAllData();
+                
+                // Test 2: Check for fallback data
+                const fallbackCheck = gameDataLoader.checkForFallbackData();
+                addResult(
+                    'No Fallback Data Detection', 
+                    !fallbackCheck.usingFallback, 
+                    fallbackCheck.usingFallback ? 
+                        `Fallback detected in: ${fallbackCheck.fallbackFiles.join(', ')}` : 
+                        'All data loaded from real JSON files'
+                );
+
+                if (fallbackCheck.warnings && fallbackCheck.warnings.length > 0) {
+                    fallbackCheck.warnings.forEach(warning => {
+                        const div = document.createElement('div');
+                        div.className = 'test-result warn-bg';
+                        div.innerHTML = `<span class="warn">⚠️ WARNING: ${warning}</span>`;
+                        results.appendChild(div);
+                    });
+                }
+
+                // Test 3: Data summary
+                const summary = gameDataLoader.getDataSummary();
+                addDataSummary('Data Load Summary', summary);
+                
+                // Test 4: Specific boat configuration test
+                addInfo('Testing boat configuration (previous bug)...');
+                const boatConfig = gameDataLoader.getBoatConfig();
+                
+                if (boatConfig) {
+                    const requiredBoatProps = [
+                        'deckColor', 'deckHeight', 'sideColor', 'sideWidth',
+                        'frontEdgeColor', 'frontEdgeHeight', 'plankSpacing',
+                        'plankColor', 'plankAlpha', 'rodHolderColor',
+                        'rodHolderRadius', 'rodHolderHeight', 'tackleBoxColor',
+                        'tackleBoxWidth', 'tackleBoxHeight', 'tackleBoxBorderColor'
+                    ];
+                    
+                    const missingProps = requiredBoatProps.filter(prop => !(prop in boatConfig));
+                    
+                    addResult(
+                        'Boat Configuration Complete',
+                        missingProps.length === 0,
+                        missingProps.length === 0 ? 
+                            'All 16 boat properties present' : 
+                            `Missing properties: ${missingProps.join(', ')}`
+                    );
+                    
+                    // Show boat configuration
+                    const div = document.createElement('div');
+                    div.className = 'boat-config';
+                    div.innerHTML = `<strong>🚤 Boat Configuration:</strong><br><pre>${JSON.stringify(boatConfig, null, 2)}</pre>`;
+                    results.appendChild(div);
+                } else {
+                    addResult('Boat Configuration Exists', false, 'Boat configuration is null - this will cause the previous error!');
+                }
+
+                // Test 5: Fish data validation
+                const fishData = gameDataLoader.getAllFish();
+                addResult(
+                    'Fish Data Loaded',
+                    fishData && fishData.length > 0,
+                    fishData ? `${fishData.length} fish species loaded` : 'No fish data available'
+                );
+
+                if (fishData && fishData.length > 0) {
+                    // Check for undefined fish names
+                    const undefinedFish = fishData.filter(fish => !fish.name || fish.name === 'undefined');
+                    addResult(
+                        'Fish Names Valid',
+                        undefinedFish.length === 0,
+                        undefinedFish.length === 0 ? 
+                            'All fish have valid names' : 
+                            `${undefinedFish.length} fish have undefined names`
+                    );
+
+                    // Test specific fish properties
+                    const sampleFish = fishData[0];
+                    const requiredFishProps = ['id', 'name', 'rarity', 'coinValue', 'experienceValue'];
+                    const fishPropsMissing = requiredFishProps.filter(prop => !(prop in sampleFish));
+                    
+                    addResult(
+                        'Fish Properties Valid',
+                        fishPropsMissing.length === 0,
+                        fishPropsMissing.length === 0 ? 
+                            'All required fish properties present' : 
+                            `Missing properties: ${fishPropsMissing.join(', ')}`
+                    );
+                }
+
+                // Test 6: Equipment data validation
+                const allRods = gameDataLoader.getAllRods();
+                addResult(
+                    'Equipment Data Loaded',
+                    allRods && allRods.length > 0,
+                    allRods ? `${allRods.length} fishing rods loaded` : 'No equipment data available'
+                );
+
+                // Test 7: Lure data validation
+                const allLures = gameDataLoader.getAllLures();
+                addResult(
+                    'Lure Data Loaded',
+                    allLures && allLures.length > 0,
+                    allLures ? `${allLures.length} lures loaded` : 'No lure data available'
+                );
+
+                // Test 8: Struggle styles validation
+                const struggleStyle = gameDataLoader.getStruggleStyle('gentle_pull');
+                addResult(
+                    'Struggle Styles Available',
+                    struggleStyle !== null,
+                    struggleStyle ? 'Struggle styles loaded successfully' : 'No struggle styles available'
+                );
+
+                // Test 9: Game configuration validation
+                const fishingConfig = gameDataLoader.getFishingConfig();
+                addResult(
+                    'Game Configuration Loaded',
+                    fishingConfig && typeof fishingConfig === 'object',
+                    fishingConfig ? 'Game configuration loaded successfully' : 'No game configuration available'
+                );
+
+                // Test 10: Player attributes validation
+                const castAccuracy = gameDataLoader.getPlayerAttribute('castAccuracy');
+                addResult(
+                    'Player Attributes Available',
+                    castAccuracy !== null,
+                    castAccuracy ? 'Player attributes loaded successfully' : 'No player attributes available'
+                );
+
+                // Test 11: Critical DataLoader methods test
+                addInfo('Testing critical DataLoader methods...');
+                
+                const testMethods = [
+                    'getFishById',
+                    'getAllFish', 
+                    'getRodById',
+                    'getAllRods',
+                    'getLureById',
+                    'getAllLures',
+                    'getBoatConfig',
+                    'getFishingConfig',
+                    'getSpawningConfig'
+                ];
+
+                testMethods.forEach(methodName => {
+                    try {
+                        const hasMethod = typeof gameDataLoader[methodName] === 'function';
+                        if (hasMethod) {
+                            // Test method call (with safe parameters)
+                            let result;
+                            if (methodName.includes('getAll')) {
+                                result = gameDataLoader[methodName]();
+                            } else if (methodName.includes('Config')) {
+                                result = gameDataLoader[methodName]();
+                            } else {
+                                // For getById methods, test with a sample ID
+                                result = gameDataLoader[methodName]('test_id');
+                            }
+                            
+                            addResult(
+                                `Method ${methodName}`,
+                                true,
+                                `Method exists and callable`
+                            );
+                        } else {
+                            addResult(
+                                `Method ${methodName}`,
+                                false,
+                                `Method missing or not a function`
+                            );
+                        }
+                    } catch (error) {
+                        addResult(
+                            `Method ${methodName}`,
+                            false,
+                            `Method error: ${error.message}`
+                        );
+                    }
+                });
+
+                // Final summary
+                addInfo('✅ All tests completed! Check results above for any issues.');
+
+            } catch (error) {
+                addResult('Data Loading', false, `Critical error: ${error.message}`);
+                console.error('Test error:', error);
+            }
+        }
+
+        // Run tests when page loads
+        runTests();
+    </script>
+</body>
+</html> 
