@@ -7,6 +7,7 @@ import { WeatherManager } from './WeatherManager.js';
 import { PlayerProgression } from './PlayerProgression.js';
 import FishDatabase from './FishDatabase.js';
 import { LocationManager } from './LocationManager.js';
+import { QuestManager } from './QuestManager.js';
 
 class GameState {
     constructor() {
@@ -44,6 +45,9 @@ class GameState {
         
         // Initialize LocationManager
         this.locationManager = new LocationManager(this);
+        
+        // Initialize QuestManager (will be properly initialized when scene is available)
+        this.questManager = null;
         
         // Store reference to DataLoader for other components to access
         this.gameDataLoader = gameDataLoader;
@@ -838,6 +842,36 @@ class GameState {
             return this.initializeAudio(scene);
         }
         return this.audioManager;
+    }
+
+    /**
+     * Initialize QuestManager with scene context
+     * @param {Phaser.Scene} scene - The scene to initialize QuestManager with
+     * @returns {QuestManager} The initialized QuestManager
+     */
+    initializeQuestManager(scene) {
+        if (!this.questManager) {
+            console.log('GameState: Initializing QuestManager with scene:', scene.scene.key);
+            this.questManager = new QuestManager(scene);
+            console.log('GameState: QuestManager initialized successfully');
+        } else if (this.questManager.scene !== scene) {
+            // Update scene reference if different
+            console.log('GameState: Updating QuestManager scene reference to:', scene.scene.key);
+            this.questManager.scene = scene;
+        }
+        return this.questManager;
+    }
+
+    /**
+     * Get QuestManager, initializing if needed
+     * @param {Phaser.Scene} scene - Optional scene for initialization
+     * @returns {QuestManager|null} The QuestManager instance or null if no scene provided
+     */
+    getQuestManager(scene) {
+        if (!this.questManager && scene) {
+            return this.initializeQuestManager(scene);
+        }
+        return this.questManager;
     }
 
     setSceneAudio(sceneKey) {

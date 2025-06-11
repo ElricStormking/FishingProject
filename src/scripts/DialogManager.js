@@ -108,6 +108,15 @@ export default class DialogManager {
 
             console.log(`DialogManager: Starting dialog with ${npc.name} from ${callingScene}`);
             
+            // Pause the main GameScene to prevent background updates
+            if (this.gameScene.scene.isSleeping('GameScene')) {
+                this.gameScene.scene.wake('GameScene');
+            }
+            // Only pause GameScene if it's the calling scene
+            if (callingScene === 'GameScene') {
+                this.gameScene.scene.pause('GameScene');
+            }
+
             // Add to active dialogs
             this.activeDialogs.add(npcId);
 
@@ -143,11 +152,18 @@ export default class DialogManager {
      */
     setupDialogListeners(npcId, callingScene) {
         try {
+            // Get the scene manager
+            const sceneManager = this.gameScene.scene;
+
+            // Use a delayed call on the scene manager's game object, which is always running
+            const timerScene = sceneManager.get('DialogScene') || this.gameScene;
+
             // Wait a bit for DialogScene to be fully initialized
-            this.gameScene.time.delayedCall(100, () => {
-                const dialogScene = this.gameScene.scene.get('DialogScene');
+            timerScene.time.delayedCall(100, () => {
+                const dialogScene = sceneManager.get('DialogScene');
                 if (!dialogScene) {
                     console.warn('DialogManager: DialogScene not found when setting up listeners');
+                    // Retry or handle error
                     return;
                 }
 
@@ -190,7 +206,7 @@ export default class DialogManager {
                 // Listen for dialog end
                 dialogScene.events.once('dialog-ended', () => {
                     try {
-                        this.endDialog(npcId);
+                        this.endDialog(npcId, callingScene);
                     } catch (error) {
                         console.error('DialogManager: Error ending dialog:', error);
                     }
@@ -362,9 +378,10 @@ export default class DialogManager {
     /**
      * End the dialog with an NPC
      * @param {string} npcId - The NPC ID
+     * @param {string} callingScene - The scene that called the dialog
      */
-    endDialog(npcId) {
-        console.log(`Ending dialog with ${npcId}`);
+    endDialog(npcId, callingScene = 'GameScene') {
+        console.log(`Ending dialog with ${npcId}, returning to ${callingScene}`);
         
         // Remove from active dialogs
         this.activeDialogs.delete(npcId);
@@ -380,6 +397,11 @@ export default class DialogManager {
             npcId: npcId,
             timestamp: Date.now()
         });
+
+        // Resume the calling Scene
+        if (this.gameScene.scene.isPaused(callingScene)) {
+            this.gameScene.scene.resume(callingScene);
+        }
 
         // Save dialog completion state
         this.saveDialogCompletionState(npcId);

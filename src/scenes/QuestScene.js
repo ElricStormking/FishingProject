@@ -35,22 +35,46 @@ export default class QuestScene extends Phaser.Scene {
         
         // Get quest manager from game state or create one
         try {
-            // First try to get it from a running GameScene
+            // CRITICAL FIX: First try to get GameState reference
             const gameScene = this.scene.get('GameScene');
-            if (gameScene && gameScene.questManager) {
-                this.questManager = gameScene.questManager;
-                console.log('QuestScene: QuestManager found from GameScene');
+            const boatMenuScene = this.scene.get('BoatMenuScene');
+            let gameState = null;
+            
+            // Get GameState reference from any available scene
+            if (gameScene && gameScene.gameState) {
+                gameState = gameScene.gameState;
+                console.log('QuestScene: GameState found from GameScene');
+            } else if (boatMenuScene && boatMenuScene.gameState) {
+                gameState = boatMenuScene.gameState;
+                console.log('QuestScene: GameState found from BoatMenuScene');
+            }
+            
+            // CRITICAL FIX: Try to get QuestManager from GameState first
+            if (gameState && gameState.questManager) {
+                this.questManager = gameState.questManager;
+                console.log('QuestScene: ✅ QuestManager found from GameState');
+                console.log('QuestScene: QuestManager active quests:', Array.from(this.questManager.activeQuests.keys()));
             } else {
-                // Try to get it from BoatMenuScene if available
-                const boatMenuScene = this.scene.get('BoatMenuScene');
-                if (boatMenuScene && boatMenuScene.questManager) {
+                // Fallback: Try to get it from a running GameScene
+                if (gameScene && gameScene.questManager) {
+                    this.questManager = gameScene.questManager;
+                    console.log('QuestScene: QuestManager found from GameScene direct reference');
+                } else if (boatMenuScene && boatMenuScene.questManager) {
                     this.questManager = boatMenuScene.questManager;
                     console.log('QuestScene: QuestManager found from BoatMenuScene');
                 } else {
-                    // Create a new QuestManager instance for this session
+                    // CRITICAL FIX: Create a new QuestManager AND store it in GameState
                     console.log('QuestScene: Creating new QuestManager instance');
                     this.questManager = new QuestManager(this);
                     console.log('QuestScene: QuestManager created successfully');
+                    
+                    // CRITICAL FIX: Store the new QuestManager in GameState for other scenes to use
+                    if (gameState) {
+                        gameState.questManager = this.questManager;
+                        console.log('QuestScene: ✅ QuestManager stored in GameState for other scenes');
+                    } else {
+                        console.warn('QuestScene: Could not store QuestManager in GameState - GameState not available');
+                    }
                 }
             }
         } catch (error) {
@@ -183,10 +207,12 @@ export default class QuestScene extends Phaser.Scene {
             const button = this.add.graphics();
             const isActive = this.currentFilter === filter.key;
             
+            // Position the button graphics at origin, we'll position the whole thing later
             button.fillStyle(isActive ? filter.color : 0x2c3e50, isActive ? 1 : 0.7);
             button.lineStyle(2, filter.color, 1);
-            button.fillRoundedRect(x - 50, buttonY - 15, 100, 30, 5);
-            button.strokeRoundedRect(x - 50, buttonY - 15, 100, 30, 5);
+            button.fillRoundedRect(-50, -15, 100, 30, 5);
+            button.strokeRoundedRect(-50, -15, 100, 30, 5);
+            button.setPosition(x, buttonY);
             
             const text = this.add.text(x, buttonY, filter.label, {
                 font: '14px Arial',
@@ -195,17 +221,20 @@ export default class QuestScene extends Phaser.Scene {
             });
             text.setOrigin(0.5);
             
-            // Make interactive
+            // Make interactive - position hit area at the same coordinates as button
             const hitArea = this.add.zone(x, buttonY, 100, 30);
             hitArea.setInteractive({ useHandCursor: true });
-            hitArea.on('pointerdown', () => this.setFilter(filter.key));
+            hitArea.on('pointerdown', () => {
+                console.log(`QuestScene: Filter clicked: ${filter.key}`);
+                this.setFilter(filter.key);
+            });
             hitArea.on('pointerover', () => {
                 if (this.currentFilter !== filter.key) {
                     button.clear();
                     button.fillStyle(filter.color, 0.5);
                     button.lineStyle(2, filter.color, 1);
-                    button.fillRoundedRect(x - 50, buttonY - 15, 100, 30, 5);
-                    button.strokeRoundedRect(x - 50, buttonY - 15, 100, 30, 5);
+                    button.fillRoundedRect(-50, -15, 100, 30, 5);
+                    button.strokeRoundedRect(-50, -15, 100, 30, 5);
                 }
             });
             hitArea.on('pointerout', () => {
@@ -213,12 +242,12 @@ export default class QuestScene extends Phaser.Scene {
                     button.clear();
                     button.fillStyle(0x2c3e50, 0.7);
                     button.lineStyle(2, filter.color, 1);
-                    button.fillRoundedRect(x - 50, buttonY - 15, 100, 30, 5);
-                    button.strokeRoundedRect(x - 50, buttonY - 15, 100, 30, 5);
+                    button.fillRoundedRect(-50, -15, 100, 30, 5);
+                    button.strokeRoundedRect(-50, -15, 100, 30, 5);
                 }
             });
             
-            this.filterButtons.push({ button, text, hitArea, filter });
+            this.filterButtons.push({ button, text, hitArea, filter, x, y: buttonY });
             this.questContainer.add(button);
             this.questContainer.add(text);
             this.questContainer.add(hitArea);
@@ -327,22 +356,26 @@ export default class QuestScene extends Phaser.Scene {
     }
 
     setFilter(filterKey) {
+        console.log(`QuestScene: Setting filter to: ${filterKey} (was: ${this.currentFilter})`);
         this.currentFilter = filterKey;
         this.updateFilterButtons();
         this.refreshQuestDisplay();
     }
 
     updateFilterButtons() {
-        this.filterButtons.forEach(({ button, filter }) => {
+        this.filterButtons.forEach(({ button, text, filter }) => {
             const isActive = this.currentFilter === filter.key;
-            const x = button.x;
-            const y = button.y;
             
             button.clear();
             button.fillStyle(isActive ? filter.color : 0x2c3e50, isActive ? 1 : 0.7);
             button.lineStyle(2, filter.color, 1);
             button.fillRoundedRect(-50, -15, 100, 30, 5);
             button.strokeRoundedRect(-50, -15, 100, 30, 5);
+            
+            // Update text color based on active state
+            text.setStyle({
+                fill: isActive ? '#ffffff' : '#ecf0f1'
+            });
         });
     }
 
@@ -361,9 +394,45 @@ export default class QuestScene extends Phaser.Scene {
             if (this.currentFilter === 'all') {
                 const activeQuests = this.questManager.getActiveQuests ? this.questManager.getActiveQuests() : [];
                 const availableQuests = this.questManager.getAvailableQuests ? this.questManager.getAvailableQuests() : [];
-                quests = [...activeQuests, ...availableQuests];
+                
+                // Combine active and available quests, but filter out any that are completed
+                const allQuests = [...activeQuests, ...availableQuests];
+                
+                // Remove duplicates and filter out completed quests
+                const questMap = new Map();
+                allQuests.forEach(quest => {
+                    // Multiple checks to ensure completed quests are never shown
+                    const isCompleted = quest.status === 'completed' || 
+                                      this.questManager.completedQuests.has(quest.id) ||
+                                      (quest.template && quest.template.status === 'completed');
+                    
+                    // Only add if not completed and not already in map
+                    if (!isCompleted && !questMap.has(quest.id)) {
+                        questMap.set(quest.id, quest);
+                        console.log(`QuestScene: Adding quest to display: ${quest.id} - ${quest.title}`);
+                    } else if (isCompleted) {
+                        console.log(`QuestScene: Filtering out completed quest: ${quest.id} - ${quest.title}`);
+                    }
+                });
+                
+                quests = Array.from(questMap.values());
             } else {
                 quests = this.questManager.getQuestsByType ? this.questManager.getQuestsByType(this.currentFilter) : [];
+                
+                // Additional safety filter to remove completed quests with multiple checks
+                quests = quests.filter(quest => {
+                    const isCompleted = quest.status === 'completed' || 
+                                      this.questManager.completedQuests.has(quest.id) ||
+                                      (quest.template && quest.template.status === 'completed');
+                    
+                    if (isCompleted) {
+                        console.log(`QuestScene: Filtering out completed quest (by type): ${quest.id} - ${quest.title}`);
+                        return false;
+                    }
+                    
+                    console.log(`QuestScene: Including quest (by type): ${quest.id} - ${quest.title}`);
+                    return true;
+                });
             }
             
             // Sort quests by priority and status
@@ -371,6 +440,10 @@ export default class QuestScene extends Phaser.Scene {
                 const statusOrder = { 'active': 0, 'available': 1, 'completed': 2 };
                 return statusOrder[a.status] - statusOrder[b.status];
             });
+            
+            console.log(`QuestScene: Displaying ${quests.length} quests for filter '${this.currentFilter}'`);
+            console.log('QuestScene: Quest IDs:', quests.map(q => q.id));
+            console.log('QuestScene: Completed quest IDs:', Array.from(this.questManager.completedQuests));
             
             this.displayQuestList(quests);
             this.updateQuestStats();
@@ -701,9 +774,34 @@ export default class QuestScene extends Phaser.Scene {
 
     setupEventListeners() {
         // Listen for quest events from QuestManager
-        this.events.on('quest-started', this.refreshQuestDisplay, this);
-        this.events.on('quest-completed', this.refreshQuestDisplay, this);
-        this.events.on('quest-objective-updated', this.refreshQuestDisplay, this);
+        this.events.on('quest-started', this.onQuestStarted, this);
+        this.events.on('quest-completed', this.onQuestCompleted, this);
+        this.events.on('quest-objective-updated', this.onQuestObjectiveUpdated, this);
+    }
+    
+    onQuestStarted(data) {
+        console.log('QuestScene: Quest started event received:', data.questId);
+        this.refreshQuestDisplay();
+    }
+    
+    onQuestCompleted(data) {
+        console.log('QuestScene: Quest completed event received:', data.questId);
+        // Force cleanup and refresh when quest is completed
+        if (this.questManager) {
+            this.questManager.cleanupQuestStates();
+        }
+        this.refreshQuestDisplay();
+        
+        // Clear selection if the completed quest was selected
+        if (this.selectedQuest && this.selectedQuest.id === data.questId) {
+            this.selectedQuest = null;
+            this.clearQuestDetails();
+        }
+    }
+    
+    onQuestObjectiveUpdated(data) {
+        console.log('QuestScene: Quest objective updated event received:', data.questId, data.objectiveId);
+        this.refreshQuestDisplay();
     }
 
     returnToGame() {

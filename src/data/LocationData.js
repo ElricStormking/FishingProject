@@ -1,5 +1,27 @@
 // Location data for Luxury Angler
 export const LOCATION_DATA = {
+  "starting_port": {
+    "name": "Starting Port",
+    "mapId": "starting_port",
+    "spotNumber": 1,
+    "description": "The main hub for all your fishing adventures. Access shops, manage your inventory, and prepare for your next trip.",
+    "environment": "saltwater",
+    "difficulty": 0,
+    "unlockLevel": 1,
+    "fishingModifiers": {
+      "biteRate": 0.5,
+      "lineStrength": 1,
+      "castDistance": 1,
+      "lureEffectiveness": 1,
+      "experienceBonus": 0
+    },
+    "fishPopulation": [],
+    "uniqueFeatures": [
+      "Access to Shop",
+      "No fishing available",
+      "Game starting point"
+    ]
+  },
   "beginner_lake_dock": {
     "name": "Beginner Lake - Wooden Dock",
     "mapId": "beginner_waters",

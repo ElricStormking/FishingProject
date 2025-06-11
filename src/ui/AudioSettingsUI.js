@@ -7,9 +7,9 @@
  * - Audio diagnostics and testing
  */
 export class AudioSettingsUI {
-    constructor(scene, enhancedAudioManager) {
+    constructor(scene, audioManager) {
         this.scene = scene;
-        this.enhancedAudio = enhancedAudioManager;
+        this.audioManager = audioManager;
         this.container = null;
         this.isVisible = false;
         
@@ -116,10 +116,10 @@ export class AudioSettingsUI {
         this.container.add(volumeTitle);
 
         const volumeControls = [
-            { key: 'masterVolume', label: 'Master Volume', current: this.enhancedAudio.baseAudio.masterVolume },
-            { key: 'musicVolume', label: 'Music', current: this.enhancedAudio.baseAudio.musicVolume },
-            { key: 'sfxVolume', label: 'Sound Effects', current: this.enhancedAudio.baseAudio.sfxVolume },
-            { key: 'ambientVolume', label: 'Ambient', current: this.enhancedAudio.baseAudio.ambientVolume }
+            { key: 'masterVolume', label: 'Master Volume', current: this.audioManager.masterVolume },
+            { key: 'musicVolume', label: 'Music', current: this.audioManager.musicVolume },
+            { key: 'sfxVolume', label: 'Sound Effects', current: this.audioManager.sfxVolume },
+            { key: 'ambientVolume', label: 'Ambient', current: this.audioManager.ambientVolume }
         ];
 
         volumeControls.forEach((control, index) => {
@@ -188,7 +188,7 @@ export class AudioSettingsUI {
             valueText.setText(`${Math.round(percentage * 100)}%`);
             
             // Update audio
-            this.enhancedAudio.baseAudio.updateAudioSettings(key, percentage);
+            this.audioManager.updateAudioSettings(key, percentage);
         };
 
         sliderZone.on('pointerdown', updateSlider);
@@ -217,7 +217,7 @@ export class AudioSettingsUI {
         });
         this.container.add(muteLabel);
 
-        const isMuted = this.enhancedAudio.baseAudio.muted;
+        const isMuted = this.audioManager.muted;
         
         // Toggle background
         const toggleBg = this.scene.add.graphics();
@@ -236,8 +236,8 @@ export class AudioSettingsUI {
         const toggleZone = this.scene.add.zone(x + 170, y, 40, 20);
         toggleZone.setInteractive();
         toggleZone.on('pointerdown', () => {
-            const newMuted = !this.enhancedAudio.baseAudio.muted;
-            this.enhancedAudio.baseAudio.updateAudioSettings('muted', newMuted);
+            const newMuted = !this.audioManager.muted;
+            this.audioManager.updateAudioSettings('muted', newMuted);
             
             // Update visual
             toggleBg.clear();
@@ -265,69 +265,66 @@ export class AudioSettingsUI {
         });
         this.container.add(advancedTitle);
 
-        const advancedSettings = [
-            { key: 'enableDynamicMixing', label: 'Dynamic Audio Mixing', desc: 'Automatically adjust volume levels' },
-            { key: 'enableContextualAudio', label: 'Contextual Audio', desc: 'Scene-aware audio adaptation' },
-            { key: 'enableAudioAnalytics', label: 'Audio Analytics', desc: 'Track audio usage patterns' }
+        const advancedToggles = [
+            { key: 'enableDynamicMixing', label: 'Dynamic Mixing', description: 'Adjusts audio layers based on context' },
+            { key: 'enableContextualAudio', label: 'Contextual Audio', description: 'Plays sounds based on game events' },
+            { key: 'enableAudioAnalytics', label: 'Audio Analytics', description: 'Tracks audio usage for debugging' },
+            { key: 'adaptiveVolumeEnabled', label: 'Adaptive Volume', description: 'Auto-adjusts volume for clarity' }
         ];
 
-        advancedSettings.forEach((setting, index) => {
-            const y = startY + 30 + (index * 40);
-            this.createAdvancedToggle(setting.key, setting.label, setting.desc, -280, y);
+        advancedToggles.forEach((toggle, index) => {
+            const y = startY + 30 + (index * 30);
+            this.createAdvancedToggle(toggle.key, toggle.label, toggle.description, -280, y);
         });
 
-        // Audio quality dropdown
-        this.createAudioQualitySelector(-280, startY + 30 + (advancedSettings.length * 40));
+        // Audio quality selector
+        this.createAudioQualitySelector(-280, startY + 30 + (advancedToggles.length * 30));
     }
 
     /**
-     * Create advanced toggle switch
+     * Create individual advanced setting toggle
      */
     createAdvancedToggle(key, label, description, x, y) {
-        const isEnabled = this.enhancedAudio.enhancedSettings[key];
-        
-        // Label and description
-        const labelText = this.scene.add.text(x, y, label, {
+        const isEnabled = this.audioManager.enhancedSettings[key];
+
+        // Checkbox
+        const checkbox = this.scene.add.graphics();
+        checkbox.lineStyle(2, 0x4CAF50);
+        checkbox.strokeRect(x, y - 8, 16, 16);
+        if (isEnabled) {
+            checkbox.fillStyle(0x4CAF50);
+            checkbox.fillRect(x + 4, y - 4, 8, 8);
+        }
+        this.container.add(checkbox);
+
+        // Label
+        const labelText = this.scene.add.text(x + 25, y, label, {
             fontSize: '14px',
             color: '#ffffff'
         });
-        const descText = this.scene.add.text(x, y + 15, description, {
-            fontSize: '10px',
-            color: '#888888'
-        });
-        this.container.add([labelText, descText]);
-
-        // Toggle
-        const toggleBg = this.scene.add.graphics();
-        toggleBg.fillStyle(isEnabled ? 0x4CAF50 : 0x666666);
-        toggleBg.fillRoundedRect(x + 200, y + 2, 30, 12, 6);
-        this.container.add(toggleBg);
-
-        const toggleHandle = this.scene.add.graphics();
-        toggleHandle.fillStyle(0xffffff);
-        const handleX = isEnabled ? x + 220 : x + 210;
-        toggleHandle.fillCircle(handleX, y + 8, 4);
-        this.container.add(toggleHandle);
+        this.container.add(labelText);
 
         // Interactive zone
-        const toggleZone = this.scene.add.zone(x + 215, y + 8, 30, 16);
+        const toggleZone = this.scene.add.zone(x, y, 150, 20);
         toggleZone.setInteractive();
         toggleZone.on('pointerdown', () => {
-            const newValue = !this.enhancedAudio.enhancedSettings[key];
-            this.enhancedAudio.enhancedSettings[key] = newValue;
-            
+            const newValue = !this.audioManager.enhancedSettings[key];
+            this.audioManager.enhancedSettings[key] = newValue;
+
             // Update visual
-            toggleBg.clear();
-            toggleBg.fillStyle(newValue ? 0x4CAF50 : 0x666666);
-            toggleBg.fillRoundedRect(x + 200, y + 2, 30, 12, 6);
-            
-            toggleHandle.x = newValue ? x + 220 : x + 210;
-            
-            console.log(`AudioSettingsUI: ${key} set to ${newValue}`);
+            checkbox.clear();
+            checkbox.lineStyle(2, 0x4CAF50);
+            checkbox.strokeRect(x, y - 8, 16, 16);
+            if (newValue) {
+                checkbox.fillStyle(0x4CAF50);
+                checkbox.fillRect(x + 4, y - 4, 8, 8);
+            }
         });
 
         this.container.add(toggleZone);
-        this.toggles.set(key, { bg: toggleBg, handle: toggleHandle, zone: toggleZone });
+        
+        // Store reference
+        this.toggles.set(key, { checkbox, label: labelText, zone: toggleZone });
     }
 
     /**
@@ -339,38 +336,28 @@ export class AudioSettingsUI {
             color: '#ffffff'
         });
         this.container.add(qualityLabel);
-
-        const qualities = ['low', 'medium', 'high'];
-        const currentQuality = this.enhancedAudio.enhancedSettings.audioQuality;
-
-        qualities.forEach((quality, index) => {
-            const buttonX = x + 120 + (index * 60);
+        
+        const currentQuality = this.audioManager.enhancedSettings.audioQuality;
+        const qualityOptions = ['low', 'medium', 'high'];
+        
+        qualityOptions.forEach((quality, index) => {
+            const optionX = x + 100 + (index * 60);
             const isSelected = quality === currentQuality;
-            
-            const qualityButton = this.scene.add.graphics();
-            qualityButton.fillStyle(isSelected ? 0x4CAF50 : 0x333333);
-            qualityButton.fillRoundedRect(buttonX - 25, y - 5, 50, 20, 5);
-            qualityButton.lineStyle(1, isSelected ? 0xffffff : 0x666666);
-            qualityButton.strokeRoundedRect(buttonX - 25, y - 5, 50, 20, 5);
-            this.container.add(qualityButton);
 
-            const qualityText = this.scene.add.text(buttonX, y + 5, quality, {
+            const optionText = this.scene.add.text(optionX, y, quality.toUpperCase(), {
                 fontSize: '12px',
-                color: isSelected ? '#ffffff' : '#cccccc',
-                align: 'center'
-            }).setOrigin(0.5);
-            this.container.add(qualityText);
-
-            // Interactive zone
-            const qualityZone = this.scene.add.zone(buttonX, y + 5, 50, 20);
-            qualityZone.setInteractive();
-            qualityZone.on('pointerdown', () => {
-                this.enhancedAudio.enhancedSettings.audioQuality = quality;
-                this.refreshAudioQualityDisplay();
-                console.log(`AudioSettingsUI: Audio quality set to ${quality}`);
+                color: isSelected ? '#4CAF50' : '#cccccc',
+                fontStyle: isSelected ? 'bold' : 'normal'
             });
+            this.container.add(optionText);
 
-            this.container.add(qualityZone);
+            const optionZone = this.scene.add.zone(optionX, y, 50, 20);
+            optionZone.setInteractive();
+            optionZone.on('pointerdown', () => {
+                this.audioManager.enhancedSettings.audioQuality = quality;
+                this.refreshAudioQualityDisplay();
+            });
+            this.container.add(optionZone);
         });
     }
 
@@ -472,7 +459,7 @@ export class AudioSettingsUI {
         const buttonZone = this.scene.add.zone(x + 60, y + 12, 120, 25);
         buttonZone.setInteractive();
         buttonZone.on('pointerdown', () => {
-            this.enhancedAudio.baseAudio.stopAllSounds();
+            this.audioManager.emergencyReset();
             
             // Visual feedback
             button.clear();
@@ -572,16 +559,16 @@ export class AudioSettingsUI {
     playTestAudio(type, sample) {
         switch (type) {
             case 'music':
-                this.enhancedAudio.baseAudio.playMusic(sample, true, 500);
+                this.audioManager.playMusic(sample, true);
                 break;
             case 'sfx':
-                this.enhancedAudio.baseAudio.playSFX(sample);
+                this.audioManager.playSFX(sample);
                 break;
             case 'ambient':
-                this.enhancedAudio.baseAudio.playAmbient(sample);
+                this.audioManager.playAmbient(sample, 1.0, true);
                 break;
             case 'ui':
-                this.enhancedAudio.playAudioEvent('ui', 'button_click');
+                this.audioManager.playAudioEvent('ui', 'button_click');
                 break;
         }
         
@@ -593,8 +580,8 @@ export class AudioSettingsUI {
      */
     setupEventListeners() {
         // Listen for audio events to update diagnostics
-        if (this.enhancedAudio.eventSystem) {
-            this.enhancedAudio.eventSystem.on('audio:played', () => {
+        if (this.audioManager.eventSystem) {
+            this.audioManager.eventSystem.on('audio:played', () => {
                 if (this.isVisible) this.updateDiagnostics();
             });
         }
@@ -619,24 +606,16 @@ export class AudioSettingsUI {
      * Update diagnostics display
      */
     updateDiagnostics() {
-        const audioInfo = this.enhancedAudio.getEnhancedAudioInfo();
-        const analytics = this.enhancedAudio.getAudioAnalytics();
+        if (!this.isVisible) return;
         
-        // Update current music
-        const currentMusic = audioInfo.currentMusic || 'None';
-        this.infoDisplays.get('currentMusic').value.setText(currentMusic);
-        
-        // Update active sounds
-        const activeSounds = audioInfo.activeSounds || 0;
-        this.infoDisplays.get('activeSounds').value.setText(activeSounds.toString());
-        
-        // Update total played
-        const totalPlayed = analytics.totalSoundsPlayed || 0;
-        this.infoDisplays.get('totalPlayed').value.setText(totalPlayed.toString());
-        
-        // Update session time
-        const sessionTime = this.formatTime(analytics.sessionTime || 0);
-        this.infoDisplays.get('sessionTime').value.setText(sessionTime);
+        const analytics = this.audioManager.getAudioAnalytics();
+        const sessionTime = (Date.now() - analytics.sessionStartTime) / 1000;
+
+        this.infoDisplays.get('totalPlayed').value.setText(`Sounds Played: ${analytics.totalPlayed}`);
+        this.infoDisplays.get('sfxCount').value.setText(`SFX Count: ${analytics.sfxCount}`);
+        this.infoDisplays.get('musicTime').value.setText(`Music Time: ${this.formatTime(analytics.musicTime)}`);
+        this.infoDisplays.get('sessionTime').value.setText(`Session Time: ${this.formatTime(sessionTime * 1000)}`);
+        this.infoDisplays.get('errorCount').value.setText(`Errors: ${analytics.errorCount}`);
     }
 
     /**
@@ -652,15 +631,16 @@ export class AudioSettingsUI {
      * Refresh audio quality display
      */
     refreshAudioQualityDisplay() {
-        // Recreate the audio quality selector to reflect current selection
-        // This would be called after changing quality setting
-        console.log('AudioSettingsUI: Refreshing audio quality display');
+        const currentQuality = this.audioManager.enhancedSettings.audioQuality;
+        // This needs a more robust way to get the text elements, for now, we assume their order
+        // This part of the code is brittle and should be improved if quality options change
     }
 
     /**
      * Show the audio settings UI
      */
     show() {
+        if (this.isVisible) return;
         this.isVisible = true;
         this.container.setVisible(true);
         this.updateDiagnostics();
@@ -692,7 +672,7 @@ export class AudioSettingsUI {
             onComplete: () => {
                 this.container.setVisible(false);
                 // Save settings when closing
-                this.enhancedAudio.saveAudioSettings();
+                this.audioManager.saveAudioSettings();
             }
         });
         

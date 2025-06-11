@@ -1,0 +1,1255 @@
+{
+  "dialogSamples": {
+    "storyDialogs": {
+      "Story01": {
+        "id": "Story01",
+        "type": "story",
+        "title": "Welcome to Luxury Angler",
+        "speaker": "Captain",
+        "portrait": "captain",
+        "text": "Welcome aboard the luxury yacht! You've just inherited this magnificent vessel from your late uncle. Are you ready to begin your journey as a master angler?",
+        "choices": [
+          {
+            "id": "story01_ready",
+            "text": "I'm ready to start fishing!",
+            "effects": {
+              "questProgress": "story_001_tutorial",
+              "unlockQuest": "story_002_first_companion"
+            }
+          },
+          {
+            "id": "story01_nervous",
+            "text": "I'm a bit nervous about this...",
+            "effects": {
+              "questProgress": "story_001_tutorial",
+              "dialogue": "Don't worry, everyone starts somewhere. Let's take it slow."
+            }
+          }
+        ],
+        "questId": "story_001_tutorial",
+        "unlocks": ["tutorial01"]
+      },
+      "Story02": {
+        "id": "Story02",
+        "type": "story",
+        "title": "First Catch Success",
+        "speaker": "Captain",
+        "portrait": "captain",
+        "text": "Excellent work on your first catch! That was a beautiful technique. You're showing real promise as an angler.",
+        "choices": [
+          {
+            "id": "story02_proud",
+            "text": "Thank you! I feel like I'm getting the hang of this.",
+            "effects": {
+              "questProgress": "story_002_first_companion",
+              "experience": 100
+            }
+          },
+          {
+            "id": "story02_lucky",
+            "text": "I think I just got lucky...",
+            "effects": {
+              "questProgress": "story_002_first_companion",
+              "dialogue": "Luck favors the prepared mind. Keep practicing!"
+            }
+          }
+        ],
+        "questId": "story_002_first_companion"
+      },
+      "Story03": {
+        "id": "Story03",
+        "type": "story",
+        "title": "Meeting Your First Companion",
+        "speaker": "Mia",
+        "portrait": "npc-assistant-1",
+        "text": "Hi there! I'm Mia, your fishing assistant. I've been waiting to meet you! I heard you're new to luxury angling. I'd love to help you learn the ropes!",
+        "choices": [
+          {
+            "id": "story03_enthusiastic",
+            "text": "That sounds great! I could use all the help I can get.",
+            "effects": {
+              "romance": { "mia": 5 },
+              "unlockQuest": "npc_mia_001",
+              "questProgress": "story_003_companion_intro"
+            }
+          },
+          {
+            "id": "story03_independent",
+            "text": "Thanks, but I prefer to learn on my own.",
+            "effects": {
+              "romance": { "mia": -2 },
+              "questProgress": "story_003_companion_intro"
+            }
+          }
+        ],
+        "questId": "story_003_companion_intro"
+      },
+      "Story04": {
+        "id": "Story04",
+        "type": "story",
+        "title": "Exploring New Waters",
+        "speaker": "Captain",
+        "portrait": "captain",
+        "text": "Now that you've mastered the basics, it's time to explore deeper waters. Each fishing spot has its own unique challenges and rewards.",
+        "choices": [
+          {
+            "id": "story04_excited",
+            "text": "I'm excited to see what's out there!",
+            "effects": {
+              "unlockMap": "coral_cove",
+              "questProgress": "story_004_new_waters"
+            }
+          }
+        ],
+        "questId": "story_004_new_waters"
+      },
+      "Story05": {
+        "id": "Story05",
+        "type": "story",
+        "title": "First Boss Challenge",
+        "speaker": "Captain",
+        "portrait": "captain",
+        "text": "You've proven yourself capable, but now comes your first real test. The Giant Bass has been spotted in these waters. Are you ready for a boss fight?",
+        "choices": [
+          {
+            "id": "story05_ready",
+            "text": "Bring it on! I'm ready for the challenge.",
+            "effects": {
+              "unlockBoss": "giant_bass",
+              "questProgress": "story_005_first_boss"
+            }
+          },
+          {
+            "id": "story05_prepare",
+            "text": "Let me prepare my equipment first.",
+            "effects": {
+              "questProgress": "story_005_first_boss",
+              "dialogue": "Wise choice. Preparation is key to success."
+            }
+          }
+        ],
+        "questId": "story_005_first_boss"
+      },
+      "Story06": {
+        "id": "Story06",
+        "type": "story",
+        "title": "Victory and New Horizons",
+        "speaker": "Captain",
+        "portrait": "captain",
+        "text": "Incredible! You've defeated the Giant Bass! Word of your skill is spreading. New fishing grounds are opening up, and more challenging waters await.",
+        "choices": [
+          {
+            "id": "story06_excited",
+            "text": "I'm ready for whatever comes next!",
+            "effects": {
+              "unlockMap": "deep_abyss",
+              "questProgress": "story_006_deep_waters",
+              "experience": 500
+            }
+          }
+        ],
+        "questId": "story_006_deep_waters"
+      },
+      "Story07": {
+        "id": "Story07",
+        "type": "story",
+        "title": "The Deep Abyss Beckons",
+        "speaker": "Luna",
+        "portrait": "npc-assistant-3",
+        "text": "The deep waters call to you now... I can sense it. The Abyss holds creatures that have never seen sunlight. Are you prepared for such darkness?",
+        "choices": [
+          {
+            "id": "story07_brave",
+            "text": "I'm not afraid of the dark depths.",
+            "effects": {
+              "unlockLocation": "midnight_trench",
+              "questProgress": "story_007_abyss_entry"
+            }
+          },
+          {
+            "id": "story07_cautious",
+            "text": "What should I know before venturing there?",
+            "effects": {
+              "questProgress": "story_007_abyss_entry",
+              "dialogue": "The creatures there are ancient and powerful. Respect them, and they may respect you."
+            }
+          }
+        ],
+        "questId": "story_007_abyss_entry"
+      },
+      "Story08": {
+        "id": "Story08",
+        "type": "story",
+        "title": "Master Angler Recognition",
+        "speaker": "Tournament Director",
+        "portrait": "tournament_director",
+        "text": "Your reputation precedes you! The Angling Guild has taken notice of your achievements. We'd like to invite you to join our ranks as a Master Angler.",
+        "choices": [
+          {
+            "id": "story08_accept",
+            "text": "I'm honored to accept this invitation.",
+            "effects": {
+              "unlockTitle": "master_angler",
+              "questProgress": "story_008_guild_invitation",
+              "unlockQuest": "guild_trials"
+            }
+          }
+        ],
+        "questId": "story_008_guild_invitation"
+      },
+      "Story09": {
+        "id": "Story09",
+        "type": "story",
+        "title": "The Legendary Kraken",
+        "speaker": "Ancient Mariner",
+        "portrait": "ancient_mariner",
+        "text": "Ye seek the ultimate challenge, do ye? The Kraken sleeps in the deepest trenches, but legends say it can be awakened by one worthy enough. Are ye that angler?",
+        "choices": [
+          {
+            "id": "story09_challenge",
+            "text": "I'll face the Kraken!",
+            "effects": {
+              "unlockBoss": "kraken",
+              "questProgress": "story_009_kraken_challenge"
+            }
+          },
+          {
+            "id": "story09_prepare",
+            "text": "I need to prepare for such a legendary battle.",
+            "effects": {
+              "questProgress": "story_009_kraken_challenge",
+              "dialogue": "Wise words. The Kraken has claimed many unprepared souls."
+            }
+          }
+        ],
+        "questId": "story_009_kraken_challenge"
+      },
+      "Story10": {
+        "id": "Story10",
+        "type": "story",
+        "title": "Legend Achieved",
+        "speaker": "Captain",
+        "portrait": "captain",
+        "text": "You've done it! The Kraken has been conquered! You are now truly a legend among anglers. Your uncle would be so proud of what you've accomplished.",
+        "choices": [
+          {
+            "id": "story10_humble",
+            "text": "I couldn't have done it without everyone's help.",
+            "effects": {
+              "unlockTitle": "kraken_slayer",
+              "questProgress": "story_010_legend_complete",
+              "experience": 2000,
+              "achievement": "legendary_angler"
+            }
+          }
+        ],
+        "questId": "story_010_legend_complete"
+      }
+    },
+    "romanticNpcDialogs": {
+      "mia01": {
+        "id": "mia01",
+        "type": "romantic_npc",
+        "npcId": "mia",
+        "title": "Getting to Know Mia",
+        "speaker": "Mia",
+        "portrait": "npc-assistant-1",
+        "text": "So, tell me about yourself! What made you want to become an angler? I've always been fascinated by the ocean and its mysteries.",
+        "choices": [
+          {
+            "id": "mia01_passion",
+            "text": "I've always felt a deep connection to the water.",
+            "effects": {
+              "romance": { "mia": 8 },
+              "dialogue": "That's beautiful! I feel the same way. The ocean calls to us, doesn't it?"
+            }
+          },
+          {
+            "id": "mia01_inheritance",
+            "text": "I inherited this yacht and thought I'd give it a try.",
+            "effects": {
+              "romance": { "mia": 3 },
+              "dialogue": "Well, sometimes the best adventures start unexpectedly!"
+            }
+          },
+          {
+            "id": "mia01_flirt",
+            "text": "I was hoping to meet someone like you.",
+            "effects": {
+              "romance": { "mia": 12 },
+              "dialogue": "*blushes* Oh my! You're quite the charmer, aren't you?"
+            }
+          }
+        ],
+        "romanceLevel": 0,
+        "unlockCondition": "story_003_companion_intro"
+      },
+      "mia02": {
+        "id": "mia02",
+        "type": "romantic_npc",
+        "npcId": "mia",
+        "title": "Mia's Fishing Tips",
+        "speaker": "Mia",
+        "portrait": "npc-assistant-1",
+        "text": "Want to know a secret? The best fishing spots are often where the water changes color. Look for those subtle shifts - that's where the fish like to gather!",
+        "choices": [
+          {
+            "id": "mia02_grateful",
+            "text": "Thank you for the tip! You're so knowledgeable.",
+            "effects": {
+              "romance": { "mia": 6 },
+              "fishDetection": 5,
+              "dialogue": "Aww, you're sweet! I love sharing what I know."
+            }
+          },
+          {
+            "id": "mia02_skeptical",
+            "text": "Are you sure about that? Sounds like folklore.",
+            "effects": {
+              "romance": { "mia": -3 },
+              "dialogue": "Trust me on this one! Experience is the best teacher."
+            }
+          }
+        ],
+        "romanceLevel": 10,
+        "unlockCondition": "mia01_completed"
+      },
+      "mia03": {
+        "id": "mia03",
+        "type": "romantic_npc",
+        "npcId": "mia",
+        "title": "Sunset Conversation",
+        "speaker": "Mia",
+        "portrait": "npc-assistant-1",
+        "text": "Look at that sunset! Isn't it gorgeous? I love how the light dances on the water. It makes me feel so peaceful... especially when I'm sharing it with someone special.",
+        "choices": [
+          {
+            "id": "mia03_romantic",
+            "text": "It's beautiful, but not as beautiful as you.",
+            "effects": {
+              "romance": { "mia": 15 },
+              "dialogue": "*blushes deeply* You always know just what to say..."
+            }
+          },
+          {
+            "id": "mia03_agree",
+            "text": "It really is peaceful. Thank you for sharing this moment.",
+            "effects": {
+              "romance": { "mia": 8 },
+              "dialogue": "Thank you for being here with me. It means a lot."
+            }
+          }
+        ],
+        "romanceLevel": 25,
+        "unlockCondition": "mia02_completed"
+      },
+      "sophie01": {
+        "id": "sophie01",
+        "type": "romantic_npc",
+        "npcId": "sophie",
+        "title": "Sophie's Challenge",
+        "speaker": "Sophie",
+        "portrait": "npc-assistant-2",
+        "text": "Hey there, newbie! I heard you've been making waves around here. Think you can keep up with a pro like me? I bet I can out-fish you any day!",
+        "choices": [
+          {
+            "id": "sophie01_accept",
+            "text": "You're on! I love a good challenge.",
+            "effects": {
+              "romance": { "sophie": 10 },
+              "unlockQuest": "fishing_challenge_sophie",
+              "dialogue": "Now that's what I like to hear! Let's see what you've got!"
+            }
+          },
+          {
+            "id": "sophie01_decline",
+            "text": "I'm still learning. Maybe another time?",
+            "effects": {
+              "romance": { "sophie": 2 },
+              "dialogue": "Fair enough. Come find me when you're ready to play with the big fish!"
+            }
+          },
+          {
+            "id": "sophie01_flirt",
+            "text": "I'd rather spend time getting to know you better.",
+            "effects": {
+              "romance": { "sophie": 8 },
+              "dialogue": "Smooth talker! I like that. But don't think it'll make me go easy on you!"
+            }
+          }
+        ],
+        "romanceLevel": 0,
+        "unlockCondition": "story_004_new_waters"
+      },
+      "sophie02": {
+        "id": "sophie02",
+        "type": "romantic_npc",
+        "npcId": "sophie",
+        "title": "Competition Results",
+        "speaker": "Sophie",
+        "portrait": "npc-assistant-2",
+        "text": "Not bad! You actually gave me a run for my money out there. I have to admit, I'm impressed. Maybe you're not such a newbie after all!",
+        "choices": [
+          {
+            "id": "sophie02_humble",
+            "text": "I learned from watching the best.",
+            "effects": {
+              "romance": { "sophie": 12 },
+              "dialogue": "Flattery will get you everywhere! But seriously, you've got natural talent."
+            }
+          },
+          {
+            "id": "sophie02_confident",
+            "text": "I told you I could keep up!",
+            "effects": {
+              "romance": { "sophie": 8 },
+              "dialogue": "Confidence! I like that in a fishing partner."
+            }
+          }
+        ],
+        "romanceLevel": 15,
+        "unlockCondition": "fishing_challenge_sophie_completed"
+      },
+      "luna01": {
+        "id": "luna01",
+        "type": "romantic_npc",
+        "npcId": "luna",
+        "title": "Luna's Wisdom",
+        "speaker": "Luna",
+        "portrait": "npc-assistant-3",
+        "text": "The ocean speaks to those who listen... I sense you have the potential to hear its whispers. The deep waters hold ancient secrets, but they only reveal themselves to the worthy.",
+        "choices": [
+          {
+            "id": "luna01_intrigued",
+            "text": "I'd love to learn more about these secrets.",
+            "effects": {
+              "romance": { "luna": 8 },
+              "deepSeaAccess": true,
+              "dialogue": "Your curiosity pleases the depths. I will teach you the old ways."
+            }
+          },
+          {
+            "id": "luna01_skeptical",
+            "text": "That sounds a bit mystical for my taste.",
+            "effects": {
+              "romance": { "luna": 1 },
+              "dialogue": "The skeptical mind sees only the surface. Perhaps in time..."
+            }
+          },
+          {
+            "id": "luna01_respectful",
+            "text": "I respect your connection to the ocean.",
+            "effects": {
+              "romance": { "luna": 6 },
+              "dialogue": "Respect is the first step toward understanding. You show promise."
+            }
+          }
+        ],
+        "romanceLevel": 0,
+        "unlockCondition": "story_006_deep_waters"
+      },
+      "luna02": {
+        "id": "luna02",
+        "type": "romantic_npc",
+        "npcId": "luna",
+        "title": "Moonlight Fishing",
+        "speaker": "Luna",
+        "portrait": "npc-assistant-3",
+        "text": "Tonight, the moon is full and the tides are perfect. This is when the rarest fish emerge from the depths. Will you join me in the ancient ritual of moonlight fishing?",
+        "choices": [
+          {
+            "id": "luna02_join",
+            "text": "I would be honored to learn from you.",
+            "effects": {
+              "romance": { "luna": 12 },
+              "unlockFishing": "moonlight_ritual",
+              "dialogue": "The moon smiles upon us tonight. Together, we will call forth the deep dwellers."
+            }
+          },
+          {
+            "id": "luna02_curious",
+            "text": "What exactly does this ritual involve?",
+            "effects": {
+              "romance": { "luna": 5 },
+              "dialogue": "Patience, meditation, and respect for the ocean's power. Nothing more, nothing less."
+            }
+          }
+        ],
+        "romanceLevel": 20,
+        "unlockCondition": "luna01_completed"
+      },
+      "mia04": {
+        "id": "mia04",
+        "type": "romantic_npc",
+        "npcId": "mia",
+        "title": "Mia's Gift",
+        "speaker": "Mia",
+        "portrait": "npc-assistant-1",
+        "text": "I made something special for you! It's a custom lure I designed based on your fishing style. I hope it brings you luck... and reminds you of me when you're out there.",
+        "choices": [
+          {
+            "id": "mia04_touched",
+            "text": "This is so thoughtful! Thank you, Mia.",
+            "effects": {
+              "romance": { "mia": 10 },
+              "items": ["mias_special_lure"],
+              "dialogue": "I'm so glad you like it! I put a lot of love into making it."
+            }
+          },
+          {
+            "id": "mia04_romantic",
+            "text": "I'll treasure this always, just like I treasure you.",
+            "effects": {
+              "romance": { "mia": 18 },
+              "items": ["mias_special_lure"],
+              "dialogue": "*tears up* You always know how to make my heart flutter..."
+            }
+          }
+        ],
+        "romanceLevel": 40,
+        "unlockCondition": "mia03_completed"
+      },
+      "mia05": {
+        "id": "mia05",
+        "type": "romantic_npc",
+        "npcId": "mia",
+        "title": "Confession Under Stars",
+        "speaker": "Mia",
+        "portrait": "npc-assistant-1",
+        "text": "Look at all those stars... They're beautiful, but not as beautiful as this moment with you. I... I think I'm falling in love with you. Is that okay?",
+        "choices": [
+          {
+            "id": "mia05_love",
+            "text": "I love you too, Mia. I have for a while now.",
+            "effects": {
+              "romance": { "mia": 25 },
+              "relationship": "lover",
+              "unlockHCG": "mia_love_confession",
+              "dialogue": "*kisses you softly* I've been hoping you'd say that..."
+            }
+          },
+          {
+            "id": "mia05_gentle",
+            "text": "I care about you deeply too.",
+            "effects": {
+              "romance": { "mia": 15 },
+              "dialogue": "That means everything to me. Let's see where this takes us."
+            }
+          }
+        ],
+        "romanceLevel": 60,
+        "unlockCondition": "mia04_completed"
+      },
+      "sophie03": {
+        "id": "sophie03",
+        "type": "romantic_npc",
+        "npcId": "sophie",
+        "title": "Sophie's Vulnerability",
+        "speaker": "Sophie",
+        "portrait": "npc-assistant-2",
+        "text": "You know, I'm not always as confident as I seem. Sometimes I worry I'm too competitive, too intense. Do you... do you think I'm too much?",
+        "choices": [
+          {
+            "id": "sophie03_reassure",
+            "text": "Your passion is one of the things I love about you.",
+            "effects": {
+              "romance": { "sophie": 15 },
+              "dialogue": "Really? You... you love that about me? That means more than you know."
+            }
+          },
+          {
+            "id": "sophie03_balance",
+            "text": "You're perfect just as you are, Sophie.",
+            "effects": {
+              "romance": { "sophie": 12 },
+              "dialogue": "Thank you for accepting all of me, even the messy parts."
+            }
+          }
+        ],
+        "romanceLevel": 30,
+        "unlockCondition": "sophie02_completed"
+      },
+      "sophie04": {
+        "id": "sophie04",
+        "type": "romantic_npc",
+        "npcId": "sophie",
+        "title": "Team Partners",
+        "speaker": "Sophie",
+        "portrait": "npc-assistant-2",
+        "text": "Hey, want to team up for the next tournament? I think we'd make an amazing team. Plus, I'd love to show everyone that we're... well, that we're together.",
+        "choices": [
+          {
+            "id": "sophie04_team",
+            "text": "I'd love to be your partner, in fishing and in life.",
+            "effects": {
+              "romance": { "sophie": 20 },
+              "unlockEvent": "couples_tournament",
+              "dialogue": "Yes! We're going to dominate that tournament together!"
+            }
+          },
+          {
+            "id": "sophie04_tournament",
+            "text": "Let's show them what we can do together!",
+            "effects": {
+              "romance": { "sophie": 12 },
+              "unlockEvent": "couples_tournament",
+              "dialogue": "That's the spirit! They won't know what hit them!"
+            }
+          }
+        ],
+        "romanceLevel": 45,
+        "unlockCondition": "sophie03_completed"
+      },
+      "luna03": {
+        "id": "luna03",
+        "type": "romantic_npc",
+        "npcId": "luna",
+        "title": "Ancient Bonds",
+        "speaker": "Luna",
+        "portrait": "npc-assistant-3",
+        "text": "The ocean has shown me visions... of us, together, in harmony with the tides. It seems the depths approve of our connection. This is... unprecedented.",
+        "choices": [
+          {
+            "id": "luna03_mystical",
+            "text": "I feel that connection too. It's like destiny.",
+            "effects": {
+              "romance": { "luna": 18 },
+              "unlockAbility": "ocean_communion",
+              "dialogue": "Yes... destiny written in the currents themselves. We are bound by more than mere affection."
+            }
+          },
+          {
+            "id": "luna03_curious",
+            "text": "What do these visions show you?",
+            "effects": {
+              "romance": { "luna": 10 },
+              "dialogue": "Peaceful moments... shared understanding... a love as deep as the ocean itself."
+            }
+          }
+        ],
+        "romanceLevel": 35,
+        "unlockCondition": "luna02_completed"
+      },
+      "luna04": {
+        "id": "luna04",
+        "type": "romantic_npc",
+        "npcId": "luna",
+        "title": "Soul Deep",
+        "speaker": "Luna",
+        "portrait": "npc-assistant-3",
+        "text": "You have touched something in me that I thought was lost to the depths forever... my heart. The ocean sings differently now, with joy instead of loneliness.",
+        "choices": [
+          {
+            "id": "luna04_love",
+            "text": "You've awakened something in me too, Luna.",
+            "effects": {
+              "romance": { "luna": 22 },
+              "relationship": "soulmate",
+              "unlockHCG": "luna_soul_bond",
+              "dialogue": "Then we are truly one with the tides... and with each other."
+            }
+          },
+          {
+            "id": "luna04_deep",
+            "text": "Our connection runs deeper than the ocean itself.",
+            "effects": {
+              "romance": { "luna": 20 },
+              "dialogue": "Yes... deeper than any trench, stronger than any current."
+            }
+          }
+        ],
+        "romanceLevel": 55,
+        "unlockCondition": "luna03_completed"
+      }
+    },
+    "tutorialDialogs": {
+      "tutorial01": {
+        "id": "tutorial01",
+        "type": "tutorial",
+        "title": "Basic Casting Tutorial",
+        "speaker": "Mia",
+        "portrait": "npc-assistant-1",
+        "text": "Welcome to your first fishing lesson! Let me teach you the basics of casting. Watch the cast meter carefully - you want to click when the indicator is in the green zone for the best results!",
+        "choices": [
+          {
+            "id": "tutorial01_understand",
+            "text": "I understand. Let me try!",
+            "effects": {
+              "startMinigame": "cast_tutorial",
+              "questProgress": "tutorial_casting"
+            }
+          },
+          {
+            "id": "tutorial01_explain",
+            "text": "Can you explain that again?",
+            "effects": {
+              "dialogue": "Of course! The green zone gives you the best accuracy. Missing it isn't the end of the world, but hitting it helps you catch better fish!"
+            }
+          }
+        ],
+        "tutorialStep": 1,
+        "minigame": "casting"
+      },
+      "tutorial02": {
+        "id": "tutorial02",
+        "type": "tutorial",
+        "title": "Lure Mechanics Tutorial",
+        "speaker": "Mia",
+        "portrait": "npc-assistant-1",
+        "text": "Great casting! Now let's learn about luring fish. Each lure type has different controls. This spinner lure uses pulse tapping - watch the fish shadow and tap when it gets close!",
+        "choices": [
+          {
+            "id": "tutorial02_ready",
+            "text": "I'm ready to try the lure minigame!",
+            "effects": {
+              "startMinigame": "lure_tutorial",
+              "questProgress": "tutorial_luring"
+            }
+          }
+        ],
+        "tutorialStep": 2,
+        "minigame": "luring"
+      },
+      "tutorial03": {
+        "id": "tutorial03",
+        "type": "tutorial",
+        "title": "Reeling In Tutorial",
+        "speaker": "Mia",
+        "portrait": "npc-assistant-1",
+        "text": "Excellent! You've hooked a fish! Now comes the tricky part - reeling it in. Watch the tension meter and be ready for QTE prompts when the fish struggles!",
+        "choices": [
+          {
+            "id": "tutorial03_ready",
+            "text": "Let's reel this fish in!",
+            "effects": {
+              "startMinigame": "reel_tutorial",
+              "questProgress": "tutorial_reeling"
+            }
+          }
+        ],
+        "tutorialStep": 3,
+        "minigame": "reeling"
+      },
+      "tutorial04": {
+        "id": "tutorial04",
+        "type": "tutorial",
+        "title": "Equipment and Inventory",
+        "speaker": "Mia",
+        "portrait": "npc-assistant-1",
+        "text": "Congratulations on your first catch! Now let me show you how to manage your equipment and inventory. Better gear means better fishing results!",
+        "choices": [
+          {
+            "id": "tutorial04_show",
+            "text": "Show me how the inventory works.",
+            "effects": {
+              "openUI": "inventory_tutorial",
+              "questProgress": "tutorial_inventory"
+            }
+          }
+        ],
+        "tutorialStep": 4,
+        "uiElement": "inventory"
+      },
+      "tutorial05": {
+        "id": "tutorial05",
+        "type": "tutorial",
+        "title": "Crafting System Introduction",
+        "speaker": "Mia",
+        "portrait": "npc-assistant-1",
+        "text": "Now that you have some fish cards, let me teach you about crafting! You can merge fish cards to create better equipment. Let's try making your first fishing rod!",
+        "choices": [
+          {
+            "id": "tutorial05_craft",
+            "text": "Let's try crafting!",
+            "effects": {
+              "openUI": "crafting_tutorial",
+              "questProgress": "tutorial_crafting"
+            }
+          }
+        ],
+        "tutorialStep": 5,
+        "uiElement": "crafting"
+      },
+      "tutorial06": {
+        "id": "tutorial06",
+        "type": "tutorial",
+        "title": "Time and Weather Systems",
+        "speaker": "Mia",
+        "portrait": "npc-assistant-1",
+        "text": "Let me explain how time and weather affect fishing! Different fish are active at different times of day, and weather can boost your chances. See the time and weather display at the top?",
+        "choices": [
+          {
+            "id": "tutorial06_understand",
+            "text": "I see! So I should plan my fishing trips carefully.",
+            "effects": {
+              "questProgress": "tutorial_time_weather",
+              "dialogue": "Exactly! Early morning and evening are often the best times, and rainy weather can increase bite rates!"
+            }
+          }
+        ],
+        "tutorialStep": 6,
+        "gameSystem": "time_weather"
+      },
+      "tutorial07": {
+        "id": "tutorial07",
+        "type": "tutorial",
+        "title": "Energy Management",
+        "speaker": "Mia",
+        "portrait": "npc-assistant-1",
+        "text": "Watch your energy meter! Fishing and traveling consume energy. When it's low, you'll need to rest or use energy items. Managing energy is key to efficient fishing!",
+        "choices": [
+          {
+            "id": "tutorial07_got_it",
+            "text": "Got it! I'll keep an eye on my energy.",
+            "effects": {
+              "questProgress": "tutorial_energy",
+              "dialogue": "Smart! You can rest at the cabin or use energy potions to restore it quickly."
+            }
+          }
+        ],
+        "tutorialStep": 7,
+        "gameSystem": "energy"
+      },
+      "tutorial08": {
+        "id": "tutorial08",
+        "type": "tutorial",
+        "title": "Map Navigation",
+        "speaker": "Mia",
+        "portrait": "npc-assistant-1",
+        "text": "Time to explore! Each map has 10 different fishing spots with unique fish. Travel between spots costs time and energy, so plan your route wisely!",
+        "choices": [
+          {
+            "id": "tutorial08_explore",
+            "text": "Let's explore the different fishing spots!",
+            "effects": {
+              "openUI": "map_tutorial",
+              "questProgress": "tutorial_navigation"
+            }
+          }
+        ],
+        "tutorialStep": 8,
+        "uiElement": "map"
+      },
+      "tutorial09": {
+        "id": "tutorial09",
+        "type": "tutorial",
+        "title": "Fish Card Collection",
+        "speaker": "Mia",
+        "portrait": "npc-assistant-1",
+        "text": "Every fish you catch becomes a Fish Card! These cards show the fish's stats and rarity. Collect them all to complete your album and use them for crafting!",
+        "choices": [
+          {
+            "id": "tutorial09_collect",
+            "text": "I want to collect them all!",
+            "effects": {
+              "openUI": "album_tutorial",
+              "questProgress": "tutorial_collection"
+            }
+          }
+        ],
+        "tutorialStep": 9,
+        "uiElement": "album"
+      },
+      "tutorial10": {
+        "id": "tutorial10",
+        "type": "tutorial",
+        "title": "Social Interactions",
+        "speaker": "Mia",
+        "portrait": "npc-assistant-1",
+        "text": "Don't forget about the social side! Visit the cabin to chat with companions, give gifts, and build relationships. Strong bonds can provide fishing bonuses!",
+        "choices": [
+          {
+            "id": "tutorial10_social",
+            "text": "I'd love to get to know everyone better!",
+            "effects": {
+              "openUI": "cabin_tutorial",
+              "questProgress": "tutorial_social"
+            }
+          }
+        ],
+        "tutorialStep": 10,
+        "uiElement": "cabin"
+      }
+    },
+    "eventDialogs": {
+      "Shop01": {
+        "id": "Shop01",
+        "type": "event",
+        "eventType": "shop",
+        "title": "Welcome to the Marina Shop",
+        "speaker": "Shopkeeper",
+        "portrait": "shopkeeper",
+        "text": "Welcome to the finest fishing supply shop on the coast! We have everything an angler could need - from basic gear to legendary equipment. What can I help you find today?",
+        "choices": [
+          {
+            "id": "shop01_browse",
+            "text": "I'd like to browse your selection.",
+            "effects": {
+              "openUI": "shop_main"
+            }
+          },
+          {
+            "id": "shop01_recommendations",
+            "text": "What would you recommend for a beginner?",
+            "effects": {
+              "openUI": "shop_beginner",
+              "dialogue": "For beginners, I always recommend starting with a good basic rod and some reliable lures!"
+            }
+          },
+          {
+            "id": "shop01_leave",
+            "text": "Just looking around, thanks.",
+            "effects": {
+              "closeDialog": true
+            }
+          }
+        ]
+      },
+      "Shop02": {
+        "id": "Shop02",
+        "type": "event",
+        "eventType": "shop",
+        "title": "Special Offer Available",
+        "speaker": "Shopkeeper",
+        "portrait": "shopkeeper",
+        "text": "You're in luck! Today only, I'm offering a special bundle deal - a premium rod, three lures, and a tackle box for just 2000 coins. Normally this would cost 3000!",
+        "choices": [
+          {
+            "id": "shop02_buy",
+            "text": "That sounds like a great deal! I'll take it.",
+            "effects": {
+              "purchaseBundle": "premium_starter_pack",
+              "cost": 2000,
+              "dialogue": "Excellent choice! This equipment will serve you well on your angling journey."
+            }
+          },
+          {
+            "id": "shop02_decline",
+            "text": "Thanks, but I'm not ready for that purchase yet.",
+            "effects": {
+              "dialogue": "No problem! The offer will be here if you change your mind."
+            }
+          }
+        ],
+        "requirements": {
+          "coins": 2000
+        }
+      },
+      "Tournament01": {
+        "id": "Tournament01",
+        "type": "event",
+        "eventType": "tournament",
+        "title": "Summer Fishing Tournament",
+        "speaker": "Tournament Director",
+        "portrait": "tournament_director",
+        "text": "Welcome to the annual Summer Fishing Tournament! Anglers from around the world have gathered to compete. Do you have what it takes to claim the grand prize?",
+        "choices": [
+          {
+            "id": "tournament01_enter",
+            "text": "I'm ready to compete!",
+            "effects": {
+              "startEvent": "summer_tournament",
+              "entryFee": 500,
+              "dialogue": "Excellent! The tournament begins at dawn. May the best angler win!"
+            }
+          },
+          {
+            "id": "tournament01_watch",
+            "text": "I'd like to watch and learn first.",
+            "effects": {
+              "openUI": "tournament_spectator",
+              "dialogue": "Smart choice! Observing the competition can teach you valuable techniques."
+            }
+          },
+          {
+            "id": "tournament01_decline",
+            "text": "Maybe next time.",
+            "effects": {
+              "dialogue": "The tournament runs all week. Come back when you're ready!"
+            }
+          }
+        ],
+        "eventDuration": "7_days",
+        "requirements": {
+          "level": 10,
+          "coins": 500
+        }
+      },
+      "Festival01": {
+        "id": "Festival01",
+        "type": "event",
+        "eventType": "festival",
+        "title": "Ocean Festival Celebration",
+        "speaker": "Festival Organizer",
+        "portrait": "festival_organizer",
+        "text": "Welcome to the Ocean Festival! We're celebrating the bounty of the sea with special activities, rare fish appearances, and exclusive rewards. Join the festivities!",
+        "choices": [
+          {
+            "id": "festival01_participate",
+            "text": "This sounds amazing! How can I participate?",
+            "effects": {
+              "unlockEvent": "ocean_festival",
+              "dialogue": "Wonderful! Check the event board for special festival quests and activities."
+            }
+          },
+          {
+            "id": "festival01_rewards",
+            "text": "What kind of rewards are available?",
+            "effects": {
+              "openUI": "festival_rewards",
+              "dialogue": "We have exclusive festival fish cards, special equipment, and even some rare companions!"
+            }
+          }
+        ],
+        "eventDuration": "14_days",
+        "specialFeatures": [
+          "rare_fish_boost",
+          "exclusive_rewards",
+          "festival_quests"
+        ]
+      },
+      "Weather01": {
+        "id": "Weather01",
+        "type": "event",
+        "eventType": "weather",
+        "title": "Storm Warning",
+        "speaker": "Weather Reporter",
+        "portrait": "weather_reporter",
+        "text": "Attention all anglers! A major storm system is approaching the area. Fishing conditions will be challenging, but some rare deep-sea fish are known to surface during storms.",
+        "choices": [
+          {
+            "id": "weather01_brave",
+            "text": "I'll brave the storm for those rare fish!",
+            "effects": {
+              "weatherBonus": "storm_fishing",
+              "rareChance": 50,
+              "dialogue": "Be careful out there! The rewards are great, but so are the risks."
+            }
+          },
+          {
+            "id": "weather01_wait",
+            "text": "I'll wait for calmer weather.",
+            "effects": {
+              "dialogue": "A wise choice. The storm should pass by tomorrow morning."
+            }
+          }
+        ],
+        "weatherEffect": "storm",
+        "duration": "6_hours"
+      },
+      "Shop03": {
+        "id": "Shop03",
+        "type": "event",
+        "eventType": "shop",
+        "title": "Rare Equipment Available",
+        "speaker": "Shopkeeper",
+        "portrait": "shopkeeper",
+        "text": "A legendary angler just traded in some rare equipment! I have a Master Titanium Rod and some exclusive lures. These don't come around often!",
+        "choices": [
+          {
+            "id": "shop03_interested",
+            "text": "Show me what you have!",
+            "effects": {
+              "openUI": "shop_rare_items"
+            }
+          },
+          {
+            "id": "shop03_price",
+            "text": "How much for the Master Rod?",
+            "effects": {
+              "dialogue": "The Master Titanium Rod is 15,000 coins. It's expensive, but worth every coin!"
+            }
+          }
+        ]
+      },
+      "Tournament02": {
+        "id": "Tournament02",
+        "type": "event",
+        "eventType": "tournament",
+        "title": "Championship Finals",
+        "speaker": "Tournament Director",
+        "portrait": "tournament_director",
+        "text": "Congratulations on making it to the finals! You're now competing against the best anglers in the world. The grand prize is 50,000 coins and the Champion's Rod!",
+        "choices": [
+          {
+            "id": "tournament02_ready",
+            "text": "I'm ready to give it my all!",
+            "effects": {
+              "startEvent": "championship_finals",
+              "dialogue": "That's the spirit! May the best angler win!"
+            }
+          },
+          {
+            "id": "tournament02_nervous",
+            "text": "I'm a bit nervous about the competition.",
+            "effects": {
+              "dialogue": "Nerves are natural! Just fish like you always do, and you'll be fine."
+            }
+          }
+        ],
+        "requirements": {
+          "tournamentRank": "finalist"
+        }
+      },
+      "Festival02": {
+        "id": "Festival02",
+        "type": "event",
+        "eventType": "festival",
+        "title": "Festival Quest Giver",
+        "speaker": "Festival Quest Master",
+        "portrait": "quest_master",
+        "text": "Welcome to the Ocean Festival! I have special festival quests that offer unique rewards. Complete them to earn exclusive festival fish cards and decorations!",
+        "choices": [
+          {
+            "id": "festival02_quests",
+            "text": "What quests do you have available?",
+            "effects": {
+              "openUI": "festival_quests",
+              "dialogue": "I have daily festival challenges and a special week-long quest chain!"
+            }
+          },
+          {
+            "id": "festival02_rewards",
+            "text": "What kind of rewards can I earn?",
+            "effects": {
+              "openUI": "festival_rewards",
+              "dialogue": "Festival fish cards, special decorations, and even a unique festival boat!"
+            }
+          }
+        ]
+      },
+      "Event01": {
+        "id": "Event01",
+        "type": "event",
+        "eventType": "special",
+        "title": "Mysterious Merchant",
+        "speaker": "Mysterious Merchant",
+        "portrait": "mysterious_merchant",
+        "text": "Greetings, angler... I have traveled from distant waters with rare treasures. Fish cards from legendary seas, equipment blessed by ancient spirits... interested?",
+        "choices": [
+          {
+            "id": "event01_curious",
+            "text": "What kind of treasures do you have?",
+            "effects": {
+              "openUI": "mysterious_shop",
+              "dialogue": "Ah, a curious soul... I have items that cannot be found anywhere else."
+            }
+          },
+          {
+            "id": "event01_suspicious",
+            "text": "This seems too good to be true...",
+            "effects": {
+              "dialogue": "Skepticism is wise, but sometimes the greatest treasures require a leap of faith."
+            }
+          }
+        ],
+        "rarity": "legendary",
+        "duration": "3_days"
+      },
+      "Event02": {
+        "id": "Event02",
+        "type": "event",
+        "eventType": "special",
+        "title": "Ancient Fishing Grounds",
+        "speaker": "Ancient Guardian",
+        "portrait": "ancient_guardian",
+        "text": "These waters have been sealed for centuries... You have proven yourself worthy to fish in the Ancient Grounds. But beware - the fish here are unlike any you've encountered.",
+        "choices": [
+          {
+            "id": "event02_enter",
+            "text": "I accept the challenge of the Ancient Grounds.",
+            "effects": {
+              "unlockMap": "ancient_grounds",
+              "dialogue": "Then enter, worthy angler, and may the ancient spirits guide your line."
+            }
+          },
+          {
+            "id": "event02_prepare",
+            "text": "I need to prepare before facing such a challenge.",
+            "effects": {
+              "dialogue": "Wisdom in preparation. The Ancient Grounds will await your return."
+            }
+          }
+        ],
+        "requirements": {
+          "level": 40,
+          "achievement": "master_angler"
+        }
+      },
+      "Weather02": {
+        "id": "Weather02",
+        "type": "event",
+        "eventType": "weather",
+        "title": "Perfect Fishing Conditions",
+        "speaker": "Weather Reporter",
+        "portrait": "weather_reporter",
+        "text": "Excellent news! We're experiencing perfect fishing conditions today - calm seas, optimal temperature, and light cloud cover. Fish activity is at its peak!",
+        "choices": [
+          {
+            "id": "weather02_fish",
+            "text": "Perfect! I'm heading out right now.",
+            "effects": {
+              "weatherBonus": "perfect_conditions",
+              "biteRate": 100,
+              "rareChance": 25,
+              "dialogue": "Enjoy the perfect conditions! Days like this are rare."
+            }
+          }
+        ],
+        "weatherEffect": "perfect",
+        "duration": "8_hours"
+      }
+    }
+  },
+  "dialogCategories": {
+    "story": {
+      "description": "Main storyline dialogs that progress the narrative",
+      "idFormat": "Story01 to Story100",
+      "questIntegration": true,
+      "unlockProgression": true
+    },
+    "romantic_npc": {
+      "description": "Romance dialogs with bikini assistants",
+      "idFormat": "npcname01 to npcname20 (e.g., mia01, sophie01, luna01)",
+      "romanceProgression": true,
+      "unlockConditions": true,
+      "availableNPCs": ["mia", "sophie", "luna"]
+    },
+    "tutorial": {
+      "description": "Tutorial dialogs with Mia as the tutor",
+      "idFormat": "tutorial01 to tutorial20",
+      "tutor": "mia",
+      "minigameIntegration": true,
+      "stepProgression": true
+    },
+    "event": {
+      "description": "Event-specific dialogs for shops, tournaments, etc.",
+      "idFormat": "EventName01 to EventName20 (e.g., Shop01, Tournament01)",
+      "eventTypes": ["shop", "tournament", "festival", "weather"],
+      "temporaryContent": true
+    }
+  },
+  "dialogEffects": {
+    "questProgress": "Advances specific quest objectives",
+    "romance": "Modifies romance meters with NPCs",
+    "unlockQuest": "Makes new quests available",
+    "unlockMap": "Opens new fishing areas",
+    "unlockBoss": "Enables boss encounters",
+    "startMinigame": "Initiates tutorial minigames",
+    "openUI": "Opens specific UI screens",
+    "purchaseBundle": "Handles shop transactions",
+    "startEvent": "Begins special events",
+    "weatherBonus": "Applies weather-based bonuses",
+    "experience": "Awards experience points",
+    "coins": "Awards or costs coins",
+    "items": "Gives or requires items"
+  },
+  "integrationNotes": {
+    "questSystem": "Dialogs integrate with QuestManager for progression tracking",
+    "romanceSystem": "Romance dialogs affect NPC relationship meters in DialogManager",
+    "tutorialSystem": "Tutorial dialogs guide players through game mechanics",
+    "eventSystem": "Event dialogs handle temporary content and special activities",
+    "choiceConsequences": "Dialog choices have immediate and long-term effects on gameplay",
+    "unlockConditions": "Many dialogs require specific story progress or relationship levels"
+  }
+} 

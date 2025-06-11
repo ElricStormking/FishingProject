@@ -30,23 +30,33 @@ export default class CabinScene extends Phaser.Scene {
         this.romancePanel = null;
         this.cabinBackground = null;
         
-        // Cabin theme colors (enhanced brass and wood)
+        // Elegant Classic Cabin theme colors (Black, Gray, Silver, Gold)
         this.cabinColors = {
-            // Enhanced brass colors from UITheme
-            brass: UITheme.colors.gold,           // 0xb8860b
-            brassLight: UITheme.colors.bronze,    // Enhanced brass highlight
-            brassDark: 0x8B6914,                  // Darker brass
+            // Gold accents for luxury touches
+            gold: 0xFFD700,                       // Pure gold for highlights
+            goldDark: 0xB8860B,                   // Dark gold for borders
+            goldLight: 0xFFF8DC,                  // Light gold for subtle highlights
             
-            // Enhanced wood colors
-            wood: UITheme.colors.secondary,       // Base wood color
-            woodDark: 0x654321,                   // Dark wood grain
-            woodLight: UITheme.colors.secondaryLight, // Light wood highlight
+            // Silver metallic elements
+            silver: 0xC0C0C0,                     // Silver for frames and borders
+            silverDark: 0x808080,                 // Dark silver for depth
+            silverLight: 0xE5E5E5,               // Light silver for highlights
             
-            // Cabin atmosphere colors using UITheme
-            background: UITheme.colors.darkSecondary,
-            panel: UITheme.colors.panelBg,
-            text: UITheme.colors.text,
-            textSecondary: UITheme.colors.textSecondary
+            // Black sophistication
+            black: 0x000000,                      // Pure black for backgrounds
+            blackSoft: 0x1a1a1a,                 // Soft black for panels
+            charcoal: 0x2F2F2F,                  // Charcoal for contrasts
+            
+            // Gray elegance
+            gray: 0x808080,                       // Medium gray
+            grayLight: 0xD3D3D3,                 // Light gray for text
+            grayDark: 0x404040,                  // Dark gray for borders
+            
+            // Classic cabin atmosphere
+            background: 0x0F0F0F,                 // Very dark background
+            panel: 0x1a1a1a,                     // Dark panel backgrounds
+            text: 0xFFD700,                      // Gold text
+            textSecondary: 0xC0C0C0              // Silver secondary text
         };
     }
 
@@ -112,89 +122,108 @@ export default class CabinScene extends Phaser.Scene {
     }
 
     createCabinBackground(width, height) {
-        // Dark ocean background visible through windows
-        this.add.rectangle(width/2, height/2, width, height, 0x0a1a2e, 1);
+        // Elegant black background
+        this.add.rectangle(width/2, height/2, width, height, this.cabinColors.black, 1);
         
-        // Cabin floor (wooden planks)
+        // Luxury cabin floor (black marble with silver veining)
         const floorBg = this.add.graphics();
-        floorBg.fillStyle(0x8B4513, 1); // Saddle brown
+        floorBg.fillStyle(this.cabinColors.blackSoft, 1);
         floorBg.fillRect(0, height * 0.7, width, height * 0.3);
         
-        // Add wood grain texture to floor
+        // Add marble veining texture to floor
         for (let i = 0; i < 8; i++) {
-            const plankLine = this.add.graphics();
-            plankLine.lineStyle(2, 0x654321, 0.6);
-            plankLine.lineBetween(0, height * 0.7 + (i * 30), width, height * 0.7 + (i * 30));
+            const veinLine = this.add.graphics();
+            veinLine.lineStyle(2, this.cabinColors.silver, 0.4);
+            veinLine.lineBetween(0, height * 0.7 + (i * 30), width, height * 0.7 + (i * 30));
             
-            // Add wood knots
+            // Add silver marble accents
             for (let j = 0; j < 5; j++) {
-                const knot = this.add.graphics();
-                knot.fillStyle(0x4a2c17, 0.8);
-                knot.fillCircle(j * (width/5) + 50, height * 0.7 + (i * 30) + 15, 3);
+                const accent = this.add.graphics();
+                accent.fillStyle(this.cabinColors.silverDark, 0.6);
+                accent.fillCircle(j * (width/5) + 50, height * 0.7 + (i * 30) + 15, 2);
             }
         }
         
-        // Cabin walls (wood paneling)
+        // Elegant cabin walls (charcoal with silver trim)
         const wallBg = this.add.graphics();
-        wallBg.fillStyle(0x8B6914, 1); // Dark goldenrod
+        wallBg.fillStyle(this.cabinColors.charcoal, 1);
         wallBg.fillRect(0, 0, width, height * 0.7);
         
-        // Add vertical wood paneling
+        // Add sophisticated paneling with silver accents
         for (let i = 0; i < 15; i++) {
             const panelLine = this.add.graphics();
-            panelLine.lineStyle(1, 0x654321, 0.4);
+            panelLine.lineStyle(1, this.cabinColors.silverDark, 0.5);
             panelLine.lineBetween(i * (width/15), 0, i * (width/15), height * 0.7);
         }
         
-        // Cabin windows (portholes)
+        // Elegant cabin windows (portholes with gold frames)
         this.createPorthole(width * 0.15, height * 0.25, 60);
         this.createPorthole(width * 0.85, height * 0.25, 60);
         
-        // Cabin ceiling with beams
+        // Luxury ceiling with gold accents
         const ceilingBg = this.add.graphics();
-        ceilingBg.fillStyle(0x654321, 1);
+        ceilingBg.fillStyle(this.cabinColors.blackSoft, 1);
         ceilingBg.fillRect(0, 0, width, 40);
         
-        // Ceiling beams
+        // Gold ceiling beams
         for (let i = 0; i < 4; i++) {
             const beam = this.add.graphics();
-            beam.fillStyle(0x4a2c17, 1);
+            beam.fillStyle(this.cabinColors.goldDark, 0.8);
             beam.fillRect(i * (width/4) + 20, 0, 30, 40);
+            
+            // Silver beam highlights
+            const beamHighlight = this.add.graphics();
+            beamHighlight.fillStyle(this.cabinColors.silver, 0.3);
+            beamHighlight.fillRect(i * (width/4) + 22, 2, 26, 4);
         }
         
-        // Warm cabin lighting
+        // Elegant ambient lighting with gold warmth
         const lightGlow = this.add.graphics();
-        lightGlow.fillStyle(0xffd700, 0.1);
+        lightGlow.fillStyle(this.cabinColors.gold, 0.08);
         lightGlow.fillCircle(width/2, height/2, width * 0.6);
         
-        // Add some nautical decorations
+        // Add silver accent lighting
+        const silverGlow = this.add.graphics();
+        silverGlow.fillStyle(this.cabinColors.silver, 0.05);
+        silverGlow.fillCircle(width/2, height/2, width * 0.4);
+        
+        // Add elegant nautical decorations
         this.addNauticalDecorations(width, height);
     }
 
     createPorthole(x, y, radius) {
-        // Porthole frame (brass)
+        // Elegant gold porthole frame
         const frame = this.add.graphics();
-        frame.fillStyle(0xb8860b, 1); // Dark goldenrod
+        frame.fillStyle(this.cabinColors.gold, 1);
         frame.fillCircle(x, y, radius + 8);
         
-        // Porthole glass
+        // Inner silver frame
+        const innerFrame = this.add.graphics();
+        innerFrame.fillStyle(this.cabinColors.silver, 0.9);
+        innerFrame.fillCircle(x, y, radius + 4);
+        
+        // Porthole glass (dark sophisticated view)
         const glass = this.add.graphics();
-        glass.fillStyle(0x001a33, 0.8); // Dark blue ocean view
+        glass.fillStyle(this.cabinColors.black, 0.9);
         glass.fillCircle(x, y, radius);
         
-        // Ocean waves visible through porthole
-        const wave1 = this.add.graphics();
-        wave1.lineStyle(2, 0x0066cc, 0.6);
-        wave1.strokeCircle(x, y + 10, radius * 0.7);
+        // Elegant view through porthole (starry night)
+        const star1 = this.add.graphics();
+        star1.fillStyle(this.cabinColors.silver, 0.8);
+        star1.fillCircle(x - radius * 0.4, y - radius * 0.3, 2);
         
-        const wave2 = this.add.graphics();
-        wave2.lineStyle(1, 0x4da6ff, 0.4);
-        wave2.strokeCircle(x, y + 20, radius * 0.5);
+        const star2 = this.add.graphics();
+        star2.fillStyle(this.cabinColors.gold, 0.6);
+        star2.fillCircle(x + radius * 0.3, y - radius * 0.5, 1.5);
         
-        // Porthole reflection
+        const star3 = this.add.graphics();
+        star3.fillStyle(this.cabinColors.silverLight, 0.7);
+        star3.fillCircle(x + radius * 0.2, y + radius * 0.4, 1);
+        
+        // Sophisticated reflection
         const reflection = this.add.graphics();
-        reflection.fillStyle(0xffffff, 0.2);
-        reflection.fillCircle(x - radius * 0.3, y - radius * 0.3, radius * 0.3);
+        reflection.fillStyle(this.cabinColors.silverLight, 0.3);
+        reflection.fillCircle(x - radius * 0.4, y - radius * 0.4, radius * 0.25);
     }
 
     addNauticalDecorations(width, height) {
@@ -216,16 +245,16 @@ export default class CabinScene extends Phaser.Scene {
     }
 
     createShipsWheel(x, y, radius) {
-        // Wheel rim
+        // Elegant wheel rim (gold)
         const rim = this.add.graphics();
-        rim.lineStyle(6, 0x8B4513, 1);
+        rim.lineStyle(6, this.cabinColors.gold, 1);
         rim.strokeCircle(x, y, radius);
         
-        // Wheel spokes
+        // Sophisticated wheel spokes (silver)
         for (let i = 0; i < 8; i++) {
             const angle = (i * Math.PI * 2) / 8;
             const spoke = this.add.graphics();
-            spoke.lineStyle(4, 0x654321, 1);
+            spoke.lineStyle(4, this.cabinColors.silver, 1);
             spoke.lineBetween(
                 x + Math.cos(angle) * radius * 0.3,
                 y + Math.sin(angle) * radius * 0.3,
@@ -234,9 +263,9 @@ export default class CabinScene extends Phaser.Scene {
             );
         }
         
-        // Center hub
+        // Center hub (charcoal)
         const hub = this.add.graphics();
-        hub.fillStyle(0x4a2c17, 1);
+        hub.fillStyle(this.cabinColors.charcoal, 1);
         hub.fillCircle(x, y, radius * 0.3);
     }
 
@@ -268,7 +297,7 @@ export default class CabinScene extends Phaser.Scene {
 
     createRopeDetail(x1, y1, x2, y2) {
         const rope = this.add.graphics();
-        rope.lineStyle(8, 0xdaa520, 1); // Goldenrod
+        rope.lineStyle(8, this.cabinColors.goldDark, 1); // Elegant dark gold rope
         
         // Create wavy rope pattern
         const segments = 20;
@@ -283,24 +312,24 @@ export default class CabinScene extends Phaser.Scene {
     }
 
     createLantern(x, y) {
-        // Lantern body
+        // Elegant lantern body (gold)
         const body = this.add.graphics();
-        body.fillStyle(0xb8860b, 1);
+        body.fillStyle(this.cabinColors.gold, 1);
         body.fillRoundedRect(x - 15, y, 30, 40, 5);
         
-        // Lantern glass
+        // Sophisticated lantern glass (warm gold light)
         const glass = this.add.graphics();
-        glass.fillStyle(0xffd700, 0.6);
+        glass.fillStyle(this.cabinColors.goldLight, 0.7);
         glass.fillRoundedRect(x - 12, y + 3, 24, 34, 3);
         
-        // Lantern top
+        // Lantern top (charcoal)
         const top = this.add.graphics();
-        top.fillStyle(0x8B4513, 1);
+        top.fillStyle(this.cabinColors.charcoal, 1);
         top.fillRoundedRect(x - 18, y - 8, 36, 8, 4);
         
-        // Hanging chain
+        // Silver hanging chain
         const chain = this.add.graphics();
-        chain.lineStyle(2, 0x2c3e50, 1);
+        chain.lineStyle(2, this.cabinColors.silver, 1);
         chain.lineBetween(x, 20, x, y - 8);
     }
 
@@ -332,35 +361,35 @@ export default class CabinScene extends Phaser.Scene {
     createHeaderBar() {
         const { width } = this.cameras.main;
         
-        // Header background (wood panel style)
+        // Elegant header background (black with gold trim)
         const headerBg = this.add.graphics();
-        headerBg.fillStyle(0x8B4513, 0.95);
+        headerBg.fillStyle(this.cabinColors.blackSoft, 0.95);
         headerBg.fillRect(0, 40, width, 60);
-        headerBg.lineStyle(2, 0xdaa520, 0.8);
+        headerBg.lineStyle(3, this.cabinColors.gold, 0.9);
         headerBg.strokeRect(0, 98, width, 2);
         
-        // Wood grain on header
+        // Silver accent lines on header
         for (let i = 0; i < 3; i++) {
-            const grain = this.add.graphics();
-            grain.lineStyle(1, 0x654321, 0.4);
-            grain.lineBetween(0, 50 + i * 15, width, 50 + i * 15);
+            const accentLine = this.add.graphics();
+            accentLine.lineStyle(1, this.cabinColors.silver, 0.4);
+            accentLine.lineBetween(0, 50 + i * 15, width, 50 + i * 15);
         }
         
-        // Title with nautical theme
+        // Elegant title with sophisticated styling
         this.headerTitle = this.add.text(width/2, 70, '⚓ Boat Cabin', {
             fontSize: '28px',
             fontFamily: 'Georgia, serif',
-            fill: '#ffd700',
+            fill: '#FFD700',  // Pure gold
             fontStyle: 'bold',
-            stroke: '#654321',
+            stroke: '#000000',  // Black stroke for contrast
             strokeThickness: 2
         }).setOrigin(0.5);
         
-        // Subtitle
+        // Sophisticated subtitle
         this.headerSubtitle = this.add.text(width/2, 90, 'Cozy quarters with your fishing companions', {
             fontSize: '14px',
             fontFamily: 'Georgia, serif',
-            fill: '#daa520',
+            fill: '#C0C0C0',  // Silver text
             fontStyle: 'italic'
         }).setOrigin(0.5);
     }
@@ -370,30 +399,9 @@ export default class CabinScene extends Phaser.Scene {
         const panelWidth = 280;
         const panelHeight = height - 180;
         const panelY = 110;
+        const panelX = 10;
         
-        // Panel background (wood panel with brass trim)
-        const panelBg = this.add.graphics();
-        panelBg.fillStyle(0x8B4513, 0.9);
-        panelBg.fillRoundedRect(10, panelY, panelWidth, panelHeight, 10);
-        panelBg.lineStyle(3, 0xb8860b, 0.8);
-        panelBg.strokeRoundedRect(10, panelY, panelWidth, panelHeight, 10);
-        
-        // Wood grain on panel
-        for (let i = 0; i < Math.floor(panelHeight / 20); i++) {
-            const grain = this.add.graphics();
-            grain.lineStyle(1, 0x654321, 0.3);
-            grain.lineBetween(15, panelY + 10 + i * 20, panelWidth - 5, panelY + 10 + i * 20);
-        }
-        
-        // Panel title with nautical theme
-        this.add.text(25, panelY + 15, '🏖️ Cabin Guests', {
-            fontSize: '18px',
-            fontFamily: 'Georgia, serif',
-            fill: '#ffd700',
-            fontStyle: 'bold',
-            stroke: '#654321',
-            strokeThickness: 1
-        });
+        this._createStyledPanel(panelX, panelY, panelWidth, panelHeight, '🏖️ Cabin Guests');
         
         // NPC list container
         this.npcListContainer = this.add.container(15, panelY + 50);
@@ -466,11 +474,11 @@ export default class CabinScene extends Phaser.Scene {
         const isSelected = this.selectedNPC === npc.id;
         
         if (isSelected) {
-            itemBg.fillStyle(0xdaa520, 0.4); // Golden highlight
-            itemBg.lineStyle(2, 0xffd700, 0.8);
+            itemBg.fillStyle(this.cabinColors.gold, 0.3); // Elegant gold highlight
+            itemBg.lineStyle(2, this.cabinColors.gold, 0.9);
         } else {
-            itemBg.fillStyle(0x654321, 0.3); // Dark wood
-            itemBg.lineStyle(1, 0x8B4513, 0.6);
+            itemBg.fillStyle(this.cabinColors.blackSoft, 0.8); // Sophisticated black
+            itemBg.lineStyle(1, this.cabinColors.silver, 0.6);
         }
         
         itemBg.fillRoundedRect(0, 0, itemWidth, itemHeight, 8);
@@ -580,37 +588,11 @@ export default class CabinScene extends Phaser.Scene {
         }
         // End Quest Indicator Logic
         
-        // Romance meter bar (brass style)
-        const meterFrame = this.add.graphics();
-        meterFrame.fillStyle(0xb8860b, 0.8);
-        meterFrame.fillRoundedRect(53, 46, 154, 16, 8);
-        meterFrame.setDepth(5);  // Above background
-        npcItem.add(meterFrame);
-        
-        const meterBg = this.add.graphics();
-        meterBg.fillStyle(0x654321, 0.8);
-        meterBg.fillRoundedRect(55, 48, 150, 12, 6);
-        meterBg.setDepth(6);  // Above meter frame
-        npcItem.add(meterBg);
-        
-        const meterFill = this.add.graphics();
-        const fillPercent = npc.romanceMeter / npc.maxRomance;
-        const fillWidth = fillPercent * 150;
-        
-        // Color based on relationship level (warmer cabin colors)
-        let fillColor = 0x8B4513; // Default brown
-        if (fillPercent >= 0.8) fillColor = 0xdc143c;      // Crimson (lover)
-        else if (fillPercent >= 0.6) fillColor = 0xff6347; // Tomato (romantic)
-        else if (fillPercent >= 0.4) fillColor = 0xffd700; // Gold (close friend)
-        else if (fillPercent >= 0.2) fillColor = 0xdaa520; // Goldenrod (friend)
-        
-        meterFill.fillStyle(fillColor, 0.9);
-        meterFill.fillRoundedRect(55, 48, fillWidth, 12, 6);
-        meterFill.setDepth(7);  // Above meter background
-        npcItem.add(meterFill);
+        const romanceMeter = this._createRomanceMeter(53, 46, 154, 16, npc.romanceMeter, npc.maxRomance);
+        npcItem.add(romanceMeter);
         
         // Romance meter percentage
-        const percentText = this.add.text(210, 54, `${Math.floor(fillPercent * 100)}%`, {
+        const percentText = this.add.text(210, 54, `${Math.floor(npc.romanceMeter / npc.maxRomance * 100)}%`, {
             fontSize: '11px',
             fontFamily: 'Georgia, serif',
             fill: '#ffd700'
@@ -671,20 +653,8 @@ export default class CabinScene extends Phaser.Scene {
         const panelHeight = height - 180;
         const panelY = 110;
         
-        // Panel background (wood with brass trim)
-        const panelBg = this.add.graphics();
-        panelBg.fillStyle(0x8B4513, 0.9);
-        panelBg.fillRoundedRect(panelX, panelY, panelWidth, panelHeight, 10);
-        panelBg.lineStyle(3, 0xb8860b, 0.8);
-        panelBg.strokeRoundedRect(panelX, panelY, panelWidth, panelHeight, 10);
-        
-        // Wood grain on chat panel
-        for (let i = 0; i < Math.floor(panelHeight / 25); i++) {
-            const grain = this.add.graphics();
-            grain.lineStyle(1, 0x654321, 0.2);
-            grain.lineBetween(panelX + 10, panelY + 10 + i * 25, panelX + panelWidth - 10, panelY + 10 + i * 25);
-        }
-        
+        this._createStyledPanel(panelX, panelY, panelWidth, panelHeight, '');
+
         // Chat header
         this.createChatHeader(panelX, panelY, panelWidth);
         
@@ -744,30 +714,8 @@ export default class CabinScene extends Phaser.Scene {
         const panelWidth = 280;
         const panelHeight = height - 180;
         const panelY = 110;
-        
-        // Panel background (wood with brass trim)
-        const panelBg = this.add.graphics();
-        panelBg.fillStyle(0x8B4513, 0.9);
-        panelBg.fillRoundedRect(panelX, panelY, panelWidth, panelHeight, 10);
-        panelBg.lineStyle(3, 0xb8860b, 0.8); // Brass trim
-        panelBg.strokeRoundedRect(panelX, panelY, panelWidth, panelHeight, 10);
-        
-        // Wood grain on panel
-        for (let i = 0; i < Math.floor(panelHeight / 20); i++) {
-            const grain = this.add.graphics();
-            grain.lineStyle(1, 0x654321, 0.3);
-            grain.lineBetween(panelX + 10, panelY + 10 + i * 20, panelX + panelWidth - 10, panelY + 10 + i * 20);
-        }
-        
-        // Panel title with nautical theme
-        this.add.text(panelX + 15, panelY + 15, '💕 Romance Details', {
-            fontSize: '18px',
-            fontFamily: 'Georgia, serif',
-            fill: '#ffd700',
-            fontStyle: 'bold',
-            stroke: '#654321',
-            strokeThickness: 1
-        });
+
+        this._createStyledPanel(panelX, panelY, panelWidth, panelHeight, '💕 Romance Details');
         
         // Romance details container
         this.romanceDetailsContainer = this.add.container(panelX + 15, panelY + 50);
@@ -864,30 +812,8 @@ export default class CabinScene extends Phaser.Scene {
         y += 25;
         
         // Large romance meter (brass style)
-        const largeMeterFrame = this.add.graphics();
-        largeMeterFrame.fillStyle(0xb8860b, 0.8);
-        largeMeterFrame.fillRoundedRect(-2, y - 2, 224, 24, 12);
-        this.romanceDetailsContainer.add(largeMeterFrame);
-        
-        const largeMeterBg = this.add.graphics();
-        largeMeterBg.fillStyle(0x654321, 0.8);
-        largeMeterBg.fillRoundedRect(0, y, 220, 20, 10);
-        this.romanceDetailsContainer.add(largeMeterBg);
-        
-        const largeMeterFill = this.add.graphics();
-        const fillPercent = npc.romanceMeter / npc.maxRomance;
-        const fillWidth = fillPercent * 220;
-        
-        // Warm cabin colors for romance levels
-        let fillColor = 0x8B4513; // Default brown
-        if (fillPercent >= 0.8) fillColor = 0xdc143c;      // Crimson (lover)
-        else if (fillPercent >= 0.6) fillColor = 0xff6347; // Tomato (romantic)
-        else if (fillPercent >= 0.4) fillColor = 0xffd700; // Gold (close friend)
-        else if (fillPercent >= 0.2) fillColor = 0xdaa520; // Goldenrod (friend)
-        
-        largeMeterFill.fillStyle(fillColor, 0.9);
-        largeMeterFill.fillRoundedRect(0, y, fillWidth, 20, 10);
-        this.romanceDetailsContainer.add(largeMeterFill);
+        const largeMeter = this._createRomanceMeter(0, y, 220, 20, npc.romanceMeter, npc.maxRomance);
+        this.romanceDetailsContainer.add(largeMeter);
         
         // Romance meter values
         const meterText = this.add.text(110, y + 10, `${npc.romanceMeter}/${npc.maxRomance}`, {
@@ -945,55 +871,11 @@ export default class CabinScene extends Phaser.Scene {
             { text: '🎁 Give Gift', action: () => this.giveGift() },
             { text: '🌹 Flirt', action: () => this.sendQuickMessage('flirt') },
             { text: '💕 Romantic Talk', action: () => this.sendQuickMessage('romantic') },
-            { text: '🎣 Fishing Together', action: () => this.inviteFishing() }
+            { text: '🎣 Fishing Together', action: () => this.inviteFishing() },
         ];
         
-        actions.forEach((actionData, index) => {
-            // Button background (brass style)
-            const buttonFrame = this.add.graphics();
-            buttonFrame.fillStyle(0xb8860b, 0.9);
-            buttonFrame.fillRoundedRect(-2, y - 2, 204, 39, 10);
-            this.romanceDetailsContainer.add(buttonFrame);
-            
-            const buttonBg = this.add.graphics();
-            buttonBg.fillStyle(0x8B4513, 0.8);
-            buttonBg.fillRoundedRect(0, y, 200, 35, 8);
-            buttonBg.lineStyle(2, 0xdaa520, 0.8);
-            buttonBg.strokeRoundedRect(0, y, 200, 35, 8);
-            this.romanceDetailsContainer.add(buttonBg);
-            
-            const buttonText = this.add.text(100, y + 17, actionData.text, {
-                fontSize: '12px',
-                fontFamily: 'Georgia, serif',
-                fill: '#ffd700',
-                fontStyle: 'bold'
-            }).setOrigin(0.5);
-            this.romanceDetailsContainer.add(buttonText);
-            
-            // Make interactive
-            const hitArea = this.add.rectangle(100, y + 17, 200, 35, 0x000000, 0);
-            hitArea.setInteractive({ useHandCursor: true });
-            hitArea.on('pointerdown', actionData.action);
-            
-            // Hover effects (warm glow)
-            hitArea.on('pointerover', () => {
-                buttonBg.clear();
-                buttonBg.fillStyle(0xdaa520, 0.9);
-                buttonBg.fillRoundedRect(0, y, 200, 35, 8);
-                buttonBg.lineStyle(2, 0xffd700, 1);
-                buttonBg.strokeRoundedRect(0, y, 200, 35, 8);
-            });
-            
-            hitArea.on('pointerout', () => {
-                buttonBg.clear();
-                buttonBg.fillStyle(0x8B4513, 0.8);
-                buttonBg.fillRoundedRect(0, y, 200, 35, 8);
-                buttonBg.lineStyle(2, 0xdaa520, 0.8);
-                buttonBg.strokeRoundedRect(0, y, 200, 35, 8);
-            });
-            
-            this.romanceDetailsContainer.add(hitArea);
-            
+        actions.forEach((actionData) => {
+            this._createCabinButton(0, y, actionData.text, actionData.action, this.romanceDetailsContainer);
             y += 45;
         });
     }
@@ -1004,38 +886,38 @@ export default class CabinScene extends Phaser.Scene {
         const inputX = 300;
         const inputWidth = width - 600;
         
-        // Input background (wood with brass trim)
+        // Elegant input background (gold frame with charcoal interior)
         const inputFrame = this.add.graphics();
-        inputFrame.fillStyle(0xb8860b, 0.9);
+        inputFrame.fillStyle(this.cabinColors.gold, 0.9);
         inputFrame.fillRoundedRect(inputX - 3, inputY - 3, inputWidth + 6, 56, 12);
         
         const inputBg = this.add.graphics();
-        inputBg.fillStyle(0x8B4513, 0.9);
+        inputBg.fillStyle(this.cabinColors.charcoal, 0.9);
         inputBg.fillRoundedRect(inputX, inputY, inputWidth, 50, 10);
-        inputBg.lineStyle(2, 0x654321, 0.8);
+        inputBg.lineStyle(2, this.cabinColors.silver, 0.8);
         inputBg.strokeRoundedRect(inputX, inputY, inputWidth, 50, 10);
         
-        // Message input placeholder
+        // Elegant message input placeholder
         this.messageInputText = this.add.text(inputX + 15, inputY + 25, 'Share your thoughts in the cabin...', {
             fontSize: '14px',
             fontFamily: 'Georgia, serif',
-            fill: '#daa520',
+            fill: '#C0C0C0',  // Silver text
             fontStyle: 'italic'
         }).setOrigin(0, 0.5);
         
-        // Send button (brass style)
+        // Elegant send button (gold frame style)
         const sendFrame = this.add.graphics();
-        sendFrame.fillStyle(0xb8860b, 0.9);
+        sendFrame.fillStyle(this.cabinColors.gold, 0.9);
         sendFrame.fillRoundedRect(inputX + inputWidth - 63, inputY + 7, 56, 36, 10);
         
         const sendBg = this.add.graphics();
-        sendBg.fillStyle(0x8B4513, 0.9);
+        sendBg.fillStyle(this.cabinColors.charcoal, 0.9);
         sendBg.fillRoundedRect(inputX + inputWidth - 60, inputY + 10, 50, 30, 8);
         
         const sendText = this.add.text(inputX + inputWidth - 35, inputY + 25, 'Send', {
             fontSize: '12px',
             fontFamily: 'Georgia, serif',
-            fill: '#ffd700',
+            fill: '#FFD700',  // Pure gold text
             fontStyle: 'bold'
         }).setOrigin(0.5);
         
@@ -1275,11 +1157,11 @@ export default class CabinScene extends Phaser.Scene {
             // Message bubble (wood style)
             const bubbleBg = this.add.graphics();
             if (isPlayer) {
-                bubbleBg.fillStyle(0x8B4513, 0.9); // Player: darker wood
-                bubbleBg.lineStyle(2, 0x654321, 0.8);
+                bubbleBg.fillStyle(this.cabinColors.charcoal, 0.9); // Player: sophisticated charcoal
+                bubbleBg.lineStyle(2, this.cabinColors.silver, 0.8);
             } else {
-                bubbleBg.fillStyle(0xdaa520, 0.8); // NPC: golden wood
-                bubbleBg.lineStyle(2, 0xb8860b, 0.8);
+                bubbleBg.fillStyle(this.cabinColors.goldDark, 0.8); // NPC: elegant gold
+                bubbleBg.lineStyle(2, this.cabinColors.gold, 0.8);
             }
             bubbleBg.fillRoundedRect(bubbleX, 5, bubbleWidth, 50, 10);
             bubbleBg.strokeRoundedRect(bubbleX, 5, bubbleWidth, 50, 10);
@@ -1452,8 +1334,8 @@ export default class CabinScene extends Phaser.Scene {
         
         const oldRomanceMeter = npc.romanceMeter;
         
-        // Increase romance meter
-        this.dialogManager.increaseRomanceMeter(this.selectedNPC, 5);
+        // Increase romance meter using correct DialogManager API
+        this.dialogManager.updateRomanceMeter({ npc: this.selectedNPC, amount: 5 });
         
         // Check for HCG unlocks
         const unlocks = this.hcgUnlockSystem.checkForUnlocks(this.selectedNPC, oldRomanceMeter, npc.romanceMeter);
@@ -1494,8 +1376,8 @@ export default class CabinScene extends Phaser.Scene {
         
         const oldRomanceMeter = npc.romanceMeter;
         
-        // Increase romance meter
-        this.dialogManager.increaseRomanceMeter(this.selectedNPC, 3);
+        // Increase romance meter using correct DialogManager API
+        this.dialogManager.updateRomanceMeter({ npc: this.selectedNPC, amount: 3 });
         
         // Check for HCG unlocks
         const unlocks = this.hcgUnlockSystem.checkForUnlocks(this.selectedNPC, oldRomanceMeter, npc.romanceMeter);
@@ -1541,7 +1423,7 @@ export default class CabinScene extends Phaser.Scene {
                 // If GameScene doesn't exist or doesn't have DialogManager, 
                 // we need to pass our DialogManager to DialogScene
                 this.scene.launch('DialogScene', {
-                    npc: this.selectedNPC,
+                    npcId: this.selectedNPC,  // Fixed: use 'npcId' not 'npc'
                     script: 'sample_assistant.md',
                     callingScene: 'CabinScene',
                     dialogManager: this.dialogManager  // Pass our DialogManager directly
@@ -1674,7 +1556,7 @@ export default class CabinScene extends Phaser.Scene {
                         npcId: npcId,
                         oldValue: oldMeter,
                         newValue: npc.romanceMeter,
-                        maxValue: npc.maxRomance
+                        maxValue: npc.maxRomance,
                     });
                 }
             },
@@ -1788,7 +1670,7 @@ export default class CabinScene extends Phaser.Scene {
                                 romanceMeter: npc.romanceMeter,
                                 maxRomance: npc.maxRomance,
                                 relationship: npc.relationship,
-                                percentage: Math.floor((npc.romanceMeter / npc.maxRomance) * 100)
+                                percentage: Math.floor((npc.romanceMeter / npc.maxRomance) * 100),
                             });
                         }
                         return states;
@@ -1801,7 +1683,7 @@ export default class CabinScene extends Phaser.Scene {
                 // Launch DialogScene directly with our fallback manager
                 try {
                     this.scene.launch('DialogScene', {
-                        npc: npcId,
+                        npcId: npcId,  // Fixed: use 'npcId' not 'npc'
                         script: 'sample_assistant.md',
                         callingScene: callingScene || 'CabinScene',
                         dialogManager: fallbackManager  // Pass ourselves as the DialogManager
@@ -1824,7 +1706,7 @@ export default class CabinScene extends Phaser.Scene {
                 dialogScript: 'sample_assistant.md',
                 description: 'A cheerful and helpful fishing guide who loves cozy cabin conversations.',
                 personality: 'Friendly, enthusiastic, and enjoys intimate cabin settings',
-                specialties: ['Cabin comfort', 'Warm conversations', 'Ocean stories']
+                specialties: ['Cabin comfort', 'Warm conversations', 'Ocean stories'],
             },
             {
                 id: 'sophie',
@@ -1836,7 +1718,7 @@ export default class CabinScene extends Phaser.Scene {
                 dialogScript: 'assistant_sophie.md',
                 description: 'An energetic fishing enthusiast who brings excitement to cabin life.',
                 personality: 'Energetic, passionate, and loves cabin adventures',
-                specialties: ['Cabin activities', 'Adventure planning', 'Romantic atmosphere']
+                specialties: ['Cabin activities', 'Adventure planning', 'Romantic atmosphere'],
             },
             {
                 id: 'luna',
@@ -1848,7 +1730,7 @@ export default class CabinScene extends Phaser.Scene {
                 dialogScript: 'assistant_luna.md',
                 description: 'A mysterious guide who finds deep meaning in cabin solitude.',
                 personality: 'Mysterious, wise, and spiritually connected to cabin energy',
-                specialties: ['Cabin meditation', 'Ocean wisdom', 'Sacred spaces']
+                specialties: ['Cabin meditation', 'Ocean wisdom', 'Sacred spaces'],
             }
         ];
 
@@ -2123,5 +2005,139 @@ export default class CabinScene extends Phaser.Scene {
         atmosphereText.setDepth(15003);
         
         console.log('CabinScene: Center Mia portrait display created');
+    }
+
+    // --- PRIVATE HELPER METHODS FOR UI CREATION ---
+
+    _createStyledPanel(x, y, width, height, title) {
+        // Elegant panel background (charcoal with gold border)
+        const panelBg = this.add.graphics();
+        panelBg.fillStyle(this.cabinColors.charcoal, 0.95);
+        panelBg.fillRoundedRect(x, y, width, height, 12);
+        panelBg.lineStyle(3, this.cabinColors.gold, 0.9);
+        panelBg.strokeRoundedRect(x, y, width, height, 12);
+
+        // Silver inner border for sophistication
+        const innerBorder = this.add.graphics();
+        innerBorder.lineStyle(1, this.cabinColors.silver, 0.6);
+        innerBorder.strokeRoundedRect(x + 2, y + 2, width - 4, height - 4, 10);
+
+        // Elegant accent lines on panel
+        const accentLines = Math.floor(height / 25);
+        for (let i = 0; i < accentLines; i++) {
+            const accent = this.add.graphics();
+            accent.lineStyle(1, this.cabinColors.silverDark, 0.2);
+            accent.lineBetween(x + 15, y + 15 + i * 25, x + width - 15, y + 15 + i * 25);
+        }
+
+        // Sophisticated panel title
+        if (title) {
+            this.add.text(x + 15, y + 15, title, {
+                fontSize: '18px',
+                fontFamily: 'Georgia, serif',
+                fill: '#FFD700',  // Pure gold
+                fontStyle: 'bold',
+                stroke: '#000000',  // Black stroke
+                strokeThickness: 1
+            });
+        }
+    }
+
+    _createRomanceMeter(x, y, width, height, currentValue, maxValue) {
+        const container = this.add.container(x, y);
+    
+        // Elegant gold frame
+        const meterFrame = this.add.graphics();
+        meterFrame.fillStyle(this.cabinColors.gold, 0.9);
+        meterFrame.fillRoundedRect(0, 0, width, height, height / 2);
+        container.add(meterFrame);
+    
+        // Silver inner frame
+        const innerFrame = this.add.graphics();
+        innerFrame.fillStyle(this.cabinColors.silver, 0.7);
+        innerFrame.fillRoundedRect(1, 1, width - 2, height - 2, (height - 2) / 2);
+        container.add(innerFrame);
+    
+        // Dark background
+        const meterBg = this.add.graphics();
+        meterBg.fillStyle(this.cabinColors.blackSoft, 0.9);
+        meterBg.fillRoundedRect(3, 3, width - 6, height - 6, (height - 6) / 2);
+        container.add(meterBg);
+    
+        // Fill
+        const fillPercent = currentValue / maxValue;
+        const fillWidth = fillPercent * (width - 6);
+        
+        // Elegant color progression using theme colors
+        let fillColor = this.cabinColors.silverDark; // Default gray
+        if (fillPercent >= 0.8) fillColor = 0xdc143c;           // Crimson (lover)
+        else if (fillPercent >= 0.6) fillColor = 0xff6347;     // Tomato (romantic)
+        else if (fillPercent >= 0.4) fillColor = this.cabinColors.gold;     // Gold (close friend)
+        else if (fillPercent >= 0.2) fillColor = this.cabinColors.goldDark; // Dark gold (friend)
+        
+        const meterFill = this.add.graphics();
+        meterFill.fillStyle(fillColor, 0.95);
+        meterFill.fillRoundedRect(3, 3, fillWidth, height - 6, (height - 6) / 2);
+        container.add(meterFill);
+    
+        return container;
+    }
+
+    _createCabinButton(x, y, text, callback, container) {
+        const width = 200;
+        const height = 35;
+        
+        const buttonContainer = this.add.container(x, y);
+    
+        // Elegant gold button frame
+        const buttonFrame = this.add.graphics();
+        buttonFrame.fillStyle(this.cabinColors.gold, 0.9);
+        buttonFrame.fillRoundedRect(-2, -2, width + 4, height + 4, 12);
+        buttonContainer.add(buttonFrame);
+    
+        const buttonBg = this.add.graphics();
+        buttonBg.fillStyle(this.cabinColors.charcoal, 0.9);
+        buttonBg.fillRoundedRect(0, 0, width, height, 10);
+        buttonBg.lineStyle(2, this.cabinColors.silver, 0.8);
+        buttonBg.strokeRoundedRect(0, 0, width, height, 10);
+        buttonContainer.add(buttonBg);
+        
+        const buttonText = this.add.text(width / 2, height / 2, text, {
+            fontSize: '12px',
+            fontFamily: 'Georgia, serif',
+            fill: '#FFD700',  // Pure gold text
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        buttonContainer.add(buttonText);
+        
+        // Make interactive
+        buttonContainer.setSize(width, height);
+        buttonContainer.setInteractive({ useHandCursor: true });
+        buttonContainer.on('pointerdown', callback);
+        
+        // Elegant hover effects
+        buttonContainer.on('pointerover', () => {
+            buttonBg.clear();
+            buttonBg.fillStyle(this.cabinColors.goldDark, 0.8);
+            buttonBg.fillRoundedRect(0, 0, width, height, 10);
+            buttonBg.lineStyle(2, this.cabinColors.gold, 1);
+            buttonBg.strokeRoundedRect(0, 0, width, height, 10);
+            buttonText.setFill('#FFFFFF');  // White text on hover
+        });
+        
+        buttonContainer.on('pointerout', () => {
+            buttonBg.clear();
+            buttonBg.fillStyle(this.cabinColors.charcoal, 0.9);
+            buttonBg.fillRoundedRect(0, 0, width, height, 10);
+            buttonBg.lineStyle(2, this.cabinColors.silver, 0.8);
+            buttonBg.strokeRoundedRect(0, 0, width, height, 10);
+            buttonText.setFill('#FFD700');  // Back to gold text
+        });
+    
+        if (container) {
+            container.add(buttonContainer);
+        }
+        
+        return buttonContainer;
     }
 } 

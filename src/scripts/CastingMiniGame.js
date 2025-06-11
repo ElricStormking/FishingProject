@@ -658,8 +658,14 @@ export class CastingMiniGame {
         } catch (error) {
             console.error('CastingMiniGame: Error in handleClick:', error);
             console.error('CastingMiniGame: Error stack:', error.stack);
-            // Try to clean up and emit failure event
+            // Try to clean up and emit failure event on GLOBAL event bus
             this.isActive = false;
+            this.scene.game.events.emit('fishing:castComplete', {
+                success: false,
+                error: error.message
+            });
+            
+            // Also emit on local scene bus
             this.scene.events.emit('fishing:castComplete', {
                 success: false,
                 error: error.message
@@ -1033,9 +1039,18 @@ export class CastingMiniGame {
         // Show result feedback
         this.showResult(hitAccurateSection, accuracy, meterValue);
         
-        // Emit completion event IMMEDIATELY
-        this.scene.events.emit('fishing:castComplete', {
+        // Emit completion event IMMEDIATELY on GLOBAL event bus for quest system
+        this.scene.game.events.emit('fishing:castComplete', {
             success: true, // Always successful, but quality varies
+            accuracy: accuracy,
+            hitAccurateSection: hitAccurateSection,
+            meterValue: meterValue,
+            castType: hitAccurateSection ? 'hotspot' : 'normal'
+        });
+        
+        // Also emit on local scene bus for any local listeners
+        this.scene.events.emit('fishing:castComplete', {
+            success: true,
             accuracy: accuracy,
             hitAccurateSection: hitAccurateSection,
             meterValue: meterValue,

@@ -105,17 +105,14 @@ export default class PreloadScene extends Phaser.Scene {
             }
         });
         
-        // Load Mia's portrait with correct Vite path
-        // Test multiple path variations to see which one works
-        console.log('PreloadScene: Attempting to load Mia portrait from: assets/dialog/portraits/mia.png');
-        this.load.image('mia-portrait', 'assets/dialog/portraits/mia.png');
-        this.load.image('portrait-mia', 'assets/dialog/portraits/mia.png');
-        this.load.image('mia-full', 'assets/dialog/portraits/mia.png');
-        
-        // Try alternative paths as well
-        console.log('PreloadScene: Also trying alternative paths...');
-        this.load.image('mia-portrait-alt', 'dialog/portraits/mia.png');
-        this.load.image('mia-portrait-public', 'public/assets/dialog/portraits/mia.png');
+        // Load Mia's portrait with the correct path for Vite.
+        // The asset is located at 'public/assets/dialog/portraits/mia.png',
+        // and Vite serves the 'public' directory at the root.
+        const miaPortraitPath = 'assets/dialog/portraits/mia.png';
+        console.log(`PreloadScene: Attempting to load Mia portrait from: ${miaPortraitPath}`);
+        this.load.image('mia-portrait', miaPortraitPath);
+        this.load.image('portrait-mia', miaPortraitPath);
+        this.load.image('mia-full', miaPortraitPath);
         
         // Add other portraits if they exist
         // this.load.image('sophie-portrait', 'assets/dialog/portraits/sophie.png');

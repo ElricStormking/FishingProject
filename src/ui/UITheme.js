@@ -249,9 +249,9 @@ export class UITheme {
             fillColor: UITheme.colors.darkSecondary,
             fillAlpha: 0.9,
             strokeColor: UITheme.colors.secondary,
-            strokeWidth: UITheme.borders.width.medium,
-            strokeAlpha: 0.8,
-            radius: UITheme.borders.radius.medium
+            strokeWidth: UITheme.borders.width.thin,
+            strokeAlpha: 0.7,
+            radius: UITheme.borders.radius.small
         },
         
         error: {
@@ -352,70 +352,231 @@ export class UITheme {
     
     // Create a standard panel with consistent styling
     static createPanel(scene, x, y, width, height, style = 'primary') {
-        const panelStyle = UITheme.panelStyles[style] || UITheme.panelStyles.primary;
-        const panel = scene.add.graphics();
-        
-        panel.fillStyle(panelStyle.fillColor, panelStyle.fillAlpha);
-        panel.fillRoundedRect(x, y, width, height, panelStyle.radius);
-        panel.lineStyle(panelStyle.strokeWidth, panelStyle.strokeColor, panelStyle.strokeAlpha);
-        panel.strokeRoundedRect(x, y, width, height, panelStyle.radius);
-        
-        return panel;
+        try {
+            const panelStyle = UITheme.panelStyles[style] || UITheme.panelStyles.primary;
+            
+            // Ensure panel style has required properties
+            const safePanelStyle = {
+                fillColor: panelStyle.fillColor || UITheme.colors.panelBg,
+                fillAlpha: panelStyle.fillAlpha || 0.95,
+                strokeColor: panelStyle.strokeColor || UITheme.colors.primary,
+                strokeWidth: panelStyle.strokeWidth || UITheme.borders.width.medium,
+                strokeAlpha: panelStyle.strokeAlpha || 0.8,
+                radius: panelStyle.radius || UITheme.borders.radius.medium
+            };
+            
+            const panel = scene.add.graphics();
+            
+            panel.fillStyle(safePanelStyle.fillColor, safePanelStyle.fillAlpha);
+            panel.fillRoundedRect(x, y, width, height, safePanelStyle.radius);
+            panel.lineStyle(safePanelStyle.strokeWidth, safePanelStyle.strokeColor, safePanelStyle.strokeAlpha);
+            panel.strokeRoundedRect(x, y, width, height, safePanelStyle.radius);
+            
+            return panel;
+        } catch (error) {
+            console.warn('UITheme: Error creating panel, using fallback:', error);
+            // Fallback to basic panel
+            try {
+                const panel = scene.add.graphics();
+                panel.fillStyle(0x1a1a2e, 0.95);
+                panel.fillRoundedRect(x, y, width, height, 8);
+                panel.lineStyle(2, 0x4a90e2, 0.8);
+                panel.strokeRoundedRect(x, y, width, height, 8);
+                return panel;
+            } catch (fallbackError) {
+                console.error('UITheme: Even fallback panel creation failed:', fallbackError);
+                return null;
+            }
+        }
     }
     
     // Create standard text with consistent styling
     static createText(scene, x, y, text, style = 'bodyMedium') {
-        const textStyle = UITheme.textStyles[style] || UITheme.textStyles.bodyMedium;
-        return scene.add.text(x, y, text, textStyle);
+        try {
+            const textStyle = UITheme.textStyles[style] || UITheme.textStyles.bodyMedium;
+            
+            // Ensure text style has required properties
+            const safeTextStyle = {
+                fontSize: textStyle.fontSize || UITheme.fonts.sizes.medium,
+                fontFamily: textStyle.fontFamily || UITheme.fonts.primary,
+                color: textStyle.color || UITheme.colors.text,
+                fontStyle: textStyle.fontStyle || UITheme.fonts.weights.normal,
+                stroke: textStyle.stroke || undefined,
+                strokeThickness: textStyle.strokeThickness || 0,
+                wordWrap: textStyle.wordWrap || undefined,
+                align: textStyle.align || undefined
+            };
+            
+            return scene.add.text(x, y, text, safeTextStyle);
+        } catch (error) {
+            console.warn('UITheme: Error creating text, using fallback:', error);
+            // Fallback to basic text
+            try {
+                return scene.add.text(x, y, text, {
+                    fontSize: '14px',
+                    fontFamily: 'Arial, sans-serif',
+                    color: '#ffffff'
+                });
+            } catch (fallbackError) {
+                console.error('UITheme: Even fallback text creation failed:', fallbackError);
+                return null;
+            }
+        }
     }
     
     // Create a standard button with hover effects
     static createButton(scene, x, y, width, height, text, callback, style = 'primary') {
-        const buttonStyle = UITheme.buttonStyles[style] || UITheme.buttonStyles.primary;
-        
-        // Button graphics
-        const button = scene.add.graphics();
-        button.fillStyle(buttonStyle.fillColor);
-        button.fillRoundedRect(-width/2, -height/2, width, height, buttonStyle.radius);
-        button.lineStyle(buttonStyle.strokeWidth, buttonStyle.strokeColor);
-        button.strokeRoundedRect(-width/2, -height/2, width, height, buttonStyle.radius);
-        button.setPosition(x, y);
-        
-        // Button text
-        const buttonText = scene.add.text(x, y, text, buttonStyle.textStyle).setOrigin(0.5);
-        
-        // Interactivity
-        button.setInteractive(new Phaser.Geom.Rectangle(-width/2, -height/2, width, height), Phaser.Geom.Rectangle.Contains);
-        
-        // Hover effects
-        button.on('pointerover', () => {
-            button.clear();
-            button.fillStyle(buttonStyle.hoverColor);
-            button.fillRoundedRect(-width/2, -height/2, width, height, buttonStyle.radius);
-            button.lineStyle(buttonStyle.strokeWidth, buttonStyle.strokeColor);
-            button.strokeRoundedRect(-width/2, -height/2, width, height, buttonStyle.radius);
-            buttonText.setScale(1.05);
-        });
-        
-        button.on('pointerout', () => {
-            button.clear();
-            button.fillStyle(buttonStyle.fillColor);
-            button.fillRoundedRect(-width/2, -height/2, width, height, buttonStyle.radius);
-            button.lineStyle(buttonStyle.strokeWidth, buttonStyle.strokeColor);
-            button.strokeRoundedRect(-width/2, -height/2, width, height, buttonStyle.radius);
-            buttonText.setScale(1);
-        });
-        
-        button.on('pointerdown', () => {
-            button.clear();
-            button.fillStyle(buttonStyle.pressedColor);
-            button.fillRoundedRect(-width/2, -height/2, width, height, buttonStyle.radius);
-            button.lineStyle(buttonStyle.strokeWidth, buttonStyle.strokeColor);
-            button.strokeRoundedRect(-width/2, -height/2, width, height, buttonStyle.radius);
-            if (callback) callback();
-        });
-        
-        return { button, text: buttonText };
+        try {
+            const buttonStyle = UITheme.buttonStyles[style] || UITheme.buttonStyles.primary;
+            
+            // Ensure all required style properties exist
+            const safeButtonStyle = {
+                fillColor: buttonStyle.fillColor || UITheme.colors.primary,
+                hoverColor: buttonStyle.hoverColor || UITheme.colors.primaryLight,
+                pressedColor: buttonStyle.pressedColor || UITheme.colors.primaryDark,
+                strokeColor: buttonStyle.strokeColor || UITheme.colors.primaryLight,
+                strokeWidth: buttonStyle.strokeWidth || UITheme.borders.width.medium,
+                radius: buttonStyle.radius || UITheme.borders.radius.medium,
+                textStyle: buttonStyle.textStyle || UITheme.textStyles.button
+            };
+            
+            // Button graphics
+            const button = scene.add.graphics();
+            button.fillStyle(safeButtonStyle.fillColor);
+            button.fillRoundedRect(-width/2, -height/2, width, height, safeButtonStyle.radius);
+            button.lineStyle(safeButtonStyle.strokeWidth, safeButtonStyle.strokeColor);
+            button.strokeRoundedRect(-width/2, -height/2, width, height, safeButtonStyle.radius);
+            button.setPosition(x, y);
+            
+            // Button text with error handling
+            let buttonText;
+            try {
+                buttonText = scene.add.text(x, y, text, safeButtonStyle.textStyle).setOrigin(0.5);
+            } catch (textError) {
+                console.warn('UITheme: Error creating button text, using fallback:', textError);
+                buttonText = scene.add.text(x, y, text, {
+                    fontSize: '14px',
+                    fill: '#ffffff',
+                    fontWeight: 'bold'
+                }).setOrigin(0.5);
+            }
+            
+            // Interactivity with error handling
+            try {
+                button.setInteractive(new Phaser.Geom.Rectangle(-width/2, -height/2, width, height), Phaser.Geom.Rectangle.Contains);
+                
+                // Hover effects with error handling
+                button.on('pointerover', () => {
+                    try {
+                        button.clear();
+                        button.fillStyle(safeButtonStyle.hoverColor);
+                        button.fillRoundedRect(-width/2, -height/2, width, height, safeButtonStyle.radius);
+                        button.lineStyle(safeButtonStyle.strokeWidth, safeButtonStyle.strokeColor);
+                        button.strokeRoundedRect(-width/2, -height/2, width, height, safeButtonStyle.radius);
+                        if (buttonText && buttonText.setScale) {
+                            buttonText.setScale(1.05);
+                        }
+                    } catch (hoverError) {
+                        console.warn('UITheme: Error in button hover effect:', hoverError);
+                    }
+                });
+                
+                button.on('pointerout', () => {
+                    try {
+                        button.clear();
+                        button.fillStyle(safeButtonStyle.fillColor);
+                        button.fillRoundedRect(-width/2, -height/2, width, height, safeButtonStyle.radius);
+                        button.lineStyle(safeButtonStyle.strokeWidth, safeButtonStyle.strokeColor);
+                        button.strokeRoundedRect(-width/2, -height/2, width, height, safeButtonStyle.radius);
+                        if (buttonText && buttonText.setScale) {
+                            buttonText.setScale(1);
+                        }
+                    } catch (outError) {
+                        console.warn('UITheme: Error in button out effect:', outError);
+                    }
+                });
+                
+                button.on('pointerdown', () => {
+                    try {
+                        button.clear();
+                        button.fillStyle(safeButtonStyle.pressedColor);
+                        button.fillRoundedRect(-width/2, -height/2, width, height, safeButtonStyle.radius);
+                        button.lineStyle(safeButtonStyle.strokeWidth, safeButtonStyle.strokeColor);
+                        button.strokeRoundedRect(-width/2, -height/2, width, height, safeButtonStyle.radius);
+                        
+                        // Execute callback with error handling
+                        if (callback && typeof callback === 'function') {
+                            try {
+                                callback();
+                            } catch (callbackError) {
+                                console.error('UITheme: Error in button callback:', callbackError);
+                            }
+                        }
+                    } catch (clickError) {
+                        console.warn('UITheme: Error in button click effect:', clickError);
+                        // Still try to execute callback even if visual effects fail
+                        if (callback && typeof callback === 'function') {
+                            try {
+                                callback();
+                            } catch (callbackError) {
+                                console.error('UITheme: Error in button callback (fallback):', callbackError);
+                            }
+                        }
+                    }
+                });
+                
+            } catch (interactiveError) {
+                console.warn('UITheme: Error setting up button interactivity:', interactiveError);
+                // Create a simple fallback interactive area
+                try {
+                    const fallbackHitArea = scene.add.rectangle(x, y, width, height, 0x000000, 0);
+                    fallbackHitArea.setInteractive({ useHandCursor: true });
+                    fallbackHitArea.on('pointerdown', () => {
+                        if (callback && typeof callback === 'function') {
+                            try {
+                                callback();
+                            } catch (callbackError) {
+                                console.error('UITheme: Error in fallback button callback:', callbackError);
+                            }
+                        }
+                    });
+                    return { button, text: buttonText, hitArea: fallbackHitArea };
+                } catch (fallbackError) {
+                    console.error('UITheme: Error creating fallback button interaction:', fallbackError);
+                }
+            }
+            
+            return { button, text: buttonText };
+            
+        } catch (error) {
+            console.error('UITheme: Critical error in createButton:', error);
+            
+            // Last resort fallback - create a very simple button
+            try {
+                const fallbackButton = scene.add.graphics();
+                fallbackButton.fillStyle(0x4a90e2);
+                fallbackButton.fillRoundedRect(-width/2, -height/2, width, height, 8);
+                fallbackButton.setPosition(x, y);
+                
+                const fallbackText = scene.add.text(x, y, text, {
+                    fontSize: '14px',
+                    fill: '#ffffff'
+                }).setOrigin(0.5);
+                
+                const fallbackHitArea = scene.add.rectangle(x, y, width, height, 0x000000, 0);
+                fallbackHitArea.setInteractive({ useHandCursor: true });
+                fallbackHitArea.on('pointerdown', () => {
+                    if (callback && typeof callback === 'function') {
+                        callback();
+                    }
+                });
+                
+                return { button: fallbackButton, text: fallbackText, hitArea: fallbackHitArea };
+            } catch (fallbackError) {
+                console.error('UITheme: Even fallback button creation failed:', fallbackError);
+                return null;
+            }
+        }
     }
     
     // Get button style by name
@@ -521,6 +682,38 @@ export class UITheme {
         });
         
         return notification;
+    }
+    
+    static createTooltip(scene) {
+        const tooltipContainer = scene.add.container(0, 0);
+        tooltipContainer.setDepth(20000).setVisible(false);
+
+        const text = UITheme.createText(scene, 0, 0, '', 'bodySmall');
+        text.setPadding(UITheme.spacing.small, UITheme.spacing.tiny);
+        text.setWordWrapWidth(200);
+
+        const bg = scene.add.graphics();
+        tooltipContainer.add([bg, text]);
+
+        tooltipContainer.show = (x, y, content) => {
+            text.setText(content);
+            const bounds = text.getBounds();
+            
+            bg.clear();
+            bg.fillStyle(UITheme.colors.dark, 0.9);
+            bg.fillRoundedRect(bounds.x - 4, bounds.y - 4, bounds.width + 8, bounds.height + 8, UITheme.borders.radius.small);
+            bg.lineStyle(1, UITheme.colors.light, 0.5);
+            bg.strokeRoundedRect(bounds.x - 4, bounds.y - 4, bounds.width + 8, bounds.height + 8, UITheme.borders.radius.small);
+
+            tooltipContainer.setPosition(x, y);
+            tooltipContainer.setVisible(true);
+        };
+        
+        tooltipContainer.hide = () => {
+            tooltipContainer.setVisible(false);
+        };
+
+        return tooltipContainer;
     }
 }
 

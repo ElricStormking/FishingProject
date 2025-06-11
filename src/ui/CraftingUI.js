@@ -1,28 +1,18 @@
 import UITheme from './UITheme.js';
+import { BaseUI } from './BaseUI.js';
 
-export class CraftingUI {
+export class CraftingUI extends BaseUI {
     constructor(scene, x, y, width, height) {
-        console.log('CraftingUI: Constructor called', { scene: scene.scene.key, x, y, width, height });
+        super(scene, x, y, width, height, 'BOAT WORKSHOP');
         
-        this.scene = scene;
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-        
-        this.gameState = scene.gameState;
         this.craftingManager = this.gameState.craftingManager;
-        this.audioManager = this.gameState.getAudioManager(scene);
         
         // UI state
-        this.isVisible = false;
         this.currentCategory = 'rods';
         this.selectedRecipe = null;
         this.selectedIngredients = [];
         
         // UI elements
-        this.container = null;
-        this.background = null;
         this.categoryTabs = {};
         this.recipeList = [];
         this.ingredientSlots = [];
@@ -32,62 +22,13 @@ export class CraftingUI {
         // Working interactive areas (outside container)
         this.workingTabAreas = {};
         this.workingRecipeAreas = [];
-        this.clickBlocker = null;
         
-        this.createUI();
+        this._createCraftingUI();
         this.setupEventListeners();
+        this.hide();
     }
 
-    createUI() {
-        // Click blocker to prevent clicks from passing through
-        this.clickBlocker = this.scene.add.graphics();
-        this.clickBlocker.fillStyle(0x000000, 0.01);
-        this.clickBlocker.fillRect(0, 0, this.scene.cameras.main.width, this.scene.cameras.main.height);
-        this.clickBlocker.setInteractive();
-        this.clickBlocker.setDepth(9999);
-        this.clickBlocker.setVisible(false);
-        this.clickBlocker.on('pointerdown', (pointer, currentlyOver) => {
-            pointer.event.stopPropagation();
-        });
-
-        // Main container
-        this.container = this.scene.add.container(this.x, this.y);
-        this.container.setVisible(false);
-        this.container.setDepth(10000);
-
-        // Interactive background to block clicks
-        this.interactiveBackground = this.scene.add.graphics();
-        this.interactiveBackground.fillStyle(0x000000, 0.01);
-        this.interactiveBackground.fillRect(0, 0, this.width, this.height);
-        this.interactiveBackground.setInteractive();
-        this.interactiveBackground.setDepth(10000);
-        this.interactiveBackground.on('pointerdown', (pointer) => {
-            pointer.event.stopPropagation();
-        });
-        this.container.add(this.interactiveBackground);
-
-        // Background using UITheme
-        this.background = UITheme.createPanel(this.scene, 0, 0, this.width, this.height, 'primary');
-        this.container.add(this.background);
-
-        // Title using UITheme
-        const title = UITheme.createText(this.scene, this.width / 2, 30, 'BOAT WORKSHOP', 'headerLarge');
-        title.setOrigin(0.5);
-        this.container.add(title);
-
-        // Close button using UITheme
-        const closeButton = UITheme.createText(this.scene, this.width - 30, 30, '×', 'error');
-        closeButton.setOrigin(0.5).setInteractive();
-        closeButton.setFontSize('32px');
-        
-        closeButton.on('pointerdown', () => {
-            this.audioManager?.playSFX('button');
-            this.hide();
-        });
-        closeButton.on('pointerover', () => closeButton.setColor('#ff9999'));
-        closeButton.on('pointerout', () => closeButton.setColor('#ff6666'));
-        this.container.add(closeButton);
-
+    _createCraftingUI() {
         // Back to Inventory button (initially hidden)
         this.createBackToInventoryButton();
 

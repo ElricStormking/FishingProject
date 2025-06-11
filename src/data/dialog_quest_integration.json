@@ -1,0 +1,256 @@
+{
+  "dialogQuestIntegration": {
+    "overview": {
+      "description": "Integration guide for dialog samples with quest systems",
+      "systems": ["DialogManager", "QuestManager", "AdvancedQuestSystem"],
+      "dialogTypes": ["story", "romantic_npc", "tutorial", "event"]
+    },
+    "storyQuestIntegration": {
+      "description": "Story dialogs integrate with main quest progression",
+      "questMapping": {
+        "Story01": {
+          "questId": "story_001_tutorial",
+          "triggers": ["game_start", "first_login"],
+          "effects": ["unlock_tutorial", "start_companion_intro"]
+        },
+        "Story02": {
+          "questId": "story_002_first_companion",
+          "triggers": ["first_fish_caught"],
+          "effects": ["experience_reward", "unlock_mia_dialogs"]
+        },
+        "Story03": {
+          "questId": "story_003_companion_intro",
+          "triggers": ["tutorial_complete"],
+          "effects": ["romance_system_unlock", "npc_quest_unlock"]
+        },
+        "Story04": {
+          "questId": "story_004_new_waters",
+          "triggers": ["basic_skills_mastered"],
+          "effects": ["map_unlock", "travel_system_unlock"]
+        },
+        "Story05": {
+          "questId": "story_005_first_boss",
+          "triggers": ["level_5_reached"],
+          "effects": ["boss_system_unlock", "combat_tutorial"]
+        }
+      },
+      "implementation": {
+        "DialogManager": "Handles story dialog display and choice processing",
+        "QuestManager": "Tracks story quest progression and unlocks",
+        "integration": "Story dialogs automatically advance quest objectives"
+      }
+    },
+    "romanticNpcIntegration": {
+      "description": "Romance dialogs integrate with relationship systems",
+      "npcProgression": {
+        "mia": {
+          "mia01": {
+            "romanceLevel": 0,
+            "unlockCondition": "story_003_companion_intro",
+            "effects": ["romance_meter_increase", "relationship_tracking"]
+          },
+          "mia02": {
+            "romanceLevel": 10,
+            "unlockCondition": "mia01_completed",
+            "effects": ["fishing_bonus", "special_lure_unlock"]
+          },
+          "mia03": {
+            "romanceLevel": 25,
+            "unlockCondition": "mia02_completed",
+            "effects": ["romantic_scene", "relationship_milestone"]
+          },
+          "mia04": {
+            "romanceLevel": 40,
+            "unlockCondition": "mia03_completed",
+            "effects": ["custom_item_gift", "deep_relationship"]
+          },
+          "mia05": {
+            "romanceLevel": 60,
+            "unlockCondition": "mia04_completed",
+            "effects": ["love_confession", "hcg_unlock", "lover_status"]
+          }
+        },
+        "sophie": {
+          "progression": "Competition-focused romance path",
+          "specialFeatures": ["fishing_challenges", "tournament_partnership"]
+        },
+        "luna": {
+          "progression": "Mystical romance path",
+          "specialFeatures": ["deep_sea_access", "ancient_wisdom"]
+        }
+      },
+      "implementation": {
+        "DialogManager": "Manages romance meter updates and relationship tracking",
+        "effects": "Romance choices affect fishing bonuses and unlock special content"
+      }
+    },
+    "tutorialIntegration": {
+      "description": "Tutorial dialogs guide players through game mechanics",
+      "tutorialFlow": {
+        "tutorial01": {
+          "system": "casting",
+          "minigame": "cast_tutorial",
+          "objective": "Learn basic casting mechanics"
+        },
+        "tutorial02": {
+          "system": "luring",
+          "minigame": "lure_tutorial",
+          "objective": "Master lure controls"
+        },
+        "tutorial03": {
+          "system": "reeling",
+          "minigame": "reel_tutorial",
+          "objective": "Complete first successful catch"
+        },
+        "tutorial04": {
+          "system": "inventory",
+          "uiElement": "inventory_tutorial",
+          "objective": "Learn equipment management"
+        },
+        "tutorial05": {
+          "system": "crafting",
+          "uiElement": "crafting_tutorial",
+          "objective": "Create first equipment"
+        },
+        "tutorial06": {
+          "system": "time_weather",
+          "gameSystem": "time_weather",
+          "objective": "Understand environmental effects"
+        },
+        "tutorial07": {
+          "system": "energy",
+          "gameSystem": "energy",
+          "objective": "Learn resource management"
+        },
+        "tutorial08": {
+          "system": "navigation",
+          "uiElement": "map_tutorial",
+          "objective": "Explore different fishing spots"
+        },
+        "tutorial09": {
+          "system": "collection",
+          "uiElement": "album_tutorial",
+          "objective": "Understand fish card system"
+        },
+        "tutorial10": {
+          "system": "social",
+          "uiElement": "cabin_tutorial",
+          "objective": "Learn companion interactions"
+        }
+      },
+      "implementation": {
+        "DialogManager": "Presents tutorial information with Mia as guide",
+        "QuestManager": "Tracks tutorial completion and unlocks next steps"
+      }
+    },
+    "eventIntegration": {
+      "description": "Event dialogs handle temporary content and special activities",
+      "eventTypes": {
+        "shop": {
+          "dialogs": ["Shop01", "Shop02", "Shop03"],
+          "features": ["item_browsing", "special_offers", "rare_equipment"],
+          "integration": "Shop dialogs interface with economy system"
+        },
+        "tournament": {
+          "dialogs": ["Tournament01", "Tournament02"],
+          "features": ["competition_entry", "championship_progression"],
+          "integration": "Tournament dialogs manage competitive events"
+        },
+        "festival": {
+          "dialogs": ["Festival01", "Festival02"],
+          "features": ["special_quests", "exclusive_rewards", "time_limited"],
+          "integration": "Festival dialogs unlock temporary content"
+        },
+        "weather": {
+          "dialogs": ["Weather01", "Weather02"],
+          "features": ["condition_warnings", "fishing_bonuses"],
+          "integration": "Weather dialogs provide gameplay modifiers"
+        },
+        "special": {
+          "dialogs": ["Event01", "Event02"],
+          "features": ["rare_encounters", "legendary_content"],
+          "integration": "Special event dialogs unlock unique experiences"
+        }
+      }
+    },
+    "implementationGuide": {
+      "DialogManager": {
+        "responsibilities": [
+          "Load dialog data from JSON",
+          "Display dialog UI with portraits and choices",
+          "Process choice effects (romance, quests, items)",
+          "Manage dialog unlock conditions",
+          "Handle dialog completion callbacks"
+        ],
+        "methods": [
+          "loadDialogData(dialogId)",
+          "displayDialog(dialogData)",
+          "processChoice(choiceId, effects)",
+          "checkUnlockConditions(dialogId)",
+          "onDialogComplete(dialogId, choiceData)"
+        ]
+      },
+      "QuestManager": {
+        "responsibilities": [
+          "Track quest progression from dialog choices",
+          "Unlock new quests based on dialog completion",
+          "Manage quest objectives and rewards",
+          "Handle story quest advancement",
+          "Process tutorial quest completion"
+        ],
+        "methods": [
+          "onDialogQuestProgress(questId, objectiveId)",
+          "unlockQuestFromDialog(questId)",
+          "completeQuestObjective(questId, objectiveId)",
+          "checkQuestUnlockConditions(questId)",
+          "processQuestRewards(questId)"
+        ]
+      },
+      "AdvancedQuestSystem": {
+        "responsibilities": [
+          "Generate dynamic quests from dialog interactions",
+          "Manage time-based quest content",
+          "Handle event quest integration",
+          "Process quest chain progression",
+          "Track quest analytics and metrics"
+        ],
+        "methods": [
+          "generateQuestFromDialog(dialogId, choiceData)",
+          "processEventQuestDialog(eventId, dialogId)",
+          "updateQuestChainFromDialog(chainId, questId)",
+          "trackDialogQuestMetrics(dialogId, questId)",
+          "handleTimeBasedQuestDialog(questType, dialogId)"
+        ]
+      }
+    },
+    "dataFlow": {
+      "dialogTrigger": "User interaction or quest progression triggers dialog",
+      "dialogDisplay": "DialogManager loads and displays dialog from JSON",
+      "choiceSelection": "Player selects dialog choice",
+      "effectProcessing": "DialogManager processes choice effects",
+      "questUpdate": "QuestManager updates quest progression",
+      "systemIntegration": "Effects propagate to other game systems",
+      "completion": "Dialog completion triggers next steps"
+    },
+    "bestPractices": {
+      "dialogDesign": [
+        "Keep dialog text concise and engaging",
+        "Provide meaningful choices with clear consequences",
+        "Use consistent character voices and personalities",
+        "Include unlock conditions for progression gating"
+      ],
+      "questIntegration": [
+        "Link dialog choices to specific quest objectives",
+        "Use dialog completion to unlock new content",
+        "Provide clear feedback for quest progression",
+        "Balance story pacing with player agency"
+      ],
+      "systemIntegration": [
+        "Ensure dialog effects integrate smoothly with game systems",
+        "Validate unlock conditions before displaying dialogs",
+        "Handle edge cases and error conditions gracefully",
+        "Maintain save/load compatibility for dialog state"
+      ]
+    }
+  }
+}

@@ -376,6 +376,11 @@ Equipment enhances player attributes and is categorized into four types:
 - **Features**: Branching dialogue choices, affection-based responses, and scripted events tied to player progression.
 - **Cross-System Integration**: Dialogue choices can influence gameplay (e.g., unlocking new fishing spots or temporary buffs).
 - **Event Quest System UI**: There will be event quests including: main story quests, side event quests, Cabin NPC quests, ..,etc.
+- **Dialog Types**: There will be 4 type of dialogs, Story dialog type, Romantic NPC dialog type, Tutorial type, and Event type. 
+- **Story dialog type**: Story dialog type are numbered with Story ID 1 to 100 (samples: Story01 to Story20)
+- **Romantic NPC type**: Romantic NPC type are numbered with NPC name ID and a number 1 to 20.(samples: mia01 to mia20, sophie01 to sophie20 )
+- **Tutorial type**: Tutorial dialogs will use NPC Mia as the tutor and Tutorial ID 1 to 20 (samples: tutorial01 to tutorial20)
+- **Event Type**:  Event dialogs will use Event Name and Event ID 1 to 20 (samples: Shop01 to Shop20)
 
 8.3 Quest System
 - **Main Story Quest**: These quests are mainly created by Main Story, and are usually important to unlock new Map area, or new equipments, new boat functionalities.

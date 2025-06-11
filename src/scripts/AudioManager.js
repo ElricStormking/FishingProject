@@ -30,6 +30,40 @@ export class AudioManager {
         this.audioContext = null;
         this.musicFadeTimer = null;
         
+        // --- Enhanced Features ---
+        this.eventSystem = this.scene.game.eventSystem; // Assuming a global event system
+        this.gameState = this.scene.game.gameState; // Assuming a global game state
+        this.audioLayers = new Map();
+        this.dynamicMixer = new Map();
+        this.contextualAudio = new Map();
+        this.audioTriggers = new Map();
+        this.audioSequences = new Map();
+        
+        this.enhancedSettings = {
+            enableDynamicMixing: true,
+            enableContextualAudio: true,
+            enableAudioAnalytics: true,
+            enableSpatialAudio: false,
+            audioQuality: 'high',
+            maxConcurrentSFX: 8,
+            fadeTransitionTime: 1500,
+            duckingAmount: 0.3,
+            adaptiveVolumeEnabled: true
+        };
+        
+        this.audioAnalytics = {
+            totalPlayed: 0,
+            musicTime: 0,
+            sfxCount: 0,
+            sessionStartTime: Date.now(),
+            popularSounds: new Map(),
+            errorCount: 0
+        };
+
+        this.audioContexts = this.initializeAudioContexts();
+        this.audioEvents = this.initializeAudioEvents();
+        // --- End Enhanced Features ---
+
         console.log('AudioManager: Initialized');
     }
 
@@ -45,6 +79,9 @@ export class AudioManager {
             
             // Set up audio event listeners
             this.setupEventListeners();
+
+            // Initialize enhanced features
+            this.initializeEnhancedAudio();
             
             this.isInitialized = true;
             console.log('AudioManager: Successfully initialized');
@@ -772,5 +809,452 @@ export class AudioManager {
         }
         
         console.log('AudioManager: Destroyed');
+    }
+
+    // --- ENHANCED AUDIO MANAGER METHODS ---
+
+    /**
+     * Initialize audio contexts for different game situations
+     */
+    initializeAudioContexts() {
+        return {
+            // Fishing contexts
+            fishing: {
+                calm_water: {
+                    music: { track: 'music_fishing', volume: 0.6 },
+                    ambient: [
+                        { track: 'ambient_water_calm', volume: 0.8 },
+                        { track: 'ambient_birds_distant', volume: 0.3 }
+                    ],
+                    weather: 'clear'
+                },
+                rough_water: {
+                    music: { track: 'music_fishing_intense', volume: 0.8 },
+                    ambient: [
+                        { track: 'ambient_water_rough', volume: 1.0 },
+                        { track: 'ambient_wind_strong', volume: 0.7 }
+                    ],
+                    weather: 'stormy'
+                },
+                night_fishing: {
+                    music: { track: 'music_fishing_night', volume: 0.5 },
+                    ambient: [
+                        { track: 'ambient_water_night', volume: 0.6 },
+                        { track: 'ambient_insects', volume: 0.4 },
+                        { track: 'ambient_owls', volume: 0.2 }
+                    ],
+                    timeOfDay: 'night'
+                }
+            },
+            
+            // Social contexts
+            social: {
+                romantic_conversation: {
+                    music: { track: 'music_romance', volume: 0.4 },
+                    ambient: [
+                        { track: 'ambient_soft_waves', volume: 0.3 },
+                        { track: 'ambient_gentle_breeze', volume: 0.2 }
+                    ]
+                },
+                friendly_chat: {
+                    music: { track: 'music_social', volume: 0.5 },
+                    ambient: [
+                        { track: 'ambient_harbor_activity', volume: 0.4 }
+                    ]
+                },
+                tutorial: {
+                    music: { track: 'music_tutorial', volume: 0.6 },
+                    ambient: [
+                        { track: 'ambient_learning', volume: 0.3 }
+                    ]
+                }
+            },
+            
+            // Achievement contexts
+            achievement: {
+                major_milestone: {
+                    music: { track: 'music_victory_major', volume: 0.9, fadeIn: true },
+                    sfx: ['sfx_fanfare_major', 'sfx_fireworks'],
+                    duration: 5000
+                },
+                minor_achievement: {
+                    music: { track: 'music_victory_minor', volume: 0.7, fadeIn: true },
+                    sfx: ['sfx_chime_success'],
+                    duration: 2000
+                },
+                first_time: {
+                    music: { track: 'music_discovery', volume: 0.8 },
+                    sfx: ['sfx_discovery_chime'],
+                    duration: 3000
+                }
+            },
+            
+            // Shop contexts
+            shop: {
+                browsing: {
+                    music: { track: 'music_shop', volume: 0.5 },
+                    ambient: [
+                        { track: 'ambient_market', volume: 0.4 }
+                    ]
+                },
+                purchasing: {
+                    music: { track: 'music_shop', volume: 0.3 }, // Duck for transaction sounds
+                    sfx: ['sfx_coin', 'sfx_purchase_success']
+                }
+            },
+            
+            // Inventory/Equipment contexts
+            equipment: {
+                crafting: {
+                    music: { track: 'music_crafting', volume: 0.6 },
+                    ambient: [
+                        { track: 'ambient_workshop', volume: 0.5 },
+                        { track: 'ambient_tools', volume: 0.3 }
+                    ]
+                },
+                upgrading: {
+                    music: { track: 'music_enhancement', volume: 0.7 },
+                    sfx: ['sfx_hammer', 'sfx_enhancement']
+                }
+            }
+        };
+    }
+
+    /**
+     * Initialize enhanced audio event system
+     */
+    initializeAudioEvents() {
+        return {
+            // Fishing events
+            fishing: {
+                cast_start: { sfx: 'sfx_cast_prepare', volume: 0.8 },
+                cast_complete: { sfx: 'sfx_cast', volume: 1.0 },
+                lure_splash: { sfx: 'sfx_splash', volume: 0.9 },
+                fish_bite: { sfx: 'sfx_bite', volume: 1.0, urgent: true },
+                tension_increase: { sfx: 'sfx_tension', volume: 0.7, loop: true },
+                tension_decrease: { sfx: 'sfx_tension_release', volume: 0.6 },
+                fish_struggle: { sfx: 'sfx_struggle', volume: 0.8, randomPitch: true },
+                reel_success: { sfx: 'sfx_reel_success', volume: 1.0 },
+                fish_caught: { 
+                    sfx: 'sfx_catch', 
+                    volume: 1.0, 
+                    followUp: 'sfx_success_chime',
+                    musicDuck: true
+                },
+                fish_escaped: { sfx: 'sfx_escape', volume: 0.9 },
+                line_snap: { sfx: 'sfx_line_snap', volume: 1.0, urgent: true }
+            },
+            
+            // UI events
+            ui: {
+                button_hover: { sfx: 'sfx_button_hover', volume: 0.4 },
+                button_click: { sfx: 'sfx_button', volume: 0.6 },
+                tab_switch: { sfx: 'sfx_tab_switch', volume: 0.5 },
+                inventory_open: { sfx: 'sfx_inventory_open', volume: 0.7 },
+                inventory_close: { sfx: 'sfx_inventory_close', volume: 0.6 },
+                item_select: { sfx: 'sfx_item_select', volume: 0.5 },
+                item_equip: { sfx: 'sfx_equip', volume: 0.8 },
+                item_unequip: { sfx: 'sfx_unequip', volume: 0.6 },
+                error: { sfx: 'sfx_error', volume: 0.7 },
+                notification: { sfx: 'sfx_notification', volume: 0.8 }
+            },
+            
+            // Progression events
+            progression: {
+                exp_gain: { sfx: 'sfx_exp_gain', volume: 0.7 },
+                level_up: { 
+                    sfx: 'sfx_levelup', 
+                    volume: 1.0, 
+                    musicDuck: true,
+                    followUp: 'sfx_level_fanfare'
+                },
+                achievement_unlock: { 
+                    sfx: 'sfx_achievement', 
+                    volume: 0.9,
+                    contextual: true // Use achievement context
+                },
+                quest_complete: { sfx: 'sfx_quest_complete', volume: 0.8 },
+                quest_update: { sfx: 'sfx_quest_update', volume: 0.6 }
+            },
+            
+            // Social events
+            social: {
+                romance_increase: { sfx: 'sfx_romance_up', volume: 0.7 },
+                romance_decrease: { sfx: 'sfx_romance_down', volume: 0.6 },
+                conversation_start: { sfx: 'sfx_dialog_start', volume: 0.6 },
+                conversation_end: { sfx: 'sfx_dialog_end', volume: 0.5 },
+                gift_give: { sfx: 'sfx_gift', volume: 0.8 },
+                npc_happy: { sfx: 'sfx_npc_happy', volume: 0.7 },
+                npc_sad: { sfx: 'sfx_npc_sad', volume: 0.6 }
+            },
+            
+            // Economy events
+            economy: {
+                coin_gain: { sfx: 'sfx_coin_gain', volume: 0.7 },
+                coin_spend: { sfx: 'sfx_coin_spend', volume: 0.6 },
+                purchase: { sfx: 'sfx_purchase', volume: 0.8 },
+                sell: { sfx: 'sfx_sell', volume: 0.7 },
+                craft_complete: { sfx: 'sfx_craft_complete', volume: 0.9 },
+                upgrade_success: { sfx: 'sfx_upgrade_success', volume: 1.0 },
+                upgrade_fail: { sfx: 'sfx_upgrade_fail', volume: 0.8 }
+            }
+        };
+    }
+
+    /**
+     * Initialize enhanced audio system
+     */
+    initializeEnhancedAudio() {
+        // Setup audio layers for dynamic mixing
+        this.setupAudioLayers();
+        
+        // Initialize contextual audio system
+        this.initializeContextualAudio();
+        
+        // Setup event listeners for enhanced features
+        this.setupEnhancedEventListeners();
+        
+        console.log('AudioManager: Enhanced features initialized');
+    }
+
+    /**
+     * Set up audio layers for dynamic mixing
+     */
+    setupAudioLayers() {
+        // Define audio layers (e.g., base, weather, action)
+        this.audioLayers.set('base', { volume: 1.0, sounds: new Set() });
+        this.audioLayers.set('weather', { volume: 1.0, sounds: new Set() });
+        this.audioLayers.set('action', { volume: 1.0, sounds: new Set() });
+        this.audioLayers.set('dialogue', { volume: 1.0, sounds: new Set() });
+        
+        console.log('AudioManager: Audio layers set up');
+    }
+
+    /**
+     * Initialize contextual audio system
+     */
+    initializeContextualAudio() {
+        // Pre-configure some contextual audio triggers
+        this.contextualAudio.set('weather_rain', {
+            condition: () => this.gameState && this.gameState.weather === 'rain',
+            sound: { key: 'ambient_rain', type: 'ambient', loop: true, volume: 0.7 }
+        });
+        
+        this.contextualAudio.set('low_energy', {
+            condition: () => this.gameState && this.gameState.player && this.gameState.player.energy < 20,
+            sound: { key: 'sfx_heartbeat_slow', type: 'sfx', loop: true, volume: 0.4 }
+        });
+        
+        console.log('AudioManager: Contextual audio system initialized');
+    }
+
+    /**
+     * Setup enhanced event listeners for game events
+     */
+    setupEnhancedEventListeners() {
+        if (!this.eventSystem) return;
+
+        // Example listeners
+        this.eventSystem.on('fish:caught', (fishData) => this.onFishCaught(fishData));
+        this.eventSystem.on('achievement:unlocked', (achievementData) => this.onAchievementUnlock(achievementData));
+        this.eventSystem.on('conversation:start', (conversationData) => this.onConversationStart(conversationData));
+
+        console.log('AudioManager: Enhanced event listeners set up');
+    }
+
+    playAudioEvent(category, eventKey, options = {}) {
+        if (!this.audioEvents[category] || !this.audioEvents[category][eventKey]) {
+            console.warn(`AudioManager: Audio event not found: ${category}.${eventKey}`);
+            return;
+        }
+
+        const eventConfig = this.audioEvents[category][eventKey];
+
+        // Play the main sound effect
+        if (eventConfig.sfx) {
+            this.playSFX(eventConfig.sfx, eventConfig.volume, options.pitch);
+        }
+
+        // Handle music ducking
+        if (eventConfig.musicDuck) {
+            this.duckMusic(true);
+            this.scene.time.delayedCall(this.enhancedSettings.fadeTransitionTime, () => this.duckMusic(false));
+        }
+
+        // Play follow-up sound
+        if (eventConfig.followUp) {
+            this.scene.time.delayedCall(500, () => {
+                this.playSFX(eventConfig.followUp, (eventConfig.volume || 1.0) * 0.8);
+            });
+        }
+        
+        // Handle contextual achievements
+        if (eventConfig.contextual) {
+            this.playContextualAudio(category, eventKey, options);
+        }
+    }
+
+    playContextualAudio(category, eventKey, options = {}) {
+        if (category === 'progression' && eventKey === 'achievement_unlock') {
+            const context = this.getAchievementContext(options.achievementType);
+            this.applyAudioContext(context);
+        }
+    }
+
+    applyAudioContext(contextConfig, options = {}) {
+        if (!contextConfig) return;
+
+        // Fade out current music if a new track is specified
+        if (contextConfig.music && this.currentMusic?.key !== contextConfig.music.track) {
+            this.stopMusic(true, this.enhancedSettings.fadeTransitionTime);
+            this.scene.time.delayedCall(this.enhancedSettings.fadeTransitionTime, () => {
+                this.playMusic(contextConfig.music.track, true, this.enhancedSettings.fadeTransitionTime);
+            });
+        }
+        
+        // Play SFX associated with the context
+        if (contextConfig.sfx) {
+            contextConfig.sfx.forEach(sfxKey => {
+                this.playSFX(sfxKey);
+            });
+        }
+    }
+
+    duckMusic(enable) {
+        if (!this.currentMusic) return;
+        
+        const targetVolume = enable ? this.musicVolume * this.enhancedSettings.duckingAmount : this.musicVolume;
+        this.smoothVolumeTransition('music', targetVolume);
+    }
+    
+    smoothVolumeTransition(audioType, targetVolume, duration = 1000) {
+        const sound = audioType === 'music' ? this.currentMusic : null;
+        if (!sound) return;
+
+        this.scene.tweens.add({
+            targets: sound,
+            volume: targetVolume,
+            duration: duration,
+            ease: 'Sine.easeInOut'
+        });
+    }
+
+    onFishCaught(fishData) {
+        this.playAudioEvent('fishing', 'fish_caught');
+        if (fishData.isLegendary) {
+            this.playAudioEvent('progression', 'achievement_unlock', { achievementType: 'legendary_fish' });
+        }
+    }
+
+    onAchievementUnlock(achievementData) {
+        this.playAudioEvent('progression', 'achievement_unlock', { achievementType: achievementData.type });
+    }
+    
+    onConversationStart(conversationData) {
+        const context = this.getSocialContext(conversationData.npcId, conversationData.romanceLevel);
+        this.applyAudioContext(context);
+    }
+
+    getAchievementContext(achievementType) {
+        switch (achievementType) {
+            case 'major': return this.audioContexts.achievement.major_milestone;
+            case 'minor': return this.audioContexts.achievement.minor_achievement;
+            default: return this.audioContexts.achievement.first_time;
+        }
+    }
+
+    getSocialContext(npcId, romanceLevel = 0) {
+        if (romanceLevel > 5) {
+            return this.audioContexts.social.romantic_conversation;
+        }
+        return this.audioContexts.social.friendly_chat;
+    }
+
+    trackAudioUsage(audioKey, audioType) {
+        if (!this.enhancedSettings.enableAudioAnalytics) return;
+
+        this.audioAnalytics.totalPlayed++;
+        if (audioType === 'music') {
+            // Track time in a separate update loop
+        } else {
+            this.audioAnalytics.sfxCount++;
+        }
+        
+        const currentCount = this.audioAnalytics.popularSounds.get(audioKey) || 0;
+        this.audioAnalytics.popularSounds.set(audioKey, currentCount + 1);
+    }
+
+    getCurrentVolume(audioType) {
+        switch(audioType) {
+            case 'music': return this.musicVolume;
+            case 'sfx': return this.sfxVolume;
+            case 'ambient': return this.ambientVolume;
+            default: return this.masterVolume;
+        }
+    }
+
+    setEnhancedSceneAudio(sceneKey, contextData = {}) {
+        this.setSceneAudio(sceneKey);
+        this.applySceneContextualAudio(sceneKey, contextData);
+    }
+    
+    applySceneContextualAudio(sceneKey, contextData) {
+        let context;
+        switch(sceneKey) {
+            case 'FishingScene':
+                context = this.audioContexts.fishing.calm_water; // Default
+                break;
+            case 'CabinScene':
+                context = this.getSocialContext(contextData.npcId, contextData.romanceLevel);
+                break;
+            case 'ShopScene':
+                context = this.audioContexts.shop.browsing;
+                break;
+        }
+        this.applyAudioContext(context);
+    }
+
+    loadAudioSettings() {
+        const settings = JSON.parse(localStorage.getItem('audioSettings'));
+        if (settings) {
+            this.masterVolume = settings.masterVolume ?? 1.0;
+            this.musicVolume = settings.musicVolume ?? 0.8;
+            this.sfxVolume = settings.sfxVolume ?? 1.0;
+            this.ambientVolume = settings.ambientVolume ?? 0.6;
+            this.muted = settings.muted ?? false;
+            Object.assign(this.enhancedSettings, settings.enhancedSettings);
+            this.updateAllVolumes();
+        }
+    }
+
+    saveAudioSettings() {
+        const settings = {
+            masterVolume: this.masterVolume,
+            musicVolume: this.musicVolume,
+            sfxVolume: this.sfxVolume,
+            ambientVolume: this.ambientVolume,
+            muted: this.muted,
+            enhancedSettings: this.enhancedSettings
+        };
+        localStorage.setItem('audioSettings', JSON.stringify(settings));
+    }
+
+    getAudioAnalytics() {
+        return this.audioAnalytics;
+    }
+
+    getEnhancedAudioInfo() {
+        return {
+            baseInfo: this.getAudioInfo(),
+            enhancedSettings: this.enhancedSettings,
+            analytics: this.audioAnalytics,
+            layers: Array.from(this.audioLayers.keys())
+        };
+    }
+    
+    emergencyReset() {
+        this.stopAllSounds();
+        this.audioLayers.forEach(layer => layer.sounds.clear());
+        console.warn('AudioManager: Emergency audio reset performed.');
     }
 } 

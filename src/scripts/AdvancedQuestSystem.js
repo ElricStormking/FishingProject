@@ -1,17 +1,23 @@
+import { questDataLoader } from './QuestDataLoader.js';
+
 /**
  * Advanced Quest System - Enhanced quest types and functionality
  * Builds on the existing QuestManager with advanced features:
  * - Time-based quests (daily, weekly, limited-time)
  * - Chain quest system with branching paths
- * - Dynamic quest generation
+ * - Dynamic quest generation from JSON templates
  * - Quest notifications and reminders
  * - Advanced quest analytics
+ * Now uses JSON-based quest data via QuestDataLoader
  */
 export class AdvancedQuestSystem {
     constructor(questManager, gameState, notificationManager) {
         this.questManager = questManager;
         this.gameState = gameState;
         this.notificationManager = notificationManager;
+        
+        // Quest data loader reference
+        this.questDataLoader = questDataLoader;
         
         // Quest enhancement features
         this.timers = new Map();
@@ -38,11 +44,9 @@ export class AdvancedQuestSystem {
             }
         };
         
-        // Dynamic quest templates
-        this.questTemplates = this.initializeQuestTemplates();
-        
-        // Quest chain definitions
-        this.questChainDefinitions = this.initializeQuestChains();
+        // Quest templates and chains now loaded from JSON via questDataLoader
+        // this.questTemplates = this.initializeQuestTemplates(); // Deprecated
+        // this.questChainDefinitions = this.initializeQuestChains(); // Deprecated
         
         this.initializeAdvancedQuests();
         this.startQuestTimers();
@@ -304,12 +308,14 @@ export class AdvancedQuestSystem {
             this.gameState.questChains = {};
         }
         
-        this.questChainDefinitions.forEach(chain => {
+        // Get quest chains from JSON data
+        const questChains = this.questDataLoader.getAllQuestChains();
+        questChains.forEach(chain => {
             if (!this.gameState.questChains[chain.id]) {
                 this.gameState.questChains[chain.id] = {
                     currentQuest: null,
                     completedQuests: [],
-                    availableQuests: [chain.quests[0].id], // First quest is available
+                    availableQuests: chain.quests.length > 0 ? [chain.quests[0].id] : [], // First quest is available
                     chainCompleted: false
                 };
             }
@@ -317,28 +323,15 @@ export class AdvancedQuestSystem {
     }
 
     /**
-     * Generate daily quests
+     * Generate daily quests using JSON templates
      */
     generateDailyQuests() {
-        const dailyQuests = [];
-        const maxDailyQuests = this.timeBasedQuests.daily.maxActive;
+        console.log('AdvancedQuestSystem: Generating daily quests from JSON templates...');
         
-        // Fishing challenge (always included)
-        const fishingQuest = this.generateQuestFromTemplate('fishingTemplates', 'daily');
-        if (fishingQuest) dailyQuests.push(fishingQuest);
+        // Use the quest data loader to generate daily quests
+        const dailyQuests = this.questDataLoader.generateDailyQuests();
         
-        // Social challenge (if NPCs available)
-        if (dailyQuests.length < maxDailyQuests) {
-            const socialQuest = this.generateQuestFromTemplate('socialTemplates', 'daily');
-            if (socialQuest) dailyQuests.push(socialQuest);
-        }
-        
-        // Equipment challenge (if equipment system available)
-        if (dailyQuests.length < maxDailyQuests) {
-            const equipmentQuest = this.generateQuestFromTemplate('equipmentTemplates', 'daily');
-            if (equipmentQuest) dailyQuests.push(equipmentQuest);
-        }
-        
+        // Store in game state
         this.gameState.dailyQuests.availableQuests = dailyQuests;
         
         // Register quests with main quest manager
@@ -346,23 +339,20 @@ export class AdvancedQuestSystem {
             this.questManager.addQuest(quest);
         });
         
-        console.log(`AdvancedQuestSystem: Generated ${dailyQuests.length} daily quests`);
+        console.log(`AdvancedQuestSystem: Generated ${dailyQuests.length} daily quests from JSON`);
+        return dailyQuests;
     }
 
     /**
-     * Generate weekly quests
+     * Generate weekly quests using JSON templates
      */
     generateWeeklyQuests() {
-        const weeklyQuests = [];
-        const maxWeeklyQuests = this.timeBasedQuests.weekly.maxActive;
+        console.log('AdvancedQuestSystem: Generating weekly quests from JSON templates...');
         
-        // More challenging quests for weekly
-        for (let i = 0; i < maxWeeklyQuests; i++) {
-            const template = this.getRandomTemplate();
-            const quest = this.generateQuestFromTemplate(template.category, 'weekly', template.template);
-            if (quest) weeklyQuests.push(quest);
-        }
+        // Use the quest data loader to generate weekly quests
+        const weeklyQuests = this.questDataLoader.generateWeeklyQuests();
         
+        // Store in game state
         this.gameState.weeklyQuests.availableQuests = weeklyQuests;
         
         // Register quests with main quest manager
@@ -370,7 +360,8 @@ export class AdvancedQuestSystem {
             this.questManager.addQuest(quest);
         });
         
-        console.log(`AdvancedQuestSystem: Generated ${weeklyQuests.length} weekly quests`);
+        console.log(`AdvancedQuestSystem: Generated ${weeklyQuests.length} weekly quests from JSON`);
+        return weeklyQuests;
     }
 
     /**
@@ -488,10 +479,10 @@ export class AdvancedQuestSystem {
     }
 
     /**
-     * Start quest chain
+     * Start quest chain using JSON data
      */
     startQuestChain(chainId, questId) {
-        const chain = this.questChainDefinitions.find(c => c.id === chainId);
+        const chain = this.questDataLoader.getQuestChain(chainId);
         const chainState = this.gameState.questChains[chainId];
         
         if (!chain || !chainState) return false;
@@ -520,10 +511,10 @@ export class AdvancedQuestSystem {
     }
 
     /**
-     * Complete quest chain quest
+     * Complete quest chain quest using JSON data
      */
     completeChainQuest(chainId, questId) {
-        const chain = this.questChainDefinitions.find(c => c.id === chainId);
+        const chain = this.questDataLoader.getQuestChain(chainId);
         const chainState = this.gameState.questChains[chainId];
         
         if (!chain || !chainState) return;
@@ -553,10 +544,10 @@ export class AdvancedQuestSystem {
     }
 
     /**
-     * Complete entire quest chain
+     * Complete entire quest chain using JSON data
      */
     completeQuestChain(chainId) {
-        const chain = this.questChainDefinitions.find(c => c.id === chainId);
+        const chain = this.questDataLoader.getQuestChain(chainId);
         const chainState = this.gameState.questChains[chainId];
         
         if (!chain || !chainState || chainState.chainCompleted) return;
@@ -773,10 +764,11 @@ export class AdvancedQuestSystem {
     }
 
     /**
-     * Get available quest chains
+     * Get available quest chains from JSON data
      */
     getAvailableQuestChains() {
-        return this.questChainDefinitions.map(chain => ({
+        const questChains = this.questDataLoader.getAllQuestChains();
+        return questChains.map(chain => ({
             ...chain,
             state: this.gameState.questChains[chain.id]
         }));

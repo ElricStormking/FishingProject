@@ -1,28 +1,13 @@
 import UITheme from './UITheme.js';
+import { BaseUI } from './BaseUI.js';
 
-export class InventoryUI {
+export class InventoryUI extends BaseUI {
     constructor(scene, x, y, width, height) {
-        console.log('InventoryUI: Constructor called', { scene: scene.scene.key, x, y, width, height });
+        super(scene, x, y, width, height, 'INVENTORY');
         
-        this.scene = scene;
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-        
-        this.gameState = scene.gameState;
         this.inventoryManager = this.gameState.inventoryManager;
-        this.audioManager = this.gameState.getAudioManager(scene);
-        
-        console.log('InventoryUI: GameState, InventoryManager, and AudioManager initialized', {
-            gameState: !!this.gameState,
-            inventoryManager: !!this.inventoryManager,
-            audioManager: !!this.audioManager
-        });
         
         // UI state
-        this.isVisible = false;
-        this.isDestroyed = false;
         this.currentCategory = 'rods';
         this.selectedItem = null;
         this.draggedItem = null;
@@ -31,8 +16,6 @@ export class InventoryUI {
         this.sortAscending = true;
         
         // UI elements
-        this.container = null;
-        this.background = null;
         this.categoryTabs = {};
         this.itemSlots = [];
         this.tooltip = null;
@@ -45,140 +28,54 @@ export class InventoryUI {
         this.slotsPerRow = 8;
         this.maxRows = 6;
         
-        this.createUI();
+        this._createInventoryUI();
         this.setupEventListeners();
+        this.hide();
     }
 
-    createUI() {
-        // Create a click blocker behind the container
+    // Override BaseUI's clickBlocker to prevent auto-hide behavior
+    _createBlocker() {
         this.clickBlocker = this.scene.add.rectangle(
-            this.x + this.width/2, 
-            this.y + this.height/2, 
-            this.width + 40, 
-            this.height + 40
-        ).setInteractive().setAlpha(0).setDepth(this.scene.getUIDepth ? this.scene.getUIDepth('ui_interactive') : 1502);
-        
-        this.clickBlocker.on('pointerdown', (pointer, localX, localY) => {
-            console.log('InventoryUI: Click blocker activated - preventing passthrough at', localX, localY);
-            // This prevents clicks from going through to elements behind
-            pointer.event.stopPropagation();
-        });
-
-        // Also make the background itself interactive to block clicks
-        this.backgroundBlocker = this.scene.add.rectangle(
-            this.x + this.width/2,
-            this.y + this.height/2,
-            this.width,
-            this.height
-        ).setInteractive().setAlpha(0).setDepth(this.scene.getUIDepth ? this.scene.getUIDepth('ui_panels') : 1000);
-        
-        this.backgroundBlocker.on('pointerdown', (pointer, localX, localY) => {
-            console.log('InventoryUI: Background blocker activated at', localX, localY);
-            pointer.event.stopPropagation();
-        });
-
-        // Main background overlay (to block clicks outside the inventory)
-        this.backgroundOverlay = this.scene.add.rectangle(
             this.scene.cameras.main.centerX,
             this.scene.cameras.main.centerY,
             this.scene.cameras.main.width,
             this.scene.cameras.main.height,
             0x000000,
-            0.4
-        ).setInteractive().setAlpha(0).setDepth(this.scene.getUIDepth ? this.scene.getUIDepth('overlay') : -10);
-
-        // Additional background for broader area coverage
-        this.extendedBackground = this.scene.add.rectangle(
-            this.scene.cameras.main.centerX,
-            this.scene.cameras.main.centerY,
-            this.scene.cameras.main.width * 1.5,
-            this.scene.cameras.main.height * 1.5,
-            0x000000,
-            0.3
-        ).setInteractive().setAlpha(0).setDepth(this.scene.getUIDepth ? this.scene.getUIDepth('overlay') : -10);
-
-        // Main inventory container
-        this.container = this.scene.add.container(this.x, this.y);
-        this.container.setDepth(this.scene.getUIDepth ? this.scene.getUIDepth('ui_panels') : 1000); // Use proper UI depth
-        this.container.setVisible(false);
-
-        // Background using UITheme
-        this.background = UITheme.createPanel(this.scene, 0, 0, this.width, this.height, 'primary');
+            0.5
+        ).setInteractive().setDepth(9999);
         
-        // Make the background itself interactive to block clicks
-        this.background.setInteractive(new Phaser.Geom.Rectangle(0, 0, this.width, this.height), Phaser.Geom.Rectangle.Contains);
-        this.background.on('pointerdown', (pointer, localX, localY) => {
-            console.log('InventoryUI: Background graphics clicked at', localX, localY, '- blocking click passthrough');
-            // Block the click from going through
-            if (pointer.event) {
+        // Only handle clicks that are outside the inventory area
+        this.clickBlocker.on('pointerdown', (pointer) => {
+            const worldPoint = this.scene.cameras.main.getWorldPoint(pointer.x, pointer.y);
+            const inventoryBounds = {
+                x: this.x,
+                y: this.y,
+                width: this.width,
+                height: this.height
+            };
+            
+            // Only hide if clicking outside the inventory area
+            if (worldPoint.x < inventoryBounds.x || 
+                worldPoint.x > inventoryBounds.x + inventoryBounds.width ||
+                worldPoint.y < inventoryBounds.y || 
+                worldPoint.y > inventoryBounds.y + inventoryBounds.height) {
                 pointer.event.stopPropagation();
-            }
-        });
-        
-        this.container.add(this.background);
-
-        // Title using UITheme
-        const title = UITheme.createText(this.scene, this.width / 2, 30, 'INVENTORY', 'headerLarge');
-        title.setOrigin(0.5);
-        this.container.add(title);
-
-        // Close button using UITheme
-        const closeButton = UITheme.createText(this.scene, this.width - 30, 30, '×', 'error');
-        closeButton.setOrigin(0.5).setInteractive();
-        closeButton.setFontSize('32px');
-        
-        closeButton.on('pointerdown', () => {
-            try {
-                console.log('InventoryUI: Close button clicked!');
-                
-                // Prevent multiple clicks or clicks on destroyed UI
-                if (this.isDestroyed || !this.isVisible) {
-                    console.log('InventoryUI: Close button clicked but UI already destroyed or hidden');
-                    return;
-                }
-                
-                // Play sound safely
-                if (this.audioManager && typeof this.audioManager.playSFX === 'function') {
-                    this.audioManager.playSFX('button');
-                }
-                
                 this.hide();
-            } catch (error) {
-                console.error('InventoryUI: Error in close button handler:', error);
-                // Try to hide anyway
-                try {
-                    this.isVisible = false;
-                    if (this.container && !this.container.destroyed) {
-                        this.container.setVisible(false);
-                    }
-                } catch (fallbackError) {
-                    console.error('InventoryUI: Fallback close also failed:', fallbackError);
-                }
             }
         });
-        
-        closeButton.on('pointerover', () => {
-            try {
-                if (!this.isDestroyed) {
-                    closeButton.setColor('#ff9999');
-                }
-            } catch (error) {
-                console.error('InventoryUI: Error in close button hover:', error);
-            }
-        });
-        
-        closeButton.on('pointerout', () => {
-            try {
-                if (!this.isDestroyed) {
-                    closeButton.setColor('#ff6666');
-                }
-            } catch (error) {
-                console.error('InventoryUI: Error in close button out:', error);
-            }
-        });
-        
-        this.container.add(closeButton);
+    }
 
+    // Override BaseUI's panel creation to ensure proper click blocking
+    _createPanel() {
+        this.background = UITheme.createPanel(this.scene, 0, 0, this.width, this.height, 'primary');
+        // Don't make the background interactive - let clicks pass through to child elements
+        this.container.add(this.background);
+    }
+
+    _createInventoryUI() {
+        // Set container depth to ensure proper layering
+        this.container.setDepth(10000);
+        
         // Crafting button
         this.createCraftingButton();
         
@@ -195,16 +92,20 @@ export class InventoryUI {
         this.createItemGrid();
 
         // Tooltip
-        this.createTooltip();
+        this.tooltip = UITheme.createTooltip(this.scene);
+        if (this.tooltip.bg) {
+            this.container.add(this.tooltip.bg);
+        }
+        if (this.tooltip.text) {
+            this.container.add(this.tooltip.text);
+        }
 
         // Equipment slots panel
         this.createEquipmentPanel();
         
-        console.log('InventoryUI: UI created with container depth:', this.container.depth);
-        console.log('InventoryUI: Container position:', this.container.x, this.container.y);
-        console.log('InventoryUI: Container size:', this.width, this.height);
-        console.log('InventoryUI: Click blocker created at depth:', this.clickBlocker.depth);
-        console.log('InventoryUI: Background blocker created at depth:', this.backgroundBlocker.depth);
+        // Ensure all interactive elements are above background
+        this.container.bringToTop(this.background);
+        this.container.sendToBack(this.background);
     }
 
     createCategoryTabs() {
@@ -297,9 +198,10 @@ export class InventoryUI {
             ).setInteractive()
             .setAlpha(0.01) // Barely visible but functional
             .setFillStyle(0x000000) // Black fill for functionality
-            .setDepth(this.scene.getUIDepth ? this.scene.getUIDepth('ui_interactive') : 1502); // Above container and background
+            .setDepth(10003); // High depth to ensure it's above everything
             
             workingTabArea.on('pointerdown', () => {
+                console.log(`InventoryUI: Working tab area clicked for category: ${category}`);
                 this.switchCategory(category);
             });
             
@@ -360,7 +262,7 @@ export class InventoryUI {
         ).setInteractive()
         .setAlpha(0.01)
         .setFillStyle(0x000000)
-        .setDepth(this.scene.getUIDepth ? this.scene.getUIDepth('ui_interactive') : 1502);
+        .setDepth(10003);
 
         workingCraftingButton.on('pointerdown', () => {
             this.openCraftingUI();
@@ -399,7 +301,7 @@ export class InventoryUI {
         ).setInteractive()
         .setAlpha(0.01)
         .setFillStyle(0x000000)
-        .setDepth(this.scene.getUIDepth ? this.scene.getUIDepth('ui_interactive') : 1502);
+        .setDepth(10003);
 
         workingEquipmentButton.on('pointerdown', () => {
             this.openEquipmentUI();
@@ -440,7 +342,7 @@ export class InventoryUI {
         ).setInteractive()
         .setAlpha(0.01)
         .setFillStyle(0xff8800)
-        .setDepth(this.scene.getUIDepth ? this.scene.getUIDepth('ui_interactive') : 1502);
+        .setDepth(10003);
 
         workingDebugButton.on('pointerdown', () => {
             this.debugFixEquipment();
@@ -481,7 +383,7 @@ export class InventoryUI {
         ).setInteractive()
         .setAlpha(0.01)
         .setFillStyle(0xe74c3c)
-        .setDepth(this.scene.getUIDepth ? this.scene.getUIDepth('ui_interactive') : 1502);
+        .setDepth(10003);
 
         workingCleanButton.on('pointerdown', () => {
             this.forceCleanInventory();
@@ -725,7 +627,7 @@ export class InventoryUI {
                 ).setInteractive()
                 .setAlpha(0.01) // Barely visible but functional
                 .setFillStyle(0x000000) // Black fill for functionality
-                .setDepth(this.scene.getUIDepth ? this.scene.getUIDepth('ui_interactive') : 1502) // Above container and background
+                .setDepth(10002) // High depth to ensure it's above everything
                 .setVisible(false); // Initially hidden until UI is shown
                 
                 const slotIndex = row * this.slotsPerRow + col;
@@ -733,6 +635,7 @@ export class InventoryUI {
                 workingSlotArea.on('pointerover', () => {
                     // Only respond if UI is visible
                     if (!this.isVisible) return;
+                    console.log(`InventoryUI: Working slot ${slotIndex} hover`);
                     workingSlotArea.setAlpha(0.02); // Slight change for functionality
                     this.onSlotHover(slotIndex);
                 });
@@ -740,6 +643,7 @@ export class InventoryUI {
                 workingSlotArea.on('pointerout', () => {
                     // Only respond if UI is visible
                     if (!this.isVisible) return;
+                    console.log(`InventoryUI: Working slot ${slotIndex} out`);
                     workingSlotArea.setAlpha(0.01); // Back to barely visible
                     this.onSlotOut(slotIndex);
                 });
@@ -747,6 +651,7 @@ export class InventoryUI {
                 workingSlotArea.on('pointerdown', () => {
                     // Only respond if UI is visible
                     if (!this.isVisible) return;
+                    console.log(`InventoryUI: Working slot ${slotIndex} clicked`);
                     this.onSlotClick(slotIndex);
                 });
                 
@@ -770,7 +675,7 @@ export class InventoryUI {
             y + this.slotSize/2, 
             this.slotSize, 
             this.slotSize
-        ).setInteractive().setAlpha(0);
+        ).setInteractive().setAlpha(0).setDepth(1); // Ensure it's above background
 
         // Slot events with better debugging
         slotArea.on('pointerover', () => {
@@ -885,9 +790,15 @@ export class InventoryUI {
             .setInteractive()
             .setAlpha(0);
 
-        slotArea.on('pointerdown', () => {
+        slotArea.on('pointerdown', (pointer, localX, localY, event) => {
             // Only respond if UI is visible
             if (!this.isVisible) return;
+            
+            // Stop event propagation to prevent UI from closing
+            if (event && event.stopPropagation) {
+                event.stopPropagation();
+            }
+            
             this.onEquipmentSlotClick(slotType);
         });
         
@@ -898,21 +809,41 @@ export class InventoryUI {
             slotSize + 5,
             slotSize + 5
         ).setInteractive()
-        .setAlpha(0.01)
-        .setFillStyle(0x000000)
-        .setDepth(this.scene.getUIDepth ? this.scene.getUIDepth('ui_interactive') : 1502)
+        .setAlpha(0.05) // More visible for equipment slots debugging
+        .setFillStyle(0xff0000) // Red fill for equipment slots to distinguish them
+        .setDepth(10003) // Same high depth as other working areas
         .setVisible(false); // Initially hidden until UI is shown
         
-        workingSlotArea.on('pointerdown', () => {
+        workingSlotArea.on('pointerdown', (pointer, localX, localY, event) => {
             // Only respond if UI is visible
             if (!this.isVisible) return;
             console.log('InventoryUI: Working equipment slot clicked:', slotType);
+            
+            // Stop event propagation to prevent UI from closing
+            if (event && event.stopPropagation) {
+                event.stopPropagation();
+            }
+            
             this.onEquipmentSlotClick(slotType);
+        });
+
+        workingSlotArea.on('pointerover', () => {
+            if (!this.isVisible) return;
+            console.log('InventoryUI: Working equipment slot hover:', slotType);
+            workingSlotArea.setAlpha(0.05); // More visible on hover
+        });
+
+        workingSlotArea.on('pointerout', () => {
+            if (!this.isVisible) return;
+            console.log('InventoryUI: Working equipment slot out:', slotType);
+            workingSlotArea.setAlpha(0.01); // Back to barely visible
         });
 
         // Store reference to working area for cleanup
         this.workingAreas = this.workingAreas || [];
         this.workingAreas.push(workingSlotArea);
+        
+        console.log(`InventoryUI: Created equipment slot working area for ${slotType} at x=${this.x + x + slotSize/2}, y=${this.y + y + slotSize/2}, depth=${workingSlotArea.depth}`);
 
         return {
             bg: slotBg,
@@ -993,25 +924,22 @@ export class InventoryUI {
     }
 
     createTooltip() {
-        this.tooltip = this.scene.add.container(0, 0);
-        this.tooltip.setVisible(false);
-        this.tooltip.setDepth(3000);
-
-        // Tooltip background using UITheme
-        this.tooltipBg = this.scene.add.graphics();
-        this.tooltipText = UITheme.createText(this.scene, 0, 0, '', 'bodySmall');
-        this.tooltipText.setPadding(8, 6);
-        this.tooltipText.setWordWrapWidth(200);
-        this.tooltipText.setBackgroundColor(UITheme.colors.darkPrimary);
-
-        this.tooltip.add([this.tooltipBg, this.tooltipText]);
+        this.tooltip = UITheme.createTooltip(this.scene);
+        this.container.add(this.tooltip.bg);
+        this.container.add(this.tooltip.text);
+        this.tooltip.bg.setVisible(false);
+        this.tooltip.text.setVisible(false);
     }
 
     // Event handlers
     onSlotHover(index) {
+        if (this.isDestroyed) return;
         const slot = this.itemSlots[index];
-        if (slot.item) {
-            this.showTooltip(slot.item, this.scene.input.activePointer.x, this.scene.input.activePointer.y);
+        if (slot && slot.item) {
+            // Use slot position instead of getBounds (which doesn't exist on graphics)
+            const tooltipX = this.x + slot.x + this.slotSize;
+            const tooltipY = this.y + slot.y;
+            this.showTooltip(slot.item, tooltipX, tooltipY);
             
             // Highlight slot using UITheme
             slot.bg.clear();
@@ -1023,8 +951,11 @@ export class InventoryUI {
     }
 
     onSlotOut(index) {
-        const slot = this.itemSlots[index];
+        if (this.isDestroyed) return;
         this.hideTooltip();
+        
+        const slot = this.itemSlots[index];
+        if (!slot) return;
         
         // Reset slot appearance using UITheme
         slot.bg.clear();
@@ -1035,6 +966,7 @@ export class InventoryUI {
     }
 
     onSlotClick(index) {
+        if (this.isDestroyed) return;
         const slot = this.itemSlots[index];
         console.log(`InventoryUI: Slot ${index} clicked, item:`, slot.item);
         
@@ -1058,45 +990,52 @@ export class InventoryUI {
     }
 
     onEquipmentSlotClick(slotType) {
-        console.log('InventoryUI: Equipment slot clicked:', slotType);
-        
-        // Play sound
-        this.audioManager?.playSFX('button');
-        
-        // Get compatible items for this slot
-        const compatibleItems = this.getCompatibleItemsForSlot(slotType);
-        
-        console.log('InventoryUI: Compatible items for', slotType, ':', compatibleItems.length);
-        
-        if (compatibleItems.length === 0) {
-            // 🚨 DISABLED: Automatic sample item generation to prevent undefined items
-            // Show message that no equipment is available
-            console.log('InventoryUI: No compatible items found for slot:', slotType);
-            this.showMessage(`No ${slotType} equipment available.\nUse the shop or crafting to get equipment.`, UITheme.colors.warning);
-            return;
+        try {
+            console.log('InventoryUI: Equipment slot clicked:', slotType);
+            
+            // Play sound
+            this.audioManager?.playSFX('button');
+            
+            // Prevent event propagation that might close the UI
+            event?.stopPropagation?.();
+            
+            // Get compatible items for this slot
+            const compatibleItems = this.getCompatibleItemsForSlot(slotType);
+            
+            console.log('InventoryUI: Compatible items for', slotType, ':', compatibleItems.length);
+            
+            if (compatibleItems.length === 0) {
+                console.log('InventoryUI: No compatible items found for slot:', slotType);
+                this.showMessage(`No ${slotType} equipment available.\nUse the shop or crafting to get equipment.`, UITheme.colors.warning);
+                return;
+            }
+            
+            // Get currently equipped item for this slot
+            const equipped = this.inventoryManager.getEquippedItems();
+            
+            let currentItem = null;
+            if (equipped) {
+                // Search through all equipped items to find one for this slot
+                Object.values(equipped).forEach(categoryItems => {
+                    if (Array.isArray(categoryItems)) {
+                        categoryItems.forEach(item => {
+                            if (this.isItemCompatibleWithSlot(item, slotType)) {
+                                currentItem = item;
+                            }
+                        });
+                    }
+                });
+            }
+            
+            console.log('InventoryUI: Currently equipped in', slotType, ':', currentItem?.name || 'none');
+            
+            // Show equipment selection dialog or quick-switch menu
+            this.showEquipmentSelectionMenu(slotType, compatibleItems, currentItem);
+            
+        } catch (error) {
+            console.error('InventoryUI: Error in onEquipmentSlotClick:', error);
+            this.showMessage('❌ Error opening equipment menu', '#e74c3c');
         }
-        
-        // Get currently equipped item for this slot
-        const equipped = this.inventoryManager.getEquippedItems();
-        
-        let currentItem = null;
-        if (equipped) {
-            // Search through all equipped items to find one for this slot
-            Object.values(equipped).forEach(categoryItems => {
-                if (Array.isArray(categoryItems)) {
-                    categoryItems.forEach(item => {
-                        if (this.isItemCompatibleWithSlot(item, slotType)) {
-                            currentItem = item;
-                        }
-                    });
-                }
-            });
-        }
-        
-        console.log('InventoryUI: Currently equipped in', slotType, ':', currentItem?.name || 'none');
-        
-        // Show equipment selection dialog or quick-switch menu
-        this.showEquipmentSelectionMenu(slotType, compatibleItems, currentItem);
     }
 
     /**
@@ -1729,104 +1668,55 @@ export class InventoryUI {
     }
 
     destroy() {
-        console.log('InventoryUI: Starting destroy process');
-        
-        // Mark as destroyed to prevent operations during cleanup
-        this.isDestroyed = true;
-        
-        try {
-            // Remove event listeners first to prevent callbacks during cleanup
-            if (this.inventoryManager) {
-                this.inventoryManager.off('itemAdded', this.itemAddedHandler);
-                this.inventoryManager.off('itemRemoved', this.itemRemovedHandler);
-                this.inventoryManager.off('itemEquipped', this.itemEquippedHandler);
-                this.inventoryManager.off('itemUnequipped', this.itemUnequippedHandler);
-                this.inventoryManager.off('consumableUsed', this.consumableUsedHandler);
-                this.inventoryManager.off('equipmentSlotsRefreshed', this.equipmentSlotsRefreshedHandler);
-                this.inventoryManager.off('allItemsRefreshed', this.allItemsRefreshedHandler);
-                this.inventoryManager.off('temporaryBoostApplied', this.temporaryBoostAppliedHandler);
-                this.inventoryManager.off('temporaryBoostExpired', this.temporaryBoostExpiredHandler);
-                console.log('InventoryUI: Event listeners removed successfully');
-            }
-        } catch (error) {
-            console.error('InventoryUI: Error removing event listeners:', error);
-        }
-
-        try {
-            // Clean up working areas with null checks
-            if (this.categoryTabs) {
-                Object.values(this.categoryTabs).forEach(tab => {
-                    if (tab && tab.workingArea && !tab.workingArea.destroyed) {
-                        tab.workingArea.destroy();
-                    }
-                });
-            }
-            
-            if (this.itemSlots) {
-                this.itemSlots.forEach(slot => {
-                    if (slot && slot.workingArea && !slot.workingArea.destroyed) {
-                        slot.workingArea.destroy();
-                    }
-                });
-            }
-            
-            // Clean up equipment slot areas with null checks
-            if (this.equipmentSlots) {
-                Object.values(this.equipmentSlots).forEach(slot => {
-                    if (slot && slot.workingArea && !slot.workingArea.destroyed) {
-                        slot.workingArea.destroy();
-                    }
-                });
-            }
-            
-            // Clean up button areas with null checks
-            if (this.craftingButtonArea && !this.craftingButtonArea.destroyed) {
-                this.craftingButtonArea.destroy();
-            }
-            
-            if (this.equipmentButtonArea && !this.equipmentButtonArea.destroyed) {
-                this.equipmentButtonArea.destroy();
-            }
-            
-            if (this.debugButtonArea && !this.debugButtonArea.destroyed) {
-                this.debugButtonArea.destroy();
-            }
-            
-            if (this.cleanButtonArea && !this.cleanButtonArea.destroyed) {
-                this.cleanButtonArea.destroy();
-            }
-            
-            // Clean up blockers with null checks
-            if (this.clickBlocker && !this.clickBlocker.destroyed) {
-                this.clickBlocker.destroy();
-            }
-            
-            if (this.backgroundBlocker && !this.backgroundBlocker.destroyed) {
-                this.backgroundBlocker.destroy();
-            }
-            
-            // Clean up main UI elements with null checks
-            if (this.container && !this.container.destroyed) {
-                this.container.destroy();
-            }
-            
-            if (this.tooltip && !this.tooltip.destroyed) {
-                this.tooltip.destroy();
-            }
-            
-            console.log('InventoryUI: Cleanup completed successfully');
-            
-        } catch (error) {
-            console.error('InventoryUI: Error during cleanup:', error);
+        if (this.isDestroyed) {
+            return;
         }
         
-        // Clear references
+        console.log('InventoryUI: Destroying...');
+        
+        // Stop listening to events
+        if (this.scene && this.scene.events) {
+            this.scene.events.off('gameloop:inventoryUpdate', this.refreshItems, this);
+        }
+        
+        // Destroy UI elements
+        if (this.container && !this.container.destroyed) {
+            this.container.destroy();
+        }
         this.container = null;
+        
+        // Destroy other created game objects
+        if (this.clickBlocker && this.clickBlocker.destroy) {
+            this.clickBlocker.destroy();
+        }
         this.clickBlocker = null;
+        
+        if (this.backgroundBlocker && this.backgroundBlocker.destroy) {
+            this.backgroundBlocker.destroy();
+        }
         this.backgroundBlocker = null;
-        this.tooltip = null;
-        this.categoryTabs = {};
+        
+        if (this.backgroundOverlay && this.backgroundOverlay.destroy) {
+            this.backgroundOverlay.destroy();
+        }
+        this.backgroundOverlay = null;
+        
+        if (this.extendedBackground && this.extendedBackground.destroy) {
+            this.extendedBackground.destroy();
+        }
+        this.extendedBackground = null;
+        
+        if (this.statsPanel && this.statsPanel.destroy) {
+            this.statsPanel.destroy();
+        }
+        this.statsPanel = null;
+        
         this.itemSlots = [];
+        this.categoryTabs = {};
+        this.tooltip = null;
+        
+        this.isDestroyed = true;
+        console.log('InventoryUI: Successfully destroyed');
     }
 
     showMessage(text, color = '#ffffff') {
@@ -1908,11 +1798,34 @@ export class InventoryUI {
             
             // Show working equipment slot areas
             if (this.workingAreas) {
-                this.workingAreas.forEach(area => {
+                console.log(`InventoryUI: Showing ${this.workingAreas.length} equipment working areas`);
+                this.workingAreas.forEach((area, index) => {
                     if (area && !area.destroyed) {
                         area.setVisible(true);
+                        console.log(`InventoryUI: Equipment working area ${index} shown at depth ${area.depth}`);
                     }
                 });
+            }
+            
+            // Show working tab areas
+            Object.values(this.categoryTabs).forEach(tabData => {
+                if (tabData.workingArea && !tabData.workingArea.destroyed) {
+                    tabData.workingArea.setVisible(true);
+                }
+            });
+            
+            // Show working button areas
+            if (this.craftingButtonArea && !this.craftingButtonArea.destroyed) {
+                this.craftingButtonArea.setVisible(true);
+            }
+            if (this.equipmentButtonArea && !this.equipmentButtonArea.destroyed) {
+                this.equipmentButtonArea.setVisible(true);
+            }
+            if (this.debugButtonArea && !this.debugButtonArea.destroyed) {
+                this.debugButtonArea.setVisible(true);
+            }
+            if (this.cleanButtonArea && !this.cleanButtonArea.destroyed) {
+                this.cleanButtonArea.setVisible(true);
             }
             
             // Refresh content when showing
@@ -1964,6 +1877,27 @@ export class InventoryUI {
                         area.setVisible(false);
                     }
                 });
+            }
+            
+            // Hide working tab areas
+            Object.values(this.categoryTabs).forEach(tabData => {
+                if (tabData.workingArea && !tabData.workingArea.destroyed) {
+                    tabData.workingArea.setVisible(false);
+                }
+            });
+            
+            // Hide working button areas
+            if (this.craftingButtonArea && !this.craftingButtonArea.destroyed) {
+                this.craftingButtonArea.setVisible(false);
+            }
+            if (this.equipmentButtonArea && !this.equipmentButtonArea.destroyed) {
+                this.equipmentButtonArea.setVisible(false);
+            }
+            if (this.debugButtonArea && !this.debugButtonArea.destroyed) {
+                this.debugButtonArea.setVisible(false);
+            }
+            if (this.cleanButtonArea && !this.cleanButtonArea.destroyed) {
+                this.cleanButtonArea.setVisible(false);
             }
             
             // Clear any open menus
@@ -2428,17 +2362,22 @@ export class InventoryUI {
         try {
             if (!this.tooltip || !item) return;
             
+            // Create a simple tooltip instead of using the complex one
+            if (this.currentTooltip) {
+                this.currentTooltip.destroy();
+            }
+            
             let tooltipText = `${item.name}\n`;
-            tooltipText += `Rarity: ${this.getRarityName(item.rarity)}\n`;
+            tooltipText += `Rarity: ${this.getRarityName(item.rarity)}`;
             
             if (item.description) {
-                tooltipText += `\n${item.description}\n`;
+                tooltipText += `\n${item.description}`;
             }
             
             if (item.stats) {
-                tooltipText += '\nStats:\n';
+                tooltipText += '\nStats:';
                 Object.entries(item.stats).forEach(([stat, value]) => {
-                    tooltipText += `${stat}: +${value}\n`;
+                    tooltipText += `\n${stat}: +${value}`;
                 });
             }
             
@@ -2453,9 +2392,14 @@ export class InventoryUI {
                 tooltipText += `\nQuantity: ${item.quantity}`;
             }
             
-            this.tooltipText.setText(tooltipText);
-            this.tooltip.setPosition(x + 10, y + 10);
-            this.tooltip.setVisible(true);
+            // Create simple tooltip text
+            this.currentTooltip = this.scene.add.text(x + 10, y + 10, tooltipText, {
+                fontSize: '12px',
+                fontFamily: 'Arial',
+                color: '#ffffff',
+                backgroundColor: '#000000',
+                padding: { x: 8, y: 4 }
+            }).setDepth(11000); // High depth to be above everything
             
         } catch (error) {
             console.error('InventoryUI: Error showing tooltip:', error);
@@ -2464,8 +2408,9 @@ export class InventoryUI {
 
     hideTooltip() {
         try {
-            if (this.tooltip) {
-                this.tooltip.setVisible(false);
+            if (this.currentTooltip) {
+                this.currentTooltip.destroy();
+                this.currentTooltip = null;
             }
         } catch (error) {
             console.error('InventoryUI: Error hiding tooltip:', error);
@@ -2528,10 +2473,26 @@ export class InventoryUI {
         const menuX = this.width - 220 - menuWidth; // Move further left
         const menuY = Math.max(20, (this.height - menuHeight) / 2); // Center vertically with min top margin
         
-        // Create semi-transparent overlay to dim background
+        // Create interactive semi-transparent overlay to dim background and block clicks
         this.equipmentMenuOverlay = this.scene.add.graphics();
         this.equipmentMenuOverlay.fillStyle(0x000000, 0.5);
         this.equipmentMenuOverlay.fillRect(0, 0, this.width, this.height);
+        this.equipmentMenuOverlay.setInteractive();
+        this.equipmentMenuOverlay.on('pointerdown', (pointer, localX, localY) => {
+            // Only close menu if clicking outside the menu area
+            const menuBounds = {
+                x: menuX,
+                y: menuY,
+                width: menuWidth,
+                height: menuHeight
+            };
+            
+            if (localX < menuBounds.x || localX > menuBounds.x + menuBounds.width ||
+                localY < menuBounds.y || localY > menuBounds.y + menuBounds.height) {
+                console.log('InventoryUI: Clicking outside equipment menu, closing');
+                this.clearEquipmentSelectionMenu();
+            }
+        });
         this.container.add(this.equipmentMenuOverlay);
         this.equipmentMenuElements.push(this.equipmentMenuOverlay);
         

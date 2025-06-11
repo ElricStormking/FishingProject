@@ -41,6 +41,11 @@ export class LuringMiniGame {
     }
 
     start(options = {}) {
+        if (this.isActive) {
+            console.warn('LuringMiniGame: Start called while already active. Ignoring.');
+            return;
+        }
+
         console.log('LuringMiniGame: Starting luring phase with options:', options);
         
         this.isActive = true; // Set active state manually instead of calling super
