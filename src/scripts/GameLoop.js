@@ -76,7 +76,7 @@ export default class GameLoop {
             time: this.gameState.world.timeOfDay || 'Dawn',
             weather: this.gameState.world.weather || 'Sunny',
             energy: this.gameState.player.energy,
-            fishtankFull: this.isFiretankFull(),
+            fishtankFull: this.isFishtankFull(),
             canShop: this.isAtStartingPort(),
             availableActions: this.getAvailableActions()
         });
@@ -232,7 +232,7 @@ export default class GameLoop {
         console.log(`GameLoop: Fishing attempt ended - ${success ? 'Success' : 'Failure'}`);
         
         // Check if fishtank is full
-        if (this.isFiretankFull()) {
+        if (this.isFishtankFull()) {
             this.scene.events.emit('gameloop:fishtankFull');
         }
         
@@ -337,7 +337,7 @@ export default class GameLoop {
         // Check basic requirements
         const hasEnergy = this.gameState.player.energy >= 5;
         const isGameActive = this.isActive;
-        const fishtankNotFull = !this.isFiretankFull();
+        const fishtankNotFull = !this.isFishtankFull();
         
         // Check if location is valid for fishing
         const currentMode = this.currentMode || 'story';
@@ -351,7 +351,7 @@ export default class GameLoop {
         return hasEnergy && isGameActive && fishtankNotFull && validLocation;
     }
 
-    isFiretankFull() {
+    isFishtankFull() {
         const maxCapacity = this.gameState.getBoatAttribute('fishtankStorage') || 10;
         return this.gameState.inventory.fish.length >= maxCapacity;
     }
@@ -669,7 +669,7 @@ export default class GameLoop {
 
     checkAutomaticTransitions() {
         // Auto-return to port if fishtank is full
-        if (this.isFiretankFull() && !this.isAtStartingPort() && this.currentPhase === 'boat_menu') {
+        if (this.isFishtankFull() && !this.isAtStartingPort() && this.currentPhase === 'boat_menu') {
             this.scene.events.emit('gameloop:autoReturnPrompt');
         }
         

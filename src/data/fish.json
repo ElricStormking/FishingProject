@@ -613,8 +613,8 @@
       "aggressiveness": 10,
       "elusiveness": 10,
       "strength": 10,
-      "weight": 200,
-      "speed": 8,
+      "weight": 5000,
+      "speed": 10,
       "depthPreference": 10,
       "baitPreference": 1,
       "endurance": 10,
@@ -629,7 +629,264 @@
       "experienceValue": 2000,
       "description": "The ultimate challenge - a sea monster of legend",
       "habitat": "tournament_waters",
-      "struggleStyle": "power_run"
+      "struggleStyle": "boss_leviathan_chaos",
+      "isBoss": true,
+      "stamina": 2000
+    },
+    {
+      "id": "giant_bass",
+      "name": "Giant Bass",
+      "rarity": 8,
+      "size": 8,
+      "aggressiveness": 7,
+      "elusiveness": 6,
+      "strength": 8,
+      "weight": 45,
+      "speed": 7,
+      "depthPreference": 4,
+      "baitPreference": 7,
+      "endurance": 8,
+      "activeTimePeriod": [
+        "morning",
+        "afternoon"
+      ],
+      "weatherPreference": [
+        "sunny",
+        "cloudy"
+      ],
+      "coinValue": 5000,
+      "experienceValue": 500,
+      "description": "A massive bass with incredible fighting spirit - Entry level boss",
+      "habitat": "lake",
+      "struggleStyle": "boss_bass_fury",
+      "isBoss": true,
+      "stamina": 300
+    },
+    {
+      "id": "giant_pike",
+      "name": "Giant Pike",
+      "rarity": 8,
+      "size": 9,
+      "aggressiveness": 9,
+      "elusiveness": 7,
+      "strength": 8,
+      "weight": 65,
+      "speed": 9,
+      "depthPreference": 5,
+      "baitPreference": 6,
+      "endurance": 7,
+      "activeTimePeriod": [
+        "morning",
+        "evening"
+      ],
+      "weatherPreference": [
+        "sunny"
+      ],
+      "coinValue": 6000,
+      "experienceValue": 600,
+      "description": "An ambush predator with razor-sharp teeth",
+      "habitat": "deep_water",
+      "struggleStyle": "boss_pike_ambush",
+      "isBoss": true,
+      "stamina": 350
+    },
+    {
+      "id": "electric_eel",
+      "name": "Electric Eel",
+      "rarity": 9,
+      "size": 7,
+      "aggressiveness": 8,
+      "elusiveness": 9,
+      "strength": 7,
+      "weight": 35,
+      "speed": 8,
+      "depthPreference": 6,
+      "baitPreference": 5,
+      "endurance": 9,
+      "activeTimePeriod": [
+        "dusk",
+        "night"
+      ],
+      "weatherPreference": [
+        "rainy"
+      ],
+      "coinValue": 7000,
+      "experienceValue": 700,
+      "description": "A shocking predator that can stun its enemies",
+      "habitat": "muddy_bottom",
+      "struggleStyle": "boss_eel_shock",
+      "isBoss": true,
+      "stamina": 400
+    },
+    {
+      "id": "coelacanth",
+      "name": "Coelacanth",
+      "rarity": 10,
+      "size": 6,
+      "aggressiveness": 5,
+      "elusiveness": 10,
+      "strength": 7,
+      "weight": 30,
+      "speed": 6,
+      "depthPreference": 9,
+      "baitPreference": 8,
+      "endurance": 10,
+      "activeTimePeriod": [
+        "dawn",
+        "dusk"
+      ],
+      "weatherPreference": [
+        "cloudy"
+      ],
+      "coinValue": 8000,
+      "experienceValue": 800,
+      "description": "A living fossil with ancient wisdom and patience",
+      "habitat": "deep_water",
+      "struggleStyle": "boss_ancient_wisdom",
+      "isBoss": true,
+      "stamina": 450
+    },
+    {
+      "id": "giant_marlin",
+      "name": "Giant Marlin",
+      "rarity": 9,
+      "size": 9,
+      "aggressiveness": 8,
+      "elusiveness": 8,
+      "strength": 9,
+      "weight": 180,
+      "speed": 10,
+      "depthPreference": 6,
+      "baitPreference": 6,
+      "endurance": 8,
+      "activeTimePeriod": [
+        "morning",
+        "afternoon"
+      ],
+      "weatherPreference": [
+        "sunny"
+      ],
+      "coinValue": 10000,
+      "experienceValue": 1000,
+      "description": "The fastest fish in the ocean with incredible acrobatic abilities",
+      "habitat": "saltwater",
+      "struggleStyle": "boss_marlin_acrobatics",
+      "isBoss": true,
+      "stamina": 500
+    },
+    {
+      "id": "tiger_shark",
+      "name": "Tiger Shark",
+      "rarity": 9,
+      "size": 10,
+      "aggressiveness": 10,
+      "elusiveness": 6,
+      "strength": 10,
+      "weight": 250,
+      "speed": 8,
+      "depthPreference": 7,
+      "baitPreference": 4,
+      "endurance": 9,
+      "activeTimePeriod": [
+        "dawn",
+        "dusk",
+        "night"
+      ],
+      "weatherPreference": [
+        "cloudy"
+      ],
+      "coinValue": 12000,
+      "experienceValue": 1200,
+      "description": "An apex predator with relentless aggression",
+      "habitat": "saltwater",
+      "struggleStyle": "boss_shark_frenzy",
+      "isBoss": true,
+      "stamina": 600
+    },
+    {
+      "id": "whale",
+      "name": "Whale",
+      "rarity": 10,
+      "size": 10,
+      "aggressiveness": 4,
+      "elusiveness": 7,
+      "strength": 10,
+      "weight": 500,
+      "speed": 5,
+      "depthPreference": 8,
+      "baitPreference": 3,
+      "endurance": 10,
+      "activeTimePeriod": [
+        "morning",
+        "afternoon"
+      ],
+      "weatherPreference": [
+        "sunny",
+        "cloudy"
+      ],
+      "coinValue": 15000,
+      "experienceValue": 1500,
+      "description": "A gentle giant with immense power and endurance",
+      "habitat": "saltwater",
+      "struggleStyle": "boss_whale_depths",
+      "isBoss": true,
+      "stamina": 800
+    },
+    {
+      "id": "megalodon",
+      "name": "Megalodon",
+      "rarity": 10,
+      "size": 10,
+      "aggressiveness": 10,
+      "elusiveness": 8,
+      "strength": 10,
+      "weight": 1000,
+      "speed": 9,
+      "depthPreference": 8,
+      "baitPreference": 2,
+      "endurance": 10,
+      "activeTimePeriod": [
+        "dawn",
+        "dusk"
+      ],
+      "weatherPreference": [
+        "cloudy"
+      ],
+      "coinValue": 20000,
+      "experienceValue": 1800,
+      "description": "A prehistoric terror with devastating power",
+      "habitat": "saltwater",
+      "struggleStyle": "boss_mega_destroyer",
+      "isBoss": true,
+      "stamina": 1000
+    },
+    {
+      "id": "mosasaurus",
+      "name": "Mosasaurus",
+      "rarity": 10,
+      "size": 10,
+      "aggressiveness": 9,
+      "elusiveness": 9,
+      "strength": 10,
+      "weight": 1500,
+      "speed": 8,
+      "depthPreference": 9,
+      "baitPreference": 2,
+      "endurance": 10,
+      "activeTimePeriod": [
+        "dusk",
+        "night"
+      ],
+      "weatherPreference": [
+        "rainy"
+      ],
+      "coinValue": 22000,
+      "experienceValue": 1900,
+      "description": "An ancient marine reptile with unpredictable patterns",
+      "habitat": "saltwater",
+      "struggleStyle": "boss_mosa_ancient",
+      "isBoss": true,
+      "stamina": 1200
     }
   ],
   "struggleStyles": [
@@ -957,6 +1214,287 @@
           "direction": "down",
           "intensity": 6,
           "duration": 800
+        }
+      ]
+    },
+    {
+      "id": "boss_bass_fury",
+      "name": "Bass Fury",
+      "description": "Aggressive surface runs with explosive jumps",
+      "intensityPattern": "escalating",
+      "qteTypes": [
+        "JUMP",
+        "THRASH",
+        "DIVE"
+      ],
+      "patterns": [
+        {
+          "direction": "up",
+          "intensity": 8,
+          "duration": 1000
+        },
+        {
+          "direction": "left",
+          "intensity": 9,
+          "duration": 800
+        },
+        {
+          "direction": "down",
+          "intensity": 7,
+          "duration": 1200
+        }
+      ]
+    },
+    {
+      "id": "boss_pike_ambush",
+      "name": "Pike Ambush",
+      "description": "Sudden explosive bursts and violent head shakes",
+      "intensityPattern": "burst",
+      "qteTypes": [
+        "DASH",
+        "ROLL",
+        "SHAKE"
+      ],
+      "patterns": [
+        {
+          "direction": "left",
+          "intensity": 10,
+          "duration": 500
+        },
+        {
+          "direction": "right",
+          "intensity": 10,
+          "duration": 500
+        },
+        {
+          "direction": "up",
+          "intensity": 8,
+          "duration": 600
+        }
+      ]
+    },
+    {
+      "id": "boss_eel_shock",
+      "name": "Electric Shock",
+      "description": "Erratic movements with stunning electrical discharges",
+      "intensityPattern": "chaotic",
+      "qteTypes": [
+        "SHOCK",
+        "COIL",
+        "ZIGZAG"
+      ],
+      "patterns": [
+        {
+          "direction": "random",
+          "intensity": 9,
+          "duration": 700
+        },
+        {
+          "direction": "spiral",
+          "intensity": 8,
+          "duration": 900
+        },
+        {
+          "direction": "random",
+          "intensity": 10,
+          "duration": 600
+        }
+      ]
+    },
+    {
+      "id": "boss_ancient_wisdom",
+      "name": "Ancient Wisdom",
+      "description": "Methodical movements with unpredictable intelligence",
+      "intensityPattern": "adaptive",
+      "qteTypes": [
+        "DEEP_WISDOM",
+        "ANCIENT_ROLL",
+        "TIME_WARP"
+      ],
+      "patterns": [
+        {
+          "direction": "down",
+          "intensity": 7,
+          "duration": 2000
+        },
+        {
+          "direction": "left",
+          "intensity": 6,
+          "duration": 1500
+        },
+        {
+          "direction": "up",
+          "intensity": 8,
+          "duration": 1800
+        }
+      ]
+    },
+    {
+      "id": "boss_marlin_acrobatics",
+      "name": "Marlin Acrobatics",
+      "description": "High-speed runs and spectacular aerial displays",
+      "intensityPattern": "speed",
+      "qteTypes": [
+        "SPRINT",
+        "JUMP_CHAIN",
+        "TAIL_WALK"
+      ],
+      "patterns": [
+        {
+          "direction": "left",
+          "intensity": 10,
+          "duration": 3000
+        },
+        {
+          "direction": "up",
+          "intensity": 9,
+          "duration": 800
+        },
+        {
+          "direction": "right",
+          "intensity": 10,
+          "duration": 2500
+        }
+      ]
+    },
+    {
+      "id": "boss_shark_frenzy",
+      "name": "Shark Frenzy",
+      "description": "Relentless aggression with feeding frenzy attacks",
+      "intensityPattern": "aggressive",
+      "qteTypes": [
+        "CIRCLE_HUNT",
+        "FRENZY_BITE",
+        "RAM_CHARGE"
+      ],
+      "patterns": [
+        {
+          "direction": "circle",
+          "intensity": 8,
+          "duration": 1200
+        },
+        {
+          "direction": "up",
+          "intensity": 10,
+          "duration": 600
+        },
+        {
+          "direction": "forward",
+          "intensity": 10,
+          "duration": 1000
+        }
+      ]
+    },
+    {
+      "id": "boss_whale_depths",
+      "name": "Whale Depths",
+      "description": "Immense power with deep soundings and surface breaches",
+      "intensityPattern": "massive",
+      "qteTypes": [
+        "DEEP_SOUND",
+        "SURFACE_BLOW",
+        "BREACH"
+      ],
+      "patterns": [
+        {
+          "direction": "down",
+          "intensity": 9,
+          "duration": 4000
+        },
+        {
+          "direction": "up",
+          "intensity": 8,
+          "duration": 2000
+        },
+        {
+          "direction": "up",
+          "intensity": 10,
+          "duration": 3000
+        }
+      ]
+    },
+    {
+      "id": "boss_mega_destroyer",
+      "name": "Megalodon Destroyer",
+      "description": "Prehistoric terror with devastating attacks",
+      "intensityPattern": "destroyer",
+      "qteTypes": [
+        "TERROR_CHARGE",
+        "MEGA_THRASH",
+        "ANCIENT_FURY"
+      ],
+      "patterns": [
+        {
+          "direction": "forward",
+          "intensity": 10,
+          "duration": 1500
+        },
+        {
+          "direction": "thrash",
+          "intensity": 10,
+          "duration": 1000
+        },
+        {
+          "direction": "all",
+          "intensity": 10,
+          "duration": 2000
+        }
+      ]
+    },
+    {
+      "id": "boss_mosa_ancient",
+      "name": "Mosasaurus Ancient",
+      "description": "Marine reptile with unpredictable prehistoric patterns",
+      "intensityPattern": "prehistoric",
+      "qteTypes": [
+        "BARREL_ROLL",
+        "AMBUSH_RISE",
+        "JAW_SNAP"
+      ],
+      "patterns": [
+        {
+          "direction": "barrel",
+          "intensity": 9,
+          "duration": 1200
+        },
+        {
+          "direction": "up",
+          "intensity": 10,
+          "duration": 800
+        },
+        {
+          "direction": "snap",
+          "intensity": 10,
+          "duration": 600
+        }
+      ]
+    },
+    {
+      "id": "boss_leviathan_chaos",
+      "name": "Leviathan Chaos",
+      "description": "Mythical beast using all patterns with reality-warping power",
+      "intensityPattern": "chaos",
+      "qteTypes": [
+        "CHAOS_STORM",
+        "MYTHICAL_ROAR",
+        "FINAL_STAND",
+        "DIVINE_TEST"
+      ],
+      "patterns": [
+        {
+          "direction": "chaos",
+          "intensity": 10,
+          "duration": 5000
+        },
+        {
+          "direction": "all",
+          "intensity": 10,
+          "duration": 3000
+        },
+        {
+          "direction": "ultimate",
+          "intensity": 10,
+          "duration": 4000
         }
       ]
     }

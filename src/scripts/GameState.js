@@ -1598,11 +1598,45 @@ class GameState {
     }
 
     reset() {
+        console.log('GameState: Resetting to initial state...');
+        
+        // Reset core state
         this.initializeState();
+        
+        // Reset all managers to initial state
+        if (this.playerProgression) {
+            this.playerProgression.initializeProgression();
+            console.log('GameState: PlayerProgression reset');
+        }
+        
+        if (this.inventoryManager) {
+            // Reset inventory to initial state (correct method name)
+            this.inventoryManager.initializeInventory();
+            console.log('GameState: InventoryManager reset');
+        }
+        
+        if (this.craftingManager) {
+            // Reset crafting to initial state (clear queue and reload recipes)
+            this.craftingManager.craftingQueue = [];
+            this.craftingManager.loadRecipes();
+            console.log('GameState: CraftingManager reset');
+        }
+        
+        if (this.locationManager) {
+            // Reset location to initial state
+            this.locationManager.initialize();
+            console.log('GameState: LocationManager reset');
+        }
+        
+        // Clear all save data
         this.deleteSave();
-        this.settingsManager?.resetToDefaults();
+        
+        // Reset settings to defaults (but don't reset audio/input settings)
+        // this.settingsManager?.resetToDefaults();
+        
+        // Emit reset event
         this.emit('gameReset');
-        console.log('GameState: Game reset to initial state');
+        console.log('GameState: Game reset to initial state completed');
     }
 
     // Auto-save functionality

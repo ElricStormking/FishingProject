@@ -79,7 +79,14 @@ export default class MenuScene extends Phaser.Scene {
 
     checkForSaveData() {
         try {
-            // Check if there's any significant saved data
+            // Check for main save file first
+            const mainSave = localStorage.getItem('luxuryAngler_save');
+            if (mainSave && mainSave !== 'null' && mainSave !== '{}') {
+                console.log('MenuScene: Found main save data in luxuryAngler_save');
+                return true;
+            }
+            
+            // Check if there's any significant saved data in individual keys
             const savedData = [
                 'playerData',
                 'inventoryData', 
@@ -93,6 +100,32 @@ export default class MenuScene extends Phaser.Scene {
                 if (data && data !== 'null' && data !== '{}' && data !== '[]') {
                     console.log(`MenuScene: Found save data in ${key}`);
                     return true;
+                }
+            }
+            
+            // Also check for any keys that start with common save prefixes
+            const allKeys = Object.keys(localStorage);
+            const saveKeyPatterns = [
+                'luxury',
+                'angler',
+                'fishing',
+                'game',
+                'save',
+                'player',
+                'inventory',
+                'quest'
+            ];
+            
+            for (const key of allKeys) {
+                const lowerKey = key.toLowerCase();
+                for (const pattern of saveKeyPatterns) {
+                    if (lowerKey.includes(pattern)) {
+                        const data = localStorage.getItem(key);
+                        if (data && data !== 'null' && data !== '{}' && data !== '[]' && data.length > 10) {
+                            console.log(`MenuScene: Found potential save data in ${key}`);
+                            return true;
+                        }
+                    }
                 }
             }
             
@@ -136,9 +169,13 @@ export default class MenuScene extends Phaser.Scene {
         console.log('MenuScene: Starting new game - clearing all saved data');
         
         try {
-            // Clear all localStorage data
+            // Clear all localStorage data first
             localStorage.clear();
             console.log('MenuScene: All localStorage data cleared');
+            
+            // Reset the GameState to initial values (this is the key fix!)
+            this.gameState.reset();
+            console.log('MenuScene: GameState reset to initial values');
             
             // Show confirmation message
             this.showNewGameMessage();

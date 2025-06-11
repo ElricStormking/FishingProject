@@ -244,7 +244,8 @@ Regular Lure Control: If a player presses up(W in WASD control), the lure is swi
 
 4.5 Fishes
 - **Fish Types**: There are 10 fish types(different shapes and looks) and each type has 5 fishes. There are 50 fishes(50 fish cards) in this game in total.
-- **Fish Bosses**: There are 10 fish bosses.
+- **Fish Bosses**: There are 10 fish bosses. Each needs special lure type to attract and has its own unique AI behaviors with a combination of QTE struggles, that will last at least 8 minutes fight for their reel-in mini game. 
+- **10 Fish Bosses**: Giant Bass, Giant Pike, Electric Eel, coelacanth, Giant Marlin, Tiger Shark, Whale, Megalodon, Mosasaurus, Leviathan
 - **Fishes locations**: The 50 fishes will spread and live in the 10 different fishing spots in 5 maps, Each spots should have 5 types of different fishes.
 
 5. CRAFTING SYSTEM

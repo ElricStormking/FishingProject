@@ -932,7 +932,7 @@ export default class BoatMenuScene extends Phaser.Scene {
         });
         
         this.events.on('gameloop:fishtankFull', () => {
-            this.showFiretankFullWarning();
+            this.showFishtankFullWarning();
         });
         
         this.events.on('gameloop:lowEnergy', () => {
@@ -1310,9 +1310,9 @@ export default class BoatMenuScene extends Phaser.Scene {
             if (typeof this.gameState.save === 'function') {
                 this.gameState.save();
                 console.log('BoatMenuScene: Game state saved before fishing');
-            } else {
-                console.warn('BoatMenuScene: save method not available, skipping save');
-            }
+                    } else {
+            console.log('BoatMenuScene: save method not available, skipping save');
+        }
             
             // Set up fishing session data with safe property access
             const fishingData = {
@@ -1380,9 +1380,9 @@ export default class BoatMenuScene extends Phaser.Scene {
             // Ensure game loop is properly set up
             if (this.gameLoop && typeof this.gameLoop.enterInventory === 'function') {
                 this.gameLoop.enterInventory();
-            } else {
-                console.warn('BoatMenuScene: GameLoop not available or enterInventory method missing');
-            }
+                    } else {
+            console.log('BoatMenuScene: GameLoop not available or enterInventory method missing');
+        }
             
             // 🚨 FORCE CLEAN: Remove any undefined items immediately on scene start
             try {
@@ -2061,7 +2061,7 @@ export default class BoatMenuScene extends Phaser.Scene {
         this.showSuccessMessage(`LEVEL UP! Now level ${data.newLevel}!`);
     }
 
-    showFiretankFullWarning() {
+    showFishtankFullWarning() {
         this.audioManager?.playSFX('notification');
         this.showWarningMessage('Fishtank is full! Return to port to sell fish.');
     }
@@ -2337,10 +2337,10 @@ export default class BoatMenuScene extends Phaser.Scene {
 
     initializePlayerStats() {
         try {
-            if (!this.gameState || !this.gameState.player) {
-                console.warn('BoatMenuScene: Cannot initialize player stats - gameState or player not available');
-                return;
-            }
+                    if (!this.gameState || !this.gameState.player) {
+            console.log('BoatMenuScene: Cannot initialize player stats - gameState or player not available');
+            return;
+        }
 
             // Initialize energy if not set
             if (typeof this.gameState.player.energy === 'undefined' || this.gameState.player.energy === null) {
@@ -2472,7 +2472,7 @@ export default class BoatMenuScene extends Phaser.Scene {
             const questManager = this.gameState.questManager;
         
         if (!questManager) {
-            console.warn('BoatMenuScene: No QuestManager available in GameState - cannot complete quest objective');
+            console.log('BoatMenuScene: No QuestManager available in GameState - cannot complete quest objective');
             this.time.delayedCall(1000, () => {
                 this.showInfoMessage('Boat menu accessed\n(QuestManager not available)');
             });

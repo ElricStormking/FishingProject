@@ -999,7 +999,7 @@ export class InventoryManager {
         try {
             // 🚨 VALIDATION: Only add sample items if DataLoader has real data
             if (!gameDataLoader || !gameDataLoader.loaded) {
-                console.error('InventoryManager: ❌ CRITICAL - DataLoader not ready, ABORTING sample item creation to prevent undefined items');
+                console.log('InventoryManager: DataLoader not ready, skipping sample item creation (this is normal during initialization)');
                 return;
             }
             
@@ -1022,12 +1022,12 @@ export class InventoryManager {
             if ((!realRods || realRods.length === 0) && 
                 (!realLures || realLures.length === 0) && 
                 (!realBoats || realBoats.length === 0)) {
-                console.warn('InventoryManager: ⚠️ WARNING - No real equipment data available, creating minimal safe sample items only');
+                console.log('InventoryManager: No real equipment data available, creating minimal safe sample items only');
             }
             
             // 🚨 VALIDATION: Check if we have real data before creating sample items
             if (!realRods || realRods.length === 0) {
-                console.warn('InventoryManager: No real rod data available, creating basic sample rod');
+                console.log('InventoryManager: No real rod data available, creating basic sample rod');
                 // Create a basic sample rod with guaranteed valid properties
                 const basicRod = {
                     id: `basic_sample_rod_${Date.now()}`,
@@ -1077,7 +1077,7 @@ export class InventoryManager {
             
             // Add sample lures with validation
             if (!realLures || realLures.length === 0) {
-                console.warn('InventoryManager: No real lure data available, creating basic sample lures');
+                console.log('InventoryManager: No real lure data available, creating basic sample lures');
                 const basicLures = [
                     {
                         id: 'basic_sample_spoon',
@@ -1125,7 +1125,7 @@ export class InventoryManager {
             
             // Add sample boats with validation
             if (!realBoats || realBoats.length === 0) {
-                console.warn('InventoryManager: No real boat data available, creating basic sample boat');
+                console.log('InventoryManager: No real boat data available, creating basic sample boat');
                 const basicBoat = {
                     id: 'basic_sample_boat',
                     name: 'Basic Sample Boat',
@@ -1155,7 +1155,7 @@ export class InventoryManager {
             
             // Add sample clothing with validation
             if (!realClothing || realClothing.length === 0) {
-                console.warn('InventoryManager: No real clothing data available, creating basic sample clothing');
+                console.log('InventoryManager: No real clothing data available, creating basic sample clothing');
                 const basicClothing = [
                     {
                         id: 'basic_sample_cap',
@@ -1916,17 +1916,17 @@ export class InventoryManager {
         
         try {
             // 🚨 VALIDATION: Ensure DataLoader is available and loaded
-            if (!this.gameState.gameDataLoader || !this.gameState.gameDataLoader.loaded) {
-                console.error('InventoryManager: GameDataLoader not available or not loaded');
+            if (!gameDataLoader || !gameDataLoader.loaded) {
+                console.log('InventoryManager: GameDataLoader not available or not loaded, skipping sample items');
                 return;
             }
             
             // Get real data from DataLoader
-            const allFish = this.gameState.gameDataLoader.getAllFish();
-            const allRods = this.gameState.gameDataLoader.getAllRods();
-            const allLures = this.gameState.gameDataLoader.getAllLures();
-            const allBoats = this.gameState.gameDataLoader.getAllBoats();
-            const allClothing = this.gameState.gameDataLoader.getAllClothing();
+            const allFish = gameDataLoader.getAllFish();
+            const allRods = gameDataLoader.getAllRods();
+            const allLures = gameDataLoader.getAllLures();
+            const allBoats = gameDataLoader.getAllBoats();
+            const allClothing = gameDataLoader.getAllClothing();
             
             console.log('InventoryManager: DataLoader data available:', {
                 fish: allFish ? allFish.length : 0,
@@ -1954,10 +1954,10 @@ export class InventoryManager {
                     console.log('InventoryManager: Adding validated rod:', rodItem.name);
                     this.addValidatedItem('rods', rodItem);
                 } else {
-                    console.warn('InventoryManager: First rod failed validation, skipping');
+                    console.log('InventoryManager: First rod failed validation, skipping');
                 }
             } else {
-                console.warn('InventoryManager: No real rod data available');
+                console.log('InventoryManager: No real rod data available');
             }
             
             // Add sample lures (only if we have real lure data)
@@ -1976,10 +1976,10 @@ export class InventoryManager {
                     console.log('InventoryManager: Adding validated lure:', lureItem.name);
                     this.addValidatedItem('lures', lureItem);
                 } else {
-                    console.warn('InventoryManager: First lure failed validation, skipping');
+                    console.log('InventoryManager: First lure failed validation, skipping');
                 }
             } else {
-                console.warn('InventoryManager: No real lure data available');
+                console.log('InventoryManager: No real lure data available');
             }
             
             // Add sample boats (only if we have real boat data)
@@ -1998,10 +1998,10 @@ export class InventoryManager {
                     console.log('InventoryManager: Adding validated boat:', boatItem.name);
                     this.addValidatedItem('boats', boatItem);
                 } else {
-                    console.warn('InventoryManager: First boat failed validation, skipping');
+                    console.log('InventoryManager: First boat failed validation, skipping');
                 }
             } else {
-                console.warn('InventoryManager: No real boat data available');
+                console.log('InventoryManager: No real boat data available');
             }
             
             // Add sample clothing (only if we have real clothing data)
@@ -2019,10 +2019,10 @@ export class InventoryManager {
                     console.log('InventoryManager: Adding validated clothing:', clothingItem.name);
                     this.addValidatedItem('clothing', clothingItem);
                 } else {
-                    console.warn('InventoryManager: First clothing item failed validation, skipping');
+                    console.log('InventoryManager: First clothing item failed validation, skipping');
                 }
             } else {
-                console.warn('InventoryManager: No real clothing data available');
+                console.log('InventoryManager: No real clothing data available');
             }
             
             // Add basic consumables (these are always safe since they're manually created)

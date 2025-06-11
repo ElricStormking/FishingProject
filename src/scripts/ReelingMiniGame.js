@@ -85,6 +85,9 @@ export class ReelingMiniGame {
         if (this.selectedFish && this.gameState.fishDatabase) {
             console.log('ReelingMiniGame: Using selected fish:', this.selectedFish.name);
             
+            // Check if this is a boss fish
+            this.isBoss = this.selectedFish.isBoss || false;
+            
             // Get struggle style data
             const struggleStyle = this.gameState.fishDatabase.getStruggleStyle(this.selectedFish.struggleStyle);
             if (struggleStyle) {
@@ -100,11 +103,17 @@ export class ReelingMiniGame {
                 speed: this.selectedFish.speed,
                 endurance: this.selectedFish.endurance,
                 weight: this.gameState.fishDatabase.calculateFishWeight(this.selectedFish),
-                aggressiveness: this.selectedFish.aggressiveness
+                aggressiveness: this.selectedFish.aggressiveness,
+                isBoss: this.isBoss
             };
             
-            // Calculate fish stamina based on endurance
-            this.fishStamina = 50 + (this.selectedFish.endurance * 15); // 65-200 stamina
+            // Calculate fish stamina - bosses have much higher stamina
+            if (this.isBoss) {
+                this.fishStamina = this.selectedFish.stamina || 300; // Boss stamina from data
+                console.log(`ReelingMiniGame: BOSS FIGHT! ${this.selectedFish.name} with ${this.fishStamina} stamina`);
+            } else {
+                this.fishStamina = 50 + (this.selectedFish.endurance * 15); // 65-200 stamina for normal fish
+            }
             this.maxFishStamina = this.fishStamina;
             
             // Calculate tension rates based on struggle style and fish strength
@@ -148,7 +157,17 @@ export class ReelingMiniGame {
         this.fishStruggling = false;
         this.qteActive = false;
         this.qteCount = 0;
-        this.maxQTEs = 2 + Math.floor(this.fishProperties.aggressiveness / 4); // 2-4 QTEs
+        
+        // Boss fights have more QTEs and phases
+        if (this.isBoss) {
+            this.maxQTEs = 8 + Math.floor(this.fishProperties.aggressiveness / 2); // 8-13 QTEs for bosses
+            this.bossPhase = 1;
+            this.maxBossPhases = 4;
+            this.bossSpecialAttackTimer = 0;
+            this.bossSpecialAttackCooldown = 15000; // 15 seconds between special attacks
+        } else {
+            this.maxQTEs = 2 + Math.floor(this.fishProperties.aggressiveness / 4); // 2-4 QTEs for normal fish
+        }
         
         // Apply equipment bonuses
         this.applyEquipmentBonuses();
@@ -1054,6 +1073,11 @@ export class ReelingMiniGame {
     updateReeling() {
         if (!this.isActive) return;
         
+        // Update boss mechanics if this is a boss fight
+        if (this.isBoss) {
+            this.updateBossMechanics();
+        }
+        
         // Update fish movement
         this.updateFishMovement();
         
@@ -1076,7 +1100,9 @@ export class ReelingMiniGame {
             reelProgress: this.reelProgress,
             fishStamina: this.fishStamina,
             fishStruggling: this.fishStruggling,
-            activeQTE: this.activeQTE
+            activeQTE: this.activeQTE,
+            isBoss: this.isBoss,
+            bossPhase: this.bossPhase
         });
     }
 
@@ -3273,6 +3299,248 @@ export class ReelingMiniGame {
             // No hold started yet - draw empty bar
             this.holdBarFill.fillStyle(0x666666, 0.5);
             this.holdBarFill.fillRect(-75, 20, 150, 8);
+        }
+    }
+
+    updateBossMechanics() {
+        if (!this.isBoss) return;
+        
+        // Update boss phase based on stamina percentage
+        const staminaPercent = (this.fishStamina / this.maxFishStamina) * 100;
+        let newPhase = 1;
+        
+        if (staminaPercent <= 25) {
+            newPhase = 4; // Final phase
+        } else if (staminaPercent <= 50) {
+            newPhase = 3;
+        } else if (staminaPercent <= 75) {
+            newPhase = 2;
+        }
+        
+        // Phase transition effects
+        if (newPhase !== this.bossPhase) {
+            this.bossPhase = newPhase;
+            this.onBossPhaseChange();
+        }
+        
+        // Boss special attacks
+        this.bossSpecialAttackTimer += 100; // Update every 100ms
+        if (this.bossSpecialAttackTimer >= this.bossSpecialAttackCooldown) {
+            this.triggerBossSpecialAttack();
+            this.bossSpecialAttackTimer = 0;
+        }
+        
+        // Boss-specific mechanics based on fish type
+        this.updateBossSpecificMechanics();
+    }
+
+    onBossPhaseChange() {
+        console.log(`ReelingMiniGame: Boss phase changed to ${this.bossPhase}`);
+        
+        // Visual effects for phase change
+        if (this.scene.cameras && this.scene.cameras.main) {
+            this.scene.cameras.main.shake(500, 5);
+        }
+        
+        // Increase difficulty in later phases
+        if (this.bossPhase >= 3) {
+            this.baseTensionIncrease *= 1.5;
+        }
+        if (this.bossPhase === 4) {
+            this.baseTensionIncrease *= 2;
+            // Final phase: more aggressive QTE scheduling
+            this.qteTimer?.destroy();
+            this.scheduleNextQTE();
+        }
+    }
+
+    triggerBossSpecialAttack() {
+        if (!this.isBoss || !this.selectedFish) return;
+        
+        const fishId = this.selectedFish.id;
+        
+        switch (fishId) {
+            case 'giant_bass':
+                this.bassFuryAttack();
+                break;
+            case 'giant_pike':
+                this.pikeAmbushAttack();
+                break;
+            case 'electric_eel':
+                this.eelShockAttack();
+                break;
+            case 'coelacanth':
+                this.ancientWisdomAttack();
+                break;
+            case 'giant_marlin':
+                this.marlinSpeedAttack();
+                break;
+            case 'tiger_shark':
+                this.sharkFrenzyAttack();
+                break;
+            case 'whale':
+                this.whaleDepthAttack();
+                break;
+            case 'megalodon':
+                this.megalodonDestroyerAttack();
+                break;
+            case 'mosasaurus':
+                this.mosasaurusAncientAttack();
+                break;
+            case 'leviathan':
+                this.leviathanChaosAttack();
+                break;
+        }
+    }
+
+    updateBossSpecificMechanics() {
+        if (!this.isBoss || !this.selectedFish) return;
+        
+        const fishId = this.selectedFish.id;
+        
+        // Continuous boss-specific effects
+        switch (fishId) {
+            case 'coelacanth':
+                // Regenerate stamina slowly
+                if (Math.random() < 0.01) { // 1% chance per update
+                    this.fishStamina = Math.min(this.maxFishStamina, this.fishStamina + 5);
+                }
+                break;
+            case 'whale':
+                // Slower reel progress due to massive size
+                this.reelProgress *= 0.5;
+                break;
+            case 'electric_eel':
+                // Random tension spikes
+                if (Math.random() < 0.02) { // 2% chance per update
+                    this.tension = Math.min(100, this.tension + 20);
+                }
+                break;
+        }
+    }
+
+    // Boss Special Attack Methods
+    bassFuryAttack() {
+        console.log('ReelingMiniGame: Giant Bass - Bass Fury Attack!');
+        this.tension = Math.min(100, this.tension + 30);
+        this.fishStruggling = true;
+        this.struggleType = 'jump';
+        
+        // Force a QTE
+        this.scene.time.delayedCall(500, () => {
+            if (!this.activeQTE) {
+                this.debugTriggerQTE('timing', 4);
+            }
+        });
+    }
+
+    pikeAmbushAttack() {
+        console.log('ReelingMiniGame: Giant Pike - Ambush Attack!');
+        // Sudden line damage
+        this.lineIntegrity = Math.max(0, this.lineIntegrity - 15);
+        this.tension = Math.min(100, this.tension + 25);
+        
+        // Force sequence QTE
+        this.scene.time.delayedCall(300, () => {
+            if (!this.activeQTE) {
+                this.debugTriggerQTE('sequence', 5);
+            }
+        });
+    }
+
+    eelShockAttack() {
+        console.log('ReelingMiniGame: Electric Eel - Shock Attack!');
+        // Control reversal effect (simulated by making QTEs harder)
+        this.controlsReversed = true;
+        this.tension = Math.min(100, this.tension + 20);
+        
+        // Remove reversal after 5 seconds
+        this.scene.time.delayedCall(5000, () => {
+            this.controlsReversed = false;
+        });
+    }
+
+    ancientWisdomAttack() {
+        console.log('ReelingMiniGame: Coelacanth - Ancient Wisdom Attack!');
+        // Increase QTE difficulty
+        this.qteSuccess = Math.max(0, this.qteSuccess - 1);
+        this.fishStamina = Math.min(this.maxFishStamina, this.fishStamina + 10);
+    }
+
+    marlinSpeedAttack() {
+        console.log('ReelingMiniGame: Giant Marlin - Speed Attack!');
+        // Multiple quick QTEs
+        for (let i = 0; i < 3; i++) {
+            this.scene.time.delayedCall(i * 1000, () => {
+                if (!this.activeQTE) {
+                    this.debugTriggerQTE('tap', 3);
+                }
+            });
+        }
+    }
+
+    sharkFrenzyAttack() {
+        console.log('ReelingMiniGame: Tiger Shark - Frenzy Attack!');
+        // Increase all subsequent QTE difficulty
+        this.tension = Math.min(100, this.tension + 35);
+        this.fishStruggling = true;
+        this.struggleType = 'thrash';
+    }
+
+    whaleDepthAttack() {
+        console.log('ReelingMiniGame: Whale - Deep Sound Attack!');
+        // Long hold QTE required
+        this.scene.time.delayedCall(1000, () => {
+            if (!this.activeQTE) {
+                this.debugTriggerQTE('hold', 5);
+            }
+        });
+    }
+
+    megalodonDestroyerAttack() {
+        console.log('ReelingMiniGame: Megalodon - Destroyer Attack!');
+        // Potential boat damage (reduce all effectiveness)
+        this.tension = Math.min(100, this.tension + 40);
+        this.lineIntegrity = Math.max(0, this.lineIntegrity - 20);
+        
+        // Screen shake effect
+        if (this.scene.cameras && this.scene.cameras.main) {
+            this.scene.cameras.main.shake(1000, 10);
+        }
+    }
+
+    mosasaurusAncientAttack() {
+        console.log('ReelingMiniGame: Mosasaurus - Ancient Attack!');
+        // Complex sequence QTE
+        this.scene.time.delayedCall(800, () => {
+            if (!this.activeQTE) {
+                this.debugTriggerQTE('sequence', 6);
+            }
+        });
+    }
+
+    leviathanChaosAttack() {
+        console.log('ReelingMiniGame: Leviathan - Chaos Attack!');
+        // Ultimate challenge - random QTE type
+        const qteTypes = ['tap', 'hold', 'sequence', 'timing'];
+        const randomType = Phaser.Utils.Array.GetRandom(qteTypes);
+        
+        this.scene.time.delayedCall(1200, () => {
+            if (!this.activeQTE) {
+                this.debugTriggerQTE(randomType, 7);
+            }
+        });
+        
+        // Reality warp effect - UI distortion
+        if (this.uiContainer) {
+            this.scene.tweens.add({
+                targets: this.uiContainer,
+                scaleX: 1.1,
+                scaleY: 0.9,
+                duration: 2000,
+                yoyo: true,
+                ease: 'Sine.easeInOut'
+            });
         }
     }
 } 
