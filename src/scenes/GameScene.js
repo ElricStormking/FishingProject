@@ -241,12 +241,12 @@ export default class GameScene extends Phaser.Scene {
         const helpTextContent = this.fishingSession ? 
             'SPACEBAR: Cast | WASD: Control Lure | SPACEBAR: Reel | ESC: Return to Boat\n' +
             'I: Inventory | P: Progression | T: Time & Weather | E: Equipment Enhancement\n' +
-            'D: Dialog (Mia) | F: Dialog (Sophie) | G: Dialog (Luna) | Q: Quest Log | Ctrl+Q: Quest Tracker | H: Toggle Help\n' +
-            'F9 or Ctrl+Shift+Q: QTE Debug Tool | U: Fish Tuning Tool' :
+            'B: Dialog (Mia) | F: Dialog (Sophie) | G: Dialog (Luna) | Q: Quest Log | Ctrl+Q: Quest Tracker | H: Toggle Help\n' +
+            'F9 or Ctrl+Shift+Q: QTE Debug Tool | U: Fish Tuning Tool | Y: Luring Debug Tool' :
             'SPACEBAR: Cast | WASD: Control Lure | SPACEBAR: Reel\n' +
             'I: Inventory | P: Progression | T: Time & Weather | M: Map Selection | E: Equipment Enhancement\n' +
-            'D: Dialog (Mia) | F: Dialog (Sophie) | G: Dialog (Luna) | Q: Quest Log | Ctrl+Q: Quest Tracker | Mouse: Navigate UI | H: Toggle Help\n' +
-            'F9 or Ctrl+Shift+Q: QTE Debug Tool | U: Fish Tuning Tool';
+            'B: Dialog (Mia) | F: Dialog (Sophie) | G: Dialog (Luna) | Q: Quest Log | Ctrl+Q: Quest Tracker | Mouse: Navigate UI | H: Toggle Help\n' +
+            'F9 or Ctrl+Shift+Q: QTE Debug Tool | U: Fish Tuning Tool | Y: Luring Debug Tool';
             
         this.helpText = this.add.text(10, 10, helpTextContent, {
             fontSize: '16px',
@@ -574,6 +574,23 @@ export default class GameScene extends Phaser.Scene {
             this.fishTuningTool = null;
         }
 
+        // Initialize Luring Debug Tool for testing lure mechanics
+        try {
+            console.log('GameScene: Initializing Luring Debug Tool...');
+            
+            // Import the Luring Debug Tool
+            import('../ui/LuringDebugTool.js').then(({ LuringDebugTool }) => {
+                this.luringDebugTool = new LuringDebugTool(this);
+                console.log('GameScene: Luring Debug Tool initialized successfully');
+            }).catch(importError => {
+                console.error('GameScene: Error importing Luring Debug Tool:', importError);
+                this.luringDebugTool = null;
+            });
+        } catch (error) {
+            console.error('GameScene: Error initializing Luring Debug Tool:', error);
+            this.luringDebugTool = null;
+        }
+
         // Final loading progress update and completion
         if (this.loadingStateManager) {
             this.loadingStateManager.updateProgress('scene_init', 100, 'Scene ready!');
@@ -674,8 +691,8 @@ export default class GameScene extends Phaser.Scene {
         });
 
         // Dialog shortcuts
-        this.input.keyboard.on('keydown-D', () => {
-            console.log('GameScene: Opening Mia dialog (D key pressed)');
+        this.input.keyboard.on('keydown-B', () => {
+            console.log('GameScene: Opening Mia dialog (B key pressed)');
             this.openMiaDialog();
         });
 
@@ -697,6 +714,18 @@ export default class GameScene extends Phaser.Scene {
         this.input.keyboard.on('keydown-U', () => {
             if (this.fishTuningTool) {
                 this.fishTuningTool.toggle();
+            }
+        });
+
+        // Luring Debug Tool shortcut (Y key)
+        this.input.keyboard.on('keydown-Y', () => {
+            if (this.luringDebugTool) {
+                // If there's an active result overlay being shown, don't toggle
+                if (this.luringDebugTool.resultOverlay) {
+                    console.log('GameScene: Luring debug test result is showing, ignoring toggle');
+                    return;
+                }
+                this.luringDebugTool.toggle();
             }
         });
 
@@ -2860,6 +2889,7 @@ export default class GameScene extends Phaser.Scene {
             if (this.renJsDebugUI) this.renJsDebugUI.destroy();
             if (this.qteDebugTool) this.qteDebugTool.destroy();
             if (this.fishTuningTool) this.fishTuningTool.destroy();
+            if (this.luringDebugTool) this.luringDebugTool.destroy();
             
             // Destroy buttons and other graphics
             this.playerButton?.destroy();
@@ -3067,6 +3097,16 @@ export default class GameScene extends Phaser.Scene {
                 }
             } catch (fishTuningError) {
                 console.warn('GameScene: Error cleaning up Fish Tuning Tool:', fishTuningError);
+            }
+            
+            // Clean up Luring Debug Tool
+            try {
+                if (this.luringDebugTool) {
+                    this.luringDebugTool.destroy();
+                    this.luringDebugTool = null;
+                }
+            } catch (luringDebugError) {
+                console.warn('GameScene: Error cleaning up Luring Debug Tool:', luringDebugError);
             }
             
             // Clean up Quest Tracker UI

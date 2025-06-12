@@ -74,6 +74,7 @@ export class LuringMiniGame {
         this.lureStats = options.lureStats || { attractionRadius: 100, lureSuccess: 5, lureControl: 5, biteRate: 5 };
         this.castType = options.castType || 'normal';
         this.hitAccurateSection = options.hitAccurateSection || false;
+        this.debugMode = options.debugMode || false; // Track if we're in debug mode
         
         // Get selected fish from options
         this.selectedFish = options.selectedFish || null;
@@ -388,31 +389,189 @@ export class LuringMiniGame {
         let inputType = 'unknown';
         let inputData = {};
         
+        // First determine the current lure phase type
+        const requiredInput = this.requiredInputs[this.currentPhase];
+        const isSequenceInput = ['flick', 'swipe', 'combo', 'trace', 'circle'].includes(requiredInput);
+        
         switch (key) {
             case ' ': // Spacebar
                 inputType = 'tap';
+                this.showInputFeedback('SPACEBAR', '#00FF88');
                 break;
             case 'w':
+                // Handle direction-specific logic
+                if (isSequenceInput) {
+                    // Let sequence handler manage this - don't call handleInput directly
+                    inputType = 'sequence';
+                    this.showInputFeedback('W', '#4A9EFF');
+                    this.updateSequenceProgress('w');
+                } else {
+                    // Standard handling
                 inputType = 'flick';
-                inputData = { direction: 'up', speed: 120 };
+                    inputData = { direction: 'up', speed: 120, key: 'w' };
+                    this.showInputFeedback('W', '#4A9EFF');
+                }
                 break;
             case 'a':
+                if (isSequenceInput) {
+                    inputType = 'sequence';
+                    this.showInputFeedback('A', '#4A9EFF');
+                    this.updateSequenceProgress('a');
+                } else {
                 inputType = 'flick';
-                inputData = { direction: 'left', speed: 120 };
+                    inputData = { direction: 'left', speed: 120, key: 'a' };
+                    this.showInputFeedback('A', '#4A9EFF');
+                }
                 break;
             case 's':
+                if (isSequenceInput) {
+                    inputType = 'sequence';
+                    this.showInputFeedback('S', '#FF6600');
+                    this.updateSequenceProgress('s');
+                } else {
                 inputType = 'drag';
-                inputData = { direction: 'down', speed: 120 };
+                    inputData = { direction: 'down', speed: 120, key: 's' };
+                    this.showInputFeedback('S', '#FF6600');
+                }
                 break;
             case 'd':
+                if (isSequenceInput) {
+                    inputType = 'sequence';
+                    this.showInputFeedback('D', '#4A9EFF');
+                    this.updateSequenceProgress('d');
+                } else {
                 inputType = 'flick';
-                inputData = { direction: 'right', speed: 120 };
+                    inputData = { direction: 'right', speed: 120, key: 'd' };
+                    this.showInputFeedback('D', '#4A9EFF');
+                }
                 break;
         }
         
-        if (inputType !== 'unknown') {
+        // Only pass to handleInput for non-sequence or unknown inputs
+        if (inputType !== 'unknown' && inputType !== 'sequence') {
             this.handleInput(inputType, inputData);
         }
+    }
+    
+    showInputFeedback(key, color) {
+        // Create temporary feedback for key press
+        if (this.keyDisplayText) {
+            // Flash the key display
+            this.scene.tweens.add({
+                targets: this.keyDisplayText,
+                scaleX: 1.5,
+                scaleY: 1.5,
+                duration: 100,
+                yoyo: true,
+                ease: 'Power2.easeOut'
+            });
+            
+            // Temporarily change color
+            const originalColor = this.keyDisplayText.style.color;
+            this.keyDisplayText.setColor(color);
+            
+            this.scene.time.delayedCall(200, () => {
+                if (this.keyDisplayText) {
+                    this.keyDisplayText.setColor(originalColor);
+                }
+            });
+        }
+    }
+    
+    updateSequenceProgress(pressedKey) {
+        const requiredInput = this.requiredInputs[this.currentPhase];
+        
+        // Handle Fly lure sequences (step by step)
+        if ((requiredInput === 'flick' || requiredInput === 'swipe' || requiredInput === 'combo') && this.flySequence) {
+            if (this.currentFlyStep < this.flySequence.length) {
+                const expectedKey = this.flySequence[this.currentFlyStep].toLowerCase();
+                
+                // Check if the right key was pressed
+                if (pressedKey === expectedKey) {
+                    // Check timing for success - use a larger perfect zone for sequences
+                    const isGoodTiming = this.isGoodTiming();
+                    
+                    if (isGoodTiming) {
+                        // Good timing - advance sequence
+                        this.currentFlyStep++;
+                        console.log(`LuringMiniGame: Fly sequence step ${this.currentFlyStep}/${this.flySequence.length} completed with good timing`);
+                        
+                        if (this.currentFlyStep < this.flySequence.length) {
+                            // Show next key in sequence
+                            const nextKey = this.flySequence[this.currentFlyStep].toUpperCase();
+                            const stepText = `PRESS ${nextKey} NEXT! (${this.currentFlyStep + 1}/${this.flySequence.length})`;
+                            this.showSingleKeyIndicator(nextKey, stepText, '#00FF88');
+                        } else {
+                            // Sequence complete!
+                            this.showSingleKeyIndicator('✓', 'SEQUENCE COMPLETE!', '#00FF00');
+                            this.scene.time.delayedCall(500, () => {
+                                this.handlePhaseSuccess();
+                            });
+                        }
+                    } else {
+                        // Bad timing but correct key
+                        const currentKeyUpper = this.flySequence[this.currentFlyStep].toUpperCase();
+                        this.showSingleKeyIndicator(currentKeyUpper, `BAD TIMING! TRY AGAIN!`, '#FF8800');
+                        console.log(`LuringMiniGame: Correct key but bad timing - retry`);
+                    }
+                } else {
+                    // Wrong key pressed
+                    const expectedKeyUpper = this.flySequence[this.currentFlyStep].toUpperCase();
+                    this.showSingleKeyIndicator(expectedKeyUpper, `WRONG! PRESS ${expectedKeyUpper}!`, '#FF4444');
+                }
+            }
+            return;
+        }
+        
+        // Handle Spoon lure sequences (step by step)
+        if ((requiredInput === 'trace' || requiredInput === 'circle') && this.spoonSequence) {
+            if (this.currentSpoonStep < this.spoonSequence.length) {
+                const expectedKey = this.spoonSequence[this.currentSpoonStep].toLowerCase();
+                
+                // Check if the right key is pressed
+                if (pressedKey === expectedKey) {
+                    // Check timing for success - use a larger perfect zone for sequences
+                    const isGoodTiming = this.isGoodTiming();
+                    
+                    if (isGoodTiming) {
+                        // Good timing - advance sequence
+                        this.currentSpoonStep++;
+                        console.log(`LuringMiniGame: Spoon sequence step ${this.currentSpoonStep}/${this.spoonSequence.length} completed with good timing`);
+                        
+                        if (this.currentSpoonStep < this.spoonSequence.length) {
+                            // Show next key in sequence
+                            const nextKey = this.spoonSequence[this.currentSpoonStep].toUpperCase();
+                            const stepText = `PRESS ${nextKey} NEXT! (${this.currentSpoonStep + 1}/${this.spoonSequence.length})`;
+                            this.showSingleKeyIndicator(nextKey, stepText, '#C0C0C0');
+                        } else {
+                            // Sequence complete!
+                            this.showSingleKeyIndicator('✓', 'CIRCLE COMPLETE!', '#00FF00');
+                            this.scene.time.delayedCall(500, () => {
+                                this.handlePhaseSuccess();
+                            });
+                        }
+                    } else {
+                        // Bad timing but correct key
+                        const currentKeyUpper = this.spoonSequence[this.currentSpoonStep].toUpperCase();
+                        this.showSingleKeyIndicator(currentKeyUpper, `BAD TIMING! TRY AGAIN!`, '#FF8800');
+                        console.log(`LuringMiniGame: Correct key but bad timing - retry`);
+                    }
+                } else {
+                    // Wrong key pressed
+                    const expectedKeyUpper = this.spoonSequence[this.currentSpoonStep].toUpperCase();
+                    this.showSingleKeyIndicator(expectedKeyUpper, `WRONG! PRESS ${expectedKeyUpper}!`, '#FF4444');
+                }
+            }
+            return;
+        }
+        
+        // Legacy sequence tracking for other lures
+        if (!this.currentSequence) {
+            this.currentSequence = [];
+            this.sequenceStep = 0;
+        }
+        
+        this.currentSequence.push(pressedKey);
     }
 
     applyEquipmentEffects() {
@@ -983,8 +1142,10 @@ export class LuringMiniGame {
             instructions: this.lurePattern.instructions
         });
         
-        // Set phase timeout with difficulty scaling
-        const timeLimit = Math.max(2000, 4000 - (difficulty * 500)); // 2-4 seconds based on difficulty
+        // Set phase timeout with difficulty scaling - longer for sequences
+        const isSequencePhase = requiredInput === 'flick' || requiredInput === 'swipe' || requiredInput === 'combo' || requiredInput === 'trace' || requiredInput === 'circle';
+        const baseTime = isSequencePhase ? 8000 : 4000; // 8 seconds for sequences, 4 for others
+        const timeLimit = Math.max(3000, baseTime - (difficulty * 500)); // 3-8 seconds based on type and difficulty
         this.phaseTimeout = this.scene.time.delayedCall(timeLimit, () => {
             this.phaseTimeout = null;
             console.log(`LuringMiniGame: Phase ${this.currentPhase + 1} timed out`);
@@ -1092,7 +1253,18 @@ export class LuringMiniGame {
             return true;
         }
 
+        // Check for sequence-based inputs (Fly and Spoon lures) - different validation flow
         const requiredInput = this.requiredInputs[this.currentPhase];
+        const isSequenceInput = ['flick', 'swipe', 'combo', 'trace', 'circle'].includes(requiredInput);
+        
+        // For sequence inputs, let updateSequenceProgress handle it rather than immediate success/failure
+        if (isSequenceInput) {
+            // Don't trigger success/failure directly - sequence updates are handled in updateSequenceProgress
+            console.log('LuringMiniGame: Sequence-based input received, letting updateSequenceProgress handle it');
+            return true;
+        }
+        
+        // Standard validation for non-sequence lures
         const success = this.validateInput(inputType, requiredInput, inputData);
         
         if (success) {
@@ -1128,16 +1300,16 @@ export class LuringMiniGame {
                 return inputType === 'pause' || inputType === 'wait';
                 
             case 'flick':
-                // Fly: Quick WASD directional inputs
-                return inputType === 'flick' && inputData?.speed >= 100;
+                // Fly: Step-by-step WASD sequence (handled in updateSequenceProgress)
+                return this.currentFlyStep >= this.flySequence?.length;
                 
             case 'swipe':
-                // Fly: Longer WASD movements
-                return inputType === 'swipe' && inputData?.distance >= 30;
+                // Fly: Step-by-step WASD sequence (handled in updateSequenceProgress)
+                return this.currentFlyStep >= this.flySequence?.length;
                 
             case 'combo':
-                // Fly: Combination of flick movements
-                return inputType === 'combo' || (inputType === 'flick' && inputData?.sequence);
+                // Fly: Step-by-step WASD sequence (handled in updateSequenceProgress)
+                return this.currentFlyStep >= this.flySequence?.length;
                 
             case 'tap':
                 // Popper: Single spacebar tap
@@ -1152,12 +1324,12 @@ export class LuringMiniGame {
                 return inputType === 'burst' || inputType === 'release';
                 
             case 'trace':
-                // Spoon: Circular WASD movements
-                return inputType === 'trace' && inputData?.pattern === 'circular';
+                // Spoon: Step-by-step circular sequence (handled in updateSequenceProgress)
+                return this.currentSpoonStep >= this.spoonSequence?.length;
                 
             case 'circle':
-                // Spoon: Complete circular motion
-                return inputType === 'circle' && inputData?.completeness >= 0.7;
+                // Spoon: Step-by-step circular sequence (handled in updateSequenceProgress)
+                return this.currentSpoonStep >= this.spoonSequence?.length;
                 
             default:
                 // Fallback to basic validation
@@ -1172,18 +1344,29 @@ export class LuringMiniGame {
             this.phaseTimeout.destroy();
             this.phaseTimeout = null;
         }
+        
+        // Stop timing meter
+        this.stopTimingMeter();
 
         // Play phase success audio
         this.audioManager?.playSFX('lure_success');
 
+        // Calculate success bonus based on timing accuracy
+        const timingAccuracy = this.getTimingAccuracy();
+        let baseBonus = 20;
+        let timingBonus = Math.floor(baseBonus * timingAccuracy);
+
         // Increase shadow interest
-        this.shadowInterest = Math.min(100, this.shadowInterest + 20);
+        this.shadowInterest = Math.min(100, this.shadowInterest + timingBonus);
         
         // Apply lure success bonus (with null checking)
         const lureBonus = this.lureStats?.lureSuccess || 0;
         this.shadowInterest += lureBonus;
         
-        console.log(`LuringMiniGame: Phase ${this.currentPhase + 1} success! Interest: ${this.shadowInterest}`);
+        console.log(`LuringMiniGame: Phase ${this.currentPhase + 1} success! Timing: ${(timingAccuracy * 100).toFixed(0)}%, Interest: ${this.shadowInterest}`);
+        
+        // Show success feedback
+        this.showPhaseSuccessFeedback(timingAccuracy);
         
         // Move to next phase
         this.currentPhase++;
@@ -1191,13 +1374,80 @@ export class LuringMiniGame {
         // Emit success event
         this.scene.events.emit('fishing:lurePhaseSuccess', {
             phase: this.currentPhase,
-            shadowInterest: this.shadowInterest
+            shadowInterest: this.shadowInterest,
+            timingAccuracy: timingAccuracy
         });
         
-        // Start next phase after brief delay
-        this.scene.time.delayedCall(500, () => {
+        // Start next phase or attempt hook after brief delay
+        this.scene.time.delayedCall(1500, () => {
+            // Clear previous UI elements before proceeding
+            this.hideAllInputIndicators();
+            
+            if (this.currentPhase < this.maxPhases) {
             this.startPhase();
+            } else {
+                this.attemptHook();
+            }
         });
+    }
+    
+    showPhaseSuccessFeedback(timingAccuracy) {
+        // Update instruction text with success feedback
+        let feedbackText = '';
+        let feedbackColor = '';
+        
+        if (timingAccuracy >= 1.0) {
+            feedbackText = '🎯 PERFECT TIMING! +' + Math.floor(20 * timingAccuracy) + ' Interest';
+            feedbackColor = '#00FF00';
+        } else if (timingAccuracy >= 0.7) {
+            feedbackText = '✅ GOOD TIMING! +' + Math.floor(20 * timingAccuracy) + ' Interest';
+            feedbackColor = '#FFFF00';
+        } else {
+            feedbackText = '⚠️ OKAY TIMING +' + Math.floor(20 * timingAccuracy) + ' Interest';
+            feedbackColor = '#FF6666';
+        }
+        
+        if (this.phaseInstructionText) {
+            this.phaseInstructionText.setText(feedbackText);
+            this.phaseInstructionText.setColor(feedbackColor);
+        }
+        
+        if (this.inputPromptText) {
+            this.inputPromptText.setText('Moving to next phase...');
+            this.inputPromptText.setColor('#AAAAAA');
+        }
+        
+        // Update interest meter
+        this.updateInterestMeter();
+        
+        // Create success particle effect
+        this.createSuccessEffect();
+    }
+    
+    createSuccessEffect() {
+        // Create a simple success effect
+        if (this.uiContainer) {
+            const successText = this.scene.add.text(0, -100, '✨ SUCCESS! ✨', {
+                fontSize: '24px',
+                fill: '#00FF88',
+                fontStyle: 'bold'
+            });
+            successText.setOrigin(0.5);
+            this.uiContainer.add(successText);
+            
+            // Animate the success text
+            this.scene.tweens.add({
+                targets: successText,
+                y: -150,
+                alpha: 0,
+                scale: 1.5,
+                duration: 1000,
+                ease: 'Power2.easeOut',
+                onComplete: () => {
+                    successText.destroy();
+                }
+            });
+        }
     }
 
     handlePhaseFailure() {
@@ -1206,15 +1456,23 @@ export class LuringMiniGame {
             this.phaseTimeout.destroy();
             this.phaseTimeout = null;
         }
+        
+        // Stop timing meter
+        this.stopTimingMeter();
 
         // Decrease shadow interest
         this.shadowInterest = Math.max(0, this.shadowInterest - 30);
         
         console.log(`LuringMiniGame: Phase ${this.currentPhase + 1} failed! Interest: ${this.shadowInterest}`);
         
+        // Show failure feedback
+        this.showPhaseFailureFeedback();
+        
         // Check if fish loses interest completely
         if (this.shadowInterest <= 0) {
+            this.scene.time.delayedCall(1500, () => {
             this.complete(false, null);
+            });
             return;
         }
         
@@ -1229,11 +1487,65 @@ export class LuringMiniGame {
         
         // Continue if phases remain
         if (this.currentPhase < this.maxPhases) {
-            this.scene.time.delayedCall(1000, () => {
+            this.scene.time.delayedCall(1500, () => {
                 this.startPhase();
             });
         } else {
+            this.scene.time.delayedCall(1500, () => {
             this.attemptHook();
+            });
+        }
+    }
+    
+    showPhaseFailureFeedback() {
+        // Update instruction text with failure feedback
+        if (this.phaseInstructionText) {
+            this.phaseInstructionText.setText('❌ MISSED! Fish loses interest');
+            this.phaseInstructionText.setColor('#FF4444');
+        }
+        
+        if (this.inputPromptText) {
+            if (this.shadowInterest <= 0) {
+                this.inputPromptText.setText('Fish swam away...');
+            } else {
+                this.inputPromptText.setText('Try again in next phase...');
+            }
+            this.inputPromptText.setColor('#FF6666');
+        }
+        
+        // Update interest meter
+        this.updateInterestMeter();
+        
+        // Create failure effect
+        this.createFailureEffect();
+    }
+    
+    createFailureEffect() {
+        // Create a failure effect
+        if (this.uiContainer) {
+            const failureText = this.scene.add.text(0, -100, '💔 MISSED!', {
+                fontSize: '24px',
+                fill: '#FF4444',
+                fontStyle: 'bold'
+            });
+            failureText.setOrigin(0.5);
+            this.uiContainer.add(failureText);
+            
+            // Animate the failure text
+            this.scene.tweens.add({
+                targets: failureText,
+                y: -150,
+                alpha: 0,
+                scale: 1.2,
+                duration: 1000,
+                ease: 'Power2.easeOut',
+                onComplete: () => {
+                    failureText.destroy();
+                }
+            });
+            
+            // Screen shake effect
+            this.scene.cameras.main.shake(200, 0.01);
         }
     }
 
@@ -1244,6 +1556,9 @@ export class LuringMiniGame {
             return;
         }
         
+        // Hide all indicators immediately for clean transition
+        this.hideAllInputIndicators();
+        
         // Final hooking attempt based on accumulated interest
         const hookChance = this.shadowInterest / 100;
         const biteRateBonus = (this.lureStats?.biteRate || 0) / 100;
@@ -1253,11 +1568,35 @@ export class LuringMiniGame {
         
         console.log(`LuringMiniGame: Hook attempt - Chance: ${(finalChance * 100).toFixed(1)}%, Success: ${success}`);
         
+        // Show hook attempt message before transition
+        if (this.phaseInstructionText) {
+            // Make the result message large and prominent
+            this.phaseInstructionText.setText(success ? '🎣 FISH HOOKED!' : '💔 FISH GOT AWAY!');
+            this.phaseInstructionText.setColor(success ? '#00FF88' : '#FF4444');
+            this.phaseInstructionText.setFontSize('36px');
+            
+            // Add animation to make it more noticeable
+            this.scene.tweens.add({
+                targets: this.phaseInstructionText,
+                scaleX: 1.2,
+                scaleY: 1.2,
+                duration: 200,
+                yoyo: true,
+                repeat: 1
+            });
+        }
+        
+        // Use longer delay in debug mode to keep the result visible
+        const delayTime = this.debugMode ? 1000 : 300;
+        
+        // Slightly delay the completion to allow for the message to be seen
+        this.scene.time.delayedCall(delayTime, () => {
         if (success) {
             this.complete(true, this.selectedFish);
         } else {
             this.complete(false, null);
         }
+        });
     }
 
     complete(success, fishHooked) {
@@ -1273,15 +1612,47 @@ export class LuringMiniGame {
         console.log('LuringMiniGame: Complete called with:', { success, fishHooked });
         
         // IMMEDIATELY clean up input handling to prevent interference with next phase
+        if (this.scene && this.scene.input && this.scene.input.keyboard) {
         this.scene.input.keyboard.off('keydown', this.handleLureInput, this);
+            
+            // In debug mode, don't restore regular game controls - LuringDebugTool will handle that
+            // This prevents issues with both systems trying to manage controls
+            console.log(`LuringMiniGame: Cleaned up input handling (debugMode: ${this.debugMode})`);
+        }
         
         // Clean up timers
         if (this.phaseTimeout) {
             this.phaseTimeout.destroy();
+            this.phaseTimeout = null;
         }
         
         if (this.fishObservationTimer) {
             this.fishObservationTimer.destroy();
+            this.fishObservationTimer = null;
+        }
+
+        // Hide UI elements immediately
+        this.hideAllInputIndicators();
+        
+        // Hide tutorial if it's still active
+        if (this.tutorialActive) {
+            this.hideTutorialPanel();
+        }
+        
+        // Clean up UI for transition
+        if (this.uiContainer) {
+            // Fade out UI container
+            this.scene.tweens.add({
+                targets: this.uiContainer,
+                alpha: 0,
+                duration: 300,
+                ease: 'Power2.easeOut',
+                onComplete: () => {
+                    if (this.uiContainer && this.uiContainer.active) {
+                        this.uiContainer.visible = false;
+                    }
+                }
+            });
         }
 
         // Validate and ensure fish data has required properties
@@ -1310,21 +1681,80 @@ export class LuringMiniGame {
             finalInterest: this.shadowInterest
         });
 
+        // Schedule emission of completion event after cleanup
+        this.scene.time.delayedCall(100, () => {
         // Emit completion event
         this.scene.events.emit('fishing:lureComplete', {
             success: success,
             fishHooked: validatedFishHooked,
             finalInterest: this.shadowInterest
+            });
         });
+        
+        // Force a cleanup after a delay to ensure everything is removed
+        this.scene.time.delayedCall(500, () => {
+            this.performCleanup();
+        });
+    }
+    
+    performCleanup() {
+        console.log('LuringMiniGame: Performing final cleanup');
+        
+        // Stop all animations/tweens on UI elements
+        this.stopAllIndicatorAnimations();
+        
+        // Hide all UI elements
+        if (this.uiContainer && this.uiContainer.active) {
+            this.uiContainer.visible = false;
+        }
+        
+        if (this.interestMeterContainer && this.interestMeterContainer.active) {
+            this.interestMeterContainer.visible = false;
+        }
+        
+        if (this.simulationContainer && this.simulationContainer.active) {
+            this.simulationContainer.visible = false;
+        }
     }
 
     destroy() {
         console.log('LuringMiniGame: Starting destroy process');
         
         this.isActive = false;
+        this.isCompleted = true; // Mark as completed to prevent duplicate calls
         this.tutorialActive = false;
         
-        // Clean up tutorial panel first
+        // Force a cleanup first to hide all UI elements
+        this.performCleanup();
+        
+        // Stop all tweens related to this game
+        if (this.scene && this.scene.tweens) {
+            // Try to stop all tweens associated with our UI containers
+            const containers = [
+                this.uiContainer, 
+                this.tutorialContainer, 
+                this.interestMeterContainer, 
+                this.simulationContainer,
+                this.keyDisplayText,
+                this.keyDisplayBg,
+                this.actionDescriptionText,
+                this.holdDurationContainer,
+                this.sequenceContainer,
+                this.successZone
+            ];
+            
+            containers.forEach(container => {
+                if (container) {
+                    try {
+                        this.scene.tweens.killTweensOf(container);
+                    } catch (error) {
+                        // Ignore errors, just continue cleanup
+                    }
+                }
+            });
+        }
+        
+        // Clean up tutorial panel 
         if (this.tutorialTimer && !this.tutorialTimer.hasDispatched) {
             try {
                 this.tutorialTimer.destroy();
@@ -1366,24 +1796,28 @@ export class LuringMiniGame {
             }
         }
         
-        // Clean up game timers
-        if (this.phaseTimeout && !this.phaseTimeout.hasDispatched) {
-            try {
-                this.phaseTimeout.destroy();
-            } catch (error) {
-                console.warn('LuringMiniGame: Error destroying phase timeout:', error);
-            }
-            this.phaseTimeout = null;
-        }
+        // Clean up all timers
+        const timers = [
+            { name: 'phaseTimeout', timer: this.phaseTimeout },
+            { name: 'fishObservationTimer', timer: this.fishObservationTimer },
+            { name: 'timingTimer', timer: this.timingTimer },
+            { name: 'holdTimer', timer: this.holdTimer }
+        ];
         
-        if (this.fishObservationTimer && !this.fishObservationTimer.hasDispatched) {
-            try {
-                this.fishObservationTimer.destroy();
+        timers.forEach(({ name, timer }) => {
+            if (timer && !timer.hasDispatched) {
+                try {
+                    timer.destroy();
             } catch (error) {
-                console.warn('LuringMiniGame: Error destroying fish observation timer:', error);
+                    console.warn(`LuringMiniGame: Error destroying ${name}:`, error);
+                }
             }
+        });
+        
+        this.phaseTimeout = null;
             this.fishObservationTimer = null;
-        }
+        this.timingTimer = null;
+        this.holdTimer = null;
         
         // Clean up fish timers
         if (this.simulationFish && Array.isArray(this.simulationFish)) {
@@ -1395,21 +1829,78 @@ export class LuringMiniGame {
                     if (fish.directionTimer && !fish.directionTimer.hasDispatched) {
                         fish.directionTimer.destroy();
                     }
+                    if (fish.bubbleTimer && !fish.bubbleTimer.hasDispatched) {
+                        fish.bubbleTimer.destroy();
+                    }
+                    
+                    // Destroy fish graphics
+                    if (fish.graphic && fish.graphic.active) {
+                        fish.graphic.destroy();
+                    }
+                    
+                    // Destroy interest indicators
+                    if (fish.interestIndicatorContainer && fish.interestIndicatorContainer.active) {
+                        fish.interestIndicatorContainer.destroy();
+                    }
                 } catch (error) {
-                    console.warn(`LuringMiniGame: Error destroying fish ${index} timers:`, error);
+                    console.warn(`LuringMiniGame: Error cleaning up fish ${index}:`, error);
                 }
             });
+            
+            // Clear the fish array
+            this.simulationFish = [];
         }
         
-        // Clean up UI
-        if (this.simulationContainer && this.simulationContainer.active) {
-            try {
-                this.simulationContainer.destroy();
+        // Stop all indicator animations and destroy any active animations
+        this.stopAllIndicatorAnimations();
+        
+        // Force destroy all UI containers - more thorough than just hiding
+        const uiContainers = [
+            { name: 'uiContainer', container: this.uiContainer },
+            { name: 'interestMeterContainer', container: this.interestMeterContainer },
+            { name: 'simulationContainer', container: this.simulationContainer },
+            { name: 'inputIndicatorContainer', container: this.inputIndicatorContainer },
+            { name: 'holdDurationContainer', container: this.holdDurationContainer },
+            { name: 'sequenceContainer', container: this.sequenceContainer },
+            { name: 'phaseProgressContainer', container: this.phaseProgressContainer }
+        ];
+        
+        uiContainers.forEach(({ name, container }) => {
+            if (container && container.active) {
+                try {
+                    // Set visibility to false first
+                    container.visible = false;
+                    // Then destroy
+                    container.destroy();
             } catch (error) {
-                console.warn('LuringMiniGame: Error destroying simulation container:', error);
+                    console.warn(`LuringMiniGame: Error destroying ${name}:`, error);
+                }
             }
-            this.simulationContainer = null;
-        }
+        });
+        
+                 // Clear all references
+         this.uiContainer = null;
+         this.interestMeterContainer = null;
+         this.simulationContainer = null;
+         this.inputIndicatorContainer = null;
+         this.holdDurationContainer = null;
+         this.sequenceContainer = null;
+         this.phaseProgressContainer = null;
+         this.keyDisplayText = null;
+         this.keyDisplayBg = null;
+         this.actionDescriptionText = null;
+         this.instructionPanel = null;
+         this.phaseIndicatorText = null;
+         this.phaseInstructionText = null;
+         this.timingMeterBg = null;
+         this.timingMeterFill = null;
+         this.successZone = null;
+         this.successZoneLabel = null;
+         this.timingLabel = null;
+         this.arrowLeft = null;
+         this.arrowRight = null;
+         this.arrowLeftTween = null;
+         this.arrowRightTween = null;
         
         console.log('LuringMiniGame: Destroy process completed');
     }
@@ -1453,59 +1944,200 @@ export class LuringMiniGame {
         const currentPhase = this.currentPhase;
         const requiredInput = this.requiredInputs[currentPhase];
         
+        // Update phase indicator
+        if (this.phaseIndicatorText) {
+            this.phaseIndicatorText.setText(`Phase ${currentPhase + 1}/${this.maxPhases}`);
+        }
+        
         let instruction = 'Get ready...';
         
         if (currentPhase < this.maxPhases) {
             switch (requiredInput) {
                 case 'pulse':
-                    instruction = '⚡ TAP SPACEBAR quickly!';
+                    instruction = '⚡ SPINNER LURE - Quick Pulses';
+                    this.showKeyIndicator('SPACEBAR', 'TAP RAPIDLY!', '#00FF88');
                     break;
                 case 'drag':
-                    instruction = '⬇️ PRESS S to drag down!';
+                    instruction = '🪱 SOFT PLASTIC - Drag Down';
+                    this.showHoldIndicator('S', 'HOLD TO DRAG DOWN', 1500);
                     break;
                 case 'pause':
-                    instruction = '⏸️ WAIT... don\'t press anything!';
+                    instruction = '⏸️ SOFT PLASTIC - Pause';
+                    this.showKeyIndicator('WAIT', 'DON\'T PRESS ANYTHING!', '#FFAA00');
                     break;
                 case 'flick':
-                    instruction = '💨 QUICK WASD movements!';
+                    instruction = '🦋 FLY LURE - Quick Flicks';
+                    this.showSingleKeyIndicator('W', 'PRESS W FIRST!', '#00FF88');
+                    this.currentFlyStep = 0;
+                    this.flySequence = ['W', 'A', 'S', 'D'];
                     break;
                 case 'swipe':
-                    instruction = '↗️ SWIPE with WASD!';
+                    instruction = '🦋 FLY LURE - Swipe Motion';
+                    this.showSingleKeyIndicator('W', 'PRESS W FIRST!', '#00FF88');
+                    this.currentFlyStep = 0;
+                    this.flySequence = ['W', 'A', 'S', 'D'];
                     break;
                 case 'combo':
-                    instruction = '🔥 COMBO! Multiple quick inputs!';
+                    instruction = '🦋 FLY LURE - Combo Moves';
+                    this.showSingleKeyIndicator('W', 'PRESS W FIRST!', '#00FF88');
+                    this.currentFlyStep = 0;
+                    this.flySequence = ['W', 'A', 'S', 'D'];
                     break;
                 case 'tap':
-                    instruction = '👆 TAP SPACEBAR!';
+                    instruction = '💥 POPPER LURE - Surface Tap';
+                    this.showKeyIndicator('SPACEBAR', 'TAP ONCE!', '#FF6600');
                     break;
                 case 'hold':
-                    instruction = '⏳ HOLD SPACEBAR down!';
+                    instruction = '💥 POPPER LURE - Hold Burst';
+                    this.showHoldIndicator('SPACEBAR', 'HOLD FOR BURST', 2000);
                     break;
                 case 'burst':
-                    instruction = '💥 RELEASE for burst!';
+                    instruction = '💥 POPPER LURE - Release Burst';
+                    this.showKeyIndicator('RELEASE', 'LET GO OF SPACEBAR!', '#FF0000');
                     break;
                 case 'trace':
-                    instruction = '🔄 TRACE with WASD!';
+                    instruction = '🥄 SPOON LURE - Trace Motion';
+                    this.showSingleKeyIndicator('W', 'PRESS W FIRST!', '#00FF88');
+                    this.currentSpoonStep = 0;
+                    this.spoonSequence = ['W', 'A', 'S', 'D'];
                     break;
                 case 'circle':
-                    instruction = '⭕ COMPLETE the circle!';
+                    instruction = '🥄 SPOON LURE - Circular Motion';
+                    this.showSingleKeyIndicator('W', 'PRESS W FIRST!', '#00FF88');
+                    this.currentSpoonStep = 0;
+                    this.spoonSequence = ['W', 'D', 'S', 'A'];
                     break;
                 default:
                     instruction = `Phase ${currentPhase + 1}: ${requiredInput}`;
+                    this.showKeyIndicator('?', 'Follow the pattern!', '#FFFFFF');
             }
         } else {
-            instruction = '🎣 Ready to hook!';
+            instruction = '🎣 Fish is interested!';
+            this.hideAllInputIndicators();
         }
         
         this.phaseInstructionText.setText(instruction);
         
+        // Update interest meter
+        this.updateInterestMeter();
+        
+        // Start timing meter for this phase
+        this.startTimingMeter();
+        
         // Use UITheme colors
         if (currentPhase === 0) {
-            this.phaseInstructionText.setColor(UITheme.colors.success); // Green for first phase
+            this.phaseInstructionText.setColor('#00FF88'); // Green for first phase
         } else if (currentPhase === this.maxPhases - 1) {
-            this.phaseInstructionText.setColor(UITheme.colors.warning); // Orange for final phase
+            this.phaseInstructionText.setColor('#FFD700'); // Gold for final phase
         } else {
-            this.phaseInstructionText.setColor(UITheme.colors.info);    // Yellow/Info for middle phases
+            this.phaseInstructionText.setColor('#4A9EFF'); // Blue for middle phases
+        }
+    }
+    
+    startTimingMeter() {
+        if (!this.timingMeterFill) return;
+        
+        // Clear previous meter
+        this.timingMeterFill.clear();
+        
+        // Start timing animation
+        this.timingProgress = 0;
+        this.timingDirection = 1; // 1 for forward, -1 for backward
+        
+        // Create timing loop
+        if (this.timingTimer) {
+            this.timingTimer.destroy();
+        }
+        
+        this.timingTimer = this.scene.time.addEvent({
+            delay: 50, // Update every 50ms
+            callback: this.updateTimingMeter,
+            callbackScope: this,
+            loop: true
+        });
+    }
+    
+    updateTimingMeter() {
+        if (!this.timingMeterFill || !this.isActive) return;
+        
+        // Update progress - much slower for easier timing
+        this.timingProgress += this.timingDirection * 0.8; // 0.8% per update (much slower)
+        
+        // Bounce back and forth
+        if (this.timingProgress >= 100) {
+            this.timingProgress = 100;
+            this.timingDirection = -1;
+        } else if (this.timingProgress <= 0) {
+            this.timingProgress = 0;
+            this.timingDirection = 1;
+        }
+        
+        // Clear and redraw meter
+        this.timingMeterFill.clear();
+        
+        // Determine color based on position - larger success zones
+        let fillColor = 0xFF0000; // Red for bad timing
+        let glowColor = 0xFF4444; // Red glow
+        if (this.timingProgress >= 35 && this.timingProgress <= 65) {
+            fillColor = 0x00FF00; // Green for perfect timing (larger zone)
+            glowColor = 0x44FF44; // Green glow
+        } else if (this.timingProgress >= 20 && this.timingProgress <= 80) {
+            fillColor = 0xFFFF00; // Yellow for okay timing (much larger zone)
+            glowColor = 0xFFFF44; // Yellow glow
+        }
+        
+        // Draw the moving indicator - larger and more visible
+        const indicatorWidth = 15;
+        const meterWidth = 396; // 400 - 4 (padding)
+        const indicatorX = -198 + (this.timingProgress / 100) * meterWidth - indicatorWidth / 2;
+        
+        // Draw glow effect first
+        this.timingMeterFill.fillStyle(glowColor, 0.4);
+        this.timingMeterFill.fillRoundedRect(indicatorX - 3, 57, indicatorWidth + 6, 36, 12);
+        
+        // Draw main indicator
+        this.timingMeterFill.fillStyle(fillColor, 0.9);
+        this.timingMeterFill.fillRoundedRect(indicatorX, 60, indicatorWidth, 30, 10);
+        
+        // Add white highlight for better visibility
+        this.timingMeterFill.fillStyle(0xFFFFFF, 0.6);
+        this.timingMeterFill.fillRoundedRect(indicatorX + 2, 62, indicatorWidth - 4, 8, 4);
+    }
+    
+    stopTimingMeter() {
+        if (this.timingTimer) {
+            this.timingTimer.destroy();
+            this.timingTimer = null;
+        }
+    }
+    
+    getTimingAccuracy() {
+        if (!this.timingProgress) return 0.5; // Default to 50% if no timing
+        
+        // Perfect timing is 35-65% (larger zone)
+        if (this.timingProgress >= 35 && this.timingProgress <= 65) {
+            return 1.0; // Perfect
+        } else if (this.timingProgress >= 20 && this.timingProgress <= 80) {
+            return 0.8; // Good (better reward for larger zone)
+        } else {
+            return 0.4; // Poor (less harsh penalty)
+        }
+    }
+    
+    isGoodTiming() {
+        // Check if the current timing is within acceptable range
+        if (!this.timingProgress) return true; // Default to true if no timing system
+        
+        // For sequence lures, be EXTREMELY forgiving - almost any timing is fine
+        const requiredInput = this.requiredInputs[this.currentPhase];
+        const isSequenceInput = ['flick', 'swipe', 'combo', 'trace', 'circle'].includes(requiredInput);
+        
+        if (isSequenceInput) {
+            // Accept timing in a huge window (10-90%) for sequences to reduce frustration
+            return this.timingProgress >= 10 && this.timingProgress <= 90;
+        } else {
+            // Regular lures use the normal timing window (20-80%)
+            return this.timingProgress >= 20 && this.timingProgress <= 80;
         }
     }
 
@@ -1623,19 +2255,450 @@ export class LuringMiniGame {
         const width = this.scene.cameras.main.width;
         const height = this.scene.cameras.main.height;
         
-        // Instructions text using UITheme
-        // Assuming a style like 'overlayNotification' or a new 'lureInstruction' style from UITheme
+        // Create main UI container
+        this.uiContainer = this.scene.add.container(width / 2, height - 200);
+        this.uiContainer.setDepth(1005);
+        
+        // Background panel for instructions - larger for more indicators
+        this.instructionPanel = this.scene.add.graphics();
+        this.instructionPanel.fillStyle(0x000000, 0.9);
+        this.instructionPanel.lineStyle(3, 0x4a9eff, 0.8);
+        this.instructionPanel.fillRoundedRect(-400, -120, 800, 240, 15);
+        this.instructionPanel.strokeRoundedRect(-400, -120, 800, 240, 15);
+        this.uiContainer.add(this.instructionPanel);
+        
+        // Phase indicator
+        this.phaseIndicatorText = UITheme.createText(
+            this.scene, 
+            0, 
+            -100, 
+            'Phase 1/3', 
+            'headerSmall'
+        );
+        this.phaseIndicatorText.setOrigin(0.5);
+        this.phaseIndicatorText.setColor('#FFD700');
+        this.uiContainer.add(this.phaseIndicatorText);
+        
+        // Main instruction text
         this.phaseInstructionText = UITheme.createText(
             this.scene, 
-            width / 2, 
-            height - 100, 
+            0, 
+            -70, 
             'Get ready to lure the fish...', 
-            'overlayNotification' // This style should handle background, padding, alignment
+            'bodyLarge'
         );
-        this.phaseInstructionText.setOrigin(0.5).setDepth(1005);
-        // Color will be set dynamically by updatePhaseInstructions
+        this.phaseInstructionText.setOrigin(0.5);
+        this.phaseInstructionText.setColor('#FFFFFF');
+        this.uiContainer.add(this.phaseInstructionText);
         
-        console.log('LuringMiniGame: UI created');
+        // Create enhanced input indicator system
+        this.createInputIndicator();
+        
+        // Timing meter background - larger and more visible
+        this.timingMeterBg = this.scene.add.graphics();
+        this.timingMeterBg.fillStyle(0x333333, 0.9);
+        this.timingMeterBg.lineStyle(2, 0x666666);
+        this.timingMeterBg.fillRoundedRect(-200, 60, 400, 30, 15);
+        this.timingMeterBg.strokeRoundedRect(-200, 60, 400, 30, 15);
+        this.uiContainer.add(this.timingMeterBg);
+        
+        // Timing meter fill
+        this.timingMeterFill = this.scene.add.graphics();
+        this.uiContainer.add(this.timingMeterFill);
+        
+        // Success zone indicator - MUCH larger and more prominent
+        this.successZone = this.scene.add.graphics();
+        this.successZone.fillStyle(0x00FF00, 0.4);
+        this.successZone.lineStyle(3, 0x00FF00, 0.8);
+        this.successZone.fillRoundedRect(-120, 60, 240, 30, 15); // Huge success zone (20-80%)
+        this.successZone.strokeRoundedRect(-120, 60, 240, 30, 15);
+        
+        // Add animated arrows pointing to success zone
+        this.arrowLeft = this.scene.add.text(-130, 75, '▶', { 
+            fontSize: '24px', 
+            fontStyle: 'bold',
+            color: '#FFFF00' 
+        });
+        this.arrowLeft.setOrigin(0.5);
+        this.arrowLeftTween = this.scene.tweens.add({
+            targets: this.arrowLeft,
+            x: '-=10',
+            duration: 500,
+            yoyo: true,
+            repeat: -1
+        });
+        
+        this.arrowRight = this.scene.add.text(130, 75, '◀', { 
+            fontSize: '24px', 
+            fontStyle: 'bold',
+            color: '#FFFF00' 
+        });
+        this.arrowRight.setOrigin(0.5);
+        this.arrowRightTween = this.scene.tweens.add({
+            targets: this.arrowRight,
+            x: '+=10',
+            duration: 500,
+            yoyo: true,
+            repeat: -1
+        });
+        
+        this.uiContainer.add([this.successZone, this.arrowLeft, this.arrowRight]);
+        
+        // Success zone label
+        this.successZoneLabel = UITheme.createText(this.scene, 0, 75, 'PERFECT', 'bodySmall');
+        this.successZoneLabel.setOrigin(0.5);
+        this.successZoneLabel.setColor('#00FF00');
+        this.successZoneLabel.setFontStyle('bold');
+        this.uiContainer.add(this.successZoneLabel);
+        
+        // Timing meter label
+        this.timingLabel = UITheme.createText(this.scene, 0, 40, 'TIMING METER', 'bodySmall');
+        this.timingLabel.setOrigin(0.5);
+        this.timingLabel.setColor('#CCCCCC');
+        this.uiContainer.add(this.timingLabel);
+        
+        // Interest meter
+        this.createInterestMeter();
+        
+        console.log('LuringMiniGame: Enhanced UI with input indicators created');
+    }
+    
+    createInputIndicator() {
+        // Container for input indicators
+        this.inputIndicatorContainer = this.scene.add.container(0, -40);
+        this.uiContainer.add(this.inputIndicatorContainer);
+        
+        // Key display area - shows which key to press
+        this.keyDisplayBg = this.scene.add.graphics();
+        this.keyDisplayBg.fillStyle(0x1a1a2e, 0.9);
+        this.keyDisplayBg.lineStyle(3, 0x4a9eff, 0.8);
+        this.keyDisplayBg.fillRoundedRect(-60, -25, 120, 50, 10);
+        this.keyDisplayBg.strokeRoundedRect(-60, -25, 120, 50, 10);
+        this.inputIndicatorContainer.add(this.keyDisplayBg);
+        
+        // Key text - shows the actual key to press
+        this.keyDisplayText = UITheme.createText(this.scene, 0, 0, '', 'headerLarge');
+        this.keyDisplayText.setOrigin(0.5);
+        this.keyDisplayText.setColor('#FFFFFF');
+        this.keyDisplayText.setFontStyle('bold');
+        this.inputIndicatorContainer.add(this.keyDisplayText);
+        
+        // Action description below key
+        this.actionDescriptionText = UITheme.createText(this.scene, 0, 35, '', 'bodyMedium');
+        this.actionDescriptionText.setOrigin(0.5);
+        this.actionDescriptionText.setColor('#00FF88');
+        this.inputIndicatorContainer.add(this.actionDescriptionText);
+        
+        // Hold duration bar (for hold actions)
+        this.holdDurationContainer = this.scene.add.container(150, 0);
+        this.inputIndicatorContainer.add(this.holdDurationContainer);
+        
+        // Hold duration background
+        this.holdDurationBg = this.scene.add.graphics();
+        this.holdDurationBg.fillStyle(0x333333, 0.8);
+        this.holdDurationBg.lineStyle(2, 0x666666);
+        this.holdDurationBg.fillRoundedRect(-50, -10, 100, 20, 10);
+        this.holdDurationBg.strokeRoundedRect(-50, -10, 100, 20, 10);
+        this.holdDurationContainer.add(this.holdDurationBg);
+        
+        // Hold duration fill
+        this.holdDurationFill = this.scene.add.graphics();
+        this.holdDurationContainer.add(this.holdDurationFill);
+        
+        // Hold duration label
+        this.holdDurationLabel = UITheme.createText(this.scene, 0, -25, 'HOLD DURATION', 'bodySmall');
+        this.holdDurationLabel.setOrigin(0.5);
+        this.holdDurationLabel.setColor('#CCCCCC');
+        this.holdDurationContainer.add(this.holdDurationLabel);
+        
+        // Sequence indicator (for combo actions like WASD circles)
+        this.sequenceContainer = this.scene.add.container(-150, 0);
+        this.inputIndicatorContainer.add(this.sequenceContainer);
+        
+        // Sequence background
+        this.sequenceBg = this.scene.add.graphics();
+        this.sequenceBg.fillStyle(0x2a1a3e, 0.8);
+        this.sequenceBg.lineStyle(2, 0x9a4aff);
+        this.sequenceBg.fillRoundedRect(-60, -25, 120, 50, 10);
+        this.sequenceBg.strokeRoundedRect(-60, -25, 120, 50, 10);
+        this.sequenceContainer.add(this.sequenceBg);
+        
+        // Sequence text
+        this.sequenceText = UITheme.createText(this.scene, 0, 0, '', 'bodyMedium');
+        this.sequenceText.setOrigin(0.5);
+        this.sequenceText.setColor('#9a4aff');
+        this.sequenceText.setFontStyle('bold');
+        this.sequenceContainer.add(this.sequenceText);
+        
+        // Sequence progress
+        this.sequenceProgressText = UITheme.createText(this.scene, 0, 35, '', 'bodySmall');
+        this.sequenceProgressText.setOrigin(0.5);
+        this.sequenceProgressText.setColor('#CCCCCC');
+        this.sequenceContainer.add(this.sequenceProgressText);
+        
+        // Initially hide all indicators
+        this.hideAllInputIndicators();
+    }
+    
+    hideAllInputIndicators() {
+        if (this.keyDisplayBg) {
+            this.keyDisplayBg.setVisible(false);
+            this.keyDisplayBg.setAlpha(1); // Reset alpha
+        }
+        if (this.keyDisplayText) {
+            this.keyDisplayText.setVisible(false);
+            this.keyDisplayText.setFontSize('32px'); // Reset to default size
+            this.keyDisplayText.setScale(1); // Reset scale
+        }
+        if (this.actionDescriptionText) {
+            this.actionDescriptionText.setVisible(false);
+            this.actionDescriptionText.setFontSize('16px'); // Reset to default size
+        }
+        if (this.holdDurationContainer) this.holdDurationContainer.setVisible(false);
+        if (this.sequenceContainer) this.sequenceContainer.setVisible(false);
+    }
+    
+    showKeyIndicator(key, action, color = '#FFFFFF') {
+        this.hideAllInputIndicators();
+        
+        if (this.keyDisplayBg) this.keyDisplayBg.setVisible(true);
+        if (this.keyDisplayText) {
+            this.keyDisplayText.setVisible(true);
+            this.keyDisplayText.setText(key);
+            this.keyDisplayText.setColor(color);
+        }
+        if (this.actionDescriptionText) {
+            this.actionDescriptionText.setVisible(true);
+            this.actionDescriptionText.setText(action);
+        }
+        
+        // Add pulsing animation to key display
+        if (this.keyDisplayText) {
+            this.scene.tweens.add({
+                targets: this.keyDisplayText,
+                scaleX: 1.2,
+                scaleY: 1.2,
+                duration: 500,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Power2.easeInOut'
+            });
+        }
+    }
+    
+    showSingleKeyIndicator(key, action, color = '#FFFFFF') {
+        this.hideAllInputIndicators();
+        
+        if (this.keyDisplayBg) {
+            this.keyDisplayBg.setVisible(true);
+            // Make the background more prominent for single keys
+            this.keyDisplayBg.clear();
+            this.keyDisplayBg.fillStyle(0x1a1a2e, 0.95);
+            this.keyDisplayBg.lineStyle(4, parseInt(color.replace('#', '0x')), 0.9);
+            this.keyDisplayBg.fillRoundedRect(-80, -35, 160, 70, 15);
+            this.keyDisplayBg.strokeRoundedRect(-80, -35, 160, 70, 15);
+        }
+        
+        if (this.keyDisplayText) {
+            this.keyDisplayText.setVisible(true);
+            this.keyDisplayText.setText(key);
+            this.keyDisplayText.setColor(color);
+            this.keyDisplayText.setFontSize('48px'); // Larger font for single keys
+        }
+        
+        if (this.actionDescriptionText) {
+            this.actionDescriptionText.setVisible(true);
+            this.actionDescriptionText.setText(action);
+            this.actionDescriptionText.setFontSize('20px'); // Larger action text
+        }
+        
+        // Add more prominent pulsing animation
+        if (this.keyDisplayText) {
+            this.scene.tweens.add({
+                targets: this.keyDisplayText,
+                scaleX: 1.4,
+                scaleY: 1.4,
+                duration: 800,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Power2.easeInOut'
+            });
+        }
+        
+        // Add glow effect to background
+        if (this.keyDisplayBg) {
+            this.scene.tweens.add({
+                targets: this.keyDisplayBg,
+                alpha: 0.7,
+                duration: 800,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Power2.easeInOut'
+            });
+        }
+    }
+    
+    showHoldIndicator(key, action, duration = 2000) {
+        this.showKeyIndicator(key, action, '#FFAA00');
+        
+        if (this.holdDurationContainer) {
+            this.holdDurationContainer.setVisible(true);
+        }
+        
+        // Start hold duration animation
+        this.holdProgress = 0;
+        this.holdMaxDuration = duration;
+        this.updateHoldDuration();
+        
+        // Create hold timer
+        if (this.holdTimer) this.holdTimer.destroy();
+        this.holdTimer = this.scene.time.addEvent({
+            delay: 50,
+            callback: () => {
+                this.holdProgress += 50;
+                this.updateHoldDuration();
+                
+                if (this.holdProgress >= this.holdMaxDuration) {
+                    this.holdTimer.destroy();
+                    this.holdTimer = null;
+                }
+            },
+            loop: true
+        });
+    }
+    
+    updateHoldDuration() {
+        if (!this.holdDurationFill) return;
+        
+        this.holdDurationFill.clear();
+        
+        const progress = Math.min(1, this.holdProgress / this.holdMaxDuration);
+        const fillWidth = 96 * progress; // 96 = 100 - 4 (padding)
+        
+        let fillColor = 0xFF0000; // Red for start
+        if (progress > 0.8) {
+            fillColor = 0x00FF00; // Green when almost complete
+        } else if (progress > 0.5) {
+            fillColor = 0xFFFF00; // Yellow for middle
+        }
+        
+        this.holdDurationFill.fillStyle(fillColor, 0.8);
+        this.holdDurationFill.fillRoundedRect(-48, -8, fillWidth, 16, 8);
+    }
+    
+    showSequenceIndicator(sequence, currentStep = 0) {
+        this.hideAllInputIndicators();
+        
+        if (this.sequenceContainer) {
+            this.sequenceContainer.setVisible(true);
+        }
+        
+        if (this.sequenceText) {
+            this.sequenceText.setVisible(true);
+            
+            // Highlight current step in sequence
+            let displayText = '';
+            sequence.forEach((key, index) => {
+                if (index === currentStep) {
+                    displayText += `[${key.toUpperCase()}]`;
+                } else if (index < currentStep) {
+                    displayText += `✓`;
+                } else {
+                    displayText += key.toUpperCase();
+                }
+                if (index < sequence.length - 1) displayText += ' → ';
+            });
+            
+            this.sequenceText.setText(displayText);
+        }
+        
+        if (this.sequenceProgressText) {
+            this.sequenceProgressText.setVisible(true);
+            this.sequenceProgressText.setText(`Step ${currentStep + 1}/${sequence.length}`);
+        }
+    }
+    
+    stopAllIndicatorAnimations() {
+        // Stop all tweens on indicator elements
+        if (this.keyDisplayText) {
+            this.scene.tweens.killTweensOf(this.keyDisplayText);
+            this.keyDisplayText.setScale(1);
+        }
+        
+        if (this.keyDisplayBg) {
+            this.scene.tweens.killTweensOf(this.keyDisplayBg);
+            this.keyDisplayBg.setAlpha(1);
+        }
+        
+        // Stop arrow animations
+        if (this.arrowLeftTween) {
+            this.arrowLeftTween.stop();
+            if (this.arrowLeft) this.scene.tweens.killTweensOf(this.arrowLeft);
+        }
+        
+        if (this.arrowRightTween) {
+            this.arrowRightTween.stop();
+            if (this.arrowRight) this.scene.tweens.killTweensOf(this.arrowRight);
+        }
+        
+        if (this.holdTimer) {
+            this.holdTimer.destroy();
+            this.holdTimer = null;
+        }
+    }
+    
+    createInterestMeter() {
+        // Interest meter container
+        this.interestMeterContainer = this.scene.add.container(50, -200);
+        this.interestMeterContainer.setDepth(1006);
+        
+        // Interest meter background
+        const meterBg = this.scene.add.graphics();
+        meterBg.fillStyle(0x333333, 0.8);
+        meterBg.lineStyle(2, 0x666666);
+        meterBg.fillRoundedRect(-15, -100, 30, 200, 15);
+        meterBg.strokeRoundedRect(-15, -100, 30, 200, 15);
+        this.interestMeterContainer.add(meterBg);
+        
+        // Interest meter fill
+        this.interestMeterFill = this.scene.add.graphics();
+        this.interestMeterContainer.add(this.interestMeterFill);
+        
+        // Interest meter label
+        const interestLabel = UITheme.createText(this.scene, 0, -120, 'FISH INTEREST', 'bodySmall');
+        interestLabel.setOrigin(0.5);
+        interestLabel.setColor('#FFFFFF');
+        this.interestMeterContainer.add(interestLabel);
+        
+        // Interest percentage text
+        this.interestPercentText = UITheme.createText(this.scene, 0, 120, '50%', 'bodyMedium');
+        this.interestPercentText.setOrigin(0.5);
+        this.interestPercentText.setColor('#FFD700');
+        this.interestMeterContainer.add(this.interestPercentText);
+        
+        // Add to scene
+        this.scene.add.existing(this.interestMeterContainer);
+    }
+    
+    updateInterestMeter() {
+        if (!this.interestMeterFill || !this.interestPercentText) return;
+        
+        this.interestMeterFill.clear();
+        
+        const fillHeight = (this.shadowInterest / 100) * 196; // 196 = 200 - 4 (padding)
+        let fillColor = 0xFF0000; // Red for low interest
+        
+        if (this.shadowInterest > 70) {
+            fillColor = 0x00FF00; // Green for high interest
+        } else if (this.shadowInterest > 40) {
+            fillColor = 0xFFFF00; // Yellow for medium interest
+        }
+        
+        this.interestMeterFill.fillStyle(fillColor, 0.8);
+        this.interestMeterFill.fillRoundedRect(-13, 98 - fillHeight, 26, fillHeight, 13);
+        
+        this.interestPercentText.setText(`${Math.round(this.shadowInterest)}%`);
+        this.interestPercentText.setColor(fillColor === 0x00FF00 ? '#00FF00' : fillColor === 0xFFFF00 ? '#FFFF00' : '#FF6666');
     }
 
     startFishMovement(fish, uiWidth) {
