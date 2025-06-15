@@ -1,0 +1,7 @@
+category_id,name,description,icon,color
+main_story,Main Story,Core narrative quests that advance the main storyline,story,#FFD700
+npc_quest,Companion Quests,Personal quests from your fishing companions,heart,#FF69B4
+daily_quest,Daily Challenges,Daily fishing challenges that reset every day,calendar,#00CED1
+weekly_quest,Weekly Challenges,More challenging weekly objectives,trophy,#32CD32
+event_quest,Special Events,Limited-time event quests with exclusive rewards,star,#FF4500
+chain_quest,Quest Chains,Multi-part quest series with escalating rewards,chain,#9370DB 

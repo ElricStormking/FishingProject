@@ -1,447 +1,382 @@
 {
   "lures": [
     {
-      "id": "basic_spinner",
-      "name": "Basic Spinner",
-      "lureType": "spinner",
+      "lure_id": "basic_spinner",
+      "lure_name": "Basic Spinner",
+      "lure_type": "spinner",
       "rarity": 1,
-      "equipSlot": "lure",
-      "stats": {
-        "biteRate": 20,
-        "lureSuccess": 15,
-        "durability": 5,
-        "precision": 5
-      },
+      "equip_slot": "lure",
+      "bite_rate": 20,
+      "lure_success": 15,
+      "durability": 5,
+      "precision": 5,
       "cost": 300,
-      "craftingMaterials": [
-        "perch",
-        "perch"
-      ],
-      "craftingTime": 2,
-      "description": "Simple spinning lure for beginners"
+      "crafting_material_1": "perch",
+      "crafting_material_2": "perch",
+      "crafting_time": 2,
+      "description": "Simple spinning lure for beginners",
+      "unlock_level": 1
     },
     {
-      "id": "silver_spinner",
-      "name": "Silver Spinner",
-      "lureType": "spinner",
+      "lure_id": "silver_spinner",
+      "lure_name": "Silver Spinner",
+      "lure_type": "spinner",
       "rarity": 2,
-      "equipSlot": "lure",
-      "stats": {
-        "biteRate": 25,
-        "lureSuccess": 20,
-        "durability": 8,
-        "precision": 7
-      },
+      "equip_slot": "lure",
+      "bite_rate": 25,
+      "lure_success": 20,
+      "durability": 8,
+      "precision": 7,
       "cost": 500,
-      "craftingMaterials": [
-        "bass",
-        "bass"
-      ],
-      "craftingTime": 4,
-      "description": "Reflective spinner with enhanced flash"
+      "crafting_material_1": "bass",
+      "crafting_material_2": "bass",
+      "crafting_time": 4,
+      "description": "Reflective spinner with enhanced flash",
+      "unlock_level": 5
     },
     {
-      "id": "gold_spinner",
-      "name": "Gold Spinner",
-      "lureType": "spinner",
+      "lure_id": "gold_spinner",
+      "lure_name": "Gold Spinner",
+      "lure_type": "spinner",
       "rarity": 3,
-      "equipSlot": "lure",
-      "stats": {
-        "biteRate": 30,
-        "lureSuccess": 25,
-        "durability": 12,
-        "precision": 10
-      },
+      "equip_slot": "lure",
+      "bite_rate": 30,
+      "lure_success": 25,
+      "durability": 12,
+      "precision": 10,
       "cost": 800,
-      "craftingMaterials": [
-        "pike",
-        "pike"
-      ],
-      "craftingTime": 6,
-      "description": "Premium gold-plated spinner"
+      "crafting_material_1": "pike",
+      "crafting_material_2": "pike",
+      "crafting_time": 6,
+      "description": "Premium gold-plated spinner",
+      "unlock_level": 10
     },
     {
-      "id": "elite_spinner",
-      "name": "Elite Spinner",
-      "lureType": "spinner",
+      "lure_id": "elite_spinner",
+      "lure_name": "Elite Spinner",
+      "lure_type": "spinner",
       "rarity": 4,
-      "equipSlot": "lure",
-      "stats": {
-        "biteRate": 40,
-        "lureSuccess": 35,
-        "durability": 18,
-        "precision": 15
-      },
+      "equip_slot": "lure",
+      "bite_rate": 40,
+      "lure_success": 35,
+      "durability": 18,
+      "precision": 15,
       "cost": 1500,
-      "craftingMaterials": [
-        "basic_spinner",
-        "basic_spinner"
-      ],
-      "craftingTime": 12,
-      "description": "High-performance spinner with perfect balance"
+      "crafting_material_1": "basic_spinner",
+      "crafting_material_2": "basic_spinner",
+      "crafting_time": 12,
+      "description": "High-performance spinner with perfect balance",
+      "unlock_level": 20
     },
     {
-      "id": "master_spinner",
-      "name": "Master Spinner",
-      "lureType": "spinner",
+      "lure_id": "master_spinner",
+      "lure_name": "Master Spinner",
+      "lure_type": "spinner",
       "rarity": 5,
-      "equipSlot": "lure",
-      "stats": {
-        "biteRate": 60,
-        "lureSuccess": 50,
-        "durability": 25,
-        "precision": 20
-      },
+      "equip_slot": "lure",
+      "bite_rate": 60,
+      "lure_success": 50,
+      "durability": 25,
+      "precision": 20,
       "cost": 4000,
-      "craftingMaterials": [
-        "elite_spinner",
-        "elite_spinner"
-      ],
-      "craftingTime": 22,
-      "description": "Ultimate spinner with magnetic attraction"
+      "crafting_material_1": "elite_spinner",
+      "crafting_material_2": "elite_spinner",
+      "crafting_time": 22,
+      "description": "Ultimate spinner with magnetic attraction",
+      "unlock_level": 35
     },
     {
-      "id": "legendary_spinner",
-      "name": "Legendary Spinner",
-      "lureType": "spinner",
+      "lure_id": "legendary_spinner",
+      "lure_name": "Legendary Spinner",
+      "lure_type": "spinner",
       "rarity": 6,
-      "equipSlot": "lure",
-      "stats": {
-        "biteRate": 80,
-        "lureSuccess": 65,
-        "durability": 35,
-        "precision": 30
-      },
+      "equip_slot": "lure",
+      "bite_rate": 80,
+      "lure_success": 65,
+      "durability": 35,
+      "precision": 30,
       "cost": 8000,
-      "craftingMaterials": [
-        "master_spinner",
-        "master_spinner"
-      ],
-      "craftingTime": 30,
-      "description": "Mythical spinner that attracts legendary fish"
+      "crafting_material_1": "master_spinner",
+      "crafting_material_2": "master_spinner",
+      "crafting_time": 30,
+      "description": "Mythical spinner that attracts legendary fish",
+      "unlock_level": 50
     },
     {
-      "id": "soft_worm",
-      "name": "Soft Worm",
-      "lureType": "soft_plastic",
+      "lure_id": "soft_worm",
+      "lure_name": "Soft Worm",
+      "lure_type": "soft_plastic",
       "rarity": 1,
-      "equipSlot": "lure",
-      "stats": {
-        "biteRate": 25,
-        "lureSuccess": 20,
-        "durability": 8,
-        "precision": 6
-      },
+      "equip_slot": "lure",
+      "bite_rate": 25,
+      "lure_success": 20,
+      "durability": 8,
+      "precision": 6,
       "cost": 500,
-      "craftingMaterials": [
-        "catfish",
-        "catfish"
-      ],
-      "craftingTime": 4,
-      "description": "Flexible worm that moves naturally"
+      "crafting_material_1": "catfish",
+      "crafting_material_2": "catfish",
+      "crafting_time": 4,
+      "description": "Flexible worm that moves naturally",
+      "unlock_level": 3
     },
     {
-      "id": "grub_tail",
-      "name": "Grub Tail",
-      "lureType": "soft_plastic",
+      "lure_id": "grub_tail",
+      "lure_name": "Grub Tail",
+      "lure_type": "soft_plastic",
       "rarity": 2,
-      "equipSlot": "lure",
-      "stats": {
-        "biteRate": 30,
-        "lureSuccess": 25,
-        "durability": 12,
-        "precision": 8
-      },
+      "equip_slot": "lure",
+      "bite_rate": 30,
+      "lure_success": 25,
+      "durability": 12,
+      "precision": 8,
       "cost": 700,
-      "craftingMaterials": [
-        "bass",
-        "bass"
-      ],
-      "craftingTime": 6,
-      "description": "Curly tail creates enticing action"
+      "crafting_material_1": "bass",
+      "crafting_material_2": "bass",
+      "crafting_time": 6,
+      "description": "Curly tail creates enticing action",
+      "unlock_level": 8
     },
     {
-      "id": "shad_body",
-      "name": "Shad Body",
-      "lureType": "soft_plastic",
+      "lure_id": "shad_body",
+      "lure_name": "Shad Body",
+      "lure_type": "soft_plastic",
       "rarity": 3,
-      "equipSlot": "lure",
-      "stats": {
-        "biteRate": 35,
-        "lureSuccess": 30,
-        "durability": 15,
-        "precision": 12
-      },
+      "equip_slot": "lure",
+      "bite_rate": 35,
+      "lure_success": 30,
+      "durability": 15,
+      "precision": 12,
       "cost": 1000,
-      "craftingMaterials": [
-        "salmon",
-        "salmon"
-      ],
-      "craftingTime": 8,
-      "description": "Realistic baitfish imitation"
+      "crafting_material_1": "salmon",
+      "crafting_material_2": "salmon",
+      "crafting_time": 8,
+      "description": "Realistic baitfish imitation",
+      "unlock_level": 15
     },
     {
-      "id": "dry_fly",
-      "name": "Dry Fly",
-      "lureType": "fly",
+      "lure_id": "dry_fly",
+      "lure_name": "Dry Fly",
+      "lure_type": "fly",
       "rarity": 1,
-      "equipSlot": "lure",
-      "stats": {
-        "biteRate": 30,
-        "lureSuccess": 25,
-        "durability": 6,
-        "precision": 8
-      },
+      "equip_slot": "lure",
+      "bite_rate": 30,
+      "lure_success": 25,
+      "durability": 6,
+      "precision": 8,
       "cost": 700,
-      "craftingMaterials": [
-        "trout",
-        "trout"
-      ],
-      "craftingTime": 6,
-      "description": "Classic surface fly for trout"
+      "crafting_material_1": "trout",
+      "crafting_material_2": "trout",
+      "crafting_time": 6,
+      "description": "Classic surface fly for trout",
+      "unlock_level": 5
     },
     {
-      "id": "wet_fly",
-      "name": "Wet Fly",
-      "lureType": "fly",
+      "lure_id": "wet_fly",
+      "lure_name": "Wet Fly",
+      "lure_type": "fly",
       "rarity": 2,
-      "equipSlot": "lure",
-      "stats": {
-        "biteRate": 35,
-        "lureSuccess": 30,
-        "durability": 10,
-        "precision": 12
-      },
+      "equip_slot": "lure",
+      "bite_rate": 35,
+      "lure_success": 30,
+      "durability": 10,
+      "precision": 12,
       "cost": 900,
-      "craftingMaterials": [
-        "salmon",
-        "salmon"
-      ],
-      "craftingTime": 8,
-      "description": "Subsurface fly that mimics emerging insects"
+      "crafting_material_1": "salmon",
+      "crafting_material_2": "salmon",
+      "crafting_time": 8,
+      "description": "Subsurface fly that mimics emerging insects",
+      "unlock_level": 12
     },
     {
-      "id": "streamer_fly",
-      "name": "Streamer Fly",
-      "lureType": "fly",
+      "lure_id": "streamer_fly",
+      "lure_name": "Streamer Fly",
+      "lure_type": "fly",
       "rarity": 3,
-      "equipSlot": "lure",
-      "stats": {
-        "biteRate": 40,
-        "lureSuccess": 35,
-        "durability": 14,
-        "precision": 15
-      },
+      "equip_slot": "lure",
+      "bite_rate": 40,
+      "lure_success": 35,
+      "durability": 14,
+      "precision": 15,
       "cost": 1200,
-      "craftingMaterials": [
-        "pike",
-        "pike"
-      ],
-      "craftingTime": 10,
-      "description": "Large fly that imitates small fish"
+      "crafting_material_1": "pike",
+      "crafting_material_2": "pike",
+      "crafting_time": 10,
+      "description": "Large fly that imitates small fish",
+      "unlock_level": 18
     },
     {
-      "id": "basic_popper",
-      "name": "Basic Popper",
-      "lureType": "popper",
+      "lure_id": "basic_popper",
+      "lure_name": "Basic Popper",
+      "lure_type": "popper",
       "rarity": 1,
-      "equipSlot": "lure",
-      "stats": {
-        "biteRate": 22,
-        "lureSuccess": 18,
-        "durability": 7,
-        "precision": 6
-      },
+      "equip_slot": "lure",
+      "bite_rate": 22,
+      "lure_success": 18,
+      "durability": 7,
+      "precision": 6,
       "cost": 400,
-      "craftingMaterials": [
-        "bass",
-        "bass"
-      ],
-      "craftingTime": 3,
-      "description": "Simple surface popper for aggressive fish"
+      "crafting_material_1": "bass",
+      "crafting_material_2": "bass",
+      "crafting_time": 3,
+      "description": "Simple surface popper for aggressive fish",
+      "unlock_level": 2
     },
     {
-      "id": "chugger_popper",
-      "name": "Chugger Popper",
-      "lureType": "popper",
+      "lure_id": "chugger_popper",
+      "lure_name": "Chugger Popper",
+      "lure_type": "popper",
       "rarity": 2,
-      "equipSlot": "lure",
-      "stats": {
-        "biteRate": 28,
-        "lureSuccess": 23,
-        "durability": 11,
-        "precision": 9
-      },
+      "equip_slot": "lure",
+      "bite_rate": 28,
+      "lure_success": 23,
+      "durability": 11,
+      "precision": 9,
       "cost": 600,
-      "craftingMaterials": [
-        "pike",
-        "pike"
-      ],
-      "craftingTime": 5,
-      "description": "Creates loud chugging sounds"
+      "crafting_material_1": "pike",
+      "crafting_material_2": "pike",
+      "crafting_time": 5,
+      "description": "Creates loud chugging sounds",
+      "unlock_level": 7
     },
     {
-      "id": "walker_popper",
-      "name": "Walker Popper",
-      "lureType": "popper",
+      "lure_id": "walker_popper",
+      "lure_name": "Walker Popper",
+      "lure_type": "popper",
       "rarity": 3,
-      "equipSlot": "lure",
-      "stats": {
-        "biteRate": 34,
-        "lureSuccess": 28,
-        "durability": 16,
-        "precision": 13
-      },
+      "equip_slot": "lure",
+      "bite_rate": 34,
+      "lure_success": 28,
+      "durability": 16,
+      "precision": 13,
       "cost": 900,
-      "craftingMaterials": [
-        "salmon",
-        "salmon"
-      ],
-      "craftingTime": 7,
-      "description": "Walks side-to-side on surface"
+      "crafting_material_1": "salmon",
+      "crafting_material_2": "salmon",
+      "crafting_time": 7,
+      "description": "Walks side-to-side on surface",
+      "unlock_level": 14
     },
     {
-      "id": "basic_spoon",
-      "name": "Basic Spoon",
-      "lureType": "spoon",
+      "lure_id": "basic_spoon",
+      "lure_name": "Basic Spoon",
+      "lure_type": "spoon",
       "rarity": 1,
-      "equipSlot": "lure",
-      "stats": {
-        "biteRate": 28,
-        "lureSuccess": 22,
-        "durability": 10,
-        "precision": 8
-      },
+      "equip_slot": "lure",
+      "bite_rate": 28,
+      "lure_success": 22,
+      "durability": 10,
+      "precision": 8,
       "cost": 600,
-      "craftingMaterials": [
-        "salmon",
-        "salmon"
-      ],
-      "craftingTime": 5,
-      "description": "Classic metal spoon with wobbling action"
+      "crafting_material_1": "salmon",
+      "crafting_material_2": "salmon",
+      "crafting_time": 5,
+      "description": "Classic metal spoon with wobbling action",
+      "unlock_level": 4
     },
     {
-      "id": "casting_spoon",
-      "name": "Casting Spoon",
-      "lureType": "spoon",
+      "lure_id": "casting_spoon",
+      "lure_name": "Casting Spoon",
+      "lure_type": "spoon",
       "rarity": 2,
-      "equipSlot": "lure",
-      "stats": {
-        "biteRate": 33,
-        "lureSuccess": 27,
-        "durability": 14,
-        "precision": 11
-      },
+      "equip_slot": "lure",
+      "bite_rate": 33,
+      "lure_success": 27,
+      "durability": 14,
+      "precision": 11,
       "cost": 800,
-      "craftingMaterials": [
-        "tuna",
-        "tuna"
-      ],
-      "craftingTime": 7,
-      "description": "Heavy spoon for long-distance casting"
+      "crafting_material_1": "tuna",
+      "crafting_material_2": "tuna",
+      "crafting_time": 7,
+      "description": "Heavy spoon for long-distance casting",
+      "unlock_level": 9
     },
     {
-      "id": "jigging_spoon",
-      "name": "Jigging Spoon",
-      "lureType": "spoon",
+      "lure_id": "jigging_spoon",
+      "lure_name": "Jigging Spoon",
+      "lure_type": "spoon",
       "rarity": 3,
-      "equipSlot": "lure",
-      "stats": {
-        "biteRate": 38,
-        "lureSuccess": 32,
-        "durability": 18,
-        "precision": 15
-      },
+      "equip_slot": "lure",
+      "bite_rate": 38,
+      "lure_success": 32,
+      "durability": 18,
+      "precision": 15,
       "cost": 1100,
-      "craftingMaterials": [
-        "pike",
-        "pike"
-      ],
-      "craftingTime": 9,
-      "description": "Vertical jigging spoon for deep water"
+      "crafting_material_1": "pike",
+      "crafting_material_2": "pike",
+      "crafting_time": 9,
+      "description": "Vertical jigging spoon for deep water",
+      "unlock_level": 16
     }
   ],
   "lureTypes": [
     {
-      "id": "spinner",
-      "name": "Spinner",
-      "controlScheme": "pulse_tap",
+      "lure_type_id": "spinner",
+      "lure_type_name": "Spinner",
+      "control_scheme": "pulse_tap",
       "description": "Rotating blade creates vibration and flash",
-      "baseAttraction": 20,
-      "preferredDepths": [
-        1,
-        2,
-        3,
-        4
-      ],
-      "effectiveAgainst": [
-        "bass",
-        "pike"
-      ]
+      "base_attraction": 20,
+      "preferred_depth_1": 1,
+      "preferred_depth_2": 2,
+      "preferred_depth_3": 3,
+      "preferred_depth_4": 4,
+      "effective_against_1": "bass",
+      "effective_against_2": "pike",
+      "effective_against_3": "perch"
     },
     {
-      "id": "soft_plastic",
-      "name": "Soft Plastic",
-      "controlScheme": "drag_and_pause",
+      "lure_type_id": "soft_plastic",
+      "lure_type_name": "Soft Plastic",
+      "control_scheme": "drag_and_pause",
       "description": "Flexible lure mimics wounded baitfish",
-      "baseAttraction": 25,
-      "preferredDepths": [
-        3,
-        4,
-        5,
-        6
-      ],
-      "effectiveAgainst": [
-        "bass",
-        "catfish"
-      ]
+      "base_attraction": 25,
+      "preferred_depth_1": 3,
+      "preferred_depth_2": 4,
+      "preferred_depth_3": 5,
+      "preferred_depth_4": 6,
+      "effective_against_1": "bass",
+      "effective_against_2": "catfish",
+      "effective_against_3": "salmon"
     },
     {
-      "id": "fly",
-      "name": "Fly",
-      "controlScheme": "swipe_flick_combo",
+      "lure_type_id": "fly",
+      "lure_type_name": "Fly",
+      "control_scheme": "swipe_flick_combo",
       "description": "Lightweight lure imitates insects",
-      "baseAttraction": 30,
-      "preferredDepths": [
-        1,
-        2
-      ],
-      "effectiveAgainst": [
-        "trout",
-        "salmon"
-      ]
+      "base_attraction": 30,
+      "preferred_depth_1": 1,
+      "preferred_depth_2": 2,
+      "preferred_depth_3": null,
+      "preferred_depth_4": null,
+      "effective_against_1": "trout",
+      "effective_against_2": "salmon",
+      "effective_against_3": null
     },
     {
-      "id": "popper",
-      "name": "Popper",
-      "controlScheme": "tap_and_hold_burst",
+      "lure_type_id": "popper",
+      "lure_type_name": "Popper",
+      "control_scheme": "tap_and_hold_burst",
       "description": "Surface lure creates splashing action",
-      "baseAttraction": 22,
-      "preferredDepths": [
-        1,
-        2
-      ],
-      "effectiveAgainst": [
-        "bass",
-        "pike"
-      ]
+      "base_attraction": 22,
+      "preferred_depth_1": 1,
+      "preferred_depth_2": 2,
+      "preferred_depth_3": null,
+      "preferred_depth_4": null,
+      "effective_against_1": "bass",
+      "effective_against_2": "pike",
+      "effective_against_3": null
     },
     {
-      "id": "spoon",
-      "name": "Spoon",
-      "controlScheme": "circular_trace",
+      "lure_type_id": "spoon",
+      "lure_type_name": "Spoon",
+      "control_scheme": "circular_trace",
       "description": "Metal lure with erratic wobbling action",
-      "baseAttraction": 28,
-      "preferredDepths": [
-        4,
-        5,
-        6,
-        7
-      ],
-      "effectiveAgainst": [
-        "salmon",
-        "tuna"
-      ]
+      "base_attraction": 28,
+      "preferred_depth_1": 4,
+      "preferred_depth_2": 5,
+      "preferred_depth_3": 6,
+      "preferred_depth_4": 7,
+      "effective_against_1": "salmon",
+      "effective_against_2": "tuna",
+      "effective_against_3": "pike"
     }
   ]
 }

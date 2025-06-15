@@ -48,7 +48,15 @@ export default class GameScene extends Phaser.Scene {
         };
     }
 
-    create(data) {
+    async create(data) {
+        console.log('GameScene: CREATE called with data:', data);
+        
+        // Initialize async components in the background
+        this.initializeAsyncComponents(data).catch(error => {
+            console.error('GameScene: Async component initialization failed, but scene will continue:', error);
+        });
+        
+        // Continue with synchronous initialization
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
 
@@ -448,72 +456,7 @@ export default class GameScene extends Phaser.Scene {
             console.warn('GameScene: Dialog system disabled due to initialization error');
         }
 
-        // Initialize Quest Manager for quest system (Priority 2.0)
-        try {
-            console.log('GameScene: Initializing Quest Manager...');
-            
-            // Validate prerequisites
-            if (!this.gameState) {
-                throw new Error('GameState not available for Quest Manager');
-            }
-            
-            // CRITICAL FIX: Only create QuestManager if it doesn't exist in GameState
-            if (this.gameState.questManager) {
-                console.log('GameScene: Using existing QuestManager from GameState');
-                this.questManager = this.gameState.questManager;
-            } else {
-                console.log('GameScene: Creating new QuestManager and storing in GameState');
-                this.questManager = new QuestManager(this);
-                this.gameState.questManager = this.questManager;
-            }
-
-            console.log('GameScene: QuestManager retrieved or created successfully');
-            
-            // Link to dialog manager if available
-            if (this.dialogManager) {
-                this.questManager.dialogManager = this.dialogManager;
-                console.log('GameScene: QuestManager linked to DialogManager');
-            } else {
-                console.warn('GameScene: DialogManager not available, Quest Manager will work with limited functionality');
-            }
-            
-            console.log('GameScene: Quest Manager initialized successfully');
-            
-            // CRITICAL FIX: Only set up quest event listeners if tutorial is NOT completed
-            if (!this.questManager.tutorialQuestsCompleted && !this.questEventListenersDisabled) {
-                console.log('GameScene: ✅ Setting up quest event listeners');
-                this.setupQuestEventListeners();
-                this.questTrackerUI = new QuestTrackerUI(this, this.questManager, 20, 100);
-            } else {
-                console.log('GameScene: 🚫 Tutorial completed or quest listeners disabled - creating QuestTrackerUI with disabled quest processing');
-                this.questTrackerUI = new QuestTrackerUI(this, null, 20, 100);
-            }
-            
-            // Debug quest system status (with error handling)
-            try {
-                if (this.questManager && typeof this.questManager.getDebugStatus === 'function') {
-                    const questStatus = this.questManager.getDebugStatus();
-                    console.log('GameScene: Quest system debug status:', questStatus);
-                } else {
-                    console.log('GameScene: Quest Manager debug status not available');
-                }
-            } catch (debugError) {
-                console.warn('GameScene: Could not get quest debug status:', debugError.message);
-            }
-            
-            // Set up RenJs Quest Integration (Priority 2.0)
-            this.setupRenJsQuestIntegration();
-            
-            // Store quest manager in gameState for access by other systems
-            this.gameState.questManager = this.questManager;
-            
-        } catch (error) {
-            console.error('GameScene: Error initializing Quest Manager:', error);
-            console.error('GameScene: Quest Manager error details:', error.message);
-            this.questManager = null;
-            
-            console.warn('GameScene: Quest Manager disabled due to initialization error');
-        }
+        // Quest Manager will be initialized asynchronously in initializeAsyncComponents
 
         // Complete RenJs Save Integration (Component 3) - after all managers are initialized
         try {
@@ -668,6 +611,10 @@ export default class GameScene extends Phaser.Scene {
                 event.preventDefault();
                 if (this.questTrackerUI) {
                     this.questTrackerUI.toggleVisibility();
+                } else {
+                    console.log('GameScene: Quest Tracker UI not yet initialized, attempting to initialize...');
+                    // Fallback initialization if async hasn't completed
+                    this.initializeQuestTrackerUIFallback();
                 }
             }
         });
@@ -3198,6 +3145,128 @@ export default class GameScene extends Phaser.Scene {
             
         } catch (error) {
             console.error('GameScene: Error creating quest completion message:', error);
+        }
+    }
+
+    /**
+     * Initialize async components in the background without blocking scene creation
+     */
+    async initializeAsyncComponents(data) {
+        try {
+            console.log('GameScene: Starting async component initialization...');
+            
+            // Initialize Quest Manager asynchronously
+            await this.initializeQuestManagerAsync();
+            
+            console.log('GameScene: Async component initialization completed');
+        } catch (error) {
+            console.error('GameScene: Error in async component initialization:', error);
+        }
+    }
+    
+    /**
+     * Initialize QuestManager asynchronously
+     */
+    async initializeQuestManagerAsync() {
+        try {
+            console.log('GameScene: Initializing Quest Manager asynchronously...');
+            
+            // CRITICAL FIX: Ensure gameState is available before proceeding
+            if (!this.gameState) {
+                console.log('GameScene: GameState not available, initializing...');
+                this.gameState = GameState.getInstance();
+                if (!this.gameState) {
+                    console.error('GameScene: Failed to get GameState instance');
+                    return;
+                }
+                console.log('GameScene: GameState initialized successfully');
+            }
+            
+            if (this.gameState.questManager) {
+                console.log('GameScene: Using existing QuestManager from GameState');
+                this.questManager = this.gameState.questManager;
+                
+                // Update scene reference
+                this.questManager.scene = this;
+                
+                // Ensure it's initialized
+                if (!this.questManager.isInitialized) {
+                    console.log('GameScene: QuestManager not initialized, initializing now...');
+                    const initResult = await this.questManager.initialize();
+                    if (initResult) {
+                        console.log('GameScene: ✅ QuestManager initialization completed successfully');
+                    } else {
+                        console.error('GameScene: ❌ QuestManager initialization failed');
+                        return;
+                    }
+                }
+            } else {
+                console.log('GameScene: Creating new QuestManager and storing in GameState');
+                this.questManager = new QuestManager(this);
+                this.gameState.questManager = this.questManager;
+                
+                // Initialize the QuestManager asynchronously
+                console.log('GameScene: Initializing QuestManager asynchronously...');
+                const initResult = await this.questManager.initialize();
+                if (initResult) {
+                    console.log('GameScene: ✅ QuestManager initialization completed successfully');
+                } else {
+                    console.error('GameScene: ❌ QuestManager initialization failed');
+                    return;
+                }
+            }
+            
+            // Set up quest event listeners after QuestManager is ready
+            this.setupQuestEventListeners();
+            
+            // Initialize Quest Tracker UI after QuestManager is ready
+            try {
+                console.log('GameScene: Initializing Quest Tracker UI...');
+                const { QuestTrackerUI } = await import('../ui/QuestTrackerUI.js');
+                this.questTrackerUI = new QuestTrackerUI(this, this.questManager);
+                console.log('GameScene: Quest Tracker UI initialized successfully');
+            } catch (trackerError) {
+                console.error('GameScene: Error initializing Quest Tracker UI:', trackerError);
+                this.questTrackerUI = null;
+            }
+            
+            console.log('GameScene: Quest Manager initialized successfully');
+            
+        } catch (error) {
+            console.error('GameScene: Error initializing Quest Manager:', error);
+            console.error('GameScene: Error stack:', error.stack);
+            this.questManager = null;
+        }
+    }
+
+    /**
+     * Fallback method to initialize Quest Tracker UI if async initialization hasn't completed
+     */
+    async initializeQuestTrackerUIFallback() {
+        try {
+            console.log('GameScene: Attempting fallback Quest Tracker UI initialization...');
+            
+            // Wait for QuestManager if it's still initializing
+            if (!this.questManager && this.gameState?.questManager) {
+                this.questManager = this.gameState.questManager;
+                console.log('GameScene: Retrieved QuestManager from GameState');
+            }
+            
+            if (!this.questManager) {
+                console.warn('GameScene: QuestManager not available for Quest Tracker UI fallback');
+                return;
+            }
+            
+            // Initialize Quest Tracker UI
+            const { QuestTrackerUI } = await import('../ui/QuestTrackerUI.js');
+            this.questTrackerUI = new QuestTrackerUI(this, this.questManager);
+            console.log('GameScene: Quest Tracker UI fallback initialization successful');
+            
+            // Now toggle it since user requested it
+            this.questTrackerUI.toggleVisibility();
+            
+        } catch (error) {
+            console.error('GameScene: Quest Tracker UI fallback initialization failed:', error);
         }
     }
 } 

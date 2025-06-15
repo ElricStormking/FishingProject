@@ -1,0 +1,131 @@
+# Story03: Meeting Your First Companion - RenJs Version
+# Enhanced visual novel style dialog for meeting Mia
+
+setup:
+  - "Initialize Story03 quest system"
+  - "{{LuxuryAnglerGame.executeCommand('startQuest', 'story_003_companion_intro')}}"
+
+scenes:
+  # Main story scene - Meeting Mia
+  story03_start:
+    background: "yacht_deck"
+    music: "gentle_ocean_breeze"
+    text: "As you finish celebrating your first successful catch, you notice someone approaching from the cabin..."
+    jump: "mia_introduction"
+
+  mia_introduction:
+    character: "mia"
+    portrait: "npc-assistant-1"
+    expression: "cheerful"
+    text: "Hi there! I'm Mia, your fishing assistant. I've been waiting to meet you!"
+    action: "{{LuxuryAnglerGame.executeCommand('unlockAchievement', 'first_companion_meeting')}}"
+    jump: "mia_enthusiasm"
+
+  mia_enthusiasm:
+    character: "mia"
+    portrait: "npc-assistant-1"
+    expression: "excited"
+    text: "I heard you're new to luxury angling. I'd love to help you learn the ropes!"
+    
+    choices:
+      - text: "That sounds great! I could use all the help I can get."
+        id: "story03_enthusiastic"
+        action: "{{LuxuryAnglerGame.increaseRomance('mia', 5)}}"
+        jump: "mia_enthusiastic_response"
+        
+      - text: "Thanks, but I prefer to learn on my own."
+        id: "story03_independent"
+        action: "{{LuxuryAnglerGame.increaseRomance('mia', -2)}}"
+        jump: "mia_independent_response"
+        
+      - text: "Tell me more about yourself first."
+        id: "story03_curious"
+        action: "{{LuxuryAnglerGame.increaseRomance('mia', 3)}}"
+        jump: "mia_about_herself"
+
+  mia_enthusiastic_response:
+    character: "mia"
+    portrait: "npc-assistant-1"
+    expression: "happy"
+    text: "Wonderful! I can already tell we're going to be great friends. There's so much I can teach you!"
+    action: "{{LuxuryAnglerGame.executeCommand('unlockQuest', 'npc_mia_001')}}"
+    jump: "story03_completion"
+
+  mia_independent_response:
+    character: "mia"
+    portrait: "npc-assistant-1"
+    expression: "understanding"
+    text: "I understand. Independence is admirable! But remember, I'm here if you ever need help."
+    jump: "story03_completion"
+
+  mia_about_herself:
+    character: "mia"
+    portrait: "npc-assistant-1"
+    expression: "thoughtful"
+    text: "Well, I've been studying marine biology for years, and I absolutely love helping new anglers discover the joy of fishing!"
+    
+    choices:
+      - text: "That's fascinating! I'd love to learn from you."
+        action: "{{LuxuryAnglerGame.increaseRomance('mia', 7)}}"
+        jump: "mia_teaching_offer"
+        
+      - text: "Marine biology sounds complicated."
+        action: "{{LuxuryAnglerGame.increaseRomance('mia', 1)}}"
+        jump: "mia_reassurance"
+
+  mia_teaching_offer:
+    character: "mia"
+    portrait: "npc-assistant-1"
+    expression: "excited"
+    text: "Really? That makes me so happy! I promise to make learning fun and easy for you."
+    action: "{{LuxuryAnglerGame.executeCommand('unlockQuest', 'npc_mia_001')}}"
+    jump: "story03_completion"
+
+  mia_reassurance:
+    character: "mia"
+    portrait: "npc-assistant-1"
+    expression: "gentle"
+    text: "Don't worry! I'll explain everything in simple terms. Fishing should be enjoyable, not overwhelming."
+    jump: "story03_completion"
+
+  story03_completion:
+    character: "mia"
+    portrait: "npc-assistant-1"
+    expression: "cheerful"
+    text: "I'm so excited to be part of your fishing journey! Let's make some wonderful memories together."
+    action: "{{LuxuryAnglerGame.executeCommand('updateQuestObjective', 'story_003_companion_intro', 'meet_mia')}}"
+    jump: "story03_end"
+
+  story03_end:
+    background: "yacht_deck_sunset"
+    text: "As the sun begins to set, you feel grateful for this new friendship and excited about the adventures ahead..."
+    action: "{{LuxuryAnglerGame.executeCommand('completeQuest', 'story_003_companion_intro')}}"
+
+# Conditional scenes based on player choices
+alternate_scenes:
+  # If player has high romance with Mia already
+  existing_friendship:
+    condition: "{{LuxuryAnglerGame.getRomanceLevel('mia') >= 10}}"
+    character: "mia"
+    text: "It's so nice to see you again! Our friendship means a lot to me."
+    
+  # If player completed tutorial perfectly
+  tutorial_master:
+    condition: "{{LuxuryAnglerGame.getQuestProgress('story_001_tutorial') === 'perfect'}}"
+    character: "mia"
+    text: "I heard about your amazing tutorial performance! You're a natural angler."
+
+# Enhanced visual novel features
+visual_effects:
+  character_animations:
+    mia_entrance: "slide_in_right"
+    mia_excitement: "bounce_gentle"
+    mia_thoughtful: "fade_to_contemplative"
+    
+  background_transitions:
+    deck_to_sunset: "fade_slow"
+    
+  sound_effects:
+    footsteps: "soft_deck_steps"
+    ocean_ambience: "gentle_waves"
+    success_chime: "quest_complete_bell" 

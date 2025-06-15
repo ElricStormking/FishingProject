@@ -27,7 +27,7 @@ export default class DialogManager {
                 romanceMeter: 0,
                 maxRomance: 100,
                 relationship: 'stranger',
-                dialogScript: 'sample_assistant.md',
+                dialogScript: 'mia_romance.md',
                 description: 'A cheerful and helpful fishing guide who loves spending time by the water. Always ready to help with a bright smile!',
                 personality: 'Friendly, enthusiastic, and knowledgeable about fishing techniques',
                 specialties: ['Beginner fishing tips', 'Equipment recommendations', 'Local fishing spots']
@@ -64,12 +64,52 @@ export default class DialogManager {
     }
 
     /**
-     * Get NPC data by ID
+     * Get NPC data by ID with fallback creation
      * @param {string} npcId - The ID of the NPC
      * @returns {Object} NPC data object
      */
     getNPC(npcId) {
-        return this.npcs.get(npcId);
+        let npc = this.npcs.get(npcId);
+        
+        // If NPC doesn't exist, create a placeholder
+        if (!npc) {
+            console.warn(`DialogManager: NPC '${npcId}' not found, creating placeholder`);
+            npc = this.createPlaceholderNPC(npcId);
+            this.npcs.set(npcId, npc);
+        }
+        
+        return npc;
+    }
+
+    /**
+     * Create a placeholder NPC for missing NPCs
+     * @param {string} npcId - The ID of the missing NPC
+     * @returns {Object} Placeholder NPC data
+     */
+    createPlaceholderNPC(npcId) {
+        const placeholderNames = {
+            'captain': 'Captain Rodriguez',
+            'fisherman': 'Old Fisherman Joe',
+            'merchant': 'Marina Merchant',
+            'guide': 'Fishing Guide Sam',
+            'instructor': 'Instructor Maria'
+        };
+        
+        const name = placeholderNames[npcId] || `${npcId.charAt(0).toUpperCase() + npcId.slice(1)} (Placeholder)`;
+        
+        return {
+            id: npcId,
+            name: name,
+            portrait: 'placeholder-npc',
+            romanceMeter: 0,
+            maxRomance: 100,
+            relationship: 'stranger',
+            dialogScript: 'placeholder_dialog.md',
+            description: `A placeholder character for ${name}. This NPC is not fully implemented yet.`,
+            personality: 'Friendly and helpful, but still being developed',
+            specialties: ['General assistance', 'Placeholder interactions'],
+            isPlaceholder: true
+        };
     }
 
     /**
@@ -85,8 +125,9 @@ export default class DialogManager {
      * Start a dialog with an NPC
      * @param {string} npcId - The ID of the NPC to dialog with
      * @param {string} callingScene - The scene that initiated the dialog
+     * @param {string} specificDialog - Optional specific dialog ID to use
      */
-    startDialog(npcId, callingScene = 'GameScene') {
+    startDialog(npcId, callingScene = 'GameScene', specificDialog = null) {
         try {
             // Validate inputs
             if (!npcId || typeof npcId !== 'string') {
@@ -96,7 +137,7 @@ export default class DialogManager {
 
             const npc = this.getNPC(npcId);
             if (!npc) {
-                console.error(`DialogManager: NPC with ID '${npcId}' not found`);
+                console.error(`DialogManager: Failed to get or create NPC with ID '${npcId}'`);
                 return false;
             }
 
@@ -107,6 +148,31 @@ export default class DialogManager {
             }
 
             console.log(`DialogManager: Starting dialog with ${npc.name} from ${callingScene}`);
+            
+            // CRITICAL FIX: Handle placeholder NPCs with Phaser dialog
+            if (npc.isPlaceholder) {
+                console.log(`DialogManager: NPC ${npcId} is a placeholder, showing Phaser dialog`);
+                return this.showPlaceholderDialog(npc, callingScene, specificDialog);
+            }
+            
+            // Determine dialog script to use
+            let dialogScript = npc.dialogScript;
+            let useRenJs = false;
+            
+            // Check for specific story dialogs that should use RenJs
+            if (specificDialog) {
+                if (specificDialog === 'Story03' || specificDialog === 'story_003_companion_intro') {
+                    dialogScript = 'story03_mia_meeting.yaml';
+                    useRenJs = true;
+                    console.log('DialogManager: Using RenJs format for Story03');
+                }
+                // Add more story dialogs here as needed
+                else if (specificDialog.startsWith('Story') && parseInt(specificDialog.slice(5)) >= 3) {
+                    // Use RenJs for Story03 and above
+                    useRenJs = true;
+                    console.log(`DialogManager: Using RenJs format for ${specificDialog}`);
+                }
+            }
             
             // Pause the main GameScene to prevent background updates
             if (this.gameScene.scene.isSleeping('GameScene')) {
@@ -122,16 +188,30 @@ export default class DialogManager {
 
             // Start the dialog scene with error handling
             try {
-                this.gameScene.scene.launch('DialogScene', {
-                    npcId: npcId, // Use npcId instead of npc for consistency
-                    script: npc.dialogScript,
+                const dialogData = {
+                    npcId: npcId,
+                    script: dialogScript,
                     callingScene: callingScene,
-                    dialogManager: this // Pass DialogManager reference
-                });
+                    dialogManager: this,
+                    useRenJs: useRenJs,
+                    specificDialog: specificDialog
+                };
+                
+                if (useRenJs) {
+                    // Launch RenJs-compatible dialog scene
+                    console.log('DialogManager: Launching RenJs dialog scene');
+                    this.gameScene.scene.launch('DialogScene', dialogData);
+                } else {
+                    // Launch standard dialog scene
+                    this.gameScene.scene.launch('DialogScene', dialogData);
+                }
             } catch (sceneError) {
                 console.error('DialogManager: Error launching DialogScene:', sceneError);
                 this.activeDialogs.delete(npcId); // Clean up on error
-                return false;
+                
+                // Fallback to placeholder dialog
+                console.log('DialogManager: Falling back to placeholder dialog due to scene error');
+                return this.showPlaceholderDialog(npc, callingScene, specificDialog);
             }
 
             // Set up event listeners for this dialog
@@ -141,8 +221,175 @@ export default class DialogManager {
             
         } catch (error) {
             console.error('DialogManager: Error in startDialog:', error);
+            
+            // Try to show placeholder dialog as final fallback
+            try {
+                const npc = this.getNPC(npcId);
+                if (npc) {
+                    return this.showPlaceholderDialog(npc, callingScene, specificDialog);
+                }
+            } catch (fallbackError) {
+                console.error('DialogManager: Fallback placeholder dialog also failed:', fallbackError);
+            }
+            
             return false;
         }
+    }
+
+    /**
+     * Show a Phaser-based placeholder dialog for missing NPCs or dialog errors
+     * @param {Object} npc - NPC data
+     * @param {string} callingScene - The calling scene name
+     * @param {string} specificDialog - Optional specific dialog ID
+     */
+    showPlaceholderDialog(npc, callingScene = 'GameScene', specificDialog = null) {
+        try {
+            console.log(`DialogManager: Creating placeholder dialog for ${npc.name}`);
+            
+            const scene = this.gameScene;
+            const width = scene.cameras.main.width;
+            const height = scene.cameras.main.height;
+            
+            // Create overlay container
+            const overlay = scene.add.container(0, 0);
+            overlay.setDepth(10000); // Ensure it's on top
+            
+            // Background
+            const bg = scene.add.rectangle(0, 0, width, height, 0x000000, 0.7);
+            bg.setOrigin(0);
+            bg.setInteractive();
+            overlay.add(bg);
+            
+            // Dialog panel
+            const panelWidth = Math.min(600, width - 40);
+            const panelHeight = Math.min(400, height - 40);
+            const centerX = width / 2;
+            const centerY = height / 2;
+            
+            const panel = scene.add.rectangle(centerX, centerY, panelWidth, panelHeight, 0x2c3e50, 0.95);
+            panel.setStrokeStyle(3, 0x3498db);
+            overlay.add(panel);
+            
+            // NPC name
+            const nameText = scene.add.text(centerX, centerY - panelHeight/2 + 40, npc.name, {
+                fontSize: '24px',
+                fill: '#3498db',
+                fontStyle: 'bold',
+                fontFamily: 'Arial'
+            }).setOrigin(0.5);
+            overlay.add(nameText);
+            
+            // Dialog content based on context
+            let dialogContent = this.getPlaceholderDialogContent(npc, specificDialog);
+            
+            const contentText = scene.add.text(centerX, centerY - 50, dialogContent, {
+                fontSize: '16px',
+                fill: '#FFFFFF',
+                fontFamily: 'Arial',
+                align: 'center',
+                wordWrap: { width: panelWidth - 60 }
+            }).setOrigin(0.5);
+            overlay.add(contentText);
+            
+            // Character description
+            if (npc.description) {
+                const descText = scene.add.text(centerX, centerY + 50, npc.description, {
+                    fontSize: '14px',
+                    fill: '#CCCCCC',
+                    fontFamily: 'Arial',
+                    align: 'center',
+                    wordWrap: { width: panelWidth - 60 }
+                }).setOrigin(0.5);
+                overlay.add(descText);
+            }
+            
+            // Close button
+            const closeButton = scene.add.rectangle(centerX, centerY + panelHeight/2 - 40, 120, 35, 0x3498db, 0.9);
+            closeButton.setStrokeStyle(2, 0xFFFFFF);
+            const closeText = scene.add.text(centerX, centerY + panelHeight/2 - 40, 'Close', {
+                fontSize: '16px',
+                fill: '#FFFFFF',
+                fontStyle: 'bold',
+                fontFamily: 'Arial'
+            }).setOrigin(0.5);
+            
+            overlay.add(closeButton);
+            overlay.add(closeText);
+            
+            // Make interactive
+            closeButton.setInteractive({ useHandCursor: true });
+            closeButton.on('pointerdown', () => {
+                console.log('DialogManager: Closing placeholder dialog');
+                overlay.destroy();
+                this.endDialog(npc.id, callingScene);
+            });
+            
+            // Also allow clicking background to close
+            bg.on('pointerdown', () => {
+                console.log('DialogManager: Closing placeholder dialog (background click)');
+                overlay.destroy();
+                this.endDialog(npc.id, callingScene);
+            });
+            
+            // Animate in
+            overlay.setAlpha(0);
+            scene.tweens.add({
+                targets: overlay,
+                alpha: 1,
+                duration: 300,
+                ease: 'Power2'
+            });
+            
+            // Add hover effects to close button
+            closeButton.on('pointerover', () => {
+                closeButton.setFillStyle(0x5dade2);
+                closeText.setScale(1.05);
+            });
+            
+            closeButton.on('pointerout', () => {
+                closeButton.setFillStyle(0x3498db);
+                closeText.setScale(1.0);
+            });
+            
+            // Add to active dialogs
+            this.activeDialogs.add(npc.id);
+            
+            console.log('DialogManager: Placeholder dialog created successfully');
+            return true;
+            
+        } catch (error) {
+            console.error('DialogManager: Error creating placeholder dialog:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Get appropriate dialog content for placeholder NPCs
+     * @param {Object} npc - NPC data
+     * @param {string} specificDialog - Optional specific dialog ID
+     * @returns {string} Dialog content
+     */
+    getPlaceholderDialogContent(npc, specificDialog) {
+        if (specificDialog) {
+            const storyDialogs = {
+                'Story02': "\"Welcome to the waters, young angler! I see great potential in you. Keep practicing your fishing skills and you'll become a master in no time!\"",
+                'Story03': "\"Ah, I see you've met one of our fishing assistants! They're wonderful guides who can teach you advanced techniques. Listen to their advice carefully.\"",
+                'Story04': "\"The ocean holds many secrets, and you're just beginning to discover them. Each new area you explore will bring new challenges and rewards.\"",
+                'Story05': "\"I've heard tales of legendary fish in these waters. With your growing skills, you might just be the one to catch them!\"",
+                'Story06': "\"You've come far, angler. The biggest challenges still await, but I have faith in your abilities.\""
+            };
+            
+            return storyDialogs[specificDialog] || `"This is a placeholder dialog for ${specificDialog}. The full story content is still being developed."`;
+        }
+        
+        const genericDialogs = [
+            `"Hello there! I'm ${npc.name}. I'm still getting settled in around here, but I'm happy to meet you!"`,
+            `"Welcome to our fishing community! I'm ${npc.name}, and while I'm still learning the ropes myself, I'm here to help however I can."`,
+            `"Greetings, angler! ${npc.name} at your service. I may be new here, but I'm eager to assist with your fishing adventures!"`,
+            `"Nice to meet you! I'm ${npc.name}. I'm still being introduced to the area, but I look forward to getting to know you better."`
+        ];
+        
+        return genericDialogs[Math.floor(Math.random() * genericDialogs.length)];
     }
 
     /**
@@ -159,6 +406,7 @@ export default class DialogManager {
             const timerScene = sceneManager.get('DialogScene') || this.gameScene;
 
             // Wait a bit for DialogScene to be fully initialized
+            if (timerScene && timerScene.time) {
             timerScene.time.delayedCall(100, () => {
                 const dialogScene = sceneManager.get('DialogScene');
                 if (!dialogScene) {
@@ -172,7 +420,7 @@ export default class DialogManager {
                     try {
                         this.updateRomanceMeter(data);
                     } catch (error) {
-                        console.error('DialogManager: Error updating romance meter:', error);
+                            console.warn('DialogManager: Romance meter update failed:', error.message);
                     }
                 });
 
@@ -181,7 +429,7 @@ export default class DialogManager {
                     try {
                         this.updateQuest(data);
                     } catch (error) {
-                        console.error('DialogManager: Error updating quest:', error);
+                            console.warn('DialogManager: Quest update failed:', error.message);
                     }
                 });
 
@@ -190,7 +438,7 @@ export default class DialogManager {
                     try {
                         this.unlockAchievement(data);
                     } catch (error) {
-                        console.error('DialogManager: Error unlocking achievement:', error);
+                            console.warn('DialogManager: Achievement unlock failed:', error.message);
                     }
                 });
 
@@ -199,23 +447,18 @@ export default class DialogManager {
                     try {
                         this.updateInventory(data);
                     } catch (error) {
-                        console.error('DialogManager: Error updating inventory:', error);
+                            console.warn('DialogManager: Inventory update failed:', error.message);
                     }
                 });
 
                 // Listen for dialog end
-                dialogScene.events.once('dialog-ended', () => {
-                    try {
+                    dialogScene.events.on('dialog-ended', (data) => {
                         this.endDialog(npcId, callingScene);
-                    } catch (error) {
-                        console.error('DialogManager: Error ending dialog:', error);
-                    }
+                    });
                 });
-                
-                console.log(`DialogManager: Event listeners set up for ${npcId} dialog`);
-            });
+            }
         } catch (error) {
-            console.error('DialogManager: Error setting up dialog listeners:', error);
+            console.warn('DialogManager: Error setting up dialog listeners:', error.message);
         }
     }
 
@@ -224,6 +467,7 @@ export default class DialogManager {
      * @param {Object} data - Romance meter update data
      */
     updateRomanceMeter(data) {
+        try {
         const { npc: npcId, amount } = data;
         const npc = this.getNPC(npcId);
         
@@ -236,21 +480,29 @@ export default class DialogManager {
         const oldMeter = npc.romanceMeter;
         npc.romanceMeter = Math.max(0, Math.min(npc.maxRomance, npc.romanceMeter + amount));
         
-        console.log(`${npc.name} romance meter: ${oldMeter} -> ${npc.romanceMeter}`);
+            console.log(`${npc.name} romance meter: ${oldMeter} -> ${npc.romanceMeter} (+${amount})`);
 
         // Check for relationship level changes
         this.checkRelationshipLevelUp(npc, oldMeter);
 
-        // Save the updated data
+            // Save the updated data immediately
         this.saveNPCData(npcId);
 
         // Emit event for UI updates
+            if (this.gameScene && this.gameScene.events) {
         this.gameScene.events.emit('romance-meter-updated', {
             npcId: npcId,
             oldValue: oldMeter,
             newValue: npc.romanceMeter,
             maxValue: npc.maxRomance
         });
+            }
+            
+            console.log(`DialogManager: Romance meter update completed for ${npc.name}`);
+        } catch (error) {
+            console.error('DialogManager: Error updating romance meter:', error);
+            console.error('DialogManager: Romance meter data:', data);
+        }
     }
 
     /**

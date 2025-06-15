@@ -1,0 +1,22 @@
+stat,data_type,description,min_value,category
+castAccuracy,integer,Improves casting precision,0,fishing
+tensionStability,integer,Reduces line tension fluctuation,0,fishing
+rareFishChance,integer,Increases chance of rare fish,0,fishing
+castingRange,integer,Increases maximum casting distance,0,fishing
+reelSpeed,integer,Increases reeling speed,0,fishing
+struggleResistance,integer,Reduces fish struggle effectiveness,0,fishing
+biteRate,integer,Increases fish bite frequency,0,lure
+lureSuccess,integer,Improves lure effectiveness,0,lure
+lureDurability,integer,Increases lure durability,0,lure
+lurePrecision,integer,Improves lure control precision,0,lure
+sunProtection,integer,Protects from sun damage,0,clothing
+luck,integer,General luck bonus,0,general
+comfort,integer,Improves comfort and stamina,0,clothing
+storage,integer,Increases inventory capacity,0,boat
+waterResistant,integer,Resistance to water damage,0,clothing
+mobility,integer,Improves movement speed,0,boat
+deepWaterAccess,integer,Allows access to deeper waters,0,boat
+fishingBonus,integer,General fishing effectiveness bonus,0,general
+luckBonus,integer,Additional luck bonus,0,general
+experienceBonus,integer,Increases experience gain,0,general
+nightFishing,integer,Enables or improves night fishing,0,fishing 

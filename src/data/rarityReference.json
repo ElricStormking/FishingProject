@@ -1,58 +1,58 @@
 {
-  "rarityLevels": [
+  "rarityReference": [
     {
-      "level": 1,
-      "name": "Common",
-      "color": "#8C7853",
+      "rarity_level": 1,
+      "rarity_name": "Common",
+      "rarity_color": "#8C7853",
       "description": "Basic items and fish",
-      "coinMultiplier": 1,
-      "xpMultiplier": 1,
-      "spawnChanceModifier": 1
+      "coin_multiplier": 1,
+      "xp_multiplier": 1,
+      "spawn_chance_modifier": 1
     },
     {
-      "level": 2,
-      "name": "Uncommon",
-      "color": "#FFFFFF",
+      "rarity_level": 2,
+      "rarity_name": "Uncommon",
+      "rarity_color": "#FFFFFF",
       "description": "Slightly better than common",
-      "coinMultiplier": 1.5,
-      "xpMultiplier": 1.5,
-      "spawnChanceModifier": 0.7
+      "coin_multiplier": 1.5,
+      "xp_multiplier": 1.5,
+      "spawn_chance_modifier": 0.7
     },
     {
-      "level": 3,
-      "name": "Rare",
-      "color": "#1EFF00",
+      "rarity_level": 3,
+      "rarity_name": "Rare",
+      "rarity_color": "#1EFF00",
       "description": "Notable items and fish",
-      "coinMultiplier": 2,
-      "xpMultiplier": 2,
-      "spawnChanceModifier": 0.4
+      "coin_multiplier": 2,
+      "xp_multiplier": 2,
+      "spawn_chance_modifier": 0.4
     },
     {
-      "level": 4,
-      "name": "Epic",
-      "color": "#0070DD",
+      "rarity_level": 4,
+      "rarity_name": "Epic",
+      "rarity_color": "#0070DD",
       "description": "High-quality items and fish",
-      "coinMultiplier": 3,
-      "xpMultiplier": 3,
-      "spawnChanceModifier": 0.2
+      "coin_multiplier": 3,
+      "xp_multiplier": 3,
+      "spawn_chance_modifier": 0.2
     },
     {
-      "level": 5,
-      "name": "Legendary",
-      "color": "#A335EE",
+      "rarity_level": 5,
+      "rarity_name": "Legendary",
+      "rarity_color": "#A335EE",
       "description": "Exceptional items and fish",
-      "coinMultiplier": 5,
-      "xpMultiplier": 5,
-      "spawnChanceModifier": 0.1
+      "coin_multiplier": 5,
+      "xp_multiplier": 5,
+      "spawn_chance_modifier": 0.1
     },
     {
-      "level": 6,
-      "name": "Mythic",
-      "color": "#FF8000",
+      "rarity_level": 6,
+      "rarity_name": "Mythic",
+      "rarity_color": "#FF8000",
       "description": "Ultimate tier items and fish",
-      "coinMultiplier": 10,
-      "xpMultiplier": 10,
-      "spawnChanceModifier": 0.05
+      "coin_multiplier": 10,
+      "xp_multiplier": 10,
+      "spawn_chance_modifier": 0.05
     }
   ]
 }

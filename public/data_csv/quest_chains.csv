@@ -1,0 +1,3 @@
+chain_id,name,description,category,quest_ids,chain_reward_coins,chain_reward_experience,chain_reward_items,chain_reward_achievements,chain_reward_romance_mia,chain_reward_romance_sophie,chain_reward_romance_luna,chain_reward_title
+story_main_chain,Main Story,The main storyline of Luxury Angler,story,story_001_tutorial|story_002_first_companion,1000,500,story_completion_trophy,story_complete,0,0,0,Story Master
+npc_introduction_chain,Meeting the Crew,Get to know all the fishing companions,npc,mia_quest_001|sophie_quest_001|luna_quest_001,1500,750,friendship_trophy,crew_friend,15,15,15,Friend of All 

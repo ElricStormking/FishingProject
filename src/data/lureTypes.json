@@ -1,88 +1,74 @@
 {
   "lureTypes": [
     {
-      "id": "spinner",
-      "name": "Spinner",
-      "controlScheme": "pulse_tap",
+      "lure_type_id": "spinner",
+      "lure_type_name": "Spinner",
+      "control_scheme": "pulse_tap",
       "description": "Rotating blade creates vibration and flash",
-      "baseAttraction": 20,
-      "preferredDepths": [
-        1,
-        2,
-        3,
-        4
-      ],
-      "effectiveAgainst": [
-        "bass",
-        "pike",
-        "perch"
-      ]
+      "base_attraction": 20,
+      "preferred_depth_1": 1,
+      "preferred_depth_2": 2,
+      "preferred_depth_3": 3,
+      "preferred_depth_4": 4,
+      "effective_against_1": "bass",
+      "effective_against_2": "pike",
+      "effective_against_3": "perch"
     },
     {
-      "id": "soft_plastic",
-      "name": "Soft Plastic",
-      "controlScheme": "drag_and_pause",
+      "lure_type_id": "soft_plastic",
+      "lure_type_name": "Soft Plastic",
+      "control_scheme": "drag_and_pause",
       "description": "Flexible lure mimics wounded baitfish",
-      "baseAttraction": 25,
-      "preferredDepths": [
-        3,
-        4,
-        5,
-        6
-      ],
-      "effectiveAgainst": [
-        "bass",
-        "catfish",
-        "salmon"
-      ]
+      "base_attraction": 25,
+      "preferred_depth_1": 3,
+      "preferred_depth_2": 4,
+      "preferred_depth_3": 5,
+      "preferred_depth_4": 6,
+      "effective_against_1": "bass",
+      "effective_against_2": "catfish",
+      "effective_against_3": "salmon"
     },
     {
-      "id": "fly",
-      "name": "Fly",
-      "controlScheme": "swipe_flick_combo",
+      "lure_type_id": "fly",
+      "lure_type_name": "Fly",
+      "control_scheme": "swipe_flick_combo",
       "description": "Lightweight lure imitates insects",
-      "baseAttraction": 30,
-      "preferredDepths": [
-        1,
-        2
-      ],
-      "effectiveAgainst": [
-        "trout",
-        "salmon"
-      ]
+      "base_attraction": 30,
+      "preferred_depth_1": 1,
+      "preferred_depth_2": 2,
+      "preferred_depth_3": null,
+      "preferred_depth_4": null,
+      "effective_against_1": "trout",
+      "effective_against_2": "salmon",
+      "effective_against_3": null
     },
     {
-      "id": "popper",
-      "name": "Popper",
-      "controlScheme": "tap_and_hold_burst",
+      "lure_type_id": "popper",
+      "lure_type_name": "Popper",
+      "control_scheme": "tap_and_hold_burst",
       "description": "Surface lure creates splashing action",
-      "baseAttraction": 22,
-      "preferredDepths": [
-        1,
-        2
-      ],
-      "effectiveAgainst": [
-        "bass",
-        "pike"
-      ]
+      "base_attraction": 22,
+      "preferred_depth_1": 1,
+      "preferred_depth_2": 2,
+      "preferred_depth_3": null,
+      "preferred_depth_4": null,
+      "effective_against_1": "bass",
+      "effective_against_2": "pike",
+      "effective_against_3": null
     },
     {
-      "id": "spoon",
-      "name": "Spoon",
-      "controlScheme": "circular_trace",
+      "lure_type_id": "spoon",
+      "lure_type_name": "Spoon",
+      "control_scheme": "circular_trace",
       "description": "Metal lure with erratic wobbling action",
-      "baseAttraction": 28,
-      "preferredDepths": [
-        4,
-        5,
-        6,
-        7
-      ],
-      "effectiveAgainst": [
-        "salmon",
-        "tuna",
-        "pike"
-      ]
+      "base_attraction": 28,
+      "preferred_depth_1": 4,
+      "preferred_depth_2": 5,
+      "preferred_depth_3": 6,
+      "preferred_depth_4": 7,
+      "effective_against_1": "salmon",
+      "effective_against_2": "tuna",
+      "effective_against_3": "pike"
     }
   ]
 }

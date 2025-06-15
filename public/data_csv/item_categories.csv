@@ -1,0 +1,11 @@
+category,type,stackable,equip_slot,max_equipped,required_properties,optional_properties
+rods,equipment,false,rod,1,"id,name,rarity,stats,description,unlockLevel","cost,craftingMaterials,craftingTime,durability,condition"
+lures,equipment,true,lure,1,"id,name,type,rarity,description,unlockLevel","cost,craftingMaterials,craftingTime,quantity,durability,condition"
+bait,consumable,true,bait,1,"id,name,rarity,description","cost,quantity,effectiveness,duration"
+boats,equipment,false,boat,1,"id,name,rarity,stats,description,unlockLevel","cost,craftingMaterials,craftingTime,durability,condition"
+clothing,equipment,false,clothing,3,"id,name,equipSlot,rarity,stats,description,unlockLevel","cost,craftingMaterials,craftingTime,durability,condition"
+upgrades,upgrade,false,none,999,"id,name,rarity,description,effect","cost,unlockLevel,permanent"
+fish,resource,true,none,0,"id,name,rarity,weight,value,description","quantity,catchLocation,catchTime,size,experience"
+consumables,consumable,true,none,0,"id,name,rarity,description,effect","cost,quantity,duration,cooldown"
+materials,resource,true,none,0,"id,name,rarity,description","cost,quantity,effect,successRate,bonusMultiplier,preventBreak,preventDowngrade"
+bikini_assistants,equipment,false,bikini_assistant,1,"id,name,rarity,stats,description,unlockLevel","cost,craftingMaterials,craftingTime,specialAbility" 

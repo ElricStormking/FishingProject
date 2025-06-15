@@ -1,1032 +1,928 @@
 import Phaser from 'phaser';
-import { RenJsLoader } from '../scripts/RenJsLoader.js';
-import { DialogDataConverter } from '../scripts/DialogDataConverter.js';
-import UITheme from '../ui/UITheme.js';
+import MarkdownDialogParser from '../scripts/MarkdownDialogParser.js';
 
-/**
- * DialogScene - Enhanced visual novel interface for NPC story dialogs
- * Features: NPC portraits, nameplates, choice buttons, dialog history, skip/auto mode
- */
 export default class DialogScene extends Phaser.Scene {
     constructor() {
         super({ key: 'DialogScene' });
+        this.dialogManager = null;
         this.currentNPCId = null;
-        this.currentScript = null;
-        this.currentDialogData = null;
-        this.isDialogActive = false;
-        this.dialogContainer = null;
-        this.dialogElements = [];
-        this.renjsLoader = null;
-        this.dialogConverter = null;
         this.callingScene = null;
-        this.externalDialogManager = null;
-        this.useRenJs = false;
+        this.dialogData = null;
+        this.currentSection = null;
+        this.parser = new MarkdownDialogParser();
+        
+        // UI elements
+        this.dialogContainer = null;
+        this.portraitImage = null;
+        this.dialogText = null;
+        this.choiceButtons = [];
+        this.romanceMeter = null;
+        this.romanceText = null;
     }
 
     init(data) {
-        console.log('DialogScene: Initializing with data:', data);
-        this.currentNPCId = data.npcId || 'mia';
-        this.currentScript = data.script || null;
-        this.currentDialogData = data.dialogData || null;
-        this.callingScene = data.callingScene || 'GameScene';
-        this.externalDialogManager = data.dialogManager || null;
-        this.useRenJs = data.useRenJs !== undefined ? data.useRenJs : false;
-    }
-
-    preload() {
-        // Load dialog UI assets with error handling
-        this.load.on('loaderror', (file) => {
-            console.warn('DialogScene: Failed to load asset:', file.src || file.key);
-            // Don't throw errors for missing assets, just log and continue
-        });
-
-        // Try to load our custom dialog assets (these may not exist, that's ok)
         try {
-            this.load.image('dialog-bg', 'assets/ui/dialog-background.png');
-            this.load.image('dialog-box', 'assets/ui/dialog-box.png');
-            this.load.image('choice-button', 'assets/ui/choice-button.png');
-            this.load.image('nameplate', 'assets/ui/nameplate.png');
+            console.log('DialogScene: INIT called with data:', data);
             
-            // Load NPC portraits (may not exist)
-            this.load.image('portrait-mia', 'assets/npcs/mia-portrait.png');
-            this.load.image('portrait-sophie', 'assets/npcs/sophie-portrait.png');
-            this.load.image('portrait-luna', 'assets/npcs/luna-portrait.png');
+            // Validate input data
+            if (!data || typeof data !== 'object') {
+                console.warn('DialogScene: Invalid or missing data, using defaults');
+                data = {};
+            }
             
-            // Load UI icons (may not exist)
-            this.load.image('skip-icon', 'assets/ui/skip-icon.png');
-            this.load.image('auto-icon', 'assets/ui/auto-icon.png');
-            this.load.image('history-icon', 'assets/ui/history-icon.png');
-            this.load.image('close-icon', 'assets/ui/close-icon.png');
+            this.callingScene = data?.callingScene || 'CabinScene';
+            this.currentNPCId = data?.npcId || null;
+            this.dialogManager = data?.dialogManager || null;
+            this.scriptFile = data?.script || 'mia_romance.md';
+            
+            // Validate critical data
+            if (!this.currentNPCId) {
+                console.warn('DialogScene: No NPC ID provided, defaulting to mia');
+                this.currentNPCId = 'mia';
+            }
+            
+            if (!this.dialogManager) {
+                console.warn('DialogScene: No DialogManager provided, will create fallback');
+            }
+            
+            console.log('DialogScene: Initialized with:', {
+                callingScene: this.callingScene,
+                npcId: this.currentNPCId,
+                scriptFile: this.scriptFile,
+                hasDialogManager: !!this.dialogManager
+            });
         } catch (error) {
-            console.warn('DialogScene: Error setting up asset loading:', error);
+            console.error('DialogScene: Error in init method:', error);
+            // Set safe defaults
+            this.callingScene = 'CabinScene';
+            this.currentNPCId = 'mia';
+            this.dialogManager = null;
+            this.scriptFile = 'mia_romance.md';
         }
-
-        // Remove error listener after load completes
-        this.load.once('complete', () => {
-            console.log('DialogScene: Asset loading complete (some assets may be missing, that\'s ok)');
-        });
     }
 
-    create() {
-        console.log('DialogScene: Creating dialog interface...');
+    async create() {
+        console.log('DialogScene: CREATE called');
         
-        // Create semi-transparent background overlay using UITheme
-        const overlay = this.add.graphics();
-        overlay.fillStyle(UITheme.colors.overlay, 0.7);
-        overlay.fillRect(0, 0, this.cameras.main.width, this.cameras.main.height);
-        overlay.setInteractive();
-        
-        // Add ESC key to close dialog
-        this.input.keyboard.on('keydown-ESC', () => {
-            this.closeDialog();
-        });
-
-        // Initialize dialog system
-        this.initializeDialogSystem();
-
-        this.isDialogActive = true;
-    }
-
-    /**
-     * Get DialogManager from various sources with fallback logic
-     * @returns {Object|null} DialogManager instance or null if not found
-     */
-    getDialogManager() {
-        // Try external first
-        if (this.externalDialogManager) {
-            return this.externalDialogManager;
-        }
-        
-        // Try GameScene
-        const gameScene = this.scene.get('GameScene');
-        if (gameScene?.dialogManager) {
-            return gameScene.dialogManager;
-        }
-        
-        // Try CabinScene
-        const cabinScene = this.scene.get('CabinScene');
-        if (cabinScene?.dialogManager) {
-            return cabinScene.dialogManager;
-        }
-        
-        // Try BoatMenuScene
-        const boatMenuScene = this.scene.get('BoatMenuScene');
-        if (boatMenuScene?.dialogManager) {
-            return boatMenuScene.dialogManager;
-        }
-        
-        // Try global gameState
         try {
-            if (typeof window !== 'undefined' && window.gameState?.dialogManager) {
-                return window.gameState.dialogManager;
+            const width = this.cameras.main.width;
+            const height = this.cameras.main.height;
+            
+            console.log('DialogScene: Camera dimensions:', { width, height });
+            
+            // Force scene to top
+            this.scene.bringToTop();
+            
+            // Load dialog content first
+            await this.loadDialogContent();
+            
+            // Create UI
+            this.createDialogInterface(width, height);
+            
+            // Start dialog
+            this.startDialog();
+            
+            console.log('DialogScene: Dialog interface created successfully');
+            
+        } catch (error) {
+            console.error('DialogScene: Error in create:', error);
+            console.error('DialogScene: Error stack:', error.stack);
+            this.createErrorFallback(error);
+        }
+    }
+    
+    async loadDialogContent() {
+        console.log('DialogScene: Loading dialog content for', this.currentNPCId, 'with script', this.scriptFile);
+        
+        try {
+            if (this.scriptFile && this.scriptFile.endsWith('.md')) {
+                // Load markdown file
+                this.dialogData = await this.parser.loadAndParseFile(this.scriptFile, this.currentNPCId);
+                console.log('DialogScene: Loaded markdown dialog data:', this.dialogData);
+            } else if (this.scriptFile && this.scriptFile.endsWith('.json')) {
+                // Load JSON dialog file
+                this.dialogData = await this.loadJSONDialogFile(this.scriptFile);
+                console.log('DialogScene: Loaded JSON dialog data:', this.dialogData);
+            } else if (typeof this.scriptFile === 'object') {
+                // Direct JSON dialog data passed
+                this.dialogData = this.processJSONDialogData(this.scriptFile);
+                console.log('DialogScene: Using direct JSON dialog data:', this.dialogData);
+            } else {
+                // Fallback to basic dialog
+                this.dialogData = this.createFallbackDialogData();
+                console.log('DialogScene: Using fallback dialog data');
             }
         } catch (error) {
-            console.warn('DialogScene: Could not access global gameState:', error);
+            console.error('DialogScene: Error loading dialog content:', error);
+            this.dialogData = this.createFallbackDialogData();
         }
-        
-        return null;
     }
-
-    async initializeDialogSystem() {
-        // Get the dialog manager using fallback logic
-        const dialogManager = this.getDialogManager();
+    
+    /**
+     * Load JSON dialog file from assets
+     * @param {string} filename - JSON file name
+     * @returns {Object} Processed dialog data
+     */
+    async loadJSONDialogFile(filename) {
+        const possiblePaths = [
+            `assets/dialog/${filename}`,
+            `./assets/dialog/${filename}`,
+            `/assets/dialog/${filename}`,
+            `public/assets/dialog/${filename}`,
+            `./public/assets/dialog/${filename}`,
+            `/public/assets/dialog/${filename}`,
+            filename // Direct path
+        ];
         
-        if (!dialogManager) {
-            console.error('DialogScene: DialogManager not found in any source (external, GameScene, CabinScene, BoatMenuScene, or GameState)');
-            this.closeDialog();
-            return;
-        }
-
-        console.log('DialogScene: Using DialogManager from', this.externalDialogManager ? 'external source' : 'GameScene');
-
-        // Initialize dialog converter for hybrid system with error handling
-        try {
-            this.dialogConverter = new DialogDataConverter();
-        } catch (error) {
-            console.warn('DialogScene: Failed to initialize DialogDataConverter:', error);
-            this.dialogConverter = null;
-        }
-
-        // Get dialog data - either passed directly or from DialogManager
-        let dialogData = this.currentDialogData;
-        if (!dialogData && this.currentNPCId) {
-            dialogData = await this.loadDialogData(this.currentNPCId);
-        }
-
-        if (!dialogData) {
-            console.error('DialogScene: No dialog data available');
-            this.closeDialog();
-            return;
-        }
-
-        // Determine which system to use based on dialog type and availability
-        const shouldUseRenJs = this.useRenJs && this.dialogConverter && this.dialogConverter.shouldUseRenJs(dialogData);
-        
-        if (shouldUseRenJs) {
-            // Initialize RenJs loader with error handling
+        for (const path of possiblePaths) {
             try {
-        this.renjsLoader = new RenJsLoader(this, dialogManager);
-        const renjsInitialized = await this.renjsLoader.initialize();
-        
-        if (renjsInitialized) {
-            console.log('DialogScene: Using RenJs for dialog');
-                    await this.startRenJsDialog(dialogData);
-                    return;
-        } else {
-                    console.log('DialogScene: RenJs failed to initialize, falling back to custom');
+                console.log(`DialogScene: Attempting to load JSON from: ${path}`);
+                const response = await fetch(path);
+                
+                if (response.ok) {
+                    const jsonData = await response.json();
+                    console.log(`DialogScene: Successfully loaded JSON from: ${path}`);
+                    return this.processJSONDialogData(jsonData);
                 }
             } catch (error) {
-                console.warn('DialogScene: Error initializing RenJs:', error);
-            console.log('DialogScene: Falling back to custom dialog system');
+                console.warn(`DialogScene: Failed to load from ${path}:`, error.message);
+                continue;
             }
         }
-
-        console.log('DialogScene: Using custom dialog system');
-        this.startCustomDialog(dialogData);
-    }
-
-    /**
-     * Load dialog data from various sources
-     */
-    async loadDialogData(npcId) {
-        const dialogManager = this.getDialogManager();
         
-        // Try to get dialog data from DialogManager
-        if (dialogManager && dialogManager.getDialogData) {
-            const dialogData = await dialogManager.getDialogData(npcId);
-            if (dialogData) return dialogData;
+        throw new Error(`Could not load JSON dialog file: ${filename}`);
+    }
+    
+    /**
+     * Process JSON dialog data into DialogScene format
+     * @param {Object} jsonData - Raw JSON dialog data
+     * @returns {Object} Processed dialog data
+     */
+    processJSONDialogData(jsonData) {
+        // Handle different JSON dialog formats
+        let dialogData = jsonData;
+        
+        // If it's a dialog collection, find the specific dialog for this NPC
+        if (jsonData.dialogSamples || jsonData.dialogs) {
+            const dialogs = jsonData.dialogSamples || jsonData.dialogs;
+            
+            // Look for NPC-specific dialogs
+            if (dialogs.romanticNPCDialogs && dialogs.romanticNPCDialogs[this.currentNPCId]) {
+                // Find the first available dialog for this NPC
+                const npcDialogs = dialogs.romanticNPCDialogs[this.currentNPCId];
+                const dialogKeys = Object.keys(npcDialogs);
+                if (dialogKeys.length > 0) {
+                    dialogData = npcDialogs[dialogKeys[0]]; // Use first dialog
+                }
+            } else if (dialogs.storyDialogs) {
+                // Use first story dialog as fallback
+                const storyKeys = Object.keys(dialogs.storyDialogs);
+                if (storyKeys.length > 0) {
+                    dialogData = dialogs.storyDialogs[storyKeys[0]];
+                }
+            }
         }
-
-        // Try to load from dialog samples JSON
+        
+        // Convert JSON dialog format to DialogScene format
+        return {
+            id: dialogData.id || 'json_dialog',
+            speaker: dialogData.speaker || this.dialogManager?.getNPC(this.currentNPCId)?.name || 'NPC',
+            text: dialogData.text || 'Hello! How can I help you today?',
+            choices: this.processJSONChoices(dialogData.choices || []),
+            effects: this.processJSONEffects(dialogData.effects || {}),
+            type: dialogData.type || 'conversation',
+            title: dialogData.title || 'Dialog'
+        };
+    }
+    
+    /**
+     * Process JSON choices into DialogScene format
+     * @param {Array} choices - Array of choice objects
+     * @returns {Array} Processed choices
+     */
+    processJSONChoices(choices) {
+        return choices.map(choice => ({
+            id: choice.id || 'choice',
+            text: choice.text || 'Continue...',
+            effects: this.processJSONEffects(choice.effects || {}),
+            target: choice.target || null,
+            romanceChange: choice.effects?.romance ? Object.values(choice.effects.romance)[0] : 0,
+            action: choice.action || null
+        }));
+    }
+    
+    /**
+     * Process JSON effects into DialogScene format
+     * @param {Object} effects - Effects object
+     * @returns {Array} Array of effect objects
+     */
+    processJSONEffects(effects) {
+        const processedEffects = [];
+        
+        // Handle romance effects
+        if (effects.romance) {
+            for (const [npcId, amount] of Object.entries(effects.romance)) {
+                processedEffects.push({
+                    command: 'romance_meter_increase',
+                    params: { npc: npcId, amount: amount }
+                });
+            }
+        }
+        
+        // Handle quest effects
+        if (effects.questProgress) {
+            processedEffects.push({
+                command: 'quest_progress',
+                params: { questId: effects.questProgress }
+            });
+        }
+        
+        if (effects.unlockQuest) {
+            processedEffects.push({
+                command: 'unlock_quest',
+                params: { questId: effects.unlockQuest }
+            });
+        }
+        
+        // Handle experience and coins
+        if (effects.experience) {
+            processedEffects.push({
+                command: 'add_experience',
+                params: { amount: effects.experience }
+            });
+        }
+        
+        if (effects.coins) {
+            processedEffects.push({
+                command: 'add_coins',
+                params: { amount: effects.coins }
+            });
+        }
+        
+        // Handle items
+        if (effects.items) {
+            for (const [itemId, quantity] of Object.entries(effects.items)) {
+                processedEffects.push({
+                    command: 'add_item',
+                    params: { itemId: itemId, quantity: quantity }
+                });
+            }
+        }
+        
+        // Handle UI effects
+        if (effects.openUI) {
+            processedEffects.push({
+                command: 'open_ui',
+                params: { uiType: effects.openUI }
+            });
+        }
+        
+        if (effects.closeDialog) {
+            processedEffects.push({
+                command: 'dialog_end'
+            });
+        }
+        
+        return processedEffects;
+    }
+    
+    createDialogInterface(width, height) {
+        // Dark background
+        const bg = this.add.graphics();
+        bg.fillStyle(0x000000, 0.8);
+        bg.fillRect(0, 0, width, height);
+        bg.setDepth(1000);
+        bg.setInteractive();
+        bg.on('pointerdown', () => this.closeDialog());
+        
+        // Main dialog container
+        this.dialogContainer = this.add.container(width/2, height/2);
+        this.dialogContainer.setDepth(1001);
+        
+        // Dialog box
+        const dialogWidth = Math.min(900, width - 100);
+        const dialogHeight = Math.min(500, height - 100);
+        
+        const dialogBg = this.add.graphics();
+        dialogBg.fillStyle(0x2c3e50, 0.95);
+        dialogBg.lineStyle(3, 0xf39c12, 1);
+        dialogBg.fillRoundedRect(-dialogWidth/2, -dialogHeight/2, dialogWidth, dialogHeight, 15);
+        dialogBg.strokeRoundedRect(-dialogWidth/2, -dialogHeight/2, dialogWidth, dialogHeight, 15);
+        this.dialogContainer.add(dialogBg);
+        
+        // Title bar
+        const npcName = this.dialogManager?.getNPC(this.currentNPCId)?.name || 'Dialog System';
+        const titleText = this.add.text(-dialogWidth/2 + 20, -dialogHeight/2 + 20, `💬 ${npcName}`, {
+            fontSize: '20px',
+            fill: '#f39c12',
+            fontWeight: 'bold'
+        });
+        this.dialogContainer.add(titleText);
+        
+        // Close button
+        const closeBtn = this.add.text(dialogWidth/2 - 30, -dialogHeight/2 + 20, '×', {
+            fontSize: '24px',
+            fill: '#e74c3c',
+            fontWeight: 'bold'
+        }).setOrigin(0.5);
+        closeBtn.setInteractive({ useHandCursor: true });
+        closeBtn.on('pointerdown', () => this.closeDialog());
+        this.dialogContainer.add(closeBtn);
+        
+        // Create portrait area
+        this.createPortraitArea(-dialogWidth/2 + 20, -dialogHeight/2 + 60);
+        
+        // Create dialog text area
+        this.createDialogTextArea(-dialogWidth/2 + 140, -dialogHeight/2 + 60, dialogWidth - 180, 200);
+        
+        // Create choice area
+        this.createChoiceArea(-dialogWidth/2 + 140, -dialogHeight/2 + 280, dialogWidth - 180);
+        
+        // Create romance meter
+        this.createRomanceMeterDisplay(-dialogWidth/2 + 140, -dialogHeight/2 + 400, 200);
+    }
+    
+    createPortraitArea(x, y) {
+        // Portrait background
+        const portraitBg = this.add.graphics();
+        portraitBg.fillStyle(0x34495e, 0.8);
+        portraitBg.lineStyle(2, 0xf39c12, 0.8);
+        portraitBg.fillRoundedRect(x, y, 100, 120, 10);
+        portraitBg.strokeRoundedRect(x, y, 100, 120, 10);
+        this.dialogContainer.add(portraitBg);
+        
+        // Try to load Mia's portrait
+        const portraitKeys = [
+            'mia-portrait', 
+            'mia-normal', 
+            'mia-happy',
+            'mia-excited',
+            'mia-shy'
+        ];
+        
+        let portraitAdded = false;
+        
+        for (const key of portraitKeys) {
+            if (this.textures.exists(key)) {
+                try {
+                    this.portraitImage = this.add.image(x + 50, y + 60, key);
+                    this.portraitImage.setDisplaySize(90, 110);
+                    this.portraitImage.setOrigin(0.5);
+                    this.dialogContainer.add(this.portraitImage);
+                    portraitAdded = true;
+                    break;
+                } catch (error) {
+                    // Silently continue to next portrait key
+                    continue;
+                }
+            }
+        }
+        
+        // Fallback portrait
+        if (!portraitAdded) {
+            const fallbackPortrait = this.add.text(x + 50, y + 60, '💃\nMIA', {
+                fontSize: '16px',
+                fill: '#f39c12',
+                fontWeight: 'bold',
+                align: 'center'
+            }).setOrigin(0.5);
+            this.dialogContainer.add(fallbackPortrait);
+        }
+    }
+    
+    createDialogTextArea(x, y, width, height) {
+        // Text background
+        const textBg = this.add.graphics();
+        textBg.fillStyle(0x34495e, 0.6);
+        textBg.fillRoundedRect(x, y, width, height, 8);
+        this.dialogContainer.add(textBg);
+        
+        // Dialog text
+        this.dialogText = this.add.text(x + 15, y + 15, '', {
+            fontSize: '16px',
+            fill: '#ecf0f1',
+            wordWrap: { width: width - 30 },
+            lineSpacing: 5
+        });
+        this.dialogContainer.add(this.dialogText);
+    }
+    
+    createChoiceArea(x, y, width) {
+        // This will be populated dynamically with choices
+        this.choiceAreaX = x;
+        this.choiceAreaY = y;
+        this.choiceAreaWidth = width;
+    }
+    
+    createRomanceMeterDisplay(x, y, width) {
+        if (!this.dialogManager || !this.currentNPCId) return;
+        
+        const npc = this.dialogManager.getNPC(this.currentNPCId);
+        if (!npc) return;
+        
+        // Romance meter background
+        const meterBg = this.add.graphics();
+        meterBg.fillStyle(0x34495e, 0.8);
+        meterBg.fillRoundedRect(x, y, width, 20, 10);
+        this.dialogContainer.add(meterBg);
+        
+        // Romance meter fill
+        const fillPercent = npc.romanceMeter / npc.maxRomance;
+        const fillWidth = fillPercent * (width - 4);
+        
+        let fillColor = 0x95a5a6;
+        if (fillPercent >= 0.8) fillColor = 0xe74c3c;
+        else if (fillPercent >= 0.6) fillColor = 0xe67e22;
+        else if (fillPercent >= 0.4) fillColor = 0xf39c12;
+        else if (fillPercent >= 0.2) fillColor = 0x27ae60;
+        
+        this.romanceMeter = this.add.graphics();
+        this.romanceMeter.fillStyle(fillColor, 1);
+        this.romanceMeter.fillRoundedRect(x + 2, y + 2, fillWidth, 16, 8);
+        this.dialogContainer.add(this.romanceMeter);
+        
+        // Romance meter text
+        this.romanceText = this.add.text(x + width/2, y + 30, `💕 Romance: ${npc.romanceMeter}/${npc.maxRomance} (${npc.relationship})`, {
+            fontSize: '12px',
+            fill: '#f39c12',
+            fontWeight: 'bold'
+        }).setOrigin(0.5, 0);
+        this.dialogContainer.add(this.romanceText);
+    }
+    
+    startDialog() {
+        if (!this.dialogData) {
+            console.error('DialogScene: No dialog data available');
+            return;
+        }
+        
+        console.log('DialogScene: Starting dialog with data:', this.dialogData);
+        
+        // The parser returns a single dialog object with sections array
+        // Start with the main dialog data (which represents the START section)
+        this.currentSection = this.dialogData;
+        this.displayCurrentSection();
+    }
+    
+    displayCurrentSection() {
+        if (!this.currentSection) {
+            console.error('DialogScene: No current section to display');
+            return;
+        }
+        
+        console.log('DialogScene: Displaying section:', this.currentSection);
+        
+        // Update dialog text
+        const speaker = this.currentSection.speaker || this.dialogManager?.getNPC(this.currentNPCId)?.name || 'Mia';
+        const text = this.currentSection.text || this.currentSection.message || 'Hello! How are you today?';
+        
+        this.dialogText.setText(`${speaker}:\n\n"${text}"`);
+        
+        // Clear previous choices
+        this.clearChoices();
+        
+        // Apply any effects from the current section BEFORE creating choices
+        if (this.currentSection.effects && this.currentSection.effects.length > 0) {
+            console.log('DialogScene: Applying section effects:', this.currentSection.effects);
+            this.applyEffects(this.currentSection.effects);
+        }
+        
+        // Create choice buttons
+        if (this.currentSection.choices && this.currentSection.choices.length > 0) {
+            this.createChoiceButtons(this.currentSection.choices);
+        } else {
+            // Create default close button if no choices
+            this.createChoiceButtons([{
+                text: "Continue...",
+                action: () => this.closeDialog()
+            }]);
+        }
+    }
+    
+    clearChoices() {
+        this.choiceButtons.forEach(button => {
+            if (button.container) {
+                button.container.destroy();
+            }
+        });
+        this.choiceButtons = [];
+    }
+    
+    createChoiceButtons(choices) {
+        choices.forEach((choice, index) => {
+            const buttonY = this.choiceAreaY + (index * 35);
+            
+            // Button container
+            const buttonContainer = this.add.container(this.choiceAreaX, buttonY);
+            this.dialogContainer.add(buttonContainer);
+            
+            // Button background
+            const button = this.add.graphics();
+            button.fillStyle(0x3498db, 0.8);
+            button.lineStyle(2, 0x2980b9, 1);
+            button.fillRoundedRect(0, 0, this.choiceAreaWidth - 20, 30, 5);
+            button.strokeRoundedRect(0, 0, this.choiceAreaWidth - 20, 30, 5);
+            button.setInteractive(new Phaser.Geom.Rectangle(0, 0, this.choiceAreaWidth - 20, 30), Phaser.Geom.Rectangle.Contains);
+            buttonContainer.add(button);
+            
+            // Button text
+            const buttonText = this.add.text(10, 15, choice.text, {
+                fontSize: '14px',
+                fill: '#ffffff',
+                fontWeight: 'bold'
+            }).setOrigin(0, 0.5);
+            buttonContainer.add(buttonText);
+            
+            // Button interaction
+            button.on('pointerdown', () => {
+                if (choice.action) {
+                    choice.action();
+                } else if (choice.target) {
+                    this.handleChoiceTarget(choice.target);
+                } else {
+                    this.makeChoice(choice.id || 'default', choice);
+                }
+            });
+            
+            // Hover effects
+            button.on('pointerover', () => {
+                button.clear();
+                button.fillStyle(0x3498db, 1);
+                button.lineStyle(2, 0x2980b9, 1);
+                button.fillRoundedRect(0, 0, this.choiceAreaWidth - 20, 30, 5);
+                button.strokeRoundedRect(0, 0, this.choiceAreaWidth - 20, 30, 5);
+            });
+            
+            button.on('pointerout', () => {
+                button.clear();
+                button.fillStyle(0x3498db, 0.8);
+                button.lineStyle(2, 0x2980b9, 1);
+                button.fillRoundedRect(0, 0, this.choiceAreaWidth - 20, 30, 5);
+                button.strokeRoundedRect(0, 0, this.choiceAreaWidth - 20, 30, 5);
+            });
+            
+            this.choiceButtons.push({
+                container: buttonContainer,
+                choice: choice
+            });
+        });
+    }
+    
+    handleChoiceTarget(target) {
+        console.log('DialogScene: Handling choice target:', target);
+        
+        // Find the target section in dialog data
+        if (this.dialogData.sections) {
+            const targetSection = this.dialogData.sections.find(section => 
+                section.label === target || section.id === target
+            );
+            
+            if (targetSection) {
+                // Convert section to dialog format
+                this.currentSection = {
+                    speaker: targetSection.speaker || this.dialogData.speaker,
+                    text: targetSection.text,
+                    choices: targetSection.choices || [],
+                    effects: targetSection.effects || []
+                };
+                this.displayCurrentSection();
+                return;
+            }
+        }
+        
+        // If target not found, provide a graceful fallback
+        console.log('DialogScene: Target section not found, providing fallback response');
+        this.currentSection = {
+            speaker: this.dialogData.speaker || 'Mia',
+            text: "That's interesting! Let's continue our conversation.",
+            choices: [{
+                text: "Continue...",
+                action: () => this.closeDialog()
+            }],
+            effects: []
+        };
+        this.displayCurrentSection();
+    }
+    
+    makeChoice(choiceId, choiceData) {
+        console.log('DialogScene: Choice made:', choiceId, choiceData);
+        
+        // Apply romance changes based on choice data first
+        if (choiceData.romanceChange) {
+            this.updateRomanceMeter(choiceData.romanceChange);
+        }
+        
+        // Apply effects if the choice has them
+        if (choiceData.effects) {
+            if (Array.isArray(choiceData.effects)) {
+                this.applyEffects(choiceData.effects);
+            } else if (choiceData.effects.romanceIncrease) {
+                this.updateRomanceMeter(choiceData.effects.romanceIncrease);
+            }
+        }
+        
+        // Default romance increases for different choice types (fallback)
+        let romanceChange = 0;
+        if (choiceId.includes('romantic') || choiceData.text.toLowerCase().includes('romantic')) {
+            romanceChange = 3;
+        } else if (choiceId.includes('compliment') || choiceData.text.toLowerCase().includes('beautiful')) {
+            romanceChange = 2;
+        } else {
+            romanceChange = 1;
+        }
+        
+        // Only apply default romance change if no specific effects were applied
+        if (!choiceData.romanceChange && !choiceData.effects?.romanceIncrease) {
+            this.updateRomanceMeter(romanceChange);
+        }
+        
+        // Close dialog after choice (for now) - unless it's a continuing conversation
+        if (!choiceData.effects?.followUpChoices) {
+            this.time.delayedCall(500, () => this.closeDialog());
+        }
+    }
+    
+    updateRomanceMeter(amount) {
         try {
-            const response = await fetch('./src/data/dialog_samples.json');
-            if (response.ok) {
-                const dialogSamples = await response.json();
+            if (!this.dialogManager || !this.currentNPCId) {
+                console.warn('DialogScene: Cannot update romance meter - missing DialogManager or NPC ID');
+                return;
+            }
+            
+            console.log(`DialogScene: Updating romance meter for ${this.currentNPCId} by ${amount}`);
+            
+            // Get current NPC data before update
+            const npc = this.dialogManager.getNPC(this.currentNPCId);
+            if (!npc) {
+                console.warn(`DialogScene: NPC ${this.currentNPCId} not found`);
+                return;
+            }
+            
+            const oldMeter = npc.romanceMeter;
+            
+            // Update romance meter through DialogManager
+            this.dialogManager.updateRomanceMeter({
+                npc: this.currentNPCId,
+                amount: amount
+            });
+            
+            // Get updated NPC data
+            const updatedNpc = this.dialogManager.getNPC(this.currentNPCId);
+            const newMeter = updatedNpc.romanceMeter;
+            
+            console.log(`DialogScene: Romance meter updated from ${oldMeter} to ${newMeter}`);
+            
+            // Update visual romance meter in dialog interface
+            if (this.romanceMeter) {
+                const fillPercent = newMeter / updatedNpc.maxRomance;
+                const fillWidth = fillPercent * 196; // width - 4
                 
-                // Handle the nested structure properly
-                let allDialogs = [];
+                let fillColor = 0x95a5a6;
+                if (fillPercent >= 0.8) fillColor = 0xe74c3c;
+                else if (fillPercent >= 0.6) fillColor = 0xe67e22;
+                else if (fillPercent >= 0.4) fillColor = 0xf39c12;
+                else if (fillPercent >= 0.2) fillColor = 0x3498db;
                 
-                if (dialogSamples && dialogSamples.dialogSamples) {
-                    // Extract dialogs from all categories
-                    const categories = dialogSamples.dialogSamples;
-                    for (const categoryName in categories) {
-                        const category = categories[categoryName];
-                        if (category && typeof category === 'object') {
-                            // Add all dialogs from this category
-                            for (const dialogKey in category) {
-                                const dialog = category[dialogKey];
-                                if (dialog && dialog.speaker) {
-                                    allDialogs.push(dialog);
-                                }
-                            }
+                this.romanceMeter.clear();
+                this.romanceMeter.fillStyle(0x34495e, 0.8);
+                this.romanceMeter.fillRoundedRect(0, 0, 200, 20, 10);
+                this.romanceMeter.fillStyle(fillColor, 1);
+                this.romanceMeter.fillRoundedRect(2, 2, fillWidth, 16, 8);
+                
+                console.log(`DialogScene: Visual romance meter updated - ${fillPercent * 100}% (${newMeter}/${updatedNpc.maxRomance})`);
+            }
+            
+            // Also update the romance text if it exists
+            if (this.romanceText) {
+                this.romanceText.setText(`💕 Romance: ${newMeter}/${updatedNpc.maxRomance} (${updatedNpc.relationship})`);
+            }
+            
+            // Emit event to notify CabinScene
+            this.events.emit('romance-meter-updated', {
+                npcId: this.currentNPCId,
+                oldValue: oldMeter,
+                newValue: newMeter,
+                maxValue: updatedNpc.maxRomance
+            });
+            
+            // Also emit to calling scene directly
+            const callingScene = this.scene.get(this.callingScene);
+            if (callingScene && callingScene.events) {
+                callingScene.events.emit('romance-meter-updated', {
+                    npcId: this.currentNPCId,
+                    oldValue: oldMeter,
+                    newValue: newMeter,
+                    maxValue: updatedNpc.maxRomance
+                });
+            }
+            
+            console.log(`DialogScene: Romance meter update completed for ${this.currentNPCId}`);
+        } catch (error) {
+            console.error('DialogScene: Error updating romance meter:', error);
+            console.error('DialogScene: Romance meter amount:', amount);
+        }
+    }
+    
+    applyEffects(effects) {
+        effects.forEach(effect => {
+            console.log('DialogScene: Applying effect:', effect);
+            
+            switch (effect.command) {
+                case 'romance_meter_increase':
+                    const amount = effect.params?.amount || 5;
+                    const npcId = effect.params?.npc || this.currentNPCId;
+                    console.log(`DialogScene: Increasing romance meter for ${npcId} by ${amount}`);
+                    this.updateRomanceMeter(amount);
+                    break;
+                    
+                case 'achievement_unlock':
+                    if (this.dialogManager && effect.params?.achievement) {
+                        console.log('DialogScene: Unlocking achievement:', effect.params.achievement);
+                        this.dialogManager.unlockAchievement(effect.params.achievement);
+                    }
+                    break;
+                    
+                case 'quest_progress':
+                    if (this.dialogManager && effect.params?.questId) {
+                        console.log('DialogScene: Progressing quest:', effect.params.questId);
+                        // Emit quest progress event to GameScene
+                        const gameScene = this.scene.get('GameScene');
+                        if (gameScene && gameScene.questManager) {
+                            gameScene.questManager.progressQuest(effect.params.questId);
                         }
                     }
-                } else if (dialogSamples && Array.isArray(dialogSamples)) {
-                    // Handle array format
-                    allDialogs = dialogSamples;
-                } else if (dialogSamples) {
-                    // Handle flat object format
-                    allDialogs = Object.values(dialogSamples).filter(item => item && item.speaker);
-                }
-                
-                // Find dialog for this NPC
-                const npcDisplayName = this.getNPCDisplayName(npcId);
-                const npcDialogs = allDialogs.filter(dialog => 
-                    dialog.speaker === npcDisplayName ||
-                    dialog.speaker === npcId ||
-                    (dialog.id && dialog.id.toLowerCase().includes(npcId.toLowerCase()))
-                );
-                
-                if (npcDialogs.length > 0) {
-                    console.log(`DialogScene: Found ${npcDialogs.length} dialogs for ${npcId}`);
-                    // Return the first available dialog for this NPC
-                    return npcDialogs[0];
-                }
-                
-                console.log(`DialogScene: No specific dialogs found for ${npcId}, using fallback`);
-            }
-        } catch (error) {
-            console.warn('DialogScene: Could not load dialog samples:', error);
-        }
-
-        // Fallback: create basic dialog data
-        return this.createFallbackDialogData(npcId);
-    }
-
-    /**
-     * Get display name for NPC ID
-     */
-    getNPCDisplayName(npcId) {
-        const nameMap = {
-            'mia': 'Mia',
-            'sophie': 'Sophie', 
-            'luna': 'Luna',
-            'captain': 'Captain'
-        };
-        return nameMap[npcId.toLowerCase()] || npcId;
-    }
-
-    /**
-     * Create fallback dialog data when no other source is available
-     */
-    createFallbackDialogData(npcId) {
-        const displayName = this.getNPCDisplayName(npcId);
-        return {
-            id: `${npcId}_fallback`,
-            type: 'tutorial',
-            title: `Conversation with ${displayName}`,
-            speaker: displayName,
-            text: `Hello! I'm ${displayName}. How can I help you today?`,
-            choices: [
-                {
-                    id: 'continue',
-                    text: 'Thanks for talking with me!',
-                    effects: {
-                        dialogue: 'Anytime! Feel free to come back and chat.'
+                    break;
+                    
+                case 'unlock_quest':
+                    if (this.dialogManager && effect.params?.questId) {
+                        console.log('DialogScene: Unlocking quest:', effect.params.questId);
+                        const gameScene = this.scene.get('GameScene');
+                        if (gameScene && gameScene.questManager) {
+                            gameScene.questManager.unlockQuest(effect.params.questId);
+                        }
                     }
-                }
+                    break;
+                    
+                case 'add_experience':
+                    if (effect.params?.amount) {
+                        console.log('DialogScene: Adding experience:', effect.params.amount);
+                        const gameScene = this.scene.get('GameScene');
+                        if (gameScene && gameScene.gameState) {
+                            gameScene.gameState.addExperience(effect.params.amount);
+                        }
+                    }
+                    break;
+                    
+                case 'add_coins':
+                    if (effect.params?.amount) {
+                        console.log('DialogScene: Adding coins:', effect.params.amount);
+                        const gameScene = this.scene.get('GameScene');
+                        if (gameScene && gameScene.gameState) {
+                            gameScene.gameState.addCoins(effect.params.amount);
+                        }
+                    }
+                    break;
+                    
+                case 'add_item':
+                    if (effect.params?.itemId) {
+                        const quantity = effect.params.quantity || 1;
+                        console.log(`DialogScene: Adding item ${effect.params.itemId} x${quantity}`);
+                        const gameScene = this.scene.get('GameScene');
+                        if (gameScene && gameScene.gameState) {
+                            gameScene.gameState.addInventoryItem(effect.params.itemId, quantity);
+                        }
+                    }
+                    break;
+                    
+                case 'open_ui':
+                    if (effect.params?.uiType) {
+                        console.log('DialogScene: Opening UI:', effect.params.uiType);
+                        // Close dialog first, then open UI
+                        this.time.delayedCall(500, () => {
+                            this.closeDialog();
+                            // Emit event to calling scene to open specific UI
+                            const callingScene = this.scene.get(this.callingScene);
+                            if (callingScene && callingScene.events) {
+                                callingScene.events.emit('open-ui', { uiType: effect.params.uiType });
+                            }
+                        });
+                    }
+                    break;
+                    
+                case 'dialog_end':
+                    console.log('DialogScene: Dialog end effect triggered');
+                    this.time.delayedCall(1000, () => this.closeDialog());
+                    break;
+                    
+                default:
+                    console.log('DialogScene: Unknown effect command:', effect.command);
+            }
+        });
+    }
+    
+    createFallbackDialogData() {
+        const npcName = this.dialogManager?.getNPC(this.currentNPCId)?.name || 'Mia';
+        
+        return {
+            speaker: npcName,
+            text: "Hello! It's so nice to spend some quiet time together. How are you feeling today?",
+            choices: [
+                { text: "💬 Chat casually", action: () => this.makeChoice('casual') },
+                { text: "💕 Say something romantic", action: () => this.makeChoice('romantic') },
+                { text: "🎁 Give compliment", action: () => this.makeChoice('compliment') }
             ]
         };
     }
-
-    async startRenJsDialog(dialogData) {
-        try {
-            // Convert dialog data to RenJs format
-            const renjsFormat = this.dialogConverter.getDialogForSystem(dialogData, true);
-            
-            if (renjsFormat.format === 'renjs') {
-                // Set up RenJs callbacks for game integration
-                this.renjsLoader.setCallbacks(renjsFormat.callbacks);
-                
-                // Load the converted script into RenJs
-                const scriptLoaded = await this.renjsLoader.loadScript(dialogData.id, renjsFormat.script);
-                
-                if (scriptLoaded) {
-                    // Start the dialog
-                    const dialogStarted = this.renjsLoader.startDialog(dialogData.id);
-                    
-                    if (dialogStarted) {
-                // Listen for dialog end from RenJs
-                this.events.on('dialog-ended', () => {
-                    this.closeDialog();
-                });
-                        return;
-                    }
-                }
-            }
-            
-            console.warn('DialogScene: Failed to start RenJs dialog, falling back to custom');
-            this.startCustomDialog(dialogData);
-            
-        } catch (error) {
-            console.error('DialogScene: Error starting RenJs dialog:', error);
-            this.startCustomDialog(dialogData);
-        }
-    }
-
-    startCustomDialog(dialogData) {
-        if (!dialogData) {
-            console.error('DialogScene: No dialog data provided for custom dialog');
-            this.closeDialog();
-            return;
-        }
-
-        // Create enhanced custom dialog using JSON data
-        this.createEnhancedCustomDialog(dialogData);
-    }
-
-    createEnhancedCustomDialog(dialogData) {
-        console.log('DialogScene: Creating enhanced custom dialog for:', dialogData.speaker);
+    
+    createErrorFallback(error) {
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
         
-        try {
-        const centerX = this.cameras.main.width / 2;
-        const centerY = this.cameras.main.height / 2;
-
-        // Main dialog container
-        this.dialogContainer = this.add.container(centerX, centerY);
-
-            // Background dialog box using UITheme with fallback
-            let dialogBg;
-            try {
-                dialogBg = UITheme.createPanel(this, -400, -150, 800, 300, 'primary');
-            } catch (error) {
-                console.warn('DialogScene: UITheme.createPanel failed, using fallback:', error);
-                dialogBg = this.add.graphics();
-                dialogBg.fillStyle(0x2c3e50, 0.9);
-                dialogBg.fillRoundedRect(-400, -150, 800, 300, 10);
-                dialogBg.lineStyle(2, 0x3498db, 1);
-                dialogBg.strokeRoundedRect(-400, -150, 800, 300, 10);
-            }
-        this.dialogContainer.add(dialogBg);
-
-        // NPC Portrait
-            this.createNPCPortrait(dialogData, -350, -100);
-
-            // Name plate using UITheme with fallback
-            let namePlate;
-            try {
-                namePlate = UITheme.createPanel(this, -200, -140, 200, 40, 'secondary');
-            } catch (error) {
-                console.warn('DialogScene: UITheme.createPanel for nameplate failed, using fallback:', error);
-                namePlate = this.add.graphics();
-                namePlate.fillStyle(0x34495e, 0.8);
-                namePlate.fillRoundedRect(-200, -140, 200, 40, 5);
-            }
-        this.dialogContainer.add(namePlate);
-
-            // Character name using UITheme with fallback
-            let nameText;
-            try {
-                nameText = UITheme.createText(this, -100, -120, dialogData.speaker, 'headerSmall');
-                nameText.setOrigin(0.5);
-                nameText.setColor(UITheme.colors.text);
-            } catch (error) {
-                console.warn('DialogScene: UITheme.createText failed, using fallback:', error);
-                nameText = this.add.text(-100, -120, dialogData.speaker, {
-                    fontSize: '18px',
-                    fill: '#ffffff',
-                    fontWeight: 'bold'
-                });
-        nameText.setOrigin(0.5);
-            }
-        this.dialogContainer.add(nameText);
-
-        // Dialog text area
-            const dialogText = this.createDialogText(dialogData);
-        this.dialogContainer.add(dialogText);
-
-        // Control buttons
-        this.createControlButtons();
-
-        // Choice buttons (if applicable)
-            this.createChoiceButtons(dialogData);
-
-            // Add entrance animation using UITheme with fallback
-        this.dialogContainer.setScale(0.8);
-        this.dialogContainer.setAlpha(0);
-            
-            try {
-        this.tweens.add({
-            targets: this.dialogContainer,
-            scale: 1,
-            alpha: 1,
-            duration: UITheme.animations.medium,
-            ease: UITheme.animations.easing.easeOut
-        });
-            } catch (error) {
-                console.warn('DialogScene: UITheme animation failed, using fallback:', error);
-                this.tweens.add({
-                    targets: this.dialogContainer,
-                    scale: 1,
-                    alpha: 1,
-                    duration: 300,
-                    ease: 'Power2'
-                });
-            }
-            
-        } catch (error) {
-            console.error('DialogScene: Error creating enhanced custom dialog:', error);
-            // Create a simple fallback dialog
-            this.createSimpleFallbackDialog(dialogData);
-        }
-    }
-
-    createNPCPortrait(dialogData, x, y) {
-        const speakerName = dialogData.speaker.toLowerCase();
-        const portraitKey = `portrait-${speakerName}`;
-        
-        if (this.textures.exists(portraitKey)) {
-            const portrait = this.add.image(x, y, portraitKey);
-            portrait.setDisplaySize(120, 150);
-            portrait.setOrigin(0.5);
-            this.dialogContainer.add(portrait);
-        } else {
-            // Create placeholder portrait
-            const placeholder = this.add.graphics();
-            placeholder.fillStyle(0x34495e, 0.8);
-            placeholder.lineStyle(2, 0x95a5a6, 1);
-            placeholder.fillRoundedRect(x - 60, y - 75, 120, 150, 10);
-            placeholder.strokeRoundedRect(x - 60, y - 75, 120, 150, 10);
-            
-            const placeholderText = this.add.text(x, y, dialogData.speaker[0], {
-                font: '48px Arial',
-                fill: '#ecf0f1',
-                fontStyle: 'bold'
-            });
-            placeholderText.setOrigin(0.5);
-            
-            this.dialogContainer.add(placeholder);
-            this.dialogContainer.add(placeholderText);
-        }
-    }
-
-    createDialogText(dialogData) {
-        try {
-            // Get dialog content from dialog data
-            const content = dialogData.text || "Hello! How can I help you?";
-            
-            // Create dialog text using UITheme with fallback
-            let dialogText;
-            try {
-                dialogText = UITheme.createText(this, -80, -50, content, 'bodyLarge');
-        dialogText.setWordWrapWidth(460);
-        dialogText.setLineSpacing(5);
-            } catch (uiError) {
-                console.warn('DialogScene: UITheme.createText failed for dialog text, using fallback:', uiError);
-                // Create fallback dialog text
-                dialogText = this.add.text(-80, -50, content, {
-                    fontSize: '16px',
-                    fill: '#ffffff',
-                    wordWrap: { width: 460 },
-                    lineSpacing: 5
-                });
-            }
-        
-        // Typewriter effect
-        this.showTextWithTypewriter(dialogText, content);
-        
-        return dialogText;
-        } catch (error) {
-            console.error('DialogScene: Error creating dialog text:', error);
-            // Return a simple fallback text
-            const fallbackText = this.add.text(-80, -50, 'Hello!', {
-                fontSize: '16px',
-                fill: '#ffffff'
-            });
-            return fallbackText;
-        }
-    }
-
-    getDialogContent(npcData) {
-        if (this.currentScript) {
-            // Parse custom script
-            return this.parseCustomScript(this.currentScript, npcData);
-        }
-        
-        // Default dialog based on NPC
-        const defaultDialogs = {
-            'mia': "Hello there! I'm Mia, your friendly fishing guide. Welcome to our beautiful fishing village! Would you like to learn some basic fishing techniques?",
-            'sophie': "Hey! I'm Sophie! *bounces excitedly* I absolutely LOVE fishing! The thrill of the catch, the peaceful water... it's amazing! Want to hear about my latest adventure?",
-            'luna': "Greetings, fellow seeker of the depths... I am Luna. The waters whisper secrets to those who listen carefully. Perhaps... you seek wisdom beyond the surface?"
-        };
-        
-        return defaultDialogs[npcData.id] || "Hello! Nice to meet you.";
-    }
-
-    parseCustomScript(script, npcData) {
-        // Simple script parsing - take first dialog line
-        const lines = script.split('\n').filter(line => line.trim());
-        for (const line of lines) {
-            if (line.includes(': ')) {
-                const [, dialog] = line.split(': ', 2);
-                return dialog.replace(/"/g, '');
-            }
-        }
-        return "Hello! How can I help you?";
-    }
-
-    showTextWithTypewriter(textObject, fullText) {
-        textObject.setText('');
-        
-        let i = 0;
-        const typewriterTimer = this.time.addEvent({
-            delay: 30,
-            callback: () => {
-                textObject.setText(fullText.substr(0, i + 1));
-                i++;
-                if (i >= fullText.length) {
-                    typewriterTimer.destroy();
-                    this.showContinueIndicator();
-                }
-            },
-            loop: true
-        });
-    }
-
-    showContinueIndicator() {
-        try {
-            // Add blinking continue indicator using UITheme with fallback
-            try {
-        const indicator = UITheme.createText(this, 350, 100, '▼', 'bodyMedium');
-        indicator.setOrigin(0.5);
-        indicator.setColor(UITheme.colors.primary);
-        this.dialogContainer.add(indicator);
-        
-        // Blinking animation using UITheme
-        this.tweens.add({
-            targets: indicator,
-            alpha: 0.3,
-            duration: UITheme.animations.slow,
-            yoyo: true,
-            repeat: -1
-        });
-            } catch (uiError) {
-                console.warn('DialogScene: UITheme failed for continue indicator, using fallback:', uiError);
-                // Create fallback continue indicator
-                const indicator = this.add.text(350, 100, '▼', {
-                    fontSize: '18px',
-                    fill: '#3498db',
-                    fontWeight: 'bold'
-                });
-                indicator.setOrigin(0.5);
-                this.dialogContainer.add(indicator);
-                
-                // Simple blinking animation
-                this.tweens.add({
-                    targets: indicator,
-                    alpha: 0.3,
-                    duration: 800,
-                    yoyo: true,
-                    repeat: -1
-                });
-            }
-        } catch (error) {
-            console.error('DialogScene: Error creating continue indicator:', error);
-        }
-    }
-
-    createControlButtons() {
-        try {
-            // Close button using UITheme with fallback
-            try {
-        const closeButton = UITheme.createText(this, 380, -130, '✕', 'headerMedium');
-        closeButton.setOrigin(0.5);
-        closeButton.setColor(UITheme.colors.error);
-        closeButton.setInteractive({ useHandCursor: true });
-        closeButton.on('pointerdown', () => this.closeDialog());
-        closeButton.on('pointerover', () => closeButton.setScale(1.2));
-        closeButton.on('pointerout', () => closeButton.setScale(1));
-        this.dialogContainer.add(closeButton);
-            } catch (uiError) {
-                console.warn('DialogScene: UITheme.createText failed for close button, using fallback:', uiError);
-                // Create fallback close button
-                const closeButton = this.add.text(380, -130, '✕', {
-                    fontSize: '24px',
-                    fill: '#ff4444',
-                    fontWeight: 'bold'
-                });
-                closeButton.setOrigin(0.5);
-                closeButton.setInteractive({ useHandCursor: true });
-                closeButton.on('pointerdown', () => this.closeDialog());
-                closeButton.on('pointerover', () => closeButton.setScale(1.2));
-                closeButton.on('pointerout', () => closeButton.setScale(1));
-                this.dialogContainer.add(closeButton);
-            }
-        } catch (error) {
-            console.error('DialogScene: Error creating control buttons:', error);
-        }
-    }
-
-    createChoiceButtons(dialogData) {
-        try {
-            // Use choices from dialog data if available, otherwise use default choices
-            let choices = [];
-            
-            if (dialogData.choices && dialogData.choices.length > 0) {
-                choices = dialogData.choices.map(choice => ({
-                    text: choice.text,
-                    action: () => this.handleDialogChoice(choice, dialogData)
-                }));
-            } else {
-                // Default interaction choices
-                choices = [
-                    { text: "Tell me about fishing", action: () => this.handleChoice('fishing', dialogData) },
-                    { text: "Ask about the village", action: () => this.handleChoice('village', dialogData) },
-                    { text: "Say goodbye", action: () => this.handleChoice('goodbye', dialogData) }
-                ];
-            }
-
-        choices.forEach((choice, index) => {
-                try {
-            const buttonX = -200 + (index * 140);
-            const buttonY = 80;
-            const buttonWidth = 130;
-            const buttonHeight = 40;
-            
-                    // Try to create choice button using UITheme
-                    try {
-            const uiButton = UITheme.createButton(this, buttonX, buttonY, buttonWidth, buttonHeight, choice.text, choice.action, 'secondary');
-            
-            // Add button components to the dialog container
-                        if (uiButton && uiButton.button) {
-            this.dialogContainer.add(uiButton.button);
-                        }
-                        if (uiButton && uiButton.text) {
-            this.dialogContainer.add(uiButton.text);
-                        }
-                        if (uiButton && uiButton.hitArea) {
-                this.dialogContainer.add(uiButton.hitArea);
-            }
-                    } catch (uiError) {
-                        console.warn('DialogScene: UITheme.createButton failed, using fallback:', uiError);
-                        // Create fallback button
-                        this.createFallbackChoiceButton(buttonX, buttonY, buttonWidth, buttonHeight, choice.text, choice.action);
-                    }
-                } catch (choiceError) {
-                    console.error('DialogScene: Error creating choice button:', choiceError);
-                }
-            });
-        } catch (error) {
-            console.error('DialogScene: Error in createChoiceButtons:', error);
-            // Create a simple continue button as fallback
-            this.createFallbackContinueButton();
-        }
-    }
-
-    /**
-     * Create a fallback choice button when UITheme fails
-     */
-    createFallbackChoiceButton(x, y, width, height, text, action) {
-        // Simple button background
-        const buttonBg = this.add.graphics();
-        buttonBg.fillStyle(0x2c3e50, 0.8);
-        buttonBg.fillRoundedRect(x - width/2, y - height/2, width, height, 5);
-        buttonBg.lineStyle(2, 0x3498db, 1);
-        buttonBg.strokeRoundedRect(x - width/2, y - height/2, width, height, 5);
-        this.dialogContainer.add(buttonBg);
-
-        // Button text
-        const buttonText = this.add.text(x, y, text, {
-            fontSize: '14px',
-            fill: '#ffffff',
-            fontWeight: 'bold',
-            wordWrap: { width: width - 10 },
-            align: 'center'
-        });
-        buttonText.setOrigin(0.5);
-        this.dialogContainer.add(buttonText);
-
-        // Interactive area
-        const hitArea = this.add.rectangle(x, y, width, height, 0x000000, 0);
-        hitArea.setInteractive({ useHandCursor: true });
-        hitArea.on('pointerdown', action);
-        hitArea.on('pointerover', () => {
-            buttonBg.clear();
-            buttonBg.fillStyle(0x34495e, 0.9);
-            buttonBg.fillRoundedRect(x - width/2, y - height/2, width, height, 5);
-            buttonBg.lineStyle(2, 0x5dade2, 1);
-            buttonBg.strokeRoundedRect(x - width/2, y - height/2, width, height, 5);
-        });
-        hitArea.on('pointerout', () => {
-            buttonBg.clear();
-            buttonBg.fillStyle(0x2c3e50, 0.8);
-            buttonBg.fillRoundedRect(x - width/2, y - height/2, width, height, 5);
-            buttonBg.lineStyle(2, 0x3498db, 1);
-            buttonBg.strokeRoundedRect(x - width/2, y - height/2, width, height, 5);
-        });
-        this.dialogContainer.add(hitArea);
-    }
-
-    /**
-     * Create a simple continue button as last resort fallback
-     */
-    createFallbackContinueButton() {
-        const buttonX = 0;
-        const buttonY = 80;
-        const buttonWidth = 120;
-        const buttonHeight = 40;
-
-        // Simple continue button
-        const buttonBg = this.add.graphics();
-        buttonBg.fillStyle(0x27ae60, 0.8);
-        buttonBg.fillRoundedRect(buttonX - buttonWidth/2, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
-        buttonBg.lineStyle(2, 0x2ecc71, 1);
-        buttonBg.strokeRoundedRect(buttonX - buttonWidth/2, buttonY - buttonHeight/2, buttonWidth, buttonHeight, 5);
-        this.dialogContainer.add(buttonBg);
-
-        const buttonText = this.add.text(buttonX, buttonY, 'Continue', {
+        this.add.text(width/2, height/2, 
+            `Dialog Error: ${error.message}\n\nClick anywhere to close.`, {
             fontSize: '16px',
-            fill: '#ffffff',
-            fontWeight: 'bold'
-        });
-        buttonText.setOrigin(0.5);
-        this.dialogContainer.add(buttonText);
-
-        const hitArea = this.add.rectangle(buttonX, buttonY, buttonWidth, buttonHeight, 0x000000, 0);
-        hitArea.setInteractive({ useHandCursor: true });
-        hitArea.on('pointerdown', () => this.closeDialog());
-        this.dialogContainer.add(hitArea);
+            fill: '#e74c3c',
+            align: 'center'
+        }).setOrigin(0.5).setDepth(1000);
+        
+        this.input.on('pointerdown', () => this.closeDialog());
     }
-
-    /**
-     * Handle choices from JSON dialog data
-     */
-    handleDialogChoice(choice, dialogData) {
-        console.log('DialogScene: Dialog choice selected:', choice.text);
-        
-        const dialogManager = this.getDialogManager();
-        
-        if (choice.effects && dialogManager) {
-            // Apply all effects from the choice
-            this.applyDialogEffects(choice.effects, dialogManager);
-        }
-        
-        // Show response dialogue if available
-        if (choice.effects && choice.effects.dialogue) {
-            // Update dialog text with response
-            const dialogText = this.dialogContainer.list.find(child => 
-                child.type === 'Text' && child.text.length > 50
-            );
-            if (dialogText) {
-                this.showTextWithTypewriter(dialogText, choice.effects.dialogue);
-            }
-            
-            // Close dialog after showing response
-            this.time.delayedCall(2000, () => {
-                this.closeDialog();
-            });
-        } else {
-            // Close dialog immediately if no response
-            this.time.delayedCall(500, () => {
-                this.closeDialog();
-            });
-        }
-    }
-
-    /**
-     * Apply dialog effects to game systems
-     */
-    applyDialogEffects(effects, dialogManager) {
-        // Romance effects
-        if (effects.romance) {
-            Object.entries(effects.romance).forEach(([npcId, points]) => {
-                if (dialogManager.increaseRomanceMeter) {
-                    dialogManager.increaseRomanceMeter(npcId, points);
-                }
-            });
-        }
-
-        // Quest progression
-        if (effects.questProgress && dialogManager.progressQuest) {
-            dialogManager.progressQuest(effects.questProgress);
-        }
-
-        // Unlock quests
-        if (effects.unlockQuest && dialogManager.startQuest) {
-            dialogManager.startQuest(effects.unlockQuest);
-        }
-
-        // Experience rewards
-        if (effects.experience) {
-            console.log('DialogScene: Adding experience:', effects.experience);
-            // Add experience handling here when available
-        }
-
-        // Coin rewards
-        if (effects.coins) {
-            console.log('DialogScene: Adding coins:', effects.coins);
-            // Add coin handling here when available
-        }
-
-        // Item rewards
-        if (effects.items && dialogManager.giveItem) {
-            effects.items.forEach(item => {
-                dialogManager.giveItem(item, 1);
-            });
-        }
-
-        // Achievement unlocks
-        if (effects.unlockAchievement && dialogManager.unlockAchievement) {
-            dialogManager.unlockAchievement(effects.unlockAchievement);
-        }
-
-        // Map unlocks
-        if (effects.unlockMap) {
-            console.log('DialogScene: Unlocking map:', effects.unlockMap);
-            // Add map unlock handling here when available
-        }
-
-        // Boss unlocks
-        if (effects.unlockBoss) {
-            console.log('DialogScene: Unlocking boss:', effects.unlockBoss);
-            // Add boss unlock handling here when available
-        }
-
-        // Minigame starts
-        if (effects.startMinigame) {
-            console.log('DialogScene: Starting minigame:', effects.startMinigame);
-            // Add minigame start handling here when available
-        }
-
-        // UI opens
-        if (effects.openUI) {
-            console.log('DialogScene: Opening UI:', effects.openUI);
-            // Add UI opening handling here when available
-        }
-    }
-
-    handleChoice(choiceType, dialogData) {
-        console.log('DialogScene: Choice selected:', choiceType, 'with speaker:', dialogData.speaker);
-        
-        // Get dialog manager - use same retrieval logic as other methods
-        let dialogManager = this.externalDialogManager;
-        if (!dialogManager) {
-            const gameScene = this.scene.get('GameScene');
-            dialogManager = gameScene?.dialogManager;
-        }
-        
-        if (dialogManager) {
-            // Trigger appropriate dialog manager events
-            const speakerName = dialogData.speaker.toLowerCase();
-            switch (choiceType) {
-                case 'fishing':
-                    if (dialogManager.increaseRomanceMeter) {
-                        dialogManager.increaseRomanceMeter(speakerName, 3);
-                    }
-                    if (dialogManager.unlockAchievement) {
-                        dialogManager.unlockAchievement('asked_about_fishing');
-                    }
-                    break;
-                case 'village':
-                    if (dialogManager.increaseRomanceMeter) {
-                        dialogManager.increaseRomanceMeter(speakerName, 2);
-                    }
-                    if (dialogManager.unlockAchievement) {
-                        dialogManager.unlockAchievement('local_curiosity');
-                    }
-                    break;
-                case 'goodbye':
-                    if (dialogManager.increaseRomanceMeter) {
-                        dialogManager.increaseRomanceMeter(speakerName, 1);
-                    }
-                    break;
-            }
-            
-            // Always unlock first conversation achievement
-            if (dialogManager.unlockAchievement) {
-                dialogManager.unlockAchievement('first_conversation');
-            }
-        } else {
-            console.warn('DialogScene: No DialogManager available for choice handling');
-        }
-        
-        // Close dialog after choice
-        this.time.delayedCall(500, () => {
-            this.closeDialog();
-        });
-    }
-
+    
     closeDialog() {
-        if (!this.isDialogActive) return;
-
-        console.log('DialogScene: Closing dialog');
-        this.isDialogActive = false;
-
-        // Emit dialog ended event for DialogManager
-        this.events.emit('dialog-ended', { npcId: this.currentNPCId });
-
-        // Clean up RenJs if it was used
-        if (this.renjsLoader && this.renjsLoader.isInitialized) {
-            this.renjsLoader.stopDialog();
-        }
-
-        // Add exit animation with UITheme
-        if (this.dialogContainer) {
-            this.tweens.add({
-                targets: this.dialogContainer,
-                scale: 0.8,
-                alpha: 0,
-                duration: UITheme.animations.fast,
-                ease: UITheme.animations.easing.easeIn,
-                onComplete: () => {
-                    this.scene.stop();
+        try {
+            console.log('DialogScene: Closing dialog');
+            
+            // Store final romance meter data before closing
+            let finalRomanceData = null;
+            if (this.dialogManager && this.currentNPCId) {
+                const npc = this.dialogManager.getNPC(this.currentNPCId);
+                if (npc) {
+                    finalRomanceData = {
+                        npcId: this.currentNPCId,
+                        newValue: npc.romanceMeter,
+                        maxValue: npc.maxRomance,
+                        relationship: npc.relationship
+                    };
+                    console.log('DialogScene: Final romance data:', finalRomanceData);
                 }
-            });
-        } else {
-            // Stop the scene if no container to animate
-            this.scene.stop();
-        }
-        
-        // Resume the calling scene if it's paused
-        if (this.callingScene && this.scene.isPaused(this.callingScene)) {
-            this.scene.resume(this.callingScene);
+            }
+            
+            // Get calling scene reference before stopping
+            const callingSceneRef = this.scene.get(this.callingScene);
+            
+            // Emit events BEFORE stopping the scene to avoid timer issues
+            if (finalRomanceData && callingSceneRef) {
+                try {
+                    if (callingSceneRef.events && typeof callingSceneRef.events.emit === 'function') {
+                        console.log('DialogScene: Emitting romance meter update to calling scene');
+                        callingSceneRef.events.emit('romance-meter-updated', finalRomanceData);
+                        
+                        // Also emit dialog-ended event
+                        callingSceneRef.events.emit('dialog-ended', {
+                            npcId: finalRomanceData.npcId,
+                            romanceMeter: finalRomanceData.newValue,
+                            relationship: finalRomanceData.relationship
+                        });
+                    }
+                    
+                    // Call the onRomanceMeterUpdated method directly as a fallback
+                    if (callingSceneRef.onRomanceMeterUpdated && typeof callingSceneRef.onRomanceMeterUpdated === 'function') {
+                        console.log('DialogScene: Calling onRomanceMeterUpdated directly');
+                        callingSceneRef.onRomanceMeterUpdated(finalRomanceData);
+                    }
+                } catch (emitError) {
+                    console.warn('DialogScene: Error emitting events to calling scene:', emitError);
+                }
+            }
+            
+            // Stop this scene first
+            if (this.scene && typeof this.scene.stop === 'function') {
+                this.scene.stop();
+            }
+            
+            // Resume calling scene
+            if (this.callingScene && this.scene && typeof this.scene.resume === 'function') {
+                try {
+                    this.scene.resume(this.callingScene);
+                    console.log('DialogScene: Successfully resumed', this.callingScene);
+                } catch (resumeError) {
+                    console.warn('DialogScene: Could not resume calling scene:', resumeError);
+                    // Try alternative method
+                    if (callingSceneRef && callingSceneRef.scene && callingSceneRef.scene.resume) {
+                        callingSceneRef.scene.resume();
+                    }
+                }
+            }
+            
+            console.log('DialogScene: Dialog closed successfully');
+        } catch (error) {
+            console.error('DialogScene: Error closing dialog:', error);
+            // Force close anyway
+            try {
+                this.scene.stop();
+            } catch (stopError) {
+                console.error('DialogScene: Could not stop scene:', stopError);
+            }
         }
     }
-
-    update() {
-        // Handle any ongoing dialog updates
-        if (!this.isDialogActive) {
-            return;
-        }
-
-        // Add SPACE key to advance dialog
-        if (this.input.keyboard.addKey('SPACE').isDown) {
-            // Could implement dialog advancement here
-        }
-    }
-
-    destroy() {
-        this.closeDialog();
-        super.destroy();
-    }
-
-    /**
-     * Create a simple fallback dialog when UITheme fails
-     */
-    createSimpleFallbackDialog(dialogData) {
-        console.log('DialogScene: Creating simple fallback dialog for:', dialogData.speaker);
-        
-        const centerX = this.cameras.main.width / 2;
-        const centerY = this.cameras.main.height / 2;
-
-        // Main dialog container
-        this.dialogContainer = this.add.container(centerX, centerY);
-
-        // Simple background
-        const dialogBg = this.add.graphics();
-        dialogBg.fillStyle(0x000000, 0.8);
-        dialogBg.fillRoundedRect(-300, -100, 600, 200, 10);
-        dialogBg.lineStyle(2, 0xffffff, 1);
-        dialogBg.strokeRoundedRect(-300, -100, 600, 200, 10);
-        this.dialogContainer.add(dialogBg);
-
-        // Character name
-        const nameText = this.add.text(0, -70, dialogData.speaker, {
-            fontSize: '24px',
-            fill: '#ffffff',
-            fontWeight: 'bold'
-        });
-        nameText.setOrigin(0.5);
-        this.dialogContainer.add(nameText);
-
-        // Dialog text
-        const dialogText = this.add.text(0, -20, dialogData.text || 'Hello!', {
-            fontSize: '16px',
-            fill: '#ffffff',
-            wordWrap: { width: 500 },
-            align: 'center'
-        });
-        dialogText.setOrigin(0.5);
-        this.dialogContainer.add(dialogText);
-
-        // Close button
-        const closeButton = this.add.text(280, -80, '✕', {
-            fontSize: '20px',
-            fill: '#ff4444',
-            fontWeight: 'bold'
-        });
-        closeButton.setOrigin(0.5);
-        closeButton.setInteractive({ useHandCursor: true });
-        closeButton.on('pointerdown', () => this.closeDialog());
-        this.dialogContainer.add(closeButton);
-
-        // Continue button
-        const continueButton = this.add.text(0, 60, 'Continue', {
-            fontSize: '18px',
-            fill: '#44ff44',
-            fontWeight: 'bold'
-        });
-        continueButton.setOrigin(0.5);
-        continueButton.setInteractive({ useHandCursor: true });
-        continueButton.on('pointerdown', () => this.closeDialog());
-        this.dialogContainer.add(continueButton);
-
-        // Simple fade in
-        this.dialogContainer.setAlpha(0);
-        this.tweens.add({
-            targets: this.dialogContainer,
-            alpha: 1,
-            duration: 300
-        });
-    }
-} 
+}

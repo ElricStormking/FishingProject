@@ -8,7 +8,7 @@
     "castDurationMultiplier": 2,
     "maxCastDuration": 1500,
     "fishingLineWidth": 2,
-    "fishingLineColor": "0x8B4513",
+    "fishingLineColor": 9127187,
     "fishingLineAlpha": 0.8,
     "lureScale": 0.8,
     "fishScale": 0.8,
@@ -31,7 +31,7 @@
   "ui": {
     "crosshairSize": 10,
     "crosshairLineLength": 15,
-    "crosshairColor": "0xffffff",
+    "crosshairColor": 16777215,
     "crosshairAlpha": 0.8,
     "crosshairLineWidth": 2
   },
@@ -51,21 +51,21 @@
     "autoSaveInterval": 30000
   },
   "boat": {
-    "deckColor": "0x8B4513",
+    "deckColor": 9127187,
     "deckHeight": 0.18,
-    "sideColor": "0x654321",
+    "sideColor": 6636321,
     "sideWidth": 80,
-    "frontEdgeColor": "0x5D4037",
+    "frontEdgeColor": 6111287,
     "frontEdgeHeight": 5,
     "plankSpacing": 40,
-    "plankColor": "0x654321",
+    "plankColor": 6636321,
     "plankAlpha": 0.3,
-    "rodHolderColor": "0x795548",
+    "rodHolderColor": 7951688,
     "rodHolderRadius": 8,
     "rodHolderHeight": 30,
-    "tackleBoxColor": "0x4E342E",
+    "tackleBoxColor": 5125166,
     "tackleBoxWidth": 60,
     "tackleBoxHeight": 40,
-    "tackleBoxBorderColor": "0x3E2723"
+    "tackleBoxBorderColor": 4073251
   }
 }

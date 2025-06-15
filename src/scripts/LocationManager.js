@@ -1,5 +1,18 @@
 // LocationManager.js - Centralized Location Management System
-import { LOCATION_DATA, getLocationById, getAllLocations, getUnlockedLocations } from '../data/LocationData.js';
+import { 
+    LOCATION_DATA, 
+    getLocationById, 
+    getAllLocations, 
+    getUnlockedLocations,
+    getLocationsByMapId,
+    getLocationsByDifficulty,
+    getLocationsByEnvironment,
+    getLocationsByFishSpecies,
+    getLocationsByDifficultyRange,
+    getLocationsByPlayerLevel,
+    searchLocations,
+    getLocationStatistics
+} from '../data/LocationData.js';
 
 export class LocationManager {
     constructor(gameState) {
@@ -490,6 +503,178 @@ export class LocationManager {
         }
     }
     
+    // Enhanced Location Discovery and Search
+    
+    /**
+     * Find locations suitable for the player's current level and skills
+     * @param {number} levelRange - How many levels above/below to include
+     * @returns {Array} Array of suitable locations
+     */
+    getSuitableLocations(levelRange = 2) {
+        const playerLevel = this.gameState.player.level || 1;
+        return getLocationsByPlayerLevel(playerLevel, levelRange)
+            .filter(location => this.isLocationUnlocked(location.id));
+    }
+    
+    /**
+     * Find locations that contain specific fish species
+     * @param {string} fishSpecies - The fish species to search for
+     * @returns {Array} Array of locations containing the fish
+     */
+    getLocationsWithFish(fishSpecies) {
+        return getLocationsByFishSpecies(fishSpecies)
+            .filter(location => this.isLocationUnlocked(location.id));
+    }
+    
+    /**
+     * Search for locations by name or description
+     * @param {string} searchTerm - The search term
+     * @returns {Array} Array of matching locations
+     */
+    searchAvailableLocations(searchTerm) {
+        return searchLocations(searchTerm)
+            .filter(location => this.isLocationUnlocked(location.id));
+    }
+    
+    /**
+     * Get locations by environment type that are unlocked
+     * @param {string} environment - Environment type
+     * @returns {Array} Array of unlocked locations in that environment
+     */
+    getUnlockedLocationsByEnvironment(environment) {
+        return getLocationsByEnvironment(environment)
+            .filter(location => this.isLocationUnlocked(location.id));
+    }
+    
+    /**
+     * Get locations within a difficulty range that are unlocked
+     * @param {number} minDifficulty - Minimum difficulty
+     * @param {number} maxDifficulty - Maximum difficulty
+     * @returns {Array} Array of unlocked locations in difficulty range
+     */
+    getUnlockedLocationsByDifficultyRange(minDifficulty, maxDifficulty) {
+        return getLocationsByDifficultyRange(minDifficulty, maxDifficulty)
+            .filter(location => this.isLocationUnlocked(location.id));
+    }
+    
+    /**
+     * Get all locations in the same map as current location
+     * @returns {Array} Array of locations in current map
+     */
+    getCurrentMapLocations() {
+        if (!this.currentLocation) return [];
+        return getLocationsByMapId(this.currentLocation.mapId)
+            .filter(location => this.isLocationUnlocked(location.id));
+    }
+    
+    /**
+     * Get recommended next locations based on player progress
+     * @returns {Array} Array of recommended locations
+     */
+    getRecommendedLocations() {
+        const playerLevel = this.gameState.player.level || 1;
+        const currentDifficulty = this.currentLocation?.difficulty || 1;
+        
+        // Get locations slightly above current difficulty
+        const nextDifficultyLocations = this.getUnlockedLocationsByDifficultyRange(
+            currentDifficulty, 
+            currentDifficulty + 2
+        );
+        
+        // Get locations suitable for player level
+        const levelSuitableLocations = this.getSuitableLocations(1);
+        
+        // Combine and deduplicate
+        const recommended = new Map();
+        
+        [...nextDifficultyLocations, ...levelSuitableLocations].forEach(location => {
+            if (!recommended.has(location.id) && location.id !== this.currentLocationId) {
+                recommended.set(location.id, location);
+            }
+        });
+        
+        return Array.from(recommended.values()).slice(0, 5); // Top 5 recommendations
+    }
+    
+    /**
+     * Get location statistics and analytics
+     * @returns {Object} Comprehensive location statistics
+     */
+    getLocationAnalytics() {
+        const baseStats = getLocationStatistics();
+        const playerStats = {
+            unlockedCount: this.unlockedLocations.size,
+            visitedCount: this.visitedLocations.size,
+            currentLocation: this.currentLocation?.name || 'None',
+            masteryLevels: {},
+            totalFishCaught: 0,
+            totalTimeSpent: 0
+        };
+        
+        // Calculate mastery and progress stats
+        this.locationProgress.forEach((progress, locationId) => {
+            const location = getLocationById(locationId);
+            if (location) {
+                playerStats.masteryLevels[location.name] = progress.masteryLevel;
+                playerStats.totalFishCaught += progress.fishCaught;
+                playerStats.totalTimeSpent += progress.timeSpent;
+            }
+        });
+        
+        return {
+            ...baseStats,
+            player: playerStats
+        };
+    }
+    
+    /**
+     * Get location completion percentage
+     * @param {string} locationId - Location to check
+     * @returns {number} Completion percentage (0-100)
+     */
+    getLocationCompletionPercentage(locationId) {
+        const location = getLocationById(locationId);
+        const progress = this.locationProgress.get(locationId);
+        
+        if (!location || !progress) return 0;
+        
+        let completionFactors = 0;
+        let maxFactors = 0;
+        
+        // Mastery level (0-10)
+        completionFactors += progress.masteryLevel;
+        maxFactors += 10;
+        
+        // Species variety (percentage of available species caught)
+        if (location.fishPopulation && location.fishPopulation.length > 0) {
+            const speciesCaughtPercent = (progress.speciesCaught.size / location.fishPopulation.length) * 10;
+            completionFactors += Math.min(speciesCaughtPercent, 10);
+            maxFactors += 10;
+        }
+        
+        // Visit frequency (capped at 10 visits = 100%)
+        completionFactors += Math.min(progress.timesVisited, 10);
+        maxFactors += 10;
+        
+        return maxFactors > 0 ? Math.round((completionFactors / maxFactors) * 100) : 0;
+    }
+    
+    /**
+     * Get locations that need more exploration
+     * @param {number} completionThreshold - Minimum completion percentage (default: 50)
+     * @returns {Array} Array of locations needing exploration
+     */
+    getLocationsNeedingExploration(completionThreshold = 50) {
+        return Array.from(this.visitedLocations)
+            .map(locationId => ({
+                location: getLocationById(locationId),
+                completion: this.getLocationCompletionPercentage(locationId)
+            }))
+            .filter(item => item.completion < completionThreshold)
+            .sort((a, b) => a.completion - b.completion)
+            .map(item => item.location);
+    }
+
     // Cleanup
     destroy() {
         this.callbacks.locationChanged = [];

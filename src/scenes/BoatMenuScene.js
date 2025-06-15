@@ -19,7 +19,14 @@ export default class BoatMenuScene extends Phaser.Scene {
     }
 
     create(data) {
-        const { width, height } = this.cameras.main;
+        console.log('BoatMenuScene: CREATE called with data:', data);
+        
+        // Initialize async components in the background
+        this.initializeAsyncComponents(data);
+        
+        // Continue with synchronous initialization
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
         
         console.log('BoatMenuScene: Creating scene with dimensions:', width, 'x', height);
         console.log('BoatMenuScene: Scene data received:', data);
@@ -52,8 +59,7 @@ export default class BoatMenuScene extends Phaser.Scene {
         // Initialize quest manager and ensure it has scene context
         console.log('BoatMenuScene: Initializing QuestManager...');
         
-        // CRITICAL FIX: Auto-create QuestManager when BoatMenuScene loads - don't wait for manual quest button press
-        this.questManager = null;
+        // Quest Manager will be initialized asynchronously in initializeAsyncComponents
         this.boatMenuAccessed = true; // Track that boat menu was accessed for retroactive quest completion
         
         if (this.gameState.questManager) {
@@ -62,8 +68,17 @@ export default class BoatMenuScene extends Phaser.Scene {
             console.log('BoatMenuScene: QuestManager quest templates count:', this.gameState.questManager.questTemplates.size);
             this.questManager = this.gameState.questManager;
             
-            // Complete boat menu quest objective immediately since QuestManager is available
-            this.completeBoatMenuQuestObjective();
+            // Update scene reference
+            this.questManager.scene = this;
+            
+            // Ensure it's initialized
+            if (!this.questManager.isInitialized) {
+                console.log('BoatMenuScene: QuestManager not initialized, will be initialized asynchronously...');
+                // await this.questManager.initialize(); // Removed - will be handled asynchronously
+            }
+            
+            // Boat menu objective will be completed in async initialization
+            console.log('BoatMenuScene: QuestManager found, boat menu objective will be completed asynchronously');
         } else {
             console.log('BoatMenuScene: 🔄 Auto-creating QuestManager for immediate availability...');
             
@@ -77,39 +92,38 @@ export default class BoatMenuScene extends Phaser.Scene {
                 
                 console.log('BoatMenuScene: ✅ QuestManager auto-created and stored in GameState');
                 
-                // CRITICAL FIX: Wait for QuestManager initialization before processing objectives
-                this.time.delayedCall(300, () => {
-                    console.log('BoatMenuScene: QuestManager initialization complete, checking active quests...');
-                    console.log('BoatMenuScene: QuestManager active quests:', Array.from(this.questManager.activeQuests.keys()));
-                    console.log('BoatMenuScene: QuestManager templates count:', this.questManager.questTemplates.size);
-                    
-                    // Complete boat menu quest objective now that QuestManager is available
-                    this.completeBoatMenuQuestObjective();
-                    
-                    // CRITICAL FIX: Set up quest event listeners on GameScene if available
-                    const gameScene = this.scene.get('GameScene');
-                    if (gameScene && gameScene.setupQuestEventListeners) {
-                        console.log('BoatMenuScene: Setting up quest event listeners on GameScene...');
-                        gameScene.questManager = this.questManager;
-                        gameScene.setupQuestEventListeners();
-                        console.log('BoatMenuScene: ✅ Quest event listeners set up on GameScene');
-                    } else {
-                        console.log('BoatMenuScene: GameScene not available for quest listener setup');
-                    }
-                });
+                // CRITICAL FIX: Initialize QuestManager asynchronously
+                console.log('BoatMenuScene: Initializing QuestManager asynchronously...');
+                // await this.questManager.initialize(); // Removed - will be handled asynchronously
+                console.log('BoatMenuScene: QuestManager initialization will complete asynchronously');
                 
-                // Update Quest Tracker UI to use the new QuestManager (use delay to ensure it's created)
-                this.time.delayedCall(100, () => {
-                    if (this.questTrackerUI && this.questTrackerUI.questProcessingDisabled) {
-                        console.log('BoatMenuScene: Enabling quest processing on existing QuestTrackerUI...');
-                        this.questTrackerUI.updateQuestManager(this.questManager);
-                    } else if (this.questTrackerUI) {
-                        console.log('BoatMenuScene: QuestTrackerUI already has active quest processing, refreshing...');
-                        this.questTrackerUI.refreshQuests();
-                    } else {
-                        console.log('BoatMenuScene: QuestTrackerUI not available yet for updating');
-                    }
-                });
+                console.log('BoatMenuScene: QuestManager active quests:', Array.from(this.questManager.activeQuests.keys()));
+                console.log('BoatMenuScene: QuestManager templates count:', this.questManager.questTemplates.size);
+                
+                // Boat menu quest objective will be completed in async initialization
+                console.log('BoatMenuScene: QuestManager created, boat menu objective will be completed asynchronously');
+                
+                // CRITICAL FIX: Set up quest event listeners on GameScene if available
+                const gameScene = this.scene.get('GameScene');
+                if (gameScene && gameScene.setupQuestEventListeners) {
+                    console.log('BoatMenuScene: Setting up quest event listeners on GameScene...');
+                    gameScene.questManager = this.questManager;
+                    gameScene.setupQuestEventListeners();
+                    console.log('BoatMenuScene: ✅ Quest event listeners set up on GameScene');
+                } else {
+                    console.log('BoatMenuScene: GameScene not available for quest listener setup');
+                }
+                
+                // Update Quest Tracker UI to use the new QuestManager
+                if (this.questTrackerUI && this.questTrackerUI.questProcessingDisabled) {
+                    console.log('BoatMenuScene: Enabling quest processing on existing QuestTrackerUI...');
+                    this.questTrackerUI.updateQuestManager(this.questManager);
+                } else if (this.questTrackerUI) {
+                    console.log('BoatMenuScene: QuestTrackerUI already has active quest processing, refreshing...');
+                    this.questTrackerUI.refreshQuests();
+                } else {
+                    console.log('BoatMenuScene: QuestTrackerUI not available yet for updating');
+                }
                 
             } catch (error) {
                 console.error('BoatMenuScene: Error auto-creating QuestManager:', error);
@@ -125,9 +139,9 @@ export default class BoatMenuScene extends Phaser.Scene {
         }
             
         // Initialize audio manager for this scene
-            this.audioManager = this.gameState.getAudioManager(this);
-            if (this.audioManager) {
-                this.audioManager.setSceneAudio('BoatMenuScene');
+        this.audioManager = this.gameState.getAudioManager(this);
+        if (this.audioManager) {
+            this.audioManager.setSceneAudio('BoatMenuScene');
             console.log('BoatMenuScene: Audio manager initialized');
         }
         
@@ -2468,6 +2482,20 @@ export default class BoatMenuScene extends Phaser.Scene {
         console.log('BoatMenuScene: Attempting to complete boat menu quest objective...');
         
         try {
+            // CRITICAL FIX: Ensure gameState is available before proceeding
+            if (!this.gameState) {
+                console.log('BoatMenuScene: GameState not available, initializing...');
+                this.gameState = GameState.getInstance();
+                if (!this.gameState) {
+                    console.error('BoatMenuScene: Failed to get GameState instance');
+                    this.time.delayedCall(1000, () => {
+                        this.showInfoMessage('Boat menu accessed\n(GameState not available)');
+                    });
+                    return;
+                }
+                console.log('BoatMenuScene: GameState initialized successfully');
+            }
+            
             // CRITICAL FIX: Use shared QuestManager from GameState instead of local instance
             const questManager = this.gameState.questManager;
         
@@ -3013,6 +3041,18 @@ export default class BoatMenuScene extends Phaser.Scene {
      */
     checkForQuestManagerAndCompleteObjective() {
         console.log('BoatMenuScene: Checking for available QuestManager...');
+        
+        // CRITICAL FIX: Ensure gameState is available before proceeding
+        if (!this.gameState) {
+            console.log('BoatMenuScene: GameState not available, initializing...');
+            this.gameState = GameState.getInstance();
+            if (!this.gameState) {
+                console.error('BoatMenuScene: Failed to get GameState instance');
+                return;
+            }
+            console.log('BoatMenuScene: GameState initialized successfully');
+        }
+        
         console.log('BoatMenuScene: GameState QuestManager exists:', !!this.gameState.questManager);
         console.log('BoatMenuScene: Current QuestManager reference:', !!this.questManager);
         
@@ -3099,6 +3139,108 @@ export default class BoatMenuScene extends Phaser.Scene {
                 this.questManagerCheckTimer = null;
                 console.log('BoatMenuScene: Stopped redundant QuestManager check timer');
             }
+        }
+    }
+
+    /**
+     * Initialize async components in the background without blocking scene creation
+     */
+    async initializeAsyncComponents(data) {
+        try {
+            console.log('BoatMenuScene: Starting async component initialization...');
+            
+            // Initialize Quest Manager asynchronously
+            await this.initializeQuestManagerAsync();
+            
+            console.log('BoatMenuScene: Async component initialization completed');
+        } catch (error) {
+            console.error('BoatMenuScene: Error in async component initialization:', error);
+        }
+    }
+    
+    /**
+     * Initialize QuestManager asynchronously
+     */
+    async initializeQuestManagerAsync() {
+        try {
+            console.log('BoatMenuScene: Initializing Quest Manager asynchronously...');
+            
+            // CRITICAL FIX: Ensure gameState is available before proceeding
+            if (!this.gameState) {
+                console.log('BoatMenuScene: GameState not available, initializing...');
+                this.gameState = GameState.getInstance();
+                if (!this.gameState) {
+                    console.error('BoatMenuScene: Failed to get GameState instance');
+                    return;
+                }
+                console.log('BoatMenuScene: GameState initialized successfully');
+            }
+            
+            if (this.gameState.questManager) {
+                console.log('BoatMenuScene: Using existing QuestManager from GameState');
+                console.log('BoatMenuScene: QuestManager active quests:', Array.from(this.gameState.questManager.activeQuests.keys()));
+                console.log('BoatMenuScene: QuestManager quest templates count:', this.gameState.questManager.questTemplates.size);
+                this.questManager = this.gameState.questManager;
+                
+                // Update scene reference
+                this.questManager.scene = this;
+                
+                // Ensure it's initialized
+                if (!this.questManager.isInitialized) {
+                    console.log('BoatMenuScene: QuestManager not initialized, initializing now...');
+                    const initResult = await this.questManager.initialize();
+                    if (initResult) {
+                        console.log('BoatMenuScene: ✅ QuestManager initialization completed successfully');
+                    } else {
+                        console.error('BoatMenuScene: ❌ QuestManager initialization failed');
+                        return;
+                    }
+                }
+            } else {
+                console.log('BoatMenuScene: Creating new QuestManager and storing in GameState');
+                this.questManager = new QuestManager(this);
+                this.gameState.questManager = this.questManager;
+                
+                // Initialize the QuestManager asynchronously
+                console.log('BoatMenuScene: Initializing QuestManager asynchronously...');
+                const initResult = await this.questManager.initialize();
+                if (initResult) {
+                    console.log('BoatMenuScene: ✅ QuestManager initialization completed successfully');
+                } else {
+                    console.error('BoatMenuScene: ❌ QuestManager initialization failed');
+                    return;
+                }
+            }
+            
+            // Now that QuestManager is properly initialized, complete the boat menu objective
+            console.log('BoatMenuScene: QuestManager ready, completing boat menu objective...');
+            this.completeBoatMenuQuestObjective();
+            
+            // Set up quest event listeners for GameScene
+            if (this.scene.get('GameScene')) {
+                const gameScene = this.scene.get('GameScene');
+                if (gameScene.setupQuestEventListeners && typeof gameScene.setupQuestEventListeners === 'function') {
+                    console.log('BoatMenuScene: Setting up quest event listeners in GameScene');
+                    gameScene.setupQuestEventListeners();
+                } else {
+                    console.warn('BoatMenuScene: GameScene.setupQuestEventListeners not available');
+                }
+            }
+            
+            // Initialize quest tracker UI after QuestManager is ready
+            if (!this.questTrackerUI) {
+                console.log('BoatMenuScene: Creating QuestTrackerUI with initialized QuestManager');
+                this.questTrackerUI = new QuestTrackerUI(this, this.questManager, 20, 100);
+            } else if (this.questTrackerUI.questProcessingDisabled) {
+                console.log('BoatMenuScene: Updating existing QuestTrackerUI with initialized QuestManager');
+                this.questTrackerUI.updateQuestManager(this.questManager);
+            }
+            
+            console.log('BoatMenuScene: Quest Manager initialized successfully');
+            
+        } catch (error) {
+            console.error('BoatMenuScene: Error initializing Quest Manager:', error);
+            this.questManager = null;
         }
     }
 }

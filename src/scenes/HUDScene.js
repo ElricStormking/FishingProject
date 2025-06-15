@@ -306,14 +306,68 @@ export default class HUDScene extends Phaser.Scene {
         this.gameState.on('levelUp', this.onLevelUp.bind(this));
         this.gameState.on('timeUpdated', this.onTimeUpdated.bind(this));
         
-        // Listen for fishing events from PlayerController
-        this.scene.get('GameScene').events.on('fishing:catchSuccess', this.onCatchSuccess.bind(this));
-        this.scene.get('GameScene').events.on('fishing:catchFailure', this.onCatchFailure.bind(this));
-        this.scene.get('GameScene').events.on('equipment:damaged', this.onEquipmentDamaged.bind(this));
+        // Listen for fishing events from PlayerController - with safety checks
+        try {
+            const gameScene = this.scene.get('GameScene');
+            if (gameScene && gameScene.events) {
+                console.log('HUDScene: Setting up GameScene event listeners');
+                gameScene.events.on('fishing:catchSuccess', this.onCatchSuccess.bind(this));
+                gameScene.events.on('fishing:catchFailure', this.onCatchFailure.bind(this));
+                gameScene.events.on('equipment:damaged', this.onEquipmentDamaged.bind(this));
+                gameScene.events.on('fishing:sessionStarted', this.onFishingSessionStarted.bind(this));
+                gameScene.events.on('fishing:sessionEnded', this.onFishingSessionEnded.bind(this));
+                console.log('HUDScene: GameScene event listeners setup complete');
+            } else {
+                console.warn('HUDScene: GameScene not available yet, will set up listeners when scene becomes available');
+                
+                // Set up a delayed listener setup for when GameScene becomes available
+                this.setupGameSceneListenersWhenReady();
+            }
+        } catch (error) {
+            console.error('HUDScene: Error setting up GameScene event listeners:', error);
+            console.warn('HUDScene: Will attempt to set up listeners when GameScene becomes available');
+            this.setupGameSceneListenersWhenReady();
+        }
+    }
+    
+    /**
+     * Set up GameScene event listeners when the scene becomes available
+     */
+    setupGameSceneListenersWhenReady() {
+        // Check periodically for GameScene availability
+        const checkForGameScene = () => {
+            try {
+                const gameScene = this.scene.get('GameScene');
+                if (gameScene && gameScene.events && gameScene.scene.isActive()) {
+                    console.log('HUDScene: GameScene now available, setting up event listeners');
+                    gameScene.events.on('fishing:catchSuccess', this.onCatchSuccess.bind(this));
+                    gameScene.events.on('fishing:catchFailure', this.onCatchFailure.bind(this));
+                    gameScene.events.on('equipment:damaged', this.onEquipmentDamaged.bind(this));
+                    gameScene.events.on('fishing:sessionStarted', this.onFishingSessionStarted.bind(this));
+                    gameScene.events.on('fishing:sessionEnded', this.onFishingSessionEnded.bind(this));
+                    console.log('HUDScene: Delayed GameScene event listeners setup complete');
+                    return true; // Stop checking
+                }
+                return false; // Continue checking
+            } catch (error) {
+                console.warn('HUDScene: Error checking for GameScene availability:', error);
+                return false; // Continue checking
+            }
+        };
         
-        // Listen for fishing session events
-        this.scene.get('GameScene').events.on('fishing:sessionStarted', this.onFishingSessionStarted.bind(this));
-        this.scene.get('GameScene').events.on('fishing:sessionEnded', this.onFishingSessionEnded.bind(this));
+        // Check immediately
+        if (!checkForGameScene()) {
+            // If not available, set up a timer to check periodically
+            const checkTimer = this.time.addEvent({
+                delay: 500, // Check every 500ms
+                callback: () => {
+                    if (checkForGameScene()) {
+                        checkTimer.destroy(); // Stop checking once successful
+                    }
+                },
+                repeat: 10 // Try up to 10 times (5 seconds total)
+            });
+        }
     }
 
     onFishCaught(data) {

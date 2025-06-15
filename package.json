@@ -5,9 +5,12 @@
   "main": "src/main.js",
   "scripts": {
     "start": "vite",
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "node scripts/csv-to-json-converter.js && vite",
+    "dev-only": "vite",
+    "build": "node scripts/csv-to-json-converter.js && vite build",
+    "preview": "vite preview",
+    "convert-csv": "node scripts/csv-to-json-converter.js",
+    "watch-csv": "node scripts/watch-csv.js"
   },
   "keywords": [
     "phaser",

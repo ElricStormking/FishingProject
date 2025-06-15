@@ -37,123 +37,239 @@ export class QuestManager {
         // Tutorial completion tracking
         this.tutorialQuestsCompleted = false;
         
-        console.log('QuestManager: Initialized successfully');
-        this.initializeQuests();
-        this.registerRenJsCommands();
-        this.setupQuestStateExports();
+        // Initialization state
+        this.isInitialized = false;
+        this.initializationPromise = null;
+        
+        console.log('QuestManager: Constructor completed, ready for initialization');
+    }
+
+    /**
+     * Initialize the quest system asynchronously
+     * This should be called after construction
+     */
+    async initialize() {
+        if (this.isInitialized) {
+            console.log('QuestManager: Already initialized, skipping');
+            return true;
+        }
+        
+        if (this.initializationPromise) {
+            console.log('QuestManager: Initialization already in progress, waiting...');
+            return await this.initializationPromise;
+        }
+        
+        console.log('QuestManager: Starting initialization process...');
+        this.initializationPromise = this.initializeQuests();
+        
+        try {
+            await this.initializationPromise;
+            this.isInitialized = true;
+            
+            // Verify quest data was loaded
+            console.log('QuestManager: Verifying quest data after initialization...');
+            console.log('QuestManager: Quest templates loaded:', this.questTemplates.size);
+            console.log('QuestManager: Available quest template IDs:', Array.from(this.questTemplates.keys()));
+            
+            // Check specifically for tutorial quest
+            const tutorialTemplate = this.questTemplates.get('story_001_tutorial');
+            if (tutorialTemplate) {
+                console.log('QuestManager: ✅ Tutorial quest template found:', tutorialTemplate.title);
+            } else {
+                console.error('QuestManager: ❌ Tutorial quest template NOT found!');
+                console.log('QuestManager: Available templates:', Array.from(this.questTemplates.keys()));
+            }
+            
+            // Register RenJs commands for quest integration
+            try {
+                this.registerRenJsCommands();
+            } catch (renjsError) {
+                console.warn('QuestManager: Error registering RenJs commands:', renjsError.message);
+            }
+            
+            // Setup quest state exports for external systems
+            try {
+                this.setupQuestStateExports();
+            } catch (exportError) {
+                console.warn('QuestManager: Error setting up quest state exports:', exportError.message);
+            }
+            
+            // Register test functions for development
+            try {
+                this.testStory03RenJs();
+            } catch (testError) {
+                console.warn('QuestManager: Error registering test functions:', testError.message);
+            }
+            
+            console.log('QuestManager: Full initialization completed successfully');
+            console.log('QuestManager: Final state - Active quests:', Array.from(this.activeQuests.keys()));
+            console.log('QuestManager: Final state - Available quests:', Array.from(this.availableQuests.keys()));
+            return true;
+        } catch (error) {
+            console.error('QuestManager: Initialization failed:', error);
+            console.error('QuestManager: Error stack:', error.stack);
+            this.initializationPromise = null;
+            this.isInitialized = false;
+            
+            // Try to load fallback data to prevent complete failure
+            try {
+                console.log('QuestManager: Attempting fallback initialization...');
+                this.questDataLoader.loadFallbackData();
+                this.loadQuestTemplatesFromData();
+                console.log('QuestManager: Fallback initialization completed');
+                this.isInitialized = true;
+                return true;
+            } catch (fallbackError) {
+                console.error('QuestManager: Fallback initialization also failed:', fallbackError);
+                return false;
+            }
+        }
     }
 
     async initializeQuests() {
-        console.log('QuestManager: Initializing quest system...');
+        console.log('QuestManager: Starting quest initialization...');
         
-        // Load quest data from JSON
-        const loadSuccess = await this.questDataLoader.loadQuestData();
-        if (!loadSuccess) {
-            console.warn('QuestManager: Failed to load quest data, using fallback');
+        try {
+            // CRITICAL FIX: Load quest data from JSON first
+            console.log('QuestManager: Loading quest data from JSON...');
+            
+            if (!this.questDataLoader) {
+                console.error('QuestManager: questDataLoader not available');
+                throw new Error('QuestDataLoader not available');
+            }
+            
+            const loadResult = await this.questDataLoader.loadQuestData();
+            if (loadResult) {
+                console.log('QuestManager: Quest data loaded from JSON successfully');
+            } else {
+                console.warn('QuestManager: Quest data loading failed, using fallback data');
+            }
+            
+            // Load quest data
+            await this.loadQuestTemplatesFromData();
+            console.log('QuestManager: Quest templates loaded successfully');
+            
+            // Initialize story quests (auto-start if enabled)
+            try {
+                this.initializeStoryQuests();
+            } catch (storyError) {
+                console.error('QuestManager: Error initializing story quests:', storyError.message);
+            }
+            
+            // Initialize NPC quests
+            try {
+                this.initializeNPCQuests();
+            } catch (npcError) {
+                console.error('QuestManager: Error initializing NPC quests:', npcError.message);
+            }
+            
+            console.log('QuestManager: Quest system initialized successfully');
+            console.log('QuestManager: Active quests:', Array.from(this.activeQuests.keys()));
+            console.log('QuestManager: Available quests:', Array.from(this.availableQuests.keys()));
+            
+        } catch (error) {
+            console.error('QuestManager: Failed to initialize quest system:', error);
+            throw error;
         }
-        
-        // Validate quest data
-        const validationErrors = this.questDataLoader.validateQuestData();
-        if (validationErrors.length > 0) {
-            console.warn('QuestManager: Quest data validation issues found');
-        }
-        
-        // Load quest templates from data loader
-        this.loadQuestTemplatesFromData();
-        
-        // Initialize story quests
-        this.initializeStoryQuests();
-        
-        // Initialize NPC quests
-        this.initializeNPCQuests();
-        
-        console.log('QuestManager: Quest system initialized with', this.questTemplates.size, 'quest templates');
-        
-        // Log quest statistics
-        const stats = this.questDataLoader.getQuestStatistics();
-        console.log('QuestManager: Quest statistics:', stats);
-        
-        // Clean up any duplicate or inconsistent quest states
-        this.cleanupQuestStates();
-        
-        // CRITICAL FIX: Validate tutorial completion status after all quests are loaded
-        this.validateTutorialCompletionStatus();
-        
-        // Debug quest states after initialization
-        this.debugQuestStates();
-        
-        console.log('QuestManager: Tutorial quests completed status:', this.tutorialQuestsCompleted);
-        
-        // EXTENSIVE DEBUG: Log all quest states
-        console.log('=== QUEST MANAGER FINAL INITIALIZATION DEBUG ===');
-        console.log('Active quests:', Array.from(this.activeQuests.keys()));
-        console.log('Available quests:', Array.from(this.availableQuests.keys()));  
-        console.log('Completed quests:', Array.from(this.completedQuests));
-        console.log('Quest templates:', Array.from(this.questTemplates.keys()));
-        console.log('Tutorial flag set:', this.tutorialQuestsCompleted);
-        console.log('=== END QUEST MANAGER INITIALIZATION DEBUG ===');
     }
     
-    loadQuestTemplatesFromData() {
-        // Load all quest templates from the data loader
-        const allTemplates = this.questDataLoader.getAllQuestTemplates();
-        allTemplates.forEach(template => {
-            this.questTemplates.set(template.id, template);
-        });
-        
-        console.log(`QuestManager: Loaded ${allTemplates.length} quest templates from JSON data`);
+    async loadQuestTemplatesFromData() {
+        try {
+            // Ensure questDataLoader is available
+            if (!this.questDataLoader) {
+                console.error('QuestManager: questDataLoader not available');
+                throw new Error('QuestDataLoader not available');
+            }
+            
+            // Load all quest templates from the data loader
+            const allTemplates = this.questDataLoader.getAllQuestTemplates();
+            
+            if (!allTemplates || allTemplates.length === 0) {
+                console.warn('QuestManager: No quest templates available from data loader');
+                // Don't throw error, just continue with empty templates
+                return;
+            }
+            
+            allTemplates.forEach(template => {
+                this.questTemplates.set(template.id, template);
+            });
+            
+            console.log(`QuestManager: Loaded ${allTemplates.length} quest templates from JSON data`);
+        } catch (error) {
+            console.error('QuestManager: Error loading quest templates:', error);
+            throw error;
+        }
     }
     
     initializeStoryQuests() {
-        // Get story quests and start auto-start quests
-        const storyQuests = this.questDataLoader.getStoryQuests();
-        const settings = this.questDataLoader.getQuestSettings();
-        
-        console.log('QuestManager: Initializing story quests...');
-        console.log('QuestManager: Found', storyQuests.length, 'story quests');
-        console.log('QuestManager: Auto-start setting:', settings.autoStartStoryQuests);
-        
-        if (settings.autoStartStoryQuests) {
-            storyQuests.forEach(quest => {
-                console.log(`QuestManager: Processing story quest: ${quest.title} (ID: ${quest.id})`);
-                console.log(`QuestManager: Quest autoStart: ${quest.autoStart}`);
-                
-                // Don't auto-start if already completed or active
-                if (this.completedQuests.has(quest.id)) {
-                    console.log(`QuestManager: Story quest ${quest.title} already completed, skipping auto-start`);
-                    return;
-                }
-                
-                if (this.activeQuests.has(quest.id)) {
-                    console.log(`QuestManager: Story quest ${quest.title} already active, skipping auto-start`);
-                    return;
-                }
-                
-                // Don't auto-start if template is marked as completed
-                const template = this.questTemplates.get(quest.id);
-                if (template && template.status === 'completed') {
-                    console.log(`QuestManager: Story quest ${quest.title} template marked as completed, skipping auto-start`);
-                    return;
-                }
-                
-                if (quest.autoStart) {
-                    console.log(`QuestManager: Starting auto-start quest: ${quest.title}`);
-                    const startResult = this.startQuest(quest.id);
-                    if (startResult) {
-                        console.log(`QuestManager: ✅ Auto-started story quest: ${quest.title}`);
-                    } else {
-                        console.error(`QuestManager: ❌ Failed to auto-start story quest: ${quest.title}`);
+        try {
+            // Get story quests and start auto-start quests
+            const storyQuests = this.questDataLoader.getStoryQuests();
+            const settings = this.questDataLoader.getQuestSettings();
+            
+            console.log('QuestManager: Initializing story quests...');
+            console.log('QuestManager: Found', storyQuests ? storyQuests.length : 0, 'story quests');
+            console.log('QuestManager: Auto-start setting:', settings ? settings.autoStartStoryQuests : 'unknown');
+            
+            if (!storyQuests || storyQuests.length === 0) {
+                console.warn('QuestManager: No story quests available to initialize');
+                return;
+            }
+            
+            if (!settings) {
+                console.warn('QuestManager: Quest settings not available, using defaults');
+                return;
+            }
+            
+            if (settings.autoStartStoryQuests) {
+                storyQuests.forEach(quest => {
+                    try {
+                        console.log(`QuestManager: Processing story quest: ${quest.title} (ID: ${quest.id})`);
+                        console.log(`QuestManager: Quest autoStart: ${quest.autoStart}`);
+                        
+                        // Don't auto-start if already completed or active
+                        if (this.completedQuests.has(quest.id)) {
+                            console.log(`QuestManager: Story quest ${quest.title} already completed, skipping auto-start`);
+                            return;
+                        }
+                        
+                        if (this.activeQuests.has(quest.id)) {
+                            console.log(`QuestManager: Story quest ${quest.title} already active, skipping auto-start`);
+                            return;
+                        }
+                        
+                        // Don't auto-start if template is marked as completed
+                        const template = this.questTemplates.get(quest.id);
+                        if (template && template.status === 'completed') {
+                            console.log(`QuestManager: Story quest ${quest.title} template marked as completed, skipping auto-start`);
+                            return;
+                        }
+                        
+                        if (quest.autoStart) {
+                            console.log(`QuestManager: Starting auto-start quest: ${quest.title}`);
+                            const startResult = this.startQuest(quest.id);
+                            if (startResult) {
+                                console.log(`QuestManager: ✅ Auto-started story quest: ${quest.title}`);
+                            } else {
+                                console.error(`QuestManager: ❌ Failed to auto-start story quest: ${quest.title}`);
+                            }
+                        } else {
+                            console.log(`QuestManager: Story quest ${quest.title} has autoStart=false, skipping`);
+                        }
+                    } catch (questError) {
+                        console.error(`QuestManager: Error processing story quest ${quest.id}:`, questError.message);
                     }
-                } else {
-                    console.log(`QuestManager: Story quest ${quest.title} has autoStart=false, skipping`);
-                }
-            });
-        } else {
-            console.log('QuestManager: Auto-start story quests is disabled in settings');
+                });
+            } else {
+                console.log('QuestManager: Auto-start story quests is disabled in settings');
+            }
+            
+            console.log('QuestManager: Story quest initialization complete');
+            console.log('QuestManager: Active quests after initialization:', Array.from(this.activeQuests.keys()));
+        } catch (error) {
+            console.error('QuestManager: Error in initializeStoryQuests:', error);
+            throw error;
         }
-        
-        console.log('QuestManager: Story quest initialization complete');
-        console.log('QuestManager: Active quests after initialization:', Array.from(this.activeQuests.keys()));
     }
     
     initializeNPCQuests() {
@@ -269,50 +385,45 @@ export class QuestManager {
     }
 
     completeQuest(questId) {
+        console.log('QuestManager: Attempting to complete quest:', questId);
+        
         const quest = this.activeQuests.get(questId);
         if (!quest) {
-            console.warn(`QuestManager: Cannot complete quest ${questId} - not found in active quests`);
+            console.warn('QuestManager: Quest not found or not active:', questId);
             return false;
         }
 
-        // Remove from active quests and add to completed
+        // Mark quest as completed
+        quest.status = 'completed';
+        quest.completedAt = Date.now();
+        
+        // Move from active to completed
         this.activeQuests.delete(questId);
         this.completedQuests.add(questId);
         
-        // CRITICAL FIX: Also remove from available quests to prevent duplication
-        this.availableQuests.delete(questId);
+        console.log('QuestManager: Quest completed successfully:', quest.title);
         
-        // ADDITIONAL FIX: Remove from quest templates to prevent re-initialization
-        // (Keep template but mark it as completed in a way that prevents re-adding)
-        const template = this.questTemplates.get(questId);
-        if (template) {
-            template.status = 'completed';
-            template.dateCompleted = new Date();
-        }
-        
-        console.log('QuestManager: Quest completed:', quest.title);
-        
-        // Debug: Log quest states after completion
-        console.log('QuestManager: Quest states after completion:');
-        console.log('- Active quests:', Array.from(this.activeQuests.keys()));
-        console.log('- Available quests:', Array.from(this.availableQuests.keys()));
-        console.log('- Completed quests:', Array.from(this.completedQuests));
-        
-        // Give quest rewards
+        // Give rewards
         this.giveQuestRewards(quest);
         
-        // Check for newly unlocked quests
+        // Check for unlocking new quests
         this.checkUnlockNewQuests(questId);
         
-        // Emit quest completion event for UI updates
-        if (this.scene && this.scene.events) {
-            this.scene.events.emit('quest-completed', { questId, quest });
-            console.log('QuestManager: Emitted quest-completed event for:', questId);
-        }
+        // Emit completion event
+        this.scene.events.emit('quest-completed', {
+            questId: questId,
+            quest: quest,
+            timestamp: Date.now()
+        });
         
-        // CRITICAL ADDITION: Show reward UI immediately when quest completes
-        console.log('QuestManager: Showing reward UI for completed quest:', quest.title);
+        // Add to rewards queue for UI display
+        this.rewardsToShow.push(questId);
+        
+        // Show quest reward UI immediately
         this.showQuestRewardUI(quest);
+        
+        // Check if this should trigger a story dialog
+        this.checkStoryDialogTriggers(questId);
         
         // Check if this completes the tutorial sequence
         if (questId === 'story_001_tutorial') {
@@ -889,8 +1000,8 @@ export class QuestManager {
             <h2 style="color: #f39c12; margin: 0 0 20px 0;">🎉 Quest Complete! 🎉</h2>
             <h3 style="color: white; margin: 0 0 20px 0;">${quest.title}</h3>
             <div style="margin: 20px 0;">
-                <div style="color: #00FF00; margin: 10px 0;">📈 Experience: +${quest.rewards.experience}</div>
-                <div style="color: #FFD700; margin: 10px 0;">💰 Coins: +${quest.rewards.coins}</div>
+                <div style="color: #00FF00; margin: 10px 0;">📈 Experience: +${quest.rewards?.experience || 0}</div>
+                <div style="color: #FFD700; margin: 10px 0;">💰 Coins: +${quest.rewards?.coins || 0}</div>
             </div>
             <button onclick="this.parentElement.parentElement.remove()" 
                     style="background: #f39c12; color: white; border: none; padding: 12px 24px; 
@@ -901,48 +1012,6 @@ export class QuestManager {
         document.body.appendChild(overlay);
         
         return true;
-    }
-
-    /**
-     * Check if tutorial quests were already completed in a previous session
-     */
-    checkIfTutorialAlreadyCompleted() {
-        // This will be called during initialization before quest data is loaded
-        // We'll check this again after initialization in initializeQuests()
-        
-        // Try to check if tutorial was completed from game state
-        try {
-            if (this.gameState && this.gameState.questData) {
-                const tutorialCompleted = this.gameState.questData.completedQuests?.includes('story_001_tutorial');
-                const companionCompleted = this.gameState.questData.completedQuests?.includes('story_002_first_companion');
-                
-                if (tutorialCompleted) {
-                    console.log('QuestManager: Tutorial quest already completed in previous session');
-                    return true;
-                }
-            }
-        } catch (error) {
-            console.warn('QuestManager: Error checking tutorial completion from game state:', error);
-        }
-        
-        return false;
-    }
-
-    /**
-     * Validate and update tutorial completion status after quest initialization
-     */
-    validateTutorialCompletionStatus() {
-        const tutorialCompleted = this.completedQuests.has('story_001_tutorial');
-        const companionCompleted = !this.questTemplates.has('story_002_first_companion') || 
-                                 this.completedQuests.has('story_002_first_companion');
-        
-        if (tutorialCompleted && companionCompleted) {
-            console.log('QuestManager: Tutorial quests were already completed, disabling quest processing');
-            this.tutorialQuestsCompleted = true;
-            return true;
-        }
-        
-        return false;
     }
 
     // Utility methods
@@ -1195,4 +1264,307 @@ export class QuestManager {
         
         console.log('=== END QUEST DEBUG ===');
     }
-} 
+
+    /**
+     * Trigger a story dialog with RenJs support
+     * @param {string} storyId - Story dialog ID (e.g., 'Story03')
+     * @param {string} npcId - NPC to dialog with
+     * @param {string} callingScene - Scene that initiated the dialog
+     */
+    triggerStoryDialog(storyId, npcId = 'mia', callingScene = 'GameScene') {
+        console.log(`QuestManager: Triggering story dialog ${storyId} with ${npcId}`);
+        
+        try {
+            // CRITICAL FIX: Check multiple sources for DialogManager
+            let dialogManager = null;
+            
+            // Priority 1: Check if DialogManager is directly attached to QuestManager
+            if (this.dialogManager) {
+                dialogManager = this.dialogManager;
+                console.log('QuestManager: Using DialogManager from QuestManager reference');
+            }
+            // Priority 2: Check scene's DialogManager
+            else if (this.scene && this.scene.dialogManager) {
+                dialogManager = this.scene.dialogManager;
+                console.log('QuestManager: Using DialogManager from scene reference');
+            }
+            // Priority 3: Check GameState's DialogManager
+            else if (this.gameState && this.gameState.dialogManager) {
+                dialogManager = this.gameState.dialogManager;
+                console.log('QuestManager: Using DialogManager from GameState reference');
+            }
+            // Priority 4: Try to get it from the calling scene
+            else {
+                const sceneManager = this.scene.scene;
+                const targetScene = sceneManager.get(callingScene);
+                if (targetScene && targetScene.dialogManager) {
+                    dialogManager = targetScene.dialogManager;
+                    console.log(`QuestManager: Using DialogManager from ${callingScene} scene`);
+                }
+            }
+            
+            if (!dialogManager) {
+                console.error('QuestManager: DialogManager not available from any source for story dialog');
+                // Show a fallback Phaser notification instead
+                return this.showStoryDialogFallback(storyId, npcId, callingScene);
+            }
+            
+            // Special handling for Story03 and above to use RenJs
+            const useRenJs = storyId === 'Story03' || (storyId.startsWith('Story') && parseInt(storyId.slice(5)) >= 3);
+            
+            if (useRenJs) {
+                console.log(`QuestManager: Using RenJs format for ${storyId}`);
+                // Use the enhanced startDialog method with specificDialog parameter
+                return dialogManager.startDialog(npcId, callingScene, storyId);
+            } else {
+                // Use standard dialog system for earlier stories
+                console.log(`QuestManager: Using standard format for ${storyId}`);
+                return dialogManager.startDialog(npcId, callingScene);
+            }
+            
+        } catch (error) {
+            console.error('QuestManager: Error triggering story dialog:', error);
+            // Show fallback notification
+            return this.showStoryDialogFallback(storyId, npcId, callingScene);
+        }
+    }
+
+    /**
+     * Show a fallback Phaser notification when DialogManager is not available
+     * @param {string} storyId - Story dialog ID
+     * @param {string} npcId - NPC ID
+     * @param {string} callingScene - Calling scene
+     */
+    showStoryDialogFallback(storyId, npcId, callingScene) {
+        try {
+            console.log(`QuestManager: Showing fallback notification for ${storyId}`);
+            
+            if (!this.scene || !this.scene.add) {
+                console.warn('QuestManager: Scene not available for fallback notification');
+                return false;
+            }
+            
+            const scene = this.scene;
+            const width = scene.cameras.main.width;
+            const height = scene.cameras.main.height;
+            
+            // Create notification overlay
+            const overlay = scene.add.container(0, 0);
+            overlay.setDepth(10000);
+            
+            // Background
+            const bg = scene.add.rectangle(0, 0, width, height, 0x000000, 0.5);
+            bg.setOrigin(0);
+            bg.setInteractive();
+            overlay.add(bg);
+            
+            // Notification panel
+            const panelWidth = Math.min(500, width - 40);
+            const panelHeight = 200;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            
+            const panel = scene.add.rectangle(centerX, centerY, panelWidth, panelHeight, 0x34495e, 0.95);
+            panel.setStrokeStyle(3, 0xe74c3c);
+            overlay.add(panel);
+            
+            // Title
+            const title = scene.add.text(centerX, centerY - 60, '📖 Story Update', {
+                fontSize: '20px',
+                fill: '#e74c3c',
+                fontStyle: 'bold',
+                fontFamily: 'Arial'
+            }).setOrigin(0.5);
+            overlay.add(title);
+            
+            // Story content
+            const storyMessages = {
+                'Story02': 'Your fishing journey continues! You\'ve completed the tutorial and are ready for new adventures.',
+                'Story03': 'You\'ve met your first fishing companion! They will guide you to become a better angler.',
+                'Story04': 'Your skills are improving! New fishing areas and challenges await you.',
+                'Story05': 'You\'ve discovered new waters! Rare fish and greater challenges lie ahead.',
+                'Story06': 'A legendary challenge approaches! Prepare yourself for the ultimate fishing test.'
+            };
+            
+            const message = storyMessages[storyId] || `Story chapter ${storyId} has been unlocked! Continue your fishing adventure.`;
+            
+            const messageText = scene.add.text(centerX, centerY - 10, message, {
+                fontSize: '16px',
+                fill: '#FFFFFF',
+                fontFamily: 'Arial',
+                align: 'center',
+                wordWrap: { width: panelWidth - 40 }
+            }).setOrigin(0.5);
+            overlay.add(messageText);
+            
+            // Continue button
+            const continueButton = scene.add.rectangle(centerX, centerY + 50, 120, 35, 0xe74c3c, 0.9);
+            continueButton.setStrokeStyle(2, 0xFFFFFF);
+            const continueText = scene.add.text(centerX, centerY + 50, 'Continue', {
+                fontSize: '16px',
+                fill: '#FFFFFF',
+                fontStyle: 'bold',
+                fontFamily: 'Arial'
+            }).setOrigin(0.5);
+            
+            overlay.add(continueButton);
+            overlay.add(continueText);
+            
+            // Make interactive
+            continueButton.setInteractive({ useHandCursor: true });
+            continueButton.on('pointerdown', () => {
+                console.log('QuestManager: Closing story fallback notification');
+                overlay.destroy();
+            });
+            
+            // Also allow clicking background to close
+            bg.on('pointerdown', () => {
+                console.log('QuestManager: Closing story fallback notification (background click)');
+                overlay.destroy();
+            });
+            
+            // Animate in
+            overlay.setAlpha(0);
+            scene.tweens.add({
+                targets: overlay,
+                alpha: 1,
+                duration: 300,
+                ease: 'Power2'
+            });
+            
+            // Add hover effects
+            continueButton.on('pointerover', () => {
+                continueButton.setFillStyle(0xc0392b);
+                continueText.setScale(1.05);
+            });
+            
+            continueButton.on('pointerout', () => {
+                continueButton.setFillStyle(0xe74c3c);
+                continueText.setScale(1.0);
+            });
+            
+            console.log('QuestManager: Story fallback notification created successfully');
+            return true;
+            
+        } catch (error) {
+            console.error('QuestManager: Error creating story fallback notification:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Check if a story dialog should be triggered based on quest completion
+     * @param {string} questId - Completed quest ID
+     */
+    checkStoryDialogTriggers(questId) {
+        const storyDialogMappings = {
+            'story_001_tutorial': 'Story02',
+            'story_002_first_companion': 'Story03',
+            'story_003_companion_intro': 'Story04',
+            'story_004_new_waters': 'Story05',
+            'story_005_first_boss': 'Story06'
+        };
+        
+        const storyId = storyDialogMappings[questId];
+        if (storyId) {
+            console.log(`QuestManager: Quest ${questId} completed, triggering ${storyId}`);
+            
+            // Determine NPC for the story dialog with fallbacks
+            let npcId = 'captain'; // Default fallback
+            
+            // Map specific stories to appropriate NPCs
+            if (storyId === 'Story02') npcId = 'captain';
+            if (storyId === 'Story03') npcId = 'mia';
+            if (storyId === 'Story04') npcId = 'mia';
+            if (storyId === 'Story05') npcId = 'sophie';
+            if (storyId === 'Story06') npcId = 'luna';
+            if (storyId === 'Story07') npcId = 'luna';
+            
+            console.log(`QuestManager: Using NPC '${npcId}' for ${storyId}`);
+            
+            // Delay the dialog trigger slightly to allow quest completion UI to show
+            setTimeout(() => {
+                try {
+                    const result = this.triggerStoryDialog(storyId, npcId, 'GameScene');
+                    if (!result) {
+                        console.warn(`QuestManager: Failed to trigger ${storyId} with ${npcId}, trying fallback`);
+                        // Try with a different NPC as fallback
+                        const fallbackNpcs = ['mia', 'sophie', 'luna', 'captain'];
+                        for (const fallbackNpc of fallbackNpcs) {
+                            if (fallbackNpc !== npcId) {
+                                console.log(`QuestManager: Trying fallback NPC: ${fallbackNpc}`);
+                                const fallbackResult = this.triggerStoryDialog(storyId, fallbackNpc, 'GameScene');
+                                if (fallbackResult) {
+                                    console.log(`QuestManager: Successfully triggered ${storyId} with fallback NPC ${fallbackNpc}`);
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        console.log(`QuestManager: Successfully triggered ${storyId} with ${npcId}`);
+                    }
+                } catch (error) {
+                    console.error(`QuestManager: Error triggering story dialog ${storyId}:`, error);
+                }
+            }, 2000);
+        }
+    }
+
+    /**
+     * Test function to trigger Story03 with RenJs (for development/testing)
+     * Call from browser console: window.testStory03RenJs()
+     */
+    testStory03RenJs() {
+        console.log('QuestManager: Registering Story03 RenJs test function');
+        
+        // Only register the global function, don't trigger immediately
+        if (typeof window !== 'undefined') {
+            window.testStory03RenJs = () => {
+                console.log('QuestManager: Testing Story03 with RenJs format (called from window)');
+                
+                // CRITICAL FIX: Check multiple sources for DialogManager
+                let dialogManager = null;
+                
+                // Priority 1: Check if DialogManager is directly attached to QuestManager
+                if (this.dialogManager) {
+                    dialogManager = this.dialogManager;
+                    console.log('QuestManager: Using DialogManager from QuestManager reference');
+                }
+                // Priority 2: Check scene's DialogManager
+                else if (this.scene && this.scene.dialogManager) {
+                    dialogManager = this.scene.dialogManager;
+                    console.log('QuestManager: Using DialogManager from scene reference');
+                }
+                // Priority 3: Check GameState's DialogManager
+                else if (this.gameState && this.gameState.dialogManager) {
+                    dialogManager = this.gameState.dialogManager;
+                    console.log('QuestManager: Using DialogManager from GameState reference');
+                }
+                // Priority 4: Try to get it from GameScene
+                else {
+                    try {
+                        const gameScene = window.game?.scene?.getScene('GameScene');
+                        if (gameScene?.dialogManager) {
+                            dialogManager = gameScene.dialogManager;
+                            console.log('QuestManager: Using DialogManager from GameScene');
+                        }
+                    } catch (sceneError) {
+                        console.warn('QuestManager: Could not access GameScene:', sceneError.message);
+                    }
+                }
+                
+                if (!dialogManager) {
+                    console.error('QuestManager: DialogManager not available from any source for story dialog');
+                    return false;
+                }
+                
+                // Trigger the story dialog
+                return this.triggerStoryDialog('Story03', 'mia', 'GameScene');
+            };
+            console.log('QuestManager: ✅ window.testStory03RenJs() function registered successfully');
+        }
+        
+        // Don't trigger immediately during initialization
+        return true;
+    }
+}

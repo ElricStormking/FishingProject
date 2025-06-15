@@ -35,4 +35,20 @@ economy,rarityMultiplier,2,Coin multiplier per rarity
 economy,shopPriceMultiplier,1.2,Shop price markup
 time,gameTimeMultiplier,60,Game time speed multiplier
 time,realTimeToGameTime,1000,Conversion ratio
-time,autoSaveInterval,30000,Auto save interval in ms 
+time,autoSaveInterval,30000,Auto save interval in ms
+boat,deckColor,0x8B4513,Color of boat deck
+boat,deckHeight,0.18,Height of boat deck
+boat,sideColor,0x654321,Color of boat sides
+boat,sideWidth,80,Width of boat sides
+boat,frontEdgeColor,0x5D4037,Color of boat front edge
+boat,frontEdgeHeight,5,Height of boat front edge
+boat,plankSpacing,40,Spacing between deck planks
+boat,plankColor,0x654321,Color of deck planks
+boat,plankAlpha,0.3,Transparency of deck planks
+boat,rodHolderColor,0x795548,Color of rod holders
+boat,rodHolderRadius,8,Radius of rod holders
+boat,rodHolderHeight,30,Height of rod holders
+boat,tackleBoxColor,0x4E342E,Color of tackle box
+boat,tackleBoxWidth,60,Width of tackle box
+boat,tackleBoxHeight,40,Height of tackle box
+boat,tackleBoxBorderColor,0x3E2723,Color of tackle box border 

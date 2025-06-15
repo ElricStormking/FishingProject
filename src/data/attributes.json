@@ -1,394 +1,377 @@
 {
-  "playerAttributes": {
-    "fishing": {
-      "castAccuracy": {
-        "name": "Cast Accuracy",
-        "category": "fishing",
-        "description": "Increases hotspot target zone size",
-        "baseValue": 50,
-        "maxValue": 100,
-        "improvementPerLevel": 1,
-        "maxLevelBonus": 20,
-        "unit": "%"
-      },
-      "biteRate": {
-        "name": "Bite Rate",
-        "category": "fishing",
-        "description": "Likelihood of fish biting the lure",
-        "baseValue": 30,
-        "maxValue": 80,
-        "improvementPerLevel": 0.5,
-        "maxLevelBonus": 25,
-        "unit": "%"
-      },
-      "rareFishChance": {
-        "name": "Rare Fish Chance",
-        "category": "fishing",
-        "description": "Probability of encountering rare fish",
-        "baseValue": 5,
-        "maxValue": 25,
-        "improvementPerLevel": 0.2,
-        "maxLevelBonus": 10,
-        "unit": "%"
-      },
-      "lureSuccess": {
-        "name": "Lure Success",
-        "category": "fishing",
-        "description": "Success rate of luring inputs",
-        "baseValue": 60,
-        "maxValue": 95,
-        "improvementPerLevel": 0.5,
-        "maxLevelBonus": 25,
-        "unit": "%"
-      },
-      "lineStrength": {
-        "name": "Line Strength",
-        "category": "fishing",
-        "description": "Reduces line break chance during fights",
-        "baseValue": 70,
-        "maxValue": 95,
-        "improvementPerLevel": 0.3,
-        "maxLevelBonus": 15,
-        "unit": "%"
-      },
-      "castingRange": {
-        "name": "Casting Range",
-        "category": "fishing",
-        "description": "Maximum distance for casting lures",
-        "baseValue": 50,
-        "maxValue": 100,
-        "improvementPerLevel": 0.5,
-        "maxLevelBonus": 25,
-        "unit": "meters"
-      },
-      "companionFishDetection": {
-        "name": "Companion Fish Detection",
-        "category": "fishing",
-        "description": "Companions help spot high-value fish",
-        "maxValue": 25,
-        "unit": "%"
-      },
-      "boatFishDetection": {
-        "name": "Boat Fish Detection",
-        "category": "fishing",
-        "description": "Enhanced fish detection systems",
-        "maxValue": 35,
-        "unit": "%"
-      },
-      "hotspotStability": {
-        "name": "Hotspot Stability",
-        "category": "fishing",
-        "description": "Increases fishing hotspot duration",
-        "maxValue": 70,
-        "unit": "%"
-      }
+  "fishAttributes": [
+    {
+      "attribute": "strength",
+      "description": "Physical power of the fish",
+      "effect": "Affects struggle intensity and escape chance",
+      "category": "combat"
     },
-    "core": {
-      "energy": {
-        "name": "Energy",
-        "category": "core",
-        "description": "Stamina for performing actions",
-        "baseValue": 100,
-        "maxValue": 200,
-        "improvementPerLevel": 2,
-        "maxLevelBonus": 100,
-        "unit": "points"
-      },
-      "companionEnergy": {
-        "name": "Companion Energy Boost",
-        "category": "core",
-        "description": "Companions provide energy bonuses",
-        "maxValue": 50,
-        "unit": "points"
-      }
+    {
+      "attribute": "agility",
+      "description": "Speed and maneuverability",
+      "effect": "Affects movement patterns and reaction time",
+      "category": "combat"
     },
-    "skill": {
-      "qtePrecision": {
-        "name": "QTE Precision",
-        "category": "skill",
-        "description": "Extends QTE timing windows",
-        "baseValue": 50,
-        "maxValue": 100,
-        "improvementPerLevel": 0.5,
-        "maxLevelBonus": 25,
-        "unit": "%"
-      },
-      "companionQtePrecision": {
-        "name": "Companion QTE Precision",
-        "category": "skill",
-        "description": "Companions extend QTE timing windows",
-        "maxValue": 20,
-        "unit": "%"
-      }
+    {
+      "attribute": "endurance",
+      "description": "Stamina and fighting duration",
+      "effect": "Affects how long fish can struggle",
+      "category": "combat"
     },
-    "equipment": {
-      "rodCastAccuracy": {
-        "name": "Rod Cast Accuracy",
-        "category": "equipment",
-        "description": "Equipment bonus to casting precision",
-        "maxValue": 50,
-        "unit": "%"
-      },
-      "tensionStability": {
-        "name": "Tension Stability",
-        "category": "equipment",
-        "description": "Widens safe tension zone during fights",
-        "maxValue": 60,
-        "unit": "%"
-      },
-      "rodRareFishChance": {
-        "name": "Rod Rare Fish Chance",
-        "category": "equipment",
-        "description": "Equipment bonus to rare fish encounters",
-        "maxValue": 40,
-        "unit": "%"
-      },
-      "rodCastingRange": {
-        "name": "Rod Casting Range",
-        "category": "equipment",
-        "description": "Equipment bonus to casting distance",
-        "maxValue": 70,
-        "unit": "%"
-      },
-      "reelSpeed": {
-        "name": "Reel Speed",
-        "category": "equipment",
-        "description": "Faster reeling during fish fights",
-        "maxValue": 40,
-        "unit": "%"
-      },
-      "struggleResistance": {
-        "name": "Struggle Resistance",
-        "category": "equipment",
-        "description": "Reduces fish struggle intensity",
-        "maxValue": 35,
-        "unit": "%"
-      },
-      "lureBiteRate": {
-        "name": "Lure Bite Rate",
-        "category": "equipment",
-        "description": "Equipment bonus to fish bite probability",
-        "maxValue": 100,
-        "unit": "%"
-      },
-      "lureLureSuccess": {
-        "name": "Lure Success Rate",
-        "category": "equipment",
-        "description": "Equipment bonus to luring minigame",
-        "maxValue": 80,
-        "unit": "%"
-      },
-      "lureDurability": {
-        "name": "Lure Durability",
-        "category": "equipment",
-        "description": "Reduces lure failure chance",
-        "maxValue": 50,
-        "unit": "%"
-      },
-      "lurePrecision": {
-        "name": "Lure Precision",
-        "category": "equipment",
-        "description": "Tightens input timing windows",
-        "maxValue": 45,
-        "unit": "%"
-      }
+    {
+      "attribute": "intelligence",
+      "description": "Learning and adaptation ability",
+      "effect": "Affects lure resistance and behavior complexity",
+      "category": "behavior"
     },
-    "social": {
-      "romanceEffectiveness": {
-        "name": "Romance Effectiveness",
-        "category": "social",
-        "description": "Increases romance points gained",
-        "baseValue": 100,
-        "maxValue": 200,
-        "unit": "%"
-      },
-      "chatroomAffinity": {
-        "name": "Chatroom Affinity",
-        "category": "social",
-        "description": "Boosts chatroom interaction success",
-        "baseValue": 100,
-        "maxValue": 180,
-        "unit": "%"
-      },
-      "entertainmentMoodBoost": {
-        "name": "Entertainment Mood Boost",
-        "category": "social",
-        "description": "Enhances companion mood improvements",
-        "baseValue": 100,
-        "maxValue": 150,
-        "unit": "%"
-      },
-      "companionSlotCapacity": {
-        "name": "Companion Slot Capacity",
-        "category": "social",
-        "description": "Number of companions that can join",
-        "baseValue": 1,
-        "maxValue": 6,
-        "unit": "slots"
-      }
+    {
+      "attribute": "aggression",
+      "description": "Tendency to attack lures",
+      "effect": "Affects bite rate and fighting intensity",
+      "category": "behavior"
     },
-    "crafting": {
-      "craftingEfficiency": {
-        "name": "Crafting Efficiency",
-        "category": "crafting",
-        "description": "Reduces crafting time and costs",
-        "maxValue": 50,
-        "unit": "%"
-      }
+    {
+      "attribute": "caution",
+      "description": "Wariness and suspicion level",
+      "effect": "Affects lure approach and escape tendency",
+      "category": "behavior"
     },
-    "automation": {
-      "autoFishingYield": {
-        "name": "Auto-Fishing Yield",
-        "category": "automation",
-        "description": "Increases auto-fishing rewards",
-        "maxValue": 80,
-        "unit": "%"
-      },
-      "autoFishingEfficiency": {
-        "name": "Auto-Fishing Efficiency",
-        "category": "automation",
-        "description": "Reduces auto-fishing time requirements",
-        "maxValue": 50,
-        "unit": "%"
-      }
+    {
+      "attribute": "size_factor",
+      "description": "Overall size influence",
+      "effect": "Affects all other attributes based on fish size",
+      "category": "physical"
     },
-    "travel": {
-      "boatSpeed": {
-        "name": "Boat Speed",
-        "category": "travel",
-        "description": "Reduces travel time between locations",
-        "baseValue": 100,
-        "maxValue": 130,
-        "improvementPerLevel": 0.3,
-        "maxLevelBonus": 15,
-        "unit": "%"
-      }
+    {
+      "attribute": "rarity_bonus",
+      "description": "Bonus from fish rarity",
+      "effect": "Increases all attributes for rare fish",
+      "category": "special"
     },
-    "economy": {
-      "coinGain": {
-        "name": "Coin Gain",
-        "category": "economy",
-        "description": "Increases coins earned from activities",
-        "baseValue": 100,
-        "maxValue": 130,
-        "improvementPerLevel": 0.3,
-        "maxLevelBonus": 15,
-        "unit": "%"
-      }
+    {
+      "attribute": "seasonal_modifier",
+      "description": "Seasonal behavior changes",
+      "effect": "Affects attributes based on time of year",
+      "category": "environmental"
     },
-    "survival": {
-      "boatDurability": {
-        "name": "Boat Durability",
-        "category": "survival",
-        "description": "Reduces penalties in adverse conditions",
-        "baseValue": 100,
-        "maxValue": 200,
-        "unit": "%"
-      }
+    {
+      "attribute": "weather_sensitivity",
+      "description": "Response to weather conditions",
+      "effect": "Affects attributes based on current weather",
+      "category": "environmental"
     },
-    "storage": {
-      "fishtankStorage": {
-        "name": "Fishtank Storage",
-        "category": "storage",
-        "description": "Expands Fish Card storage capacity",
-        "baseValue": 10,
-        "maxValue": 100,
-        "unit": "cards"
-      }
+    {
+      "attribute": "depth_preference",
+      "description": "Preferred water depth",
+      "effect": "Affects behavior at different depths",
+      "category": "environmental"
+    },
+    {
+      "attribute": "current_tolerance",
+      "description": "Ability to handle water currents",
+      "effect": "Affects behavior in flowing water",
+      "category": "environmental"
     }
-  },
-  "fishAttributes": {
-    "aggressiveness": {
-      "min": 1,
-      "max": 10
+  ],
+  "attributeModifiers": [
+    {
+      "modifier_type": "equipment",
+      "modifier_name": "basic_rod",
+      "target_attribute": "strength",
+      "effect_value": -0.1,
+      "condition": "rod_equipped",
+      "description": "Basic rod reduces fish strength perception"
     },
-    "elusiveness": {
-      "min": 1,
-      "max": 10
+    {
+      "modifier_type": "equipment",
+      "modifier_name": "advanced_rod",
+      "target_attribute": "strength",
+      "effect_value": -0.2,
+      "condition": "rod_equipped",
+      "description": "Advanced rod significantly reduces fish strength"
     },
-    "strength": {
-      "min": 1,
-      "max": 10
+    {
+      "modifier_type": "equipment",
+      "modifier_name": "basic_reel",
+      "target_attribute": "agility",
+      "effect_value": -0.1,
+      "condition": "reel_equipped",
+      "description": "Basic reel reduces fish agility"
     },
-    "size": {
-      "min": 1,
-      "max": 10
+    {
+      "modifier_type": "equipment",
+      "modifier_name": "advanced_reel",
+      "target_attribute": "agility",
+      "effect_value": -0.25,
+      "condition": "reel_equipped",
+      "description": "Advanced reel greatly reduces fish agility"
     },
-    "speed": {
-      "min": 1,
-      "max": 10
+    {
+      "modifier_type": "equipment",
+      "modifier_name": "strong_line",
+      "target_attribute": "endurance",
+      "effect_value": -0.15,
+      "condition": "line_equipped",
+      "description": "Strong line reduces fish endurance"
     },
-    "endurance": {
-      "min": 1,
-      "max": 10
+    {
+      "modifier_type": "equipment",
+      "modifier_name": "premium_line",
+      "target_attribute": "endurance",
+      "effect_value": -0.3,
+      "condition": "line_equipped",
+      "description": "Premium line significantly reduces fish endurance"
     },
-    "depthPreference": {
-      "min": 1,
-      "max": 10
+    {
+      "modifier_type": "lure",
+      "modifier_name": "spinner",
+      "target_attribute": "aggression",
+      "effect_value": 0.2,
+      "condition": "lure_active",
+      "description": "Spinner lures increase fish aggression"
     },
-    "baitPreference": {
-      "min": 1,
-      "max": 10
+    {
+      "modifier_type": "lure",
+      "modifier_name": "jig",
+      "target_attribute": "intelligence",
+      "effect_value": -0.1,
+      "condition": "lure_active",
+      "description": "Jig lures reduce fish intelligence"
+    },
+    {
+      "modifier_type": "lure",
+      "modifier_name": "live_bait",
+      "target_attribute": "caution",
+      "effect_value": -0.3,
+      "condition": "lure_active",
+      "description": "Live bait significantly reduces fish caution"
+    },
+    {
+      "modifier_type": "lure",
+      "modifier_name": "artificial_fly",
+      "target_attribute": "intelligence",
+      "effect_value": 0.1,
+      "condition": "lure_active",
+      "description": "Artificial flies increase fish intelligence"
+    },
+    {
+      "modifier_type": "skill",
+      "modifier_name": "casting_accuracy",
+      "target_attribute": "caution",
+      "effect_value": -0.1,
+      "condition": "skill_active",
+      "description": "Accurate casting reduces fish caution"
+    },
+    {
+      "modifier_type": "skill",
+      "modifier_name": "lure_presentation",
+      "target_attribute": "intelligence",
+      "effect_value": -0.15,
+      "condition": "skill_active",
+      "description": "Good lure presentation reduces fish intelligence"
+    },
+    {
+      "modifier_type": "skill",
+      "modifier_name": "fighting_technique",
+      "target_attribute": "strength",
+      "effect_value": -0.2,
+      "condition": "skill_active",
+      "description": "Fighting technique reduces effective fish strength"
+    },
+    {
+      "modifier_type": "skill",
+      "modifier_name": "patience",
+      "target_attribute": "aggression",
+      "effect_value": 0.1,
+      "condition": "skill_active",
+      "description": "Patience increases fish aggression over time"
+    },
+    {
+      "modifier_type": "environmental",
+      "modifier_name": "clear_weather",
+      "target_attribute": "caution",
+      "effect_value": 0.1,
+      "condition": "weather_clear",
+      "description": "Clear weather increases fish caution"
+    },
+    {
+      "modifier_type": "environmental",
+      "modifier_name": "overcast",
+      "target_attribute": "aggression",
+      "effect_value": 0.15,
+      "condition": "weather_overcast",
+      "description": "Overcast weather increases fish aggression"
+    },
+    {
+      "modifier_type": "environmental",
+      "modifier_name": "rain",
+      "target_attribute": "caution",
+      "effect_value": -0.2,
+      "condition": "weather_rain",
+      "description": "Rain reduces fish caution"
+    },
+    {
+      "modifier_type": "environmental",
+      "modifier_name": "storm",
+      "target_attribute": "all_attributes",
+      "effect_value": 0.3,
+      "condition": "weather_storm",
+      "description": "Storm increases all fish attributes"
+    },
+    {
+      "modifier_type": "time",
+      "modifier_name": "dawn",
+      "target_attribute": "aggression",
+      "effect_value": 0.2,
+      "condition": "time_dawn",
+      "description": "Dawn increases fish aggression"
+    },
+    {
+      "modifier_type": "time",
+      "modifier_name": "dusk",
+      "target_attribute": "aggression",
+      "effect_value": 0.25,
+      "condition": "time_dusk",
+      "description": "Dusk significantly increases fish aggression"
+    },
+    {
+      "modifier_type": "time",
+      "modifier_name": "night",
+      "target_attribute": "caution",
+      "effect_value": -0.15,
+      "condition": "time_night",
+      "description": "Night reduces fish caution"
+    },
+    {
+      "modifier_type": "time",
+      "modifier_name": "midday",
+      "target_attribute": "intelligence",
+      "effect_value": 0.1,
+      "condition": "time_midday",
+      "description": "Midday increases fish intelligence"
     }
-  },
-  "attributeModifiers": {
-    "weatherEffects": {
-      "sunny": {
-        "biteRate": 1.1,
-        "fishDetection": 1
-      },
-      "cloudy": {
-        "biteRate": 1,
-        "fishDetection": 1.1
-      },
-      "rainy": {
-        "biteRate": 0.9,
-        "fishDetection": 1.2
-      },
-      "storm": {
-        "biteRate": 0.7,
-        "fishDetection": 1.3
-      }
+  ],
+  "playerAttributes": [
+    {
+      "id": "fishing_castAccuracy",
+      "name": "Cast Accuracy",
+      "category": "fishing",
+      "description": "Increases hotspot target zone size",
+      "baseValue": 50,
+      "maxValue": 100,
+      "improvementPerLevel": 1,
+      "maxLevelBonus": 20,
+      "unit": "%"
     },
-    "timeEffects": {
-      "dawn": {
-        "biteRate": 1.2,
-        "fishDetection": 1.1
-      },
-      "morning": {
-        "biteRate": 1.1,
-        "fishDetection": 1
-      },
-      "afternoon": {
-        "biteRate": 1,
-        "fishDetection": 1
-      },
-      "evening": {
-        "biteRate": 1.1,
-        "fishDetection": 1.2
-      },
-      "dusk": {
-        "biteRate": 1.2,
-        "fishDetection": 1.1
-      },
-      "night": {
-        "biteRate": 0.8,
-        "fishDetection": 1.3
-      }
+    {
+      "id": "fishing_biteRate",
+      "name": "Bite Rate",
+      "category": "fishing",
+      "description": "Likelihood of fish biting the lure",
+      "baseValue": 30,
+      "maxValue": 80,
+      "improvementPerLevel": 0.5,
+      "maxLevelBonus": 25,
+      "unit": "%"
     },
-    "depthEffects": {
-      "shallow": {
-        "fishDetection": 1.2,
-        "rareFishChance": 0.8
-      },
-      "mid": {
-        "fishDetection": 1,
-        "rareFishChance": 1
-      },
-      "deep": {
-        "fishDetection": 0.9,
-        "rareFishChance": 1.3
-      }
+    {
+      "id": "fishing_rareFishChance",
+      "name": "Rare Fish Chance",
+      "category": "fishing",
+      "description": "Probability of encountering rare fish",
+      "baseValue": 5,
+      "maxValue": 25,
+      "improvementPerLevel": 0.2,
+      "maxLevelBonus": 10,
+      "unit": "%"
+    },
+    {
+      "id": "fishing_lureSuccess",
+      "name": "Lure Success",
+      "category": "fishing",
+      "description": "Success rate of luring inputs",
+      "baseValue": 60,
+      "maxValue": 95,
+      "improvementPerLevel": 0.5,
+      "maxLevelBonus": 25,
+      "unit": "%"
+    },
+    {
+      "id": "fishing_lineStrength",
+      "name": "Line Strength",
+      "category": "fishing",
+      "description": "Reduces line break chance during fights",
+      "baseValue": 70,
+      "maxValue": 95,
+      "improvementPerLevel": 0.3,
+      "maxLevelBonus": 15,
+      "unit": "%"
+    },
+    {
+      "id": "fishing_castingRange",
+      "name": "Casting Range",
+      "category": "fishing",
+      "description": "Maximum distance for casting lures",
+      "baseValue": 50,
+      "maxValue": 100,
+      "improvementPerLevel": 0.5,
+      "maxLevelBonus": 25,
+      "unit": "meters"
+    },
+    {
+      "id": "core_energy",
+      "name": "Energy",
+      "category": "core",
+      "description": "Stamina for performing actions",
+      "baseValue": 100,
+      "maxValue": 200,
+      "improvementPerLevel": 2,
+      "maxLevelBonus": 100,
+      "unit": "points"
+    },
+    {
+      "id": "skill_qtePrecision",
+      "name": "QTE Precision",
+      "category": "skill",
+      "description": "Extends QTE timing windows",
+      "baseValue": 50,
+      "maxValue": 100,
+      "improvementPerLevel": 0.5,
+      "maxLevelBonus": 25,
+      "unit": "%"
+    },
+    {
+      "id": "social_romanceEffectiveness",
+      "name": "Romance Effectiveness",
+      "category": "social",
+      "description": "Increases romance points gained",
+      "baseValue": 100,
+      "maxValue": 200,
+      "improvementPerLevel": 0,
+      "maxLevelBonus": 0,
+      "unit": "%"
+    },
+    {
+      "id": "travel_boatSpeed",
+      "name": "Boat Speed",
+      "category": "travel",
+      "description": "Reduces travel time between locations",
+      "baseValue": 100,
+      "maxValue": 130,
+      "improvementPerLevel": 0.3,
+      "maxLevelBonus": 15,
+      "unit": "%"
+    },
+    {
+      "id": "economy_coinGain",
+      "name": "Coin Gain",
+      "category": "economy",
+      "description": "Increases coins earned from activities",
+      "baseValue": 100,
+      "maxValue": 130,
+      "improvementPerLevel": 0.3,
+      "maxLevelBonus": 15,
+      "unit": "%"
     }
-  }
+  ]
 }

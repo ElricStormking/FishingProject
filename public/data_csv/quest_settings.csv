@@ -1,0 +1,8 @@
+setting_key,setting_value,setting_type,description
+dailyQuestCount,3,number,Number of daily quests available
+weeklyQuestCount,2,number,Number of weekly quests available
+maxActiveQuests,10,number,Maximum number of active quests
+questLogSize,50,number,Maximum quest log size
+autoStartStoryQuests,true,boolean,Auto-start story quests
+showQuestNotifications,true,boolean,Show quest notifications
+questRewardAnimations,true,boolean,Enable quest reward animations 

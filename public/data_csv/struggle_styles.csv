@@ -1,0 +1,22 @@
+id,name,description,intensityPattern,qteTypes,patterns_directions,patterns_intensities,patterns_durations
+gentle_pull,Gentle Pull,Slow steady resistance - perfect for beginners,variable,DASH|THRASH,left|right|left,2|1|2,1000|800|600
+rapid_thrashing,Rapid Thrashing,Quick erratic movements in all directions,variable,DASH|THRASH,left|right|up|down,4|4|3|3,300|300|400|400
+steady_pull,Steady Pull,Consistent resistance in one direction,variable,DASH|THRASH,left|right|left,3|2|4,1200|800|1000
+jumping_escape,Jumping Escape,Fish leaps out of water trying to escape,variable,DASH|THRASH,up|down|left|up,6|4|5|7,800|600|700|900
+violent_thrashing,Violent Thrashing,Aggressive shaking that can snap the line,variable,DASH|THRASH,left|right|up|down,7|8|6|7,500|400|600|500
+deep_dive,Deep Dive,Fish dives straight down with force,variable,DASH|THRASH,down|left|down,6|4|8,1000|600|1200
+bulldogging,Bulldogging,Fish uses its weight to resist being pulled up,variable,DASH|THRASH,down|left|down,7|5|8,1500|800|1800
+long_sprint,Long Sprint,Fish makes extended runs in one direction,variable,DASH|THRASH,left|right|left,5|6|7,2000|1500|2500
+power_run,Power Run,Explosive bursts of speed and strength,variable,DASH|THRASH,left|down|right|up,8|7|8|6,1000|800|1200|600
+aerial_acrobatics,Aerial Acrobatics,Fish jumps and performs aerial maneuvers,variable,DASH|THRASH,up|down|up|left,8|5|9|6,1200|400|1500|800
+circle_fighting,Circle Fighting,Fish swims in circles to confuse the angler,variable,DASH|THRASH,circle|left|circle|right,6|7|8|7,1500|600|1800|700
+boss_bass_fury,Bass Fury,Explosive power with territorial aggression,aggressive,POWER_SLAM|TERRITORY_CHARGE|BASS_RAGE,down|left|up,8|9|7,1500|1200|1000
+boss_pike_ambush,Pike Ambush,Lightning-fast strikes from concealment,stealth,AMBUSH_STRIKE|RAZOR_DASH|PREDATOR_LUNGE,forward|left|right,9|8|9,800|600|1000
+boss_eel_shock,Eel Shock,Electrical discharges with unpredictable movements,electric,SHOCK_BURST|ELECTRIC_COIL|LIGHTNING_STRIKE,shock|coil|strike,7|8|10,1000|1500|500
+boss_ancient_wisdom,Ancient Wisdom,Methodical movements with unpredictable intelligence,adaptive,DEEP_WISDOM|ANCIENT_ROLL|TIME_WARP,down|left|up,7|6|8,2000|1500|1800
+boss_marlin_acrobatics,Marlin Acrobatics,High-speed runs and spectacular aerial displays,speed,SPRINT|JUMP_CHAIN|TAIL_WALK,left|up|right,10|9|10,3000|800|2500
+boss_shark_frenzy,Shark Frenzy,Relentless aggression with feeding frenzy attacks,aggressive,CIRCLE_HUNT|FRENZY_BITE|RAM_CHARGE,circle|up|forward,8|10|10,1200|600|1000
+boss_whale_depths,Whale Depths,Immense power with deep soundings and surface breaches,massive,DEEP_SOUND|SURFACE_BLOW|BREACH,down|up|up,9|8|10,4000|2000|3000
+boss_mega_destroyer,Megalodon Destroyer,Prehistoric terror with devastating attacks,destroyer,TERROR_CHARGE|MEGA_THRASH|ANCIENT_FURY,forward|thrash|all,10|10|10,1500|1000|2000
+boss_mosa_ancient,Mosasaurus Ancient,Marine reptile with unpredictable prehistoric patterns,prehistoric,BARREL_ROLL|AMBUSH_RISE|JAW_SNAP,barrel|up|snap,9|10|10,1200|800|600
+boss_leviathan_chaos,Leviathan Chaos,Mythical beast using all patterns with reality-warping power,chaos,CHAOS_STORM|MYTHICAL_ROAR|FINAL_STAND|DIVINE_TEST,chaos|all|ultimate,10|10|10,5000|3000|4000 

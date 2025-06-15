@@ -1,25 +1,34 @@
-fish_id,fish_name,rarity,size,aggressiveness,elusiveness,strength,weight,speed,depth_preference,bait_preference,endurance,active_time_1,active_time_2,active_time_3,weather_preference,coin_value,xp_value,description,habitat,struggle_style
-bluegill,Bluegill,1,2,3,2,2,0.3,4,2,9,2,morning,afternoon,,sunny|cloudy,40,8,A small colorful fish perfect for beginners,shallow_water,gentle_pull
-bass,Largemouth Bass,3,4,6,5,5,2.8,6,4,7,6,morning,afternoon,,sunny|cloudy,350,50,A popular sport fish with strong fighting ability,lake,deep_dive
-trout,Rainbow Trout,3,3,4,5,4,1.2,6,4,10,4,dawn,dusk,,cloudy|rainy,200,35,A prized freshwater fish that prefers fly lures,stream,jumping_escape
-perch,Yellow Perch,2,2,3,4,2,0.5,5,3,7,3,morning,afternoon,evening,sunny|cloudy,100,20,A striped freshwater fish with moderate fighting spirit,mid_water,steady_pull
-sunfish,Sunfish,1,2,4,3,2,0.4,5,2,8,3,morning,afternoon,,sunny,60,12,A bright active fish that loves sunny weather,shallow_water,rapid_thrashing
-catfish,Channel Catfish,3,6,3,4,6,5.2,3,8,9,7,night,dawn,,rainy,300,45,A bottom-dwelling fish with incredible strength,muddy_bottom,bulldogging
-pike,Northern Pike,4,5,7,6,6,3.5,7,5,6,5,morning,evening,,sunny,400,60,An aggressive predator with sharp teeth,deep_water,violent_thrashing
-walleye,Walleye,3,3,5,6,4,2.1,6,6,8,5,dusk,night,,cloudy,250,40,A nocturnal predator with excellent eyesight,mid_water,steady_fight
-crappie,Black Crappie,2,2,4,5,3,0.8,5,4,8,3,morning,evening,,cloudy,120,25,A schooling fish that travels in groups,shallow_water,quick_darts
-carp,Common Carp,3,5,4,5,7,6.5,4,6,7,8,morning,afternoon,evening,cloudy|rainy,280,42,A hardy fish with impressive endurance,lake,long_fight
-sea_bass,Striped Sea Bass,2,4,5,4,5,3.2,6,5,7,6,morning,afternoon,,sunny|cloudy,320,48,A common harbor fish with distinctive stripes,saltwater,steady_pull
-mackerel,Atlantic Mackerel,1,2,6,3,3,0.9,8,3,6,4,morning,afternoon,,sunny,80,15,A fast-moving schooling fish,saltwater,rapid_swimming
-flounder,Summer Flounder,2,3,3,7,4,2.5,3,8,8,5,afternoon,evening,,cloudy,180,32,A flatfish that hides on the sea floor,saltwater,bottom_struggle
-cod,Atlantic Cod,3,4,4,5,5,4.8,4,7,7,6,morning,evening,,cloudy|rainy,380,55,A valuable commercial fish species,saltwater,heavy_pull
-salmon,Atlantic Salmon,4,4,5,7,7,4.8,8,6,8,8,dawn,dusk,,rainy,600,85,A powerful migratory fish with incredible endurance,saltwater,long_sprint
-tuna,Yellowfin Tuna,6,8,8,7,10,45.0,9,7,6,9,morning,afternoon,,sunny,1200,150,A massive ocean predator with incredible power,saltwater,power_run
-shark,Small Shark,5,6,9,6,8,25.0,8,7,4,8,dawn,dusk,night,cloudy,1500,200,A dangerous predator requiring skill to catch,saltwater,circle_fighting
-sailfish,Atlantic Sailfish,7,7,8,8,8,28.0,10,6,5,7,morning,afternoon,,sunny,1800,250,The fastest fish in the ocean - a tournament favorite,saltwater,aerial_acrobatics
-moonfish,Celestial Moonfish,4,3,4,8,4,2.2,7,3,9,5,night,,,clear_night,600,90,A rare fish that glows with soft moonlight,mystical_pond,lunar_spiral
-ghost_pike,Spectral Pike,7,5,7,10,7,4.2,8,6,5,8,late_night,,,misty_night,1200,180,A translucent pike that phases in and out of reality,mystical_pond,phase_shifting
-golden_trout,Golden Trout,7,3,5,9,6,2.5,8,3,10,7,dawn,,,sunny,1500,220,A legendary high-altitude trout with golden coloration,mountain_stream,ethereal_dance
-tournament_bass,Tournament Bass,5,5,8,6,8,6.5,7,5,8,8,morning,afternoon,,perfect,1000,150,A championship-quality bass bred for competition,tournament_waters,champion_fight
-golden_salmon,Golden Salmon,7,5,7,8,9,8.8,9,6,7,9,dawn,dusk,,perfect,1800,250,A legendary salmon with golden scales,tournament_waters,golden_run
-leviathan,The Leviathan,10,10,10,10,10,200.0,8,10,1,10,dawn,dusk,,challenge,25000,2000,The ultimate challenge - a sea monster of legend,tournament_waters,legendary_battle 
+id,name,rarity,size,aggressiveness,elusiveness,strength,weight,speed,depthPreference,baitPreference,endurance,activeTimePeriod,weatherPreference,coinValue,experienceValue,description,habitat,struggleStyle,isBoss,stamina
+bluegill,Bluegill,1,2,3,2,2,0.3,4,2,9,2,morning|afternoon,sunny|cloudy,40,8,A small colorful fish perfect for beginners,shallow_water,gentle_pull,false,
+bass,Largemouth Bass,3,4,6,5,5,2.8,6,4,7,6,morning|afternoon,sunny|cloudy,350,50,A popular sport fish with strong fighting ability,lake,deep_dive,false,
+trout,Rainbow Trout,3,3,4,5,4,1.2,6,4,10,4,dawn|dusk,cloudy|rainy,200,35,A prized freshwater fish that prefers fly lures,stream,jumping_escape,false,
+perch,Yellow Perch,2,2,3,4,2,0.5,5,3,7,3,morning|afternoon|evening,sunny|cloudy,100,20,A striped freshwater fish with moderate fighting spirit,mid_water,steady_pull,false,
+sunfish,Sunfish,1,2,4,3,2,0.4,5,2,8,3,morning|afternoon,sunny,60,12,A bright active fish that loves sunny weather,shallow_water,rapid_thrashing,false,
+catfish,Channel Catfish,3,6,3,4,6,5.2,3,8,9,7,night|dawn,rainy,300,45,A bottom-dwelling fish with incredible strength,muddy_bottom,bulldogging,false,
+pike,Northern Pike,4,5,7,6,6,3.5,7,5,6,5,morning|evening,sunny,400,60,An aggressive predator with sharp teeth,deep_water,violent_thrashing,false,
+walleye,Walleye,3,3,5,6,4,2.1,6,6,8,4,dawn|dusk,cloudy,250,40,A prized fish that prefers low light conditions,deep_water,steady_pull,false,
+crappie,Crappie,2,2,3,4,3,0.8,5,4,8,3,morning|evening,cloudy,120,25,A schooling fish with delicate mouth,mid_water,gentle_pull,false,
+carp,Common Carp,4,7,4,5,7,8.5,4,5,6,8,morning|afternoon,any,450,65,A large hardy fish that fights with endurance,lake,power_run,false,
+sea_bass,Sea Bass,3,4,5,4,5,3.2,6,4,7,5,morning|afternoon,sunny|cloudy,320,48,A versatile saltwater fish with good fighting spirit,saltwater,steady_pull,false,
+mackerel,Mackerel,2,3,6,5,4,1.8,8,3,6,4,morning|afternoon,sunny,180,30,A fast-moving fish with silver streaks,saltwater,long_sprint,false,
+flounder,Flounder,2,4,2,6,3,2.5,3,9,7,3,dawn|dusk,cloudy,200,32,A flatfish that blends with the ocean floor,saltwater,bulldogging,false,
+cod,Atlantic Cod,3,5,4,4,5,4.8,4,7,8,6,morning|afternoon,cloudy|rainy,380,55,A deep-water fish prized for its meat,saltwater,deep_dive,false,
+salmon,Atlantic Salmon,4,5,6,6,6,6.2,7,5,9,7,dawn|dusk,cloudy|rainy,500,70,A powerful anadromous fish with incredible stamina,saltwater,aerial_acrobatics,false,
+tuna,Bluefin Tuna,5,6,7,7,8,15.5,9,6,7,9,morning|afternoon,sunny,800,120,A massive pelagic predator with incredible speed,saltwater,power_run,false,
+shark,Bull Shark,6,8,9,6,9,45.2,8,7,5,10,dawn|dusk|night,any,1200,200,An apex predator with immense power,saltwater,circle_fighting,false,
+sailfish,Sailfish,6,7,8,8,7,28.3,10,4,6,8,morning|afternoon,sunny,1000,180,The fastest fish in the ocean with spectacular jumps,saltwater,aerial_acrobatics,false,
+moonfish,Moonfish,5,4,5,8,4,3.8,6,8,9,5,night,clear,600,90,A mysterious deep-sea fish that glows in darkness,deep_sea,gentle_pull,false,
+ghost_pike,Ghost Pike,5,5,8,9,6,4.2,8,5,7,6,night|dawn,foggy,650,95,A spectral predator that appears in misty waters,haunted_waters,violent_thrashing,false,
+golden_trout,Golden Trout,6,4,5,7,5,2.8,7,4,10,5,dawn|dusk,clear,750,110,A rare golden variant with exceptional beauty,mountain_stream,jumping_escape,false,
+tournament_bass,Tournament Bass,5,6,7,6,7,5.5,7,4,8,7,morning|afternoon,sunny|cloudy,700,100,A specially bred bass for competitive fishing,tournament_lake,deep_dive,false,
+golden_salmon,Golden Salmon,6,6,7,7,7,8.8,8,5,9,8,dawn|dusk,cloudy|rainy,900,140,A legendary salmon with golden scales,pristine_river,aerial_acrobatics,false,
+leviathan,Leviathan,10,15,10,10,15,200.0,6,10,5,20,night,stormy,5000,1000,A mythical sea monster of immense proportions,abyssal_depths,boss_leviathan_chaos,true,2000
+giant_bass,Giant Bass,7,8,8,7,8,12.5,7,6,8,9,morning|afternoon,sunny|cloudy,1500,250,A massive bass that rules its territory,deep_lake,boss_bass_fury,true,800
+giant_pike,Giant Pike,7,9,9,8,9,18.2,8,7,6,8,morning|evening,sunny,1800,300,An enormous pike with razor-sharp teeth,northern_waters,boss_pike_ambush,true,900
+electric_eel,Electric Eel,8,7,6,7,7,25.0,5,8,8,10,night|dawn,rainy,2000,350,A shocking predator with electrical attacks,murky_swamp,boss_eel_shock,true,1000
+coelacanth,Coelacanth,9,6,5,9,6,68.0,4,9,10,12,dawn|dusk,any,3000,500,A living fossil from the depths of time,ancient_depths,boss_ancient_wisdom,true,1200
+giant_marlin,Giant Marlin,8,10,9,8,9,180.0,9,6,7,10,morning|afternoon,sunny,2500,400,A colossal marlin with incredible speed and power,open_ocean,boss_marlin_acrobatics,true,1100
+tiger_shark,Tiger Shark,8,9,10,7,10,350.0,8,7,5,12,dawn|dusk|night,any,3000,450,A massive predator with distinctive stripes,shark_territory,boss_shark_frenzy,true,1200
+whale,Blue Whale,9,20,4,6,15,15000.0,6,8,8,25,morning|afternoon,any,4000,600,The largest creature ever known to exist,deep_ocean,boss_whale_depths,true,1500
+megalodon,Megalodon,10,25,10,8,20,50000.0,7,9,4,30,any,any,10000,1500,A prehistoric shark of unimaginable size,prehistoric_depths,boss_mega_destroyer,true,2000
+mosasaurus,Mosasaurus,10,22,9,9,18,8000.0,6,10,6,25,dawn|dusk,stormy,8000,1200,An ancient marine reptile with unpredictable patterns,saltwater,boss_mosa_ancient,true,1200 

@@ -1,0 +1,46 @@
+{
+  "id": "mia_sample_dialog",
+  "type": "romantic_npc",
+  "title": "Romantic Conversation with Mia",
+  "speaker": "Mia",
+  "portrait": "mia-portrait",
+  "text": "The sunset looks absolutely beautiful tonight! I love how the golden light reflects on the water. It makes me feel so peaceful... especially when I'm sharing this moment with someone special like you.",
+  "choices": [
+    {
+      "id": "romantic_response",
+      "text": "You're more beautiful than any sunset, Mia.",
+      "effects": {
+        "romance": { "mia": 15 },
+        "dialogue": "*blushes deeply* You always know exactly what to say to make my heart flutter..."
+      }
+    },
+    {
+      "id": "compliment_response",
+      "text": "I love watching sunsets with you too.",
+      "effects": {
+        "romance": { "mia": 8 },
+        "dialogue": "Thank you for being here with me. These moments mean everything to me."
+      }
+    },
+    {
+      "id": "casual_response",
+      "text": "It really is a beautiful evening.",
+      "effects": {
+        "romance": { "mia": 3 },
+        "dialogue": "Yes, it is! I'm so glad we can enjoy it together."
+      }
+    },
+    {
+      "id": "gift_option",
+      "text": "I brought you something special.",
+      "effects": {
+        "romance": { "mia": 12 },
+        "coins": -50,
+        "dialogue": "Oh my! You're so thoughtful! What is it?"
+      }
+    }
+  ],
+  "npcId": "mia",
+  "romanceLevel": 20,
+  "unlockCondition": "cabin_access"
+} 

@@ -1,276 +1,191 @@
 {
   "strugglePatterns": [
     {
-      "id": "gentle_pull",
-      "name": "Gentle Pull",
+      "struggle_id": "gentle_pull",
+      "struggle_name": "Gentle Pull",
       "description": "Slow steady resistance - perfect for beginners",
-      "patterns": [
-        {
-          "direction": "left",
-          "intensity": 2,
-          "duration": 1000
-        },
-        {
-          "direction": "right",
-          "intensity": 1,
-          "duration": 800
-        },
-        {
-          "direction": "left",
-          "intensity": 2,
-          "duration": 600
-        }
-      ]
+      "pattern_1_direction": "left",
+      "pattern_1_intensity": 2,
+      "pattern_1_duration": 1000,
+      "pattern_2_direction": "right",
+      "pattern_2_intensity": 1,
+      "pattern_2_duration": 800,
+      "pattern_3_direction": "left",
+      "pattern_3_intensity": 2,
+      "pattern_3_duration": 600,
+      "pattern_4_direction": null,
+      "pattern_4_intensity": null,
+      "pattern_4_duration": null
     },
     {
-      "id": "rapid_thrashing",
-      "name": "Rapid Thrashing",
+      "struggle_id": "rapid_thrashing",
+      "struggle_name": "Rapid Thrashing",
       "description": "Quick erratic movements in all directions",
-      "patterns": [
-        {
-          "direction": "left",
-          "intensity": 4,
-          "duration": 300
-        },
-        {
-          "direction": "right",
-          "intensity": 4,
-          "duration": 300
-        },
-        {
-          "direction": "up",
-          "intensity": 3,
-          "duration": 400
-        },
-        {
-          "direction": "down",
-          "intensity": 3,
-          "duration": 400
-        }
-      ]
+      "pattern_1_direction": "left",
+      "pattern_1_intensity": 4,
+      "pattern_1_duration": 300,
+      "pattern_2_direction": "right",
+      "pattern_2_intensity": 4,
+      "pattern_2_duration": 300,
+      "pattern_3_direction": "up",
+      "pattern_3_intensity": 3,
+      "pattern_3_duration": 400,
+      "pattern_4_direction": "down",
+      "pattern_4_intensity": 3,
+      "pattern_4_duration": 400
     },
     {
-      "id": "steady_pull",
-      "name": "Steady Pull",
+      "struggle_id": "steady_pull",
+      "struggle_name": "Steady Pull",
       "description": "Consistent resistance in one direction",
-      "patterns": [
-        {
-          "direction": "left",
-          "intensity": 3,
-          "duration": 1200
-        },
-        {
-          "direction": "right",
-          "intensity": 2,
-          "duration": 800
-        },
-        {
-          "direction": "left",
-          "intensity": 4,
-          "duration": 1000
-        }
-      ]
+      "pattern_1_direction": "left",
+      "pattern_1_intensity": 3,
+      "pattern_1_duration": 1200,
+      "pattern_2_direction": "right",
+      "pattern_2_intensity": 2,
+      "pattern_2_duration": 800,
+      "pattern_3_direction": "left",
+      "pattern_3_intensity": 4,
+      "pattern_3_duration": 1000,
+      "pattern_4_direction": null,
+      "pattern_4_intensity": null,
+      "pattern_4_duration": null
     },
     {
-      "id": "jumping_escape",
-      "name": "Jumping Escape",
+      "struggle_id": "jumping_escape",
+      "struggle_name": "Jumping Escape",
       "description": "Fish leaps out of water trying to escape",
-      "patterns": [
-        {
-          "direction": "up",
-          "intensity": 6,
-          "duration": 800
-        },
-        {
-          "direction": "down",
-          "intensity": 4,
-          "duration": 600
-        },
-        {
-          "direction": "left",
-          "intensity": 5,
-          "duration": 700
-        },
-        {
-          "direction": "up",
-          "intensity": 7,
-          "duration": 900
-        }
-      ]
+      "pattern_1_direction": "up",
+      "pattern_1_intensity": 6,
+      "pattern_1_duration": 800,
+      "pattern_2_direction": "down",
+      "pattern_2_intensity": 4,
+      "pattern_2_duration": 600,
+      "pattern_3_direction": "left",
+      "pattern_3_intensity": 5,
+      "pattern_3_duration": 700,
+      "pattern_4_direction": "up",
+      "pattern_4_intensity": 7,
+      "pattern_4_duration": 900
     },
     {
-      "id": "violent_thrashing",
-      "name": "Violent Thrashing",
+      "struggle_id": "violent_thrashing",
+      "struggle_name": "Violent Thrashing",
       "description": "Aggressive shaking that can snap the line",
-      "patterns": [
-        {
-          "direction": "left",
-          "intensity": 7,
-          "duration": 500
-        },
-        {
-          "direction": "right",
-          "intensity": 8,
-          "duration": 400
-        },
-        {
-          "direction": "up",
-          "intensity": 6,
-          "duration": 600
-        },
-        {
-          "direction": "down",
-          "intensity": 7,
-          "duration": 500
-        }
-      ]
+      "pattern_1_direction": "left",
+      "pattern_1_intensity": 7,
+      "pattern_1_duration": 500,
+      "pattern_2_direction": "right",
+      "pattern_2_intensity": 8,
+      "pattern_2_duration": 400,
+      "pattern_3_direction": "up",
+      "pattern_3_intensity": 6,
+      "pattern_3_duration": 600,
+      "pattern_4_direction": "down",
+      "pattern_4_intensity": 7,
+      "pattern_4_duration": 500
     },
     {
-      "id": "deep_dive",
-      "name": "Deep Dive",
+      "struggle_id": "deep_dive",
+      "struggle_name": "Deep Dive",
       "description": "Fish dives straight down with force",
-      "patterns": [
-        {
-          "direction": "down",
-          "intensity": 6,
-          "duration": 1000
-        },
-        {
-          "direction": "left",
-          "intensity": 4,
-          "duration": 600
-        },
-        {
-          "direction": "down",
-          "intensity": 8,
-          "duration": 1200
-        }
-      ]
+      "pattern_1_direction": "down",
+      "pattern_1_intensity": 6,
+      "pattern_1_duration": 1000,
+      "pattern_2_direction": "left",
+      "pattern_2_intensity": 4,
+      "pattern_2_duration": 600,
+      "pattern_3_direction": "down",
+      "pattern_3_intensity": 8,
+      "pattern_3_duration": 1200,
+      "pattern_4_direction": null,
+      "pattern_4_intensity": null,
+      "pattern_4_duration": null
     },
     {
-      "id": "bulldogging",
-      "name": "Bulldogging",
+      "struggle_id": "bulldogging",
+      "struggle_name": "Bulldogging",
       "description": "Fish uses its weight to resist being pulled up",
-      "patterns": [
-        {
-          "direction": "down",
-          "intensity": 7,
-          "duration": 1500
-        },
-        {
-          "direction": "left",
-          "intensity": 6,
-          "duration": 1000
-        },
-        {
-          "direction": "down",
-          "intensity": 9,
-          "duration": 1800
-        }
-      ]
+      "pattern_1_direction": "down",
+      "pattern_1_intensity": 7,
+      "pattern_1_duration": 1500,
+      "pattern_2_direction": "left",
+      "pattern_2_intensity": 6,
+      "pattern_2_duration": 1000,
+      "pattern_3_direction": "down",
+      "pattern_3_intensity": 9,
+      "pattern_3_duration": 1800,
+      "pattern_4_direction": null,
+      "pattern_4_intensity": null,
+      "pattern_4_duration": null
     },
     {
-      "id": "long_sprint",
-      "name": "Long Sprint",
+      "struggle_id": "long_sprint",
+      "struggle_name": "Long Sprint",
       "description": "Sustained high-speed run in one direction",
-      "patterns": [
-        {
-          "direction": "left",
-          "intensity": 8,
-          "duration": 2000
-        },
-        {
-          "direction": "right",
-          "intensity": 6,
-          "duration": 1000
-        },
-        {
-          "direction": "left",
-          "intensity": 9,
-          "duration": 2500
-        }
-      ]
+      "pattern_1_direction": "left",
+      "pattern_1_intensity": 8,
+      "pattern_1_duration": 2000,
+      "pattern_2_direction": "right",
+      "pattern_2_intensity": 6,
+      "pattern_2_duration": 1000,
+      "pattern_3_direction": "left",
+      "pattern_3_intensity": 9,
+      "pattern_3_duration": 2500,
+      "pattern_4_direction": null,
+      "pattern_4_intensity": null,
+      "pattern_4_duration": null
     },
     {
-      "id": "power_run",
-      "name": "Power Run",
+      "struggle_id": "power_run",
+      "struggle_name": "Power Run",
       "description": "Explosive bursts of power and speed",
-      "patterns": [
-        {
-          "direction": "left",
-          "intensity": 9,
-          "duration": 800
-        },
-        {
-          "direction": "right",
-          "intensity": 10,
-          "duration": 600
-        },
-        {
-          "direction": "left",
-          "intensity": 8,
-          "duration": 1000
-        },
-        {
-          "direction": "right",
-          "intensity": 10,
-          "duration": 800
-        }
-      ]
+      "pattern_1_direction": "left",
+      "pattern_1_intensity": 9,
+      "pattern_1_duration": 800,
+      "pattern_2_direction": "right",
+      "pattern_2_intensity": 10,
+      "pattern_2_duration": 600,
+      "pattern_3_direction": "left",
+      "pattern_3_intensity": 8,
+      "pattern_3_duration": 1000,
+      "pattern_4_direction": "right",
+      "pattern_4_intensity": 10,
+      "pattern_4_duration": 800
     },
     {
-      "id": "aerial_acrobatics",
-      "name": "Aerial Acrobatics",
+      "struggle_id": "aerial_acrobatics",
+      "struggle_name": "Aerial Acrobatics",
       "description": "Spectacular jumps and tail walks",
-      "patterns": [
-        {
-          "direction": "up",
-          "intensity": 9,
-          "duration": 700
-        },
-        {
-          "direction": "left",
-          "intensity": 7,
-          "duration": 500
-        },
-        {
-          "direction": "up",
-          "intensity": 10,
-          "duration": 800
-        },
-        {
-          "direction": "right",
-          "intensity": 8,
-          "duration": 600
-        }
-      ]
+      "pattern_1_direction": "up",
+      "pattern_1_intensity": 9,
+      "pattern_1_duration": 700,
+      "pattern_2_direction": "left",
+      "pattern_2_intensity": 7,
+      "pattern_2_duration": 500,
+      "pattern_3_direction": "up",
+      "pattern_3_intensity": 10,
+      "pattern_3_duration": 800,
+      "pattern_4_direction": "right",
+      "pattern_4_intensity": 8,
+      "pattern_4_duration": 600
     },
     {
-      "id": "circle_fighting",
-      "name": "Circle Fighting",
+      "struggle_id": "circle_fighting",
+      "struggle_name": "Circle Fighting",
       "description": "Fish swims in circles to create slack",
-      "patterns": [
-        {
-          "direction": "left",
-          "intensity": 6,
-          "duration": 800
-        },
-        {
-          "direction": "up",
-          "intensity": 6,
-          "duration": 800
-        },
-        {
-          "direction": "right",
-          "intensity": 6,
-          "duration": 800
-        },
-        {
-          "direction": "down",
-          "intensity": 6,
-          "duration": 800
-        }
-      ]
+      "pattern_1_direction": "left",
+      "pattern_1_intensity": 6,
+      "pattern_1_duration": 800,
+      "pattern_2_direction": "up",
+      "pattern_2_intensity": 6,
+      "pattern_2_duration": 800,
+      "pattern_3_direction": "right",
+      "pattern_3_intensity": 6,
+      "pattern_3_duration": 800,
+      "pattern_4_direction": "down",
+      "pattern_4_intensity": 6,
+      "pattern_4_duration": 800
     }
   ]
 }

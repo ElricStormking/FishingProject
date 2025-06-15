@@ -1,0 +1,13 @@
+attribute,description,effect,category
+strength,Physical power of the fish,Affects struggle intensity and escape chance,combat
+agility,Speed and maneuverability,Affects movement patterns and reaction time,combat
+endurance,Stamina and fighting duration,Affects how long fish can struggle,combat
+intelligence,Learning and adaptation ability,Affects lure resistance and behavior complexity,behavior
+aggression,Tendency to attack lures,Affects bite rate and fighting intensity,behavior
+caution,Wariness and suspicion level,Affects lure approach and escape tendency,behavior
+size_factor,Overall size influence,Affects all other attributes based on fish size,physical
+rarity_bonus,Bonus from fish rarity,Increases all attributes for rare fish,special
+seasonal_modifier,Seasonal behavior changes,Affects attributes based on time of year,environmental
+weather_sensitivity,Response to weather conditions,Affects attributes based on current weather,environmental
+depth_preference,Preferred water depth,Affects behavior at different depths,environmental
+current_tolerance,Ability to handle water currents,Affects behavior in flowing water,environmental 

@@ -13,19 +13,15 @@
       "depthPreference": 2,
       "baitPreference": 9,
       "endurance": 2,
-      "activeTimePeriod": [
-        "morning",
-        "afternoon"
-      ],
-      "weatherPreference": [
-        "sunny",
-        "cloudy"
-      ],
+      "activeTimePeriod": [],
+      "weatherPreference": [],
       "coinValue": 40,
       "experienceValue": 8,
       "description": "A small colorful fish perfect for beginners",
       "habitat": "shallow_water",
-      "struggleStyle": "gentle_pull"
+      "struggleStyle": "gentle_pull",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "bass",
@@ -40,19 +36,15 @@
       "depthPreference": 4,
       "baitPreference": 7,
       "endurance": 6,
-      "activeTimePeriod": [
-        "morning",
-        "afternoon"
-      ],
-      "weatherPreference": [
-        "sunny",
-        "cloudy"
-      ],
+      "activeTimePeriod": [],
+      "weatherPreference": [],
       "coinValue": 350,
       "experienceValue": 50,
       "description": "A popular sport fish with strong fighting ability",
       "habitat": "lake",
-      "struggleStyle": "deep_dive"
+      "struggleStyle": "deep_dive",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "trout",
@@ -67,19 +59,15 @@
       "depthPreference": 4,
       "baitPreference": 10,
       "endurance": 4,
-      "activeTimePeriod": [
-        "dawn",
-        "dusk"
-      ],
-      "weatherPreference": [
-        "cloudy",
-        "rainy"
-      ],
+      "activeTimePeriod": [],
+      "weatherPreference": [],
       "coinValue": 200,
       "experienceValue": 35,
       "description": "A prized freshwater fish that prefers fly lures",
       "habitat": "stream",
-      "struggleStyle": "jumping_escape"
+      "struggleStyle": "jumping_escape",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "perch",
@@ -94,20 +82,15 @@
       "depthPreference": 3,
       "baitPreference": 7,
       "endurance": 3,
-      "activeTimePeriod": [
-        "morning",
-        "afternoon",
-        "evening"
-      ],
-      "weatherPreference": [
-        "sunny",
-        "cloudy"
-      ],
+      "activeTimePeriod": [],
+      "weatherPreference": [],
       "coinValue": 100,
       "experienceValue": 20,
       "description": "A striped freshwater fish with moderate fighting spirit",
       "habitat": "mid_water",
-      "struggleStyle": "steady_pull"
+      "struggleStyle": "steady_pull",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "sunfish",
@@ -122,18 +105,15 @@
       "depthPreference": 2,
       "baitPreference": 8,
       "endurance": 3,
-      "activeTimePeriod": [
-        "morning",
-        "afternoon"
-      ],
-      "weatherPreference": [
-        "sunny"
-      ],
+      "activeTimePeriod": [],
+      "weatherPreference": [],
       "coinValue": 60,
       "experienceValue": 12,
       "description": "A bright active fish that loves sunny weather",
       "habitat": "shallow_water",
-      "struggleStyle": "rapid_thrashing"
+      "struggleStyle": "rapid_thrashing",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "catfish",
@@ -148,18 +128,15 @@
       "depthPreference": 8,
       "baitPreference": 9,
       "endurance": 7,
-      "activeTimePeriod": [
-        "night",
-        "dawn"
-      ],
-      "weatherPreference": [
-        "rainy"
-      ],
+      "activeTimePeriod": [],
+      "weatherPreference": [],
       "coinValue": 300,
       "experienceValue": 45,
       "description": "A bottom-dwelling fish with incredible strength",
       "habitat": "muddy_bottom",
-      "struggleStyle": "bulldogging"
+      "struggleStyle": "bulldogging",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "pike",
@@ -174,18 +151,15 @@
       "depthPreference": 5,
       "baitPreference": 6,
       "endurance": 5,
-      "activeTimePeriod": [
-        "morning",
-        "evening"
-      ],
-      "weatherPreference": [
-        "sunny"
-      ],
+      "activeTimePeriod": [],
+      "weatherPreference": [],
       "coinValue": 400,
       "experienceValue": 60,
       "description": "An aggressive predator with sharp teeth",
       "habitat": "deep_water",
-      "struggleStyle": "violent_thrashing"
+      "struggleStyle": "violent_thrashing",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "walleye",
@@ -199,436 +173,381 @@
       "speed": 6,
       "depthPreference": 6,
       "baitPreference": 8,
-      "endurance": 5,
-      "activeTimePeriod": [
-        "dusk",
-        "night"
-      ],
-      "weatherPreference": [
-        "cloudy"
-      ],
+      "endurance": 4,
+      "activeTimePeriod": [],
+      "weatherPreference": [],
       "coinValue": 250,
       "experienceValue": 40,
-      "description": "A nocturnal predator with excellent eyesight",
-      "habitat": "mid_water",
-      "struggleStyle": "steady_pull"
+      "description": "A prized fish that prefers low light conditions",
+      "habitat": "deep_water",
+      "struggleStyle": "steady_pull",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "crappie",
-      "name": "Black Crappie",
+      "name": "Crappie",
       "rarity": 2,
       "size": 2,
-      "aggressiveness": 4,
-      "elusiveness": 5,
+      "aggressiveness": 3,
+      "elusiveness": 4,
       "strength": 3,
       "weight": 0.8,
       "speed": 5,
       "depthPreference": 4,
       "baitPreference": 8,
       "endurance": 3,
-      "activeTimePeriod": [
-        "morning",
-        "evening"
-      ],
-      "weatherPreference": [
-        "cloudy"
-      ],
+      "activeTimePeriod": [],
+      "weatherPreference": [],
       "coinValue": 120,
       "experienceValue": 25,
-      "description": "A schooling fish that travels in groups",
-      "habitat": "shallow_water",
-      "struggleStyle": "rapid_thrashing"
+      "description": "A schooling fish with delicate mouth",
+      "habitat": "mid_water",
+      "struggleStyle": "gentle_pull",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "carp",
       "name": "Common Carp",
-      "rarity": 3,
-      "size": 5,
+      "rarity": 4,
+      "size": 7,
       "aggressiveness": 4,
       "elusiveness": 5,
       "strength": 7,
-      "weight": 6.5,
+      "weight": 8.5,
       "speed": 4,
-      "depthPreference": 6,
-      "baitPreference": 7,
+      "depthPreference": 5,
+      "baitPreference": 6,
       "endurance": 8,
-      "activeTimePeriod": [
-        "morning",
-        "afternoon",
-        "evening"
-      ],
-      "weatherPreference": [
-        "cloudy",
-        "rainy"
-      ],
-      "coinValue": 280,
-      "experienceValue": 42,
-      "description": "A hardy fish with impressive endurance",
+      "activeTimePeriod": [],
+      "weatherPreference": [],
+      "coinValue": 450,
+      "experienceValue": 65,
+      "description": "A large hardy fish that fights with endurance",
       "habitat": "lake",
-      "struggleStyle": "long_sprint"
+      "struggleStyle": "power_run",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "sea_bass",
-      "name": "Striped Sea Bass",
-      "rarity": 2,
+      "name": "Sea Bass",
+      "rarity": 3,
       "size": 4,
       "aggressiveness": 5,
       "elusiveness": 4,
       "strength": 5,
       "weight": 3.2,
       "speed": 6,
-      "depthPreference": 5,
+      "depthPreference": 4,
       "baitPreference": 7,
-      "endurance": 6,
-      "activeTimePeriod": [
-        "morning",
-        "afternoon"
-      ],
-      "weatherPreference": [
-        "sunny",
-        "cloudy"
-      ],
+      "endurance": 5,
+      "activeTimePeriod": [],
+      "weatherPreference": [],
       "coinValue": 320,
       "experienceValue": 48,
-      "description": "A common harbor fish with distinctive stripes",
+      "description": "A versatile saltwater fish with good fighting spirit",
       "habitat": "saltwater",
-      "struggleStyle": "steady_pull"
+      "struggleStyle": "steady_pull",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "mackerel",
-      "name": "Atlantic Mackerel",
-      "rarity": 1,
-      "size": 2,
+      "name": "Mackerel",
+      "rarity": 2,
+      "size": 3,
       "aggressiveness": 6,
-      "elusiveness": 3,
-      "strength": 3,
-      "weight": 0.9,
+      "elusiveness": 5,
+      "strength": 4,
+      "weight": 1.8,
       "speed": 8,
       "depthPreference": 3,
       "baitPreference": 6,
       "endurance": 4,
-      "activeTimePeriod": [
-        "morning",
-        "afternoon"
-      ],
-      "weatherPreference": [
-        "sunny"
-      ],
-      "coinValue": 80,
-      "experienceValue": 15,
-      "description": "A fast-moving schooling fish",
+      "activeTimePeriod": [],
+      "weatherPreference": [],
+      "coinValue": 180,
+      "experienceValue": 30,
+      "description": "A fast-moving fish with silver streaks",
       "habitat": "saltwater",
-      "struggleStyle": "power_run"
+      "struggleStyle": "long_sprint",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "flounder",
-      "name": "Summer Flounder",
+      "name": "Flounder",
       "rarity": 2,
-      "size": 3,
-      "aggressiveness": 3,
-      "elusiveness": 7,
-      "strength": 4,
+      "size": 4,
+      "aggressiveness": 2,
+      "elusiveness": 6,
+      "strength": 3,
       "weight": 2.5,
       "speed": 3,
-      "depthPreference": 8,
-      "baitPreference": 8,
-      "endurance": 5,
-      "activeTimePeriod": [
-        "afternoon",
-        "evening"
-      ],
-      "weatherPreference": [
-        "cloudy"
-      ],
-      "coinValue": 180,
+      "depthPreference": 9,
+      "baitPreference": 7,
+      "endurance": 3,
+      "activeTimePeriod": [],
+      "weatherPreference": [],
+      "coinValue": 200,
       "experienceValue": 32,
-      "description": "A flatfish that hides on the sea floor",
+      "description": "A flatfish that blends with the ocean floor",
       "habitat": "saltwater",
-      "struggleStyle": "bulldogging"
+      "struggleStyle": "bulldogging",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "cod",
       "name": "Atlantic Cod",
       "rarity": 3,
-      "size": 4,
+      "size": 5,
       "aggressiveness": 4,
-      "elusiveness": 5,
+      "elusiveness": 4,
       "strength": 5,
       "weight": 4.8,
       "speed": 4,
       "depthPreference": 7,
-      "baitPreference": 7,
+      "baitPreference": 8,
       "endurance": 6,
-      "activeTimePeriod": [
-        "morning",
-        "evening"
-      ],
-      "weatherPreference": [
-        "cloudy",
-        "rainy"
-      ],
+      "activeTimePeriod": [],
+      "weatherPreference": [],
       "coinValue": 380,
       "experienceValue": 55,
-      "description": "A valuable commercial fish species",
+      "description": "A deep-water fish prized for its meat",
       "habitat": "saltwater",
-      "struggleStyle": "deep_dive"
+      "struggleStyle": "deep_dive",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "salmon",
       "name": "Atlantic Salmon",
       "rarity": 4,
-      "size": 4,
-      "aggressiveness": 5,
-      "elusiveness": 7,
-      "strength": 7,
-      "weight": 4.8,
-      "speed": 8,
-      "depthPreference": 6,
-      "baitPreference": 8,
-      "endurance": 8,
-      "activeTimePeriod": [
-        "dawn",
-        "dusk"
-      ],
-      "weatherPreference": [
-        "rainy"
-      ],
-      "coinValue": 600,
-      "experienceValue": 85,
-      "description": "A powerful migratory fish with incredible endurance",
+      "size": 5,
+      "aggressiveness": 6,
+      "elusiveness": 6,
+      "strength": 6,
+      "weight": 6.2,
+      "speed": 7,
+      "depthPreference": 5,
+      "baitPreference": 9,
+      "endurance": 7,
+      "activeTimePeriod": [],
+      "weatherPreference": [],
+      "coinValue": 500,
+      "experienceValue": 70,
+      "description": "A powerful anadromous fish with incredible stamina",
       "habitat": "saltwater",
-      "struggleStyle": "long_sprint"
+      "struggleStyle": "aerial_acrobatics",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "tuna",
-      "name": "Yellowfin Tuna",
-      "rarity": 6,
-      "size": 8,
-      "aggressiveness": 8,
+      "name": "Bluefin Tuna",
+      "rarity": 5,
+      "size": 6,
+      "aggressiveness": 7,
       "elusiveness": 7,
-      "strength": 10,
-      "weight": 45,
+      "strength": 8,
+      "weight": 15.5,
       "speed": 9,
-      "depthPreference": 7,
-      "baitPreference": 6,
+      "depthPreference": 6,
+      "baitPreference": 7,
       "endurance": 9,
-      "activeTimePeriod": [
-        "morning",
-        "afternoon"
-      ],
-      "weatherPreference": [
-        "sunny"
-      ],
-      "coinValue": 1200,
-      "experienceValue": 150,
-      "description": "A massive ocean predator with incredible power",
+      "activeTimePeriod": [],
+      "weatherPreference": [],
+      "coinValue": 800,
+      "experienceValue": 120,
+      "description": "A massive pelagic predator with incredible speed",
       "habitat": "saltwater",
-      "struggleStyle": "power_run"
+      "struggleStyle": "power_run",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "shark",
-      "name": "Small Shark",
-      "rarity": 5,
-      "size": 6,
+      "name": "Bull Shark",
+      "rarity": 6,
+      "size": 8,
       "aggressiveness": 9,
       "elusiveness": 6,
-      "strength": 8,
-      "weight": 25,
+      "strength": 9,
+      "weight": 45.2,
       "speed": 8,
       "depthPreference": 7,
-      "baitPreference": 4,
-      "endurance": 8,
-      "activeTimePeriod": [
-        "dawn",
-        "dusk",
-        "night"
-      ],
-      "weatherPreference": [
-        "cloudy"
-      ],
-      "coinValue": 1500,
+      "baitPreference": 5,
+      "endurance": 10,
+      "activeTimePeriod": [],
+      "weatherPreference": [],
+      "coinValue": 1200,
       "experienceValue": 200,
-      "description": "A dangerous predator requiring skill to catch",
+      "description": "An apex predator with immense power",
       "habitat": "saltwater",
-      "struggleStyle": "circle_fighting"
+      "struggleStyle": "circle_fighting",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "sailfish",
-      "name": "Atlantic Sailfish",
-      "rarity": 7,
+      "name": "Sailfish",
+      "rarity": 6,
       "size": 7,
       "aggressiveness": 8,
       "elusiveness": 8,
-      "strength": 8,
-      "weight": 28,
+      "strength": 7,
+      "weight": 28.3,
       "speed": 10,
-      "depthPreference": 6,
-      "baitPreference": 5,
-      "endurance": 7,
-      "activeTimePeriod": [
-        "morning",
-        "afternoon"
-      ],
-      "weatherPreference": [
-        "sunny"
-      ],
-      "coinValue": 1800,
-      "experienceValue": 250,
-      "description": "The fastest fish in the ocean - a tournament favorite",
+      "depthPreference": 4,
+      "baitPreference": 6,
+      "endurance": 8,
+      "activeTimePeriod": [],
+      "weatherPreference": [],
+      "coinValue": 1000,
+      "experienceValue": 180,
+      "description": "The fastest fish in the ocean with spectacular jumps",
       "habitat": "saltwater",
-      "struggleStyle": "aerial_acrobatics"
+      "struggleStyle": "aerial_acrobatics",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "moonfish",
-      "name": "Celestial Moonfish",
-      "rarity": 4,
-      "size": 3,
-      "aggressiveness": 4,
+      "name": "Moonfish",
+      "rarity": 5,
+      "size": 4,
+      "aggressiveness": 5,
       "elusiveness": 8,
       "strength": 4,
-      "weight": 2.2,
-      "speed": 7,
-      "depthPreference": 3,
+      "weight": 3.8,
+      "speed": 6,
+      "depthPreference": 8,
       "baitPreference": 9,
       "endurance": 5,
-      "activeTimePeriod": [
-        "night"
-      ],
-      "weatherPreference": [
-        "clear_night"
-      ],
+      "activeTimePeriod": [],
+      "weatherPreference": [],
       "coinValue": 600,
       "experienceValue": 90,
-      "description": "A rare fish that glows with soft moonlight",
-      "habitat": "mystical_pond",
-      "struggleStyle": "circle_fighting"
+      "description": "A mysterious deep-sea fish that glows in darkness",
+      "habitat": "deep_sea",
+      "struggleStyle": "gentle_pull",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "ghost_pike",
-      "name": "Spectral Pike",
-      "rarity": 7,
+      "name": "Ghost Pike",
+      "rarity": 5,
       "size": 5,
-      "aggressiveness": 7,
-      "elusiveness": 10,
-      "strength": 7,
+      "aggressiveness": 8,
+      "elusiveness": 9,
+      "strength": 6,
       "weight": 4.2,
       "speed": 8,
-      "depthPreference": 6,
-      "baitPreference": 5,
-      "endurance": 8,
-      "activeTimePeriod": [
-        "late_night"
-      ],
-      "weatherPreference": [
-        "misty_night"
-      ],
-      "coinValue": 1200,
-      "experienceValue": 180,
-      "description": "A translucent pike that phases in and out of reality",
-      "habitat": "mystical_pond",
-      "struggleStyle": "jumping_escape"
+      "depthPreference": 5,
+      "baitPreference": 7,
+      "endurance": 6,
+      "activeTimePeriod": [],
+      "weatherPreference": [],
+      "coinValue": 650,
+      "experienceValue": 95,
+      "description": "A spectral predator that appears in misty waters",
+      "habitat": "haunted_waters",
+      "struggleStyle": "violent_thrashing",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "golden_trout",
       "name": "Golden Trout",
-      "rarity": 7,
-      "size": 3,
+      "rarity": 6,
+      "size": 4,
       "aggressiveness": 5,
-      "elusiveness": 9,
-      "strength": 6,
-      "weight": 2.5,
-      "speed": 8,
-      "depthPreference": 3,
+      "elusiveness": 7,
+      "strength": 5,
+      "weight": 2.8,
+      "speed": 7,
+      "depthPreference": 4,
       "baitPreference": 10,
-      "endurance": 7,
-      "activeTimePeriod": [
-        "dawn"
-      ],
-      "weatherPreference": [
-        "sunny"
-      ],
-      "coinValue": 1500,
-      "experienceValue": 220,
-      "description": "A legendary high-altitude trout with golden coloration",
+      "endurance": 5,
+      "activeTimePeriod": [],
+      "weatherPreference": [],
+      "coinValue": 750,
+      "experienceValue": 110,
+      "description": "A rare golden variant with exceptional beauty",
       "habitat": "mountain_stream",
-      "struggleStyle": "aerial_acrobatics"
+      "struggleStyle": "jumping_escape",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "tournament_bass",
       "name": "Tournament Bass",
       "rarity": 5,
-      "size": 5,
-      "aggressiveness": 8,
+      "size": 6,
+      "aggressiveness": 7,
       "elusiveness": 6,
-      "strength": 8,
-      "weight": 6.5,
+      "strength": 7,
+      "weight": 5.5,
       "speed": 7,
-      "depthPreference": 5,
+      "depthPreference": 4,
       "baitPreference": 8,
-      "endurance": 8,
-      "activeTimePeriod": [
-        "morning",
-        "afternoon"
-      ],
-      "weatherPreference": [
-        "perfect"
-      ],
-      "coinValue": 1000,
-      "experienceValue": 150,
-      "description": "A championship-quality bass bred for competition",
-      "habitat": "tournament_waters",
-      "struggleStyle": "violent_thrashing"
+      "endurance": 7,
+      "activeTimePeriod": [],
+      "weatherPreference": [],
+      "coinValue": 700,
+      "experienceValue": 100,
+      "description": "A specially bred bass for competitive fishing",
+      "habitat": "tournament_lake",
+      "struggleStyle": "deep_dive",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "golden_salmon",
       "name": "Golden Salmon",
-      "rarity": 7,
-      "size": 5,
+      "rarity": 6,
+      "size": 6,
       "aggressiveness": 7,
-      "elusiveness": 8,
-      "strength": 9,
+      "elusiveness": 7,
+      "strength": 7,
       "weight": 8.8,
-      "speed": 9,
-      "depthPreference": 6,
-      "baitPreference": 7,
-      "endurance": 9,
-      "activeTimePeriod": [
-        "dawn",
-        "dusk"
-      ],
-      "weatherPreference": [
-        "perfect"
-      ],
-      "coinValue": 1800,
-      "experienceValue": 250,
+      "speed": 8,
+      "depthPreference": 5,
+      "baitPreference": 9,
+      "endurance": 8,
+      "activeTimePeriod": [],
+      "weatherPreference": [],
+      "coinValue": 900,
+      "experienceValue": 140,
       "description": "A legendary salmon with golden scales",
-      "habitat": "tournament_waters",
-      "struggleStyle": "long_sprint"
+      "habitat": "pristine_river",
+      "struggleStyle": "aerial_acrobatics",
+      "isBoss": false,
+      "stamina": null
     },
     {
       "id": "leviathan",
-      "name": "The Leviathan",
+      "name": "Leviathan",
       "rarity": 10,
-      "size": 10,
+      "size": 15,
       "aggressiveness": 10,
       "elusiveness": 10,
-      "strength": 10,
-      "weight": 5000,
-      "speed": 10,
+      "strength": 15,
+      "weight": 200,
+      "speed": 6,
       "depthPreference": 10,
-      "baitPreference": 1,
-      "endurance": 10,
-      "activeTimePeriod": [
-        "dawn",
-        "dusk"
-      ],
-      "weatherPreference": [
-        "challenge"
-      ],
-      "coinValue": 25000,
-      "experienceValue": 2000,
-      "description": "The ultimate challenge - a sea monster of legend",
-      "habitat": "tournament_waters",
+      "baitPreference": 5,
+      "endurance": 20,
+      "activeTimePeriod": [],
+      "weatherPreference": [],
+      "coinValue": 5000,
+      "experienceValue": 1000,
+      "description": "A mythical sea monster of immense proportions",
+      "habitat": "abyssal_depths",
       "struggleStyle": "boss_leviathan_chaos",
       "isBoss": true,
       "stamina": 2000
@@ -636,252 +555,204 @@
     {
       "id": "giant_bass",
       "name": "Giant Bass",
-      "rarity": 8,
+      "rarity": 7,
       "size": 8,
-      "aggressiveness": 7,
-      "elusiveness": 6,
+      "aggressiveness": 8,
+      "elusiveness": 7,
       "strength": 8,
-      "weight": 45,
+      "weight": 12.5,
       "speed": 7,
-      "depthPreference": 4,
-      "baitPreference": 7,
-      "endurance": 8,
-      "activeTimePeriod": [
-        "morning",
-        "afternoon"
-      ],
-      "weatherPreference": [
-        "sunny",
-        "cloudy"
-      ],
-      "coinValue": 5000,
-      "experienceValue": 500,
-      "description": "A massive bass with incredible fighting spirit - Entry level boss",
-      "habitat": "lake",
+      "depthPreference": 6,
+      "baitPreference": 8,
+      "endurance": 9,
+      "activeTimePeriod": [],
+      "weatherPreference": [],
+      "coinValue": 1500,
+      "experienceValue": 250,
+      "description": "A massive bass that rules its territory",
+      "habitat": "deep_lake",
       "struggleStyle": "boss_bass_fury",
       "isBoss": true,
-      "stamina": 300
+      "stamina": 800
     },
     {
       "id": "giant_pike",
       "name": "Giant Pike",
-      "rarity": 8,
+      "rarity": 7,
       "size": 9,
       "aggressiveness": 9,
-      "elusiveness": 7,
-      "strength": 8,
-      "weight": 65,
-      "speed": 9,
-      "depthPreference": 5,
+      "elusiveness": 8,
+      "strength": 9,
+      "weight": 18.2,
+      "speed": 8,
+      "depthPreference": 7,
       "baitPreference": 6,
-      "endurance": 7,
-      "activeTimePeriod": [
-        "morning",
-        "evening"
-      ],
-      "weatherPreference": [
-        "sunny"
-      ],
-      "coinValue": 6000,
-      "experienceValue": 600,
-      "description": "An ambush predator with razor-sharp teeth",
-      "habitat": "deep_water",
+      "endurance": 8,
+      "activeTimePeriod": [],
+      "weatherPreference": [],
+      "coinValue": 1800,
+      "experienceValue": 300,
+      "description": "An enormous pike with razor-sharp teeth",
+      "habitat": "northern_waters",
       "struggleStyle": "boss_pike_ambush",
       "isBoss": true,
-      "stamina": 350
+      "stamina": 900
     },
     {
       "id": "electric_eel",
       "name": "Electric Eel",
-      "rarity": 9,
+      "rarity": 8,
       "size": 7,
-      "aggressiveness": 8,
-      "elusiveness": 9,
+      "aggressiveness": 6,
+      "elusiveness": 7,
       "strength": 7,
-      "weight": 35,
-      "speed": 8,
-      "depthPreference": 6,
-      "baitPreference": 5,
-      "endurance": 9,
-      "activeTimePeriod": [
-        "dusk",
-        "night"
-      ],
-      "weatherPreference": [
-        "rainy"
-      ],
-      "coinValue": 7000,
-      "experienceValue": 700,
-      "description": "A shocking predator that can stun its enemies",
-      "habitat": "muddy_bottom",
+      "weight": 25,
+      "speed": 5,
+      "depthPreference": 8,
+      "baitPreference": 8,
+      "endurance": 10,
+      "activeTimePeriod": [],
+      "weatherPreference": [],
+      "coinValue": 2000,
+      "experienceValue": 350,
+      "description": "A shocking predator with electrical attacks",
+      "habitat": "murky_swamp",
       "struggleStyle": "boss_eel_shock",
       "isBoss": true,
-      "stamina": 400
+      "stamina": 1000
     },
     {
       "id": "coelacanth",
       "name": "Coelacanth",
-      "rarity": 10,
+      "rarity": 9,
       "size": 6,
       "aggressiveness": 5,
-      "elusiveness": 10,
-      "strength": 7,
-      "weight": 30,
-      "speed": 6,
+      "elusiveness": 9,
+      "strength": 6,
+      "weight": 68,
+      "speed": 4,
       "depthPreference": 9,
-      "baitPreference": 8,
-      "endurance": 10,
-      "activeTimePeriod": [
-        "dawn",
-        "dusk"
-      ],
-      "weatherPreference": [
-        "cloudy"
-      ],
-      "coinValue": 8000,
-      "experienceValue": 800,
-      "description": "A living fossil with ancient wisdom and patience",
-      "habitat": "deep_water",
+      "baitPreference": 10,
+      "endurance": 12,
+      "activeTimePeriod": [],
+      "weatherPreference": [],
+      "coinValue": 3000,
+      "experienceValue": 500,
+      "description": "A living fossil from the depths of time",
+      "habitat": "ancient_depths",
       "struggleStyle": "boss_ancient_wisdom",
       "isBoss": true,
-      "stamina": 450
+      "stamina": 1200
     },
     {
       "id": "giant_marlin",
       "name": "Giant Marlin",
-      "rarity": 9,
-      "size": 9,
-      "aggressiveness": 8,
+      "rarity": 8,
+      "size": 10,
+      "aggressiveness": 9,
       "elusiveness": 8,
       "strength": 9,
       "weight": 180,
-      "speed": 10,
+      "speed": 9,
       "depthPreference": 6,
-      "baitPreference": 6,
-      "endurance": 8,
-      "activeTimePeriod": [
-        "morning",
-        "afternoon"
-      ],
-      "weatherPreference": [
-        "sunny"
-      ],
-      "coinValue": 10000,
-      "experienceValue": 1000,
-      "description": "The fastest fish in the ocean with incredible acrobatic abilities",
-      "habitat": "saltwater",
+      "baitPreference": 7,
+      "endurance": 10,
+      "activeTimePeriod": [],
+      "weatherPreference": [],
+      "coinValue": 2500,
+      "experienceValue": 400,
+      "description": "A colossal marlin with incredible speed and power",
+      "habitat": "open_ocean",
       "struggleStyle": "boss_marlin_acrobatics",
       "isBoss": true,
-      "stamina": 500
+      "stamina": 1100
     },
     {
       "id": "tiger_shark",
       "name": "Tiger Shark",
-      "rarity": 9,
-      "size": 10,
+      "rarity": 8,
+      "size": 9,
       "aggressiveness": 10,
-      "elusiveness": 6,
+      "elusiveness": 7,
       "strength": 10,
-      "weight": 250,
+      "weight": 350,
       "speed": 8,
       "depthPreference": 7,
-      "baitPreference": 4,
-      "endurance": 9,
-      "activeTimePeriod": [
-        "dawn",
-        "dusk",
-        "night"
-      ],
-      "weatherPreference": [
-        "cloudy"
-      ],
-      "coinValue": 12000,
-      "experienceValue": 1200,
-      "description": "An apex predator with relentless aggression",
-      "habitat": "saltwater",
+      "baitPreference": 5,
+      "endurance": 12,
+      "activeTimePeriod": [],
+      "weatherPreference": [],
+      "coinValue": 3000,
+      "experienceValue": 450,
+      "description": "A massive predator with distinctive stripes",
+      "habitat": "shark_territory",
       "struggleStyle": "boss_shark_frenzy",
       "isBoss": true,
-      "stamina": 600
+      "stamina": 1200
     },
     {
       "id": "whale",
-      "name": "Whale",
-      "rarity": 10,
-      "size": 10,
+      "name": "Blue Whale",
+      "rarity": 9,
+      "size": 20,
       "aggressiveness": 4,
-      "elusiveness": 7,
-      "strength": 10,
-      "weight": 500,
-      "speed": 5,
+      "elusiveness": 6,
+      "strength": 15,
+      "weight": 15000,
+      "speed": 6,
       "depthPreference": 8,
-      "baitPreference": 3,
-      "endurance": 10,
-      "activeTimePeriod": [
-        "morning",
-        "afternoon"
-      ],
-      "weatherPreference": [
-        "sunny",
-        "cloudy"
-      ],
-      "coinValue": 15000,
-      "experienceValue": 1500,
-      "description": "A gentle giant with immense power and endurance",
-      "habitat": "saltwater",
+      "baitPreference": 8,
+      "endurance": 25,
+      "activeTimePeriod": [],
+      "weatherPreference": [],
+      "coinValue": 4000,
+      "experienceValue": 600,
+      "description": "The largest creature ever known to exist",
+      "habitat": "deep_ocean",
       "struggleStyle": "boss_whale_depths",
       "isBoss": true,
-      "stamina": 800
+      "stamina": 1500
     },
     {
       "id": "megalodon",
       "name": "Megalodon",
       "rarity": 10,
-      "size": 10,
+      "size": 25,
       "aggressiveness": 10,
       "elusiveness": 8,
-      "strength": 10,
-      "weight": 1000,
-      "speed": 9,
-      "depthPreference": 8,
-      "baitPreference": 2,
-      "endurance": 10,
-      "activeTimePeriod": [
-        "dawn",
-        "dusk"
-      ],
-      "weatherPreference": [
-        "cloudy"
-      ],
-      "coinValue": 20000,
-      "experienceValue": 1800,
-      "description": "A prehistoric terror with devastating power",
-      "habitat": "saltwater",
+      "strength": 20,
+      "weight": 50000,
+      "speed": 7,
+      "depthPreference": 9,
+      "baitPreference": 4,
+      "endurance": 30,
+      "activeTimePeriod": [],
+      "weatherPreference": [],
+      "coinValue": 10000,
+      "experienceValue": 1500,
+      "description": "A prehistoric shark of unimaginable size",
+      "habitat": "prehistoric_depths",
       "struggleStyle": "boss_mega_destroyer",
       "isBoss": true,
-      "stamina": 1000
+      "stamina": 2000
     },
     {
       "id": "mosasaurus",
       "name": "Mosasaurus",
       "rarity": 10,
-      "size": 10,
+      "size": 22,
       "aggressiveness": 9,
       "elusiveness": 9,
-      "strength": 10,
-      "weight": 1500,
-      "speed": 8,
-      "depthPreference": 9,
-      "baitPreference": 2,
-      "endurance": 10,
-      "activeTimePeriod": [
-        "dusk",
-        "night"
-      ],
-      "weatherPreference": [
-        "rainy"
-      ],
-      "coinValue": 22000,
-      "experienceValue": 1900,
+      "strength": 18,
+      "weight": 8000,
+      "speed": 6,
+      "depthPreference": 10,
+      "baitPreference": 6,
+      "endurance": 25,
+      "activeTimePeriod": [],
+      "weatherPreference": [],
+      "coinValue": 8000,
+      "experienceValue": 1200,
       "description": "An ancient marine reptile with unpredictable patterns",
       "habitat": "saltwater",
       "struggleStyle": "boss_mosa_ancient",
@@ -899,23 +770,26 @@
         "DASH",
         "THRASH"
       ],
-      "patterns": [
-        {
-          "direction": "left",
-          "intensity": 2,
-          "duration": 1000
-        },
-        {
-          "direction": "right",
-          "intensity": 1,
-          "duration": 800
-        },
-        {
-          "direction": "left",
-          "intensity": 2,
-          "duration": 600
-        }
-      ]
+      "patterns_directions": [
+        "left",
+        "right",
+        "left"
+      ],
+      "patterns_intensities": [
+        "2",
+        "1",
+        "2"
+      ],
+      "patterns_durations": [
+        "1000",
+        "800",
+        "600"
+      ],
+      "patterns": {
+        "directions": [],
+        "intensities": [],
+        "durations": []
+      }
     },
     {
       "id": "rapid_thrashing",
@@ -926,28 +800,29 @@
         "DASH",
         "THRASH"
       ],
-      "patterns": [
-        {
-          "direction": "left",
-          "intensity": 4,
-          "duration": 300
-        },
-        {
-          "direction": "right",
-          "intensity": 4,
-          "duration": 300
-        },
-        {
-          "direction": "up",
-          "intensity": 3,
-          "duration": 400
-        },
-        {
-          "direction": "down",
-          "intensity": 3,
-          "duration": 400
-        }
-      ]
+      "patterns_directions": [
+        "left",
+        "right",
+        "up",
+        "down"
+      ],
+      "patterns_intensities": [
+        "4",
+        "4",
+        "3",
+        "3"
+      ],
+      "patterns_durations": [
+        "300",
+        "300",
+        "400",
+        "400"
+      ],
+      "patterns": {
+        "directions": [],
+        "intensities": [],
+        "durations": []
+      }
     },
     {
       "id": "steady_pull",
@@ -958,23 +833,26 @@
         "DASH",
         "THRASH"
       ],
-      "patterns": [
-        {
-          "direction": "left",
-          "intensity": 3,
-          "duration": 1200
-        },
-        {
-          "direction": "right",
-          "intensity": 2,
-          "duration": 800
-        },
-        {
-          "direction": "left",
-          "intensity": 4,
-          "duration": 1000
-        }
-      ]
+      "patterns_directions": [
+        "left",
+        "right",
+        "left"
+      ],
+      "patterns_intensities": [
+        "3",
+        "2",
+        "4"
+      ],
+      "patterns_durations": [
+        "1200",
+        "800",
+        "1000"
+      ],
+      "patterns": {
+        "directions": [],
+        "intensities": [],
+        "durations": []
+      }
     },
     {
       "id": "jumping_escape",
@@ -985,28 +863,29 @@
         "DASH",
         "THRASH"
       ],
-      "patterns": [
-        {
-          "direction": "up",
-          "intensity": 6,
-          "duration": 800
-        },
-        {
-          "direction": "down",
-          "intensity": 4,
-          "duration": 600
-        },
-        {
-          "direction": "left",
-          "intensity": 5,
-          "duration": 700
-        },
-        {
-          "direction": "up",
-          "intensity": 7,
-          "duration": 900
-        }
-      ]
+      "patterns_directions": [
+        "up",
+        "down",
+        "left",
+        "up"
+      ],
+      "patterns_intensities": [
+        "6",
+        "4",
+        "5",
+        "7"
+      ],
+      "patterns_durations": [
+        "800",
+        "600",
+        "700",
+        "900"
+      ],
+      "patterns": {
+        "directions": [],
+        "intensities": [],
+        "durations": []
+      }
     },
     {
       "id": "violent_thrashing",
@@ -1017,28 +896,29 @@
         "DASH",
         "THRASH"
       ],
-      "patterns": [
-        {
-          "direction": "left",
-          "intensity": 7,
-          "duration": 500
-        },
-        {
-          "direction": "right",
-          "intensity": 8,
-          "duration": 400
-        },
-        {
-          "direction": "up",
-          "intensity": 6,
-          "duration": 600
-        },
-        {
-          "direction": "down",
-          "intensity": 7,
-          "duration": 500
-        }
-      ]
+      "patterns_directions": [
+        "left",
+        "right",
+        "up",
+        "down"
+      ],
+      "patterns_intensities": [
+        "7",
+        "8",
+        "6",
+        "7"
+      ],
+      "patterns_durations": [
+        "500",
+        "400",
+        "600",
+        "500"
+      ],
+      "patterns": {
+        "directions": [],
+        "intensities": [],
+        "durations": []
+      }
     },
     {
       "id": "deep_dive",
@@ -1049,23 +929,26 @@
         "DASH",
         "THRASH"
       ],
-      "patterns": [
-        {
-          "direction": "down",
-          "intensity": 6,
-          "duration": 1000
-        },
-        {
-          "direction": "left",
-          "intensity": 4,
-          "duration": 600
-        },
-        {
-          "direction": "down",
-          "intensity": 8,
-          "duration": 1200
-        }
-      ]
+      "patterns_directions": [
+        "down",
+        "left",
+        "down"
+      ],
+      "patterns_intensities": [
+        "6",
+        "4",
+        "8"
+      ],
+      "patterns_durations": [
+        "1000",
+        "600",
+        "1200"
+      ],
+      "patterns": {
+        "directions": [],
+        "intensities": [],
+        "durations": []
+      }
     },
     {
       "id": "bulldogging",
@@ -1076,230 +959,248 @@
         "DASH",
         "THRASH"
       ],
-      "patterns": [
-        {
-          "direction": "down",
-          "intensity": 7,
-          "duration": 1500
-        },
-        {
-          "direction": "left",
-          "intensity": 6,
-          "duration": 1000
-        },
-        {
-          "direction": "down",
-          "intensity": 9,
-          "duration": 1800
-        }
-      ]
+      "patterns_directions": [
+        "down",
+        "left",
+        "down"
+      ],
+      "patterns_intensities": [
+        "7",
+        "5",
+        "8"
+      ],
+      "patterns_durations": [
+        "1500",
+        "800",
+        "1800"
+      ],
+      "patterns": {
+        "directions": [],
+        "intensities": [],
+        "durations": []
+      }
     },
     {
       "id": "long_sprint",
       "name": "Long Sprint",
-      "description": "Sustained high-speed run in one direction",
+      "description": "Fish makes extended runs in one direction",
       "intensityPattern": "variable",
       "qteTypes": [
         "DASH",
         "THRASH"
       ],
-      "patterns": [
-        {
-          "direction": "left",
-          "intensity": 8,
-          "duration": 2000
-        },
-        {
-          "direction": "right",
-          "intensity": 6,
-          "duration": 1000
-        },
-        {
-          "direction": "left",
-          "intensity": 9,
-          "duration": 2500
-        }
-      ]
+      "patterns_directions": [
+        "left",
+        "right",
+        "left"
+      ],
+      "patterns_intensities": [
+        "5",
+        "6",
+        "7"
+      ],
+      "patterns_durations": [
+        "2000",
+        "1500",
+        "2500"
+      ],
+      "patterns": {
+        "directions": [],
+        "intensities": [],
+        "durations": []
+      }
     },
     {
       "id": "power_run",
       "name": "Power Run",
-      "description": "Explosive bursts of power and speed",
+      "description": "Explosive bursts of speed and strength",
       "intensityPattern": "variable",
       "qteTypes": [
         "DASH",
         "THRASH"
       ],
-      "patterns": [
-        {
-          "direction": "left",
-          "intensity": 9,
-          "duration": 800
-        },
-        {
-          "direction": "right",
-          "intensity": 10,
-          "duration": 600
-        },
-        {
-          "direction": "left",
-          "intensity": 8,
-          "duration": 1000
-        },
-        {
-          "direction": "right",
-          "intensity": 10,
-          "duration": 800
-        }
-      ]
+      "patterns_directions": [
+        "left",
+        "down",
+        "right",
+        "up"
+      ],
+      "patterns_intensities": [
+        "8",
+        "7",
+        "8",
+        "6"
+      ],
+      "patterns_durations": [
+        "1000",
+        "800",
+        "1200",
+        "600"
+      ],
+      "patterns": {
+        "directions": [],
+        "intensities": [],
+        "durations": []
+      }
     },
     {
       "id": "aerial_acrobatics",
       "name": "Aerial Acrobatics",
-      "description": "Spectacular jumps and tail walks",
+      "description": "Fish jumps and performs aerial maneuvers",
       "intensityPattern": "variable",
       "qteTypes": [
         "DASH",
         "THRASH"
       ],
-      "patterns": [
-        {
-          "direction": "up",
-          "intensity": 9,
-          "duration": 700
-        },
-        {
-          "direction": "left",
-          "intensity": 7,
-          "duration": 500
-        },
-        {
-          "direction": "up",
-          "intensity": 10,
-          "duration": 800
-        },
-        {
-          "direction": "right",
-          "intensity": 8,
-          "duration": 600
-        }
-      ]
+      "patterns_directions": [
+        "up",
+        "down",
+        "up",
+        "left"
+      ],
+      "patterns_intensities": [
+        "8",
+        "5",
+        "9",
+        "6"
+      ],
+      "patterns_durations": [
+        "1200",
+        "400",
+        "1500",
+        "800"
+      ],
+      "patterns": {
+        "directions": [],
+        "intensities": [],
+        "durations": []
+      }
     },
     {
       "id": "circle_fighting",
       "name": "Circle Fighting",
-      "description": "Fish swims in circles to create slack",
+      "description": "Fish swims in circles to confuse the angler",
       "intensityPattern": "variable",
       "qteTypes": [
         "DASH",
         "THRASH"
       ],
-      "patterns": [
-        {
-          "direction": "left",
-          "intensity": 6,
-          "duration": 800
-        },
-        {
-          "direction": "up",
-          "intensity": 6,
-          "duration": 800
-        },
-        {
-          "direction": "right",
-          "intensity": 6,
-          "duration": 800
-        },
-        {
-          "direction": "down",
-          "intensity": 6,
-          "duration": 800
-        }
-      ]
+      "patterns_directions": [
+        "circle",
+        "left",
+        "circle",
+        "right"
+      ],
+      "patterns_intensities": [
+        "6",
+        "7",
+        "8",
+        "7"
+      ],
+      "patterns_durations": [
+        "1500",
+        "600",
+        "1800",
+        "700"
+      ],
+      "patterns": {
+        "directions": [],
+        "intensities": [],
+        "durations": []
+      }
     },
     {
       "id": "boss_bass_fury",
       "name": "Bass Fury",
-      "description": "Aggressive surface runs with explosive jumps",
-      "intensityPattern": "escalating",
+      "description": "Explosive power with territorial aggression",
+      "intensityPattern": "aggressive",
       "qteTypes": [
-        "JUMP",
-        "THRASH",
-        "DIVE"
+        "POWER_SLAM",
+        "TERRITORY_CHARGE",
+        "BASS_RAGE"
       ],
-      "patterns": [
-        {
-          "direction": "up",
-          "intensity": 8,
-          "duration": 1000
-        },
-        {
-          "direction": "left",
-          "intensity": 9,
-          "duration": 800
-        },
-        {
-          "direction": "down",
-          "intensity": 7,
-          "duration": 1200
-        }
-      ]
+      "patterns_directions": [
+        "down",
+        "left",
+        "up"
+      ],
+      "patterns_intensities": [
+        "8",
+        "9",
+        "7"
+      ],
+      "patterns_durations": [
+        "1500",
+        "1200",
+        "1000"
+      ],
+      "patterns": {
+        "directions": [],
+        "intensities": [],
+        "durations": []
+      }
     },
     {
       "id": "boss_pike_ambush",
       "name": "Pike Ambush",
-      "description": "Sudden explosive bursts and violent head shakes",
-      "intensityPattern": "burst",
+      "description": "Lightning-fast strikes from concealment",
+      "intensityPattern": "stealth",
       "qteTypes": [
-        "DASH",
-        "ROLL",
-        "SHAKE"
+        "AMBUSH_STRIKE",
+        "RAZOR_DASH",
+        "PREDATOR_LUNGE"
       ],
-      "patterns": [
-        {
-          "direction": "left",
-          "intensity": 10,
-          "duration": 500
-        },
-        {
-          "direction": "right",
-          "intensity": 10,
-          "duration": 500
-        },
-        {
-          "direction": "up",
-          "intensity": 8,
-          "duration": 600
-        }
-      ]
+      "patterns_directions": [
+        "forward",
+        "left",
+        "right"
+      ],
+      "patterns_intensities": [
+        "9",
+        "8",
+        "9"
+      ],
+      "patterns_durations": [
+        "800",
+        "600",
+        "1000"
+      ],
+      "patterns": {
+        "directions": [],
+        "intensities": [],
+        "durations": []
+      }
     },
     {
       "id": "boss_eel_shock",
-      "name": "Electric Shock",
-      "description": "Erratic movements with stunning electrical discharges",
-      "intensityPattern": "chaotic",
+      "name": "Eel Shock",
+      "description": "Electrical discharges with unpredictable movements",
+      "intensityPattern": "electric",
       "qteTypes": [
-        "SHOCK",
-        "COIL",
-        "ZIGZAG"
+        "SHOCK_BURST",
+        "ELECTRIC_COIL",
+        "LIGHTNING_STRIKE"
       ],
-      "patterns": [
-        {
-          "direction": "random",
-          "intensity": 9,
-          "duration": 700
-        },
-        {
-          "direction": "spiral",
-          "intensity": 8,
-          "duration": 900
-        },
-        {
-          "direction": "random",
-          "intensity": 10,
-          "duration": 600
-        }
-      ]
+      "patterns_directions": [
+        "shock",
+        "coil",
+        "strike"
+      ],
+      "patterns_intensities": [
+        "7",
+        "8",
+        "10"
+      ],
+      "patterns_durations": [
+        "1000",
+        "1500",
+        "500"
+      ],
+      "patterns": {
+        "directions": [],
+        "intensities": [],
+        "durations": []
+      }
     },
     {
       "id": "boss_ancient_wisdom",
@@ -1311,23 +1212,26 @@
         "ANCIENT_ROLL",
         "TIME_WARP"
       ],
-      "patterns": [
-        {
-          "direction": "down",
-          "intensity": 7,
-          "duration": 2000
-        },
-        {
-          "direction": "left",
-          "intensity": 6,
-          "duration": 1500
-        },
-        {
-          "direction": "up",
-          "intensity": 8,
-          "duration": 1800
-        }
-      ]
+      "patterns_directions": [
+        "down",
+        "left",
+        "up"
+      ],
+      "patterns_intensities": [
+        "7",
+        "6",
+        "8"
+      ],
+      "patterns_durations": [
+        "2000",
+        "1500",
+        "1800"
+      ],
+      "patterns": {
+        "directions": [],
+        "intensities": [],
+        "durations": []
+      }
     },
     {
       "id": "boss_marlin_acrobatics",
@@ -1339,23 +1243,26 @@
         "JUMP_CHAIN",
         "TAIL_WALK"
       ],
-      "patterns": [
-        {
-          "direction": "left",
-          "intensity": 10,
-          "duration": 3000
-        },
-        {
-          "direction": "up",
-          "intensity": 9,
-          "duration": 800
-        },
-        {
-          "direction": "right",
-          "intensity": 10,
-          "duration": 2500
-        }
-      ]
+      "patterns_directions": [
+        "left",
+        "up",
+        "right"
+      ],
+      "patterns_intensities": [
+        "10",
+        "9",
+        "10"
+      ],
+      "patterns_durations": [
+        "3000",
+        "800",
+        "2500"
+      ],
+      "patterns": {
+        "directions": [],
+        "intensities": [],
+        "durations": []
+      }
     },
     {
       "id": "boss_shark_frenzy",
@@ -1367,23 +1274,26 @@
         "FRENZY_BITE",
         "RAM_CHARGE"
       ],
-      "patterns": [
-        {
-          "direction": "circle",
-          "intensity": 8,
-          "duration": 1200
-        },
-        {
-          "direction": "up",
-          "intensity": 10,
-          "duration": 600
-        },
-        {
-          "direction": "forward",
-          "intensity": 10,
-          "duration": 1000
-        }
-      ]
+      "patterns_directions": [
+        "circle",
+        "up",
+        "forward"
+      ],
+      "patterns_intensities": [
+        "8",
+        "10",
+        "10"
+      ],
+      "patterns_durations": [
+        "1200",
+        "600",
+        "1000"
+      ],
+      "patterns": {
+        "directions": [],
+        "intensities": [],
+        "durations": []
+      }
     },
     {
       "id": "boss_whale_depths",
@@ -1395,23 +1305,26 @@
         "SURFACE_BLOW",
         "BREACH"
       ],
-      "patterns": [
-        {
-          "direction": "down",
-          "intensity": 9,
-          "duration": 4000
-        },
-        {
-          "direction": "up",
-          "intensity": 8,
-          "duration": 2000
-        },
-        {
-          "direction": "up",
-          "intensity": 10,
-          "duration": 3000
-        }
-      ]
+      "patterns_directions": [
+        "down",
+        "up",
+        "up"
+      ],
+      "patterns_intensities": [
+        "9",
+        "8",
+        "10"
+      ],
+      "patterns_durations": [
+        "4000",
+        "2000",
+        "3000"
+      ],
+      "patterns": {
+        "directions": [],
+        "intensities": [],
+        "durations": []
+      }
     },
     {
       "id": "boss_mega_destroyer",
@@ -1423,23 +1336,26 @@
         "MEGA_THRASH",
         "ANCIENT_FURY"
       ],
-      "patterns": [
-        {
-          "direction": "forward",
-          "intensity": 10,
-          "duration": 1500
-        },
-        {
-          "direction": "thrash",
-          "intensity": 10,
-          "duration": 1000
-        },
-        {
-          "direction": "all",
-          "intensity": 10,
-          "duration": 2000
-        }
-      ]
+      "patterns_directions": [
+        "forward",
+        "thrash",
+        "all"
+      ],
+      "patterns_intensities": [
+        "10",
+        "10",
+        "10"
+      ],
+      "patterns_durations": [
+        "1500",
+        "1000",
+        "2000"
+      ],
+      "patterns": {
+        "directions": [],
+        "intensities": [],
+        "durations": []
+      }
     },
     {
       "id": "boss_mosa_ancient",
@@ -1451,23 +1367,26 @@
         "AMBUSH_RISE",
         "JAW_SNAP"
       ],
-      "patterns": [
-        {
-          "direction": "barrel",
-          "intensity": 9,
-          "duration": 1200
-        },
-        {
-          "direction": "up",
-          "intensity": 10,
-          "duration": 800
-        },
-        {
-          "direction": "snap",
-          "intensity": 10,
-          "duration": 600
-        }
-      ]
+      "patterns_directions": [
+        "barrel",
+        "up",
+        "snap"
+      ],
+      "patterns_intensities": [
+        "9",
+        "10",
+        "10"
+      ],
+      "patterns_durations": [
+        "1200",
+        "800",
+        "600"
+      ],
+      "patterns": {
+        "directions": [],
+        "intensities": [],
+        "durations": []
+      }
     },
     {
       "id": "boss_leviathan_chaos",
@@ -1480,23 +1399,26 @@
         "FINAL_STAND",
         "DIVINE_TEST"
       ],
-      "patterns": [
-        {
-          "direction": "chaos",
-          "intensity": 10,
-          "duration": 5000
-        },
-        {
-          "direction": "all",
-          "intensity": 10,
-          "duration": 3000
-        },
-        {
-          "direction": "ultimate",
-          "intensity": 10,
-          "duration": 4000
-        }
-      ]
+      "patterns_directions": [
+        "chaos",
+        "all",
+        "ultimate"
+      ],
+      "patterns_intensities": [
+        "10",
+        "10",
+        "10"
+      ],
+      "patterns_durations": [
+        "5000",
+        "3000",
+        "4000"
+      ],
+      "patterns": {
+        "directions": [],
+        "intensities": [],
+        "durations": []
+      }
     }
   ]
 }

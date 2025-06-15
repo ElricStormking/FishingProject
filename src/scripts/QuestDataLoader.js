@@ -124,9 +124,19 @@ export class QuestDataLoader {
      * Get quest templates by category
      */
     getQuestTemplatesByCategory(category) {
-        return Array.from(this.questTemplates.values()).filter(quest => 
-            quest.category === category
-        );
+        try {
+            if (!this.questTemplates || this.questTemplates.size === 0) {
+                console.warn(`QuestDataLoader: No quest templates available for category: ${category}`);
+                return [];
+            }
+            
+            return Array.from(this.questTemplates.values()).filter(quest => 
+                quest.category === category
+            );
+        } catch (error) {
+            console.error(`QuestDataLoader: Error getting quest templates for category ${category}:`, error);
+            return [];
+        }
     }
 
     /**
@@ -161,7 +171,27 @@ export class QuestDataLoader {
      * Get quest settings
      */
     getQuestSettings() {
-        return this.questSettings;
+        try {
+            if (!this.questSettings || Object.keys(this.questSettings).length === 0) {
+                console.warn('QuestDataLoader: Quest settings not available, using defaults');
+                return {
+                    dailyQuestCount: 3,
+                    weeklyQuestCount: 2,
+                    maxActiveQuests: 10,
+                    autoStartStoryQuests: true
+                };
+            }
+            
+            return this.questSettings;
+        } catch (error) {
+            console.error('QuestDataLoader: Error getting quest settings:', error);
+            return {
+                dailyQuestCount: 3,
+                weeklyQuestCount: 2,
+                maxActiveQuests: 10,
+                autoStartStoryQuests: true
+            };
+        }
     }
 
     /**

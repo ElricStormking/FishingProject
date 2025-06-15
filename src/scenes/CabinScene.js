@@ -8,6 +8,7 @@ import HCGNotificationManager from '../scripts/HCGNotificationManager.js';
 import Phaser from 'phaser';
 import UITheme from '../ui/UITheme.js';
 import GameState from '../scripts/GameState.js';
+import DialogScene from './DialogScene.js';
 
 export default class CabinScene extends Phaser.Scene {
     constructor() {
@@ -68,46 +69,130 @@ export default class CabinScene extends Phaser.Scene {
         this.hcgUnlockSystem = new HCGUnlockSystem();
         this.hcgNotificationManager = new HCGNotificationManager(this);
     }
+    
+    /**
+     * Called when the scene is resumed from being paused
+     */
+    wake() {
+        console.log('CabinScene: Scene woke up from pause');
+        try {
+            // Refresh the entire UI when resuming
+            this.refreshCabin();
+            console.log('CabinScene: UI refreshed after wake');
+            
+            // Clear any error messages that might be showing
+            this.children.list.forEach(child => {
+                if (child.depth >= 20000) {
+                    // This is likely an error message overlay, remove it
+                    child.destroy();
+                }
+            });
+            
+        } catch (error) {
+            console.error('CabinScene: Error during wake refresh:', error);
+        }
+    }
+    
+    /**
+     * Called when the scene is paused
+     */
+    sleep() {
+        console.log('CabinScene: Scene going to sleep (paused)');
+    }
 
     async create() {
         const { width, height } = this.cameras.main;
         
+        try {
+            console.log('CabinScene: Starting create method...');
+        
         // Hide fish button when cabin is opened
+            try {
         if (this.scene.get('BoatMenuScene') && this.scene.get('BoatMenuScene').hideFishButton) {
             this.scene.get('BoatMenuScene').hideFishButton();
+                }
+            } catch (fishButtonError) {
+                console.warn('CabinScene: Could not hide fish button:', fishButtonError);
         }
         
+            console.log('CabinScene: Initializing GameState...');
         // Initialize GameState first
+            try {
         this.gameState = GameState.getInstance();
+                console.log('CabinScene: GameState initialized:', !!this.gameState);
+            } catch (gameStateError) {
+                console.warn('CabinScene: GameState initialization failed:', gameStateError);
+                this.gameState = null;
+            }
         
+            console.log('CabinScene: Initializing audio manager...');
         // Initialize audio manager for this scene
-        this.audioManager = this.gameState.getAudioManager(this);
+            try {
+                this.audioManager = this.gameState?.getAudioManager(this);
         if (this.audioManager) {
             this.audioManager.setSceneAudio('CabinScene');
             console.log('CabinScene: Audio manager initialized');
         } else {
             console.warn('CabinScene: Audio manager not available');
+                }
+            } catch (audioError) {
+                console.warn('CabinScene: Audio manager initialization failed:', audioError);
+                this.audioManager = null;
         }
         
+            console.log('CabinScene: Creating cabin background...');
         // Create cabin background with wood textures
+            try {
         this.createCabinBackground(width, height);
-        
+                console.log('CabinScene: Cabin background created');
+            } catch (backgroundError) {
+                console.error('CabinScene: Background creation failed:', backgroundError);
+                // Create simple fallback background
+                this.add.rectangle(width/2, height/2, width, height, 0x000000, 1);
+            }
+            
+            console.log('CabinScene: Getting DialogManager reference...');
         // Get references - try multiple sources for DialogManager
+            try {
         this.gameScene = this.scene.get('GameScene');
+                console.log('CabinScene: GameScene found:', !!this.gameScene);
+                
         this.dialogManager = this.gameScene?.dialogManager;
+                console.log('CabinScene: DialogManager from GameScene:', !!this.dialogManager);
         
         // If DialogManager not available from GameScene, create a robust fallback
         if (!this.dialogManager) {
             console.log('CabinScene: DialogManager not available from GameScene, creating enhanced fallback');
             this.dialogManager = this.createFallbackDialogManager();
             console.log('CabinScene: Fallback DialogManager created with', this.dialogManager.npcs.size, 'NPCs');
-        }
+                } else {
+                    console.log('CabinScene: Using DialogManager from GameScene with', this.dialogManager.npcs.size, 'NPCs');
+                }
+            } catch (dialogManagerError) {
+                console.error('CabinScene: DialogManager setup failed:', dialogManagerError);
+                this.dialogManager = this.createFallbackDialogManager();
+            }
 
+            console.log('CabinScene: Creating cabin UI...');
         // Initialize UI
+            try {
         this.createCabinUI();
+                console.log('CabinScene: Cabin UI created');
+            } catch (uiError) {
+                console.error('CabinScene: UI creation failed:', uiError);
+                this.createFallbackUI(width, height);
+            }
+            
+            console.log('CabinScene: Setting up event listeners...');
+            try {
         this.setupEventListeners();
+                console.log('CabinScene: Event listeners set up');
+            } catch (eventError) {
+                console.error('CabinScene: Event listener setup failed:', eventError);
+            }
         
         // Auto-select first NPC if none selected
+            try {
         if (!this.selectedNPC && this.dialogManager && this.dialogManager.npcs) {
             const npcs = Array.from(this.dialogManager.npcs.keys());
             if (npcs.length > 0) {
@@ -115,10 +200,52 @@ export default class CabinScene extends Phaser.Scene {
                 console.log('CabinScene: Auto-selected NPC in create():', this.selectedNPC);
             }
         }
-        
+            } catch (npcSelectError) {
+                console.warn('CabinScene: NPC auto-selection failed:', npcSelectError);
+                this.selectedNPC = 'mia'; // Default fallback
+            }
+            
+            console.log('CabinScene: Creating center Mia portrait...');
+            // Create Mia's center portrait
+            try {
+                this.createCenterMiaPortrait();
+                console.log('CabinScene: Center Mia portrait created');
+            } catch (portraitError) {
+                console.warn('CabinScene: Center portrait creation failed:', portraitError);
+            }
+            
+            console.log('CabinScene: Refreshing cabin...');
+            try {
         this.refreshCabin();
-        
-        console.log('CabinScene: Boat Cabin initialized');
+                console.log('CabinScene: Cabin refreshed');
+            } catch (refreshError) {
+                console.warn('CabinScene: Cabin refresh failed:', refreshError);
+            }
+            
+            console.log('CabinScene: Boat Cabin initialized successfully');
+        } catch (error) {
+            console.error('CabinScene: Error during scene creation:', error);
+            console.error('CabinScene: Error stack:', error.stack);
+            console.error('CabinScene: Error name:', error.name);
+            console.error('CabinScene: Error message:', error.message);
+            
+            // Try to create a minimal fallback UI
+            try {
+                console.log('CabinScene: Attempting to create fallback UI...');
+                this.createFallbackUI(width, height);
+                console.log('CabinScene: Fallback UI created successfully');
+            } catch (fallbackError) {
+                console.error('CabinScene: Even fallback UI creation failed:', fallbackError);
+                // Create absolute minimal UI
+                this.add.text(width/2, height/2, 'Cabin Scene Error\nClick to return', {
+                    fontSize: '24px',
+                    fill: '#ff0000',
+                    align: 'center'
+                }).setOrigin(0.5).setInteractive().on('pointerdown', () => {
+                    this.exitCabin();
+                });
+            }
+        }
     }
 
     createCabinBackground(width, height) {
@@ -347,8 +474,8 @@ export default class CabinScene extends Phaser.Scene {
         this.createChatPanel();       // Center panel - Chat messages
         this.createRomancePanel();    // Right panel - Romance details and actions
         
-        // ADD MIA'S CENTER PORTRAIT DISPLAY
-        this.createCenterMiaPortrait();
+        // ADD MIA'S CENTER PORTRAIT DISPLAY - TEMPORARILY DISABLED FOR TESTING
+        // this.createCenterMiaPortrait();
         
         // Bottom input area
         this.createInputArea();
@@ -511,8 +638,6 @@ export default class CabinScene extends Phaser.Scene {
             for (const key of portraitKeys) {
                 if (this.textures.exists(key) && (key.includes('mia-portrait') || key.includes('portrait-mia') || key.includes('mia-full'))) {
                     try {
-                        console.log(`🎯 CabinScene: Creating Mia portrait with key '${key}' using ABSOLUTE positioning`);
-                        
                         // Calculate exact world position where the portrait should appear
                         // NPC list container is at (15, panelY + 50), item is at (0, y), portrait should be at (30, 42) within item
                         const worldX = 15 + 0 + 30;  // container.x + item.x + portrait.x
@@ -524,9 +649,7 @@ export default class CabinScene extends Phaser.Scene {
                         miaPortrait.setDisplaySize(50, 60);
                         miaPortrait.setVisible(true);
                         miaPortrait.setAlpha(1);
-                        miaPortrait.setDepth(20000);  // Extremely high depth to ensure visibility
-                        
-                        console.log(`✅ CabinScene: Mia portrait '${key}' created with ABSOLUTE positioning - world coordinates: (${worldX}, ${worldY}), depth: ${miaPortrait.depth}`);
+                        miaPortrait.setDepth(100);  // Lower depth to not block dialogs
                         
                         // Store reference for cleanup
                         if (!this.absolutePortraits) this.absolutePortraits = [];
@@ -535,15 +658,16 @@ export default class CabinScene extends Phaser.Scene {
                         portraitAdded = true;
                         break;
                     } catch (error) {
-                        console.error(`❌ CabinScene: Error creating absolute portrait with key '${key}':`, error);
+                        // Silently continue to next portrait key
+                        continue;
                     }
                 }
             }
         }
         
         // If no actual image was found for any NPC, just log it - NO FALLBACK
-        if (!portraitAdded) {
-            console.log(`❌ CabinScene: No actual portrait image found for ${npc.name}. Available keys:`, portraitKeys.filter(key => this.textures.exists(key)));
+        if (!portraitAdded && npc.id === 'mia') {
+            console.log(`CabinScene: No portrait image found for ${npc.name}, using text fallback`);
         }
         
         // NPC name
@@ -770,7 +894,7 @@ export default class CabinScene extends Phaser.Scene {
                     const romancePortrait = this.add.image(125, y + 50, key);
                     romancePortrait.setDisplaySize(70, 90);
                     romancePortrait.setOrigin(0.5);
-                    romancePortrait.setDepth(15000);
+                    romancePortrait.setDepth(500); // Lower depth to not block dialogs
                     
                     // Make sure it's visible
                     romancePortrait.setVisible(true);
@@ -778,11 +902,10 @@ export default class CabinScene extends Phaser.Scene {
                     
                     this.romanceDetailsContainer.add(romancePortrait);
                     portraitAdded = true;
-                    console.log(`🔍 CabinScene: Romance portrait '${key}' positioned at (${romancePortrait.x}, ${romancePortrait.y}) size ${romancePortrait.displayWidth}x${romancePortrait.displayHeight}`);
-                    console.log(`CabinScene: Added romance portrait '${key}' for ${npc.name} with depth 15000`);
                     break;
                 } catch (error) {
-                    console.error(`CabinScene: Error creating romance portrait:`, error);
+                    // Silently continue to next portrait key
+                    continue;
                 }
             }
         }
@@ -867,11 +990,12 @@ export default class CabinScene extends Phaser.Scene {
         
         // Action buttons with cabin theme
         const actions = [
-            { text: '💬 Chat Together', action: () => this.sendQuickMessage('greeting') },
+            { text: '💬 Chat Together', action: () => this.startRomanceDialog() },
             { text: '🎁 Give Gift', action: () => this.giveGift() },
             { text: '🌹 Flirt', action: () => this.sendQuickMessage('flirt') },
             { text: '💕 Romantic Talk', action: () => this.sendQuickMessage('romantic') },
             { text: '🎣 Fishing Together', action: () => this.inviteFishing() },
+            { text: '📄 Test JSON Dialog', action: () => this.testJSONDialog() },
         ];
         
         actions.forEach((actionData) => {
@@ -1023,8 +1147,18 @@ export default class CabinScene extends Phaser.Scene {
     }
 
     setupEventListeners() {
+        try {
+            console.log('CabinScene: Setting up event listeners...');
+            
+            // Listen for scene wake events (when resumed from other scenes)
+            this.events.on('wake', () => {
+                console.log('CabinScene: Scene woke up, refreshing UI');
+                this.refreshCabin();
+            });
+            
         // Listen for romance meter updates - use fallback if gameScene not available
-        if (this.gameScene && this.gameScene.events) {
+            if (this.gameScene && this.gameScene.events && typeof this.gameScene.events.on === 'function') {
+                console.log('CabinScene: Setting up GameScene event listeners');
             this.gameScene.events.on('romance-meter-updated', (data) => {
                 this.onRomanceMeterUpdated(data);
             });
@@ -1034,7 +1168,9 @@ export default class CabinScene extends Phaser.Scene {
                 this.onRelationshipChanged(data);
             });
         } else {
+                console.log('CabinScene: GameScene events not available, using local events');
             // If gameScene events not available, listen to our own events instead
+                if (this.events && typeof this.events.on === 'function') {
             this.events.on('romance-meter-updated', (data) => {
                 this.onRomanceMeterUpdated(data);
             });
@@ -1042,6 +1178,36 @@ export default class CabinScene extends Phaser.Scene {
             this.events.on('relationship-changed', (data) => {
                 this.onRelationshipChanged(data);
             });
+                }
+            }
+            
+            // Listen for dialog completion events
+            if (this.events && typeof this.events.on === 'function') {
+                this.events.on('dialog-ended', (data) => {
+                    console.log('CabinScene: Dialog ended, refreshing UI:', data);
+                    this.refreshCabin();
+                });
+            }
+            
+            // Listen for DialogScene events when it's active
+            if (this.scene && this.scene.manager && this.scene.manager.events && typeof this.scene.manager.events.on === 'function') {
+                this.scene.manager.events.on('wake', (scene) => {
+                    if (scene && scene.scene && scene.scene.key === 'DialogScene') {
+                        console.log('CabinScene: DialogScene woke up, setting up listeners');
+                        if (scene.events && typeof scene.events.on === 'function') {
+                            scene.events.on('romance-meter-updated', (data) => {
+                                console.log('CabinScene: Received romance meter update from DialogScene:', data);
+                                this.onRomanceMeterUpdated(data);
+                            });
+                        }
+                    }
+                });
+            }
+            
+            console.log('CabinScene: Event listeners setup completed');
+        } catch (error) {
+            console.error('CabinScene: Error setting up event listeners:', error);
+            console.error('CabinScene: Will continue without event listeners');
         }
     }
 
@@ -1412,6 +1578,150 @@ export default class CabinScene extends Phaser.Scene {
         this.refreshCabin();
     }
 
+    startRomanceDialog() {
+        try {
+            console.log('CabinScene: Starting romance dialog...');
+            
+            // Validate prerequisites
+            if (!this.dialogManager) {
+                console.error('CabinScene: DialogManager not available for romance dialog');
+                this.showErrorMessage('Dialog system is currently unavailable.');
+                return;
+            }
+            
+            if (!this.selectedNPC) {
+                console.warn('CabinScene: No NPC selected, defaulting to mia');
+                this.selectedNPC = 'mia';
+            }
+            
+            console.log('CabinScene: Starting romance dialog for', this.selectedNPC);
+            
+            // Get the NPC data to determine the correct script
+            const npc = this.dialogManager.getNPC(this.selectedNPC);
+            if (!npc) {
+                console.error('CabinScene: NPC not found for romance dialog:', this.selectedNPC);
+                this.showErrorMessage(`NPC ${this.selectedNPC} not found.`);
+                return;
+            }
+            
+            console.log('CabinScene: NPC data for romance dialog:', npc);
+            console.log('CabinScene: Dialog script:', npc.dialogScript);
+            
+            // Validate scene manager
+            if (!this.scene || !this.scene.manager) {
+                console.error('CabinScene: Scene manager not available');
+                this.showErrorMessage('Scene system is not available.');
+                return;
+            }
+            
+            // Debug scene state before launching
+            console.log('CabinScene: Current scene active:', this.scene.isActive('CabinScene'));
+            console.log('CabinScene: Available scenes:', Object.keys(this.scene.manager.scenes));
+            console.log('CabinScene: DialogScene exists:', !!this.scene.get('DialogScene'));
+            
+            // Prepare dialog scene data
+            const dialogSceneData = {
+                npcId: this.selectedNPC,
+                script: npc.dialogScript || 'mia_romance.md', // Fallback script
+                callingScene: 'CabinScene',
+                dialogManager: this.dialogManager
+            };
+            console.log('CabinScene: DialogScene data:', dialogSceneData);
+            
+            // Stop existing DialogScene if it exists
+            if (this.scene.get('DialogScene')) {
+                console.log('CabinScene: DialogScene already exists, stopping it first');
+                this.scene.stop('DialogScene');
+            }
+            
+            // Launch DialogScene with error handling
+            try {
+                console.log('CabinScene: Pausing CabinScene...');
+                this.scene.pause('CabinScene');
+                
+                console.log('CabinScene: Launching DialogScene...');
+                this.scene.launch('DialogScene', dialogSceneData);
+                
+                console.log('CabinScene: DialogScene launch command sent successfully');
+                
+            } catch (sceneError) {
+                console.error('CabinScene: Error launching DialogScene:', sceneError);
+                this.scene.resume('CabinScene'); // Resume if launch failed
+                this.showErrorMessage('Failed to start dialog system.');
+                return;
+            }
+            
+            console.log('CabinScene: Romance dialog started successfully');
+            
+        } catch (error) {
+            console.error('CabinScene: Error starting romance dialog:', error);
+            console.error('CabinScene: Error stack:', error.stack);
+            
+            // Ensure scene is resumed if something went wrong
+            try {
+                this.scene.resume('CabinScene');
+            } catch (resumeError) {
+                console.error('CabinScene: Error resuming scene after dialog error:', resumeError);
+            }
+            
+            // Show user-friendly error message
+            this.showErrorMessage('Unable to start conversation. Please try again.');
+        }
+    }
+    
+    /**
+     * Show an error message to the user
+     * @param {string} message - Error message to display
+     */
+    showErrorMessage(message) {
+        const { width, height } = this.cameras.main;
+        
+        // Create error notification
+        const errorBg = this.add.graphics();
+        errorBg.fillStyle(0x000000, 0.8);
+        errorBg.fillRect(0, 0, width, height);
+        errorBg.setDepth(20000);
+        
+        const errorPanel = this.add.graphics();
+        errorPanel.fillStyle(0xe74c3c, 0.9);
+        errorPanel.lineStyle(3, 0xc0392b, 1);
+        errorPanel.fillRoundedRect(width/2 - 200, height/2 - 75, 400, 150, 10);
+        errorPanel.strokeRoundedRect(width/2 - 200, height/2 - 75, 400, 150, 10);
+        errorPanel.setDepth(20001);
+        
+        const errorText = this.add.text(width/2, height/2 - 20, message, {
+            fontSize: '18px',
+            fill: '#ffffff',
+            fontWeight: 'bold',
+            align: 'center',
+            wordWrap: { width: 350 }
+        }).setOrigin(0.5).setDepth(20002);
+        
+        const okButton = this.add.text(width/2, height/2 + 30, 'OK', {
+            fontSize: '16px',
+            fill: '#ffffff',
+            fontWeight: 'bold',
+            backgroundColor: '#c0392b',
+            padding: { x: 20, y: 10 }
+        }).setOrigin(0.5).setDepth(20003);
+        
+        okButton.setInteractive({ useHandCursor: true });
+        okButton.on('pointerdown', () => {
+            errorBg.destroy();
+            errorPanel.destroy();
+            errorText.destroy();
+            okButton.destroy();
+        });
+        
+        // Auto-dismiss after 5 seconds
+        this.time.delayedCall(5000, () => {
+            if (errorBg && errorBg.active) errorBg.destroy();
+            if (errorPanel && errorPanel.active) errorPanel.destroy();
+            if (errorText && errorText.active) errorText.destroy();
+            if (okButton && okButton.active) okButton.destroy();
+        });
+    }
+
     openFullDialog() {
         // Open full dialog system for this NPC from the cabin
         if (this.dialogManager && this.selectedNPC) {
@@ -1464,8 +1774,24 @@ export default class CabinScene extends Phaser.Scene {
     }
 
     onRomanceMeterUpdated(data) {
+        try {
         console.log('CabinScene: Romance meter updated', data);
-        this.refreshRomancePanel();
+            
+            // Validate data
+            if (!data || !data.npcId) {
+                console.warn('CabinScene: Invalid romance meter update data:', data);
+                return;
+            }
+            
+            // Ensure we're updating the correct NPC
+            if (data.npcId !== this.selectedNPC) {
+                console.log(`CabinScene: Romance update for ${data.npcId}, but selected NPC is ${this.selectedNPC}`);
+                // Still update if it's a valid NPC, but don't show notifications
+            }
+            
+            // Force refresh the entire cabin UI to ensure updates are visible
+            console.log('CabinScene: Forcing complete UI refresh after romance meter update');
+            this.refreshCabin();
         
         // Check for HCG unlocks when romance meter changes
         if (data.oldValue !== undefined && data.newValue !== undefined) {
@@ -1479,6 +1805,43 @@ export default class CabinScene extends Phaser.Scene {
             // Update album button if new HCGs were unlocked
             if (unlocks.length > 0) {
                 this.updateAlbumButton();
+                }
+            }
+            
+            // Show a brief notification about the romance increase (only for selected NPC)
+            if (data.npcId === this.selectedNPC && data.newValue > (data.oldValue || 0)) {
+                const increase = data.newValue - (data.oldValue || 0);
+                this.showRomanceIncreaseNotification(data.npcId, increase);
+            }
+            
+            // Add a chat message about the romance increase
+            if (data.npcId === this.selectedNPC && data.newValue > (data.oldValue || 0)) {
+                const increase = data.newValue - (data.oldValue || 0);
+                const npc = this.dialogManager?.getNPC(data.npcId);
+                const npcName = npc ? npc.name : data.npcId;
+                
+                const systemMessage = {
+                    sender: 'system',
+                    message: `💕 Romance with ${npcName} increased by ${increase}! (Total: ${data.newValue}/${data.maxValue})`,
+                    timestamp: Date.now()
+                };
+                
+                const chatHistory = this.getChatHistory();
+                chatHistory.push(systemMessage);
+                this.saveChatHistory(chatHistory);
+                this.displayChatMessages(chatHistory);
+            }
+            
+            console.log('CabinScene: Romance meter update handling completed');
+        } catch (error) {
+            console.error('CabinScene: Error handling romance meter update:', error);
+            console.error('CabinScene: Romance meter update data:', data);
+            
+            // Force a UI refresh even if there was an error
+            try {
+                this.refreshCabin();
+            } catch (refreshError) {
+                console.error('CabinScene: Error during fallback refresh:', refreshError);
             }
         }
     }
@@ -1682,9 +2045,11 @@ export default class CabinScene extends Phaser.Scene {
                 console.log(`Fallback: Start dialog with ${npcId} from ${callingScene}`);
                 // Launch DialogScene directly with our fallback manager
                 try {
+                    const npc = fallbackManager.getNPC(npcId);
+                    const script = npc ? npc.dialogScript : 'sample_assistant.md';
                     this.scene.launch('DialogScene', {
                         npcId: npcId,  // Fixed: use 'npcId' not 'npc'
-                        script: 'sample_assistant.md',
+                        script: script,
                         callingScene: callingScene || 'CabinScene',
                         dialogManager: fallbackManager  // Pass ourselves as the DialogManager
                     });
@@ -1703,7 +2068,7 @@ export default class CabinScene extends Phaser.Scene {
                 romanceMeter: 0,
                 maxRomance: 100,
                 relationship: 'stranger',
-                dialogScript: 'sample_assistant.md',
+                dialogScript: 'mia_romance.md',
                 description: 'A cheerful and helpful fishing guide who loves cozy cabin conversations.',
                 personality: 'Friendly, enthusiastic, and enjoys intimate cabin settings',
                 specialties: ['Cabin comfort', 'Warm conversations', 'Ocean stories'],
@@ -1914,13 +2279,13 @@ export default class CabinScene extends Phaser.Scene {
         portraitFrame.fillRoundedRect(centerX - 122, centerY - 172, 244, 344, 15);
         portraitFrame.lineStyle(4, 0xdaa520, 1);
         portraitFrame.strokeRoundedRect(centerX - 122, centerY - 172, 244, 344, 15);
-        portraitFrame.setDepth(15000);
+        portraitFrame.setDepth(1000); // Much lower depth to not block dialogs
         
         // Inner wood frame
         const innerFrame = this.add.graphics();
         innerFrame.fillStyle(0x8B4513, 0.8);
         innerFrame.fillRoundedRect(centerX - 115, centerY - 165, 230, 330, 10);
-        innerFrame.setDepth(15001);
+        innerFrame.setDepth(1001); // Slightly higher than frame
         
         // Try to load Mia's actual portrait
         const portraitKeys = [
@@ -1932,37 +2297,21 @@ export default class CabinScene extends Phaser.Scene {
         ];
         let portraitAdded = false;
         
-        // Debug: Check all available textures
-        console.log('CabinScene: Checking for center Mia portrait keys:', portraitKeys);
-        
         for (const key of portraitKeys) {
-            console.log(`CabinScene: Checking center texture key '${key}' - exists: ${this.textures.exists(key)}`);
             if (this.textures.exists(key)) {
                 try {
-                    console.log(`🎯 CabinScene: Creating center Mia portrait with key '${key}'`);
-                    
-                    // Get texture info for debugging
-                    const texture = this.textures.get(key);
-                    console.log(`🔍 CabinScene: Center texture '${key}' info:`, {
-                        source: texture.source?.[0]?.image?.src || 'unknown',
-                        width: texture.source?.[0]?.width || 'unknown',
-                        height: texture.source?.[0]?.height || 'unknown',
-                        type: texture.source?.[0]?.image ? 'image' : 'canvas'
-                    });
-                    
                     const centerMiaPortrait = this.add.image(centerX, centerY, key);
                     centerMiaPortrait.setDisplaySize(220, 320);
                     centerMiaPortrait.setOrigin(0.5);
-                    centerMiaPortrait.setDepth(15002);
+                    centerMiaPortrait.setDepth(1002); // Lower depth to not block dialogs
                     centerMiaPortrait.setVisible(true);
                     centerMiaPortrait.setAlpha(1);
-                    
-                    console.log(`✅ CabinScene: Center Mia portrait '${key}' created successfully - size: ${centerMiaPortrait.displayWidth}x${centerMiaPortrait.displayHeight}, position: (${centerMiaPortrait.x}, ${centerMiaPortrait.y}), depth: ${centerMiaPortrait.depth}`);
                     
                     portraitAdded = true;
                     break;
                 } catch (error) {
-                    console.error(`❌ CabinScene: Error creating center portrait with key '${key}':`, error);
+                    // Silently continue to next portrait key
+                    continue;
                 }
             }
         }
@@ -1979,7 +2328,7 @@ export default class CabinScene extends Phaser.Scene {
                 strokeThickness: 3
             });
             fallbackText.setOrigin(0.5);
-            fallbackText.setDepth(15002);
+            fallbackText.setDepth(1002); // Lower depth to not block dialogs
         }
         
         // Add cabin title below the portrait
@@ -1992,7 +2341,7 @@ export default class CabinScene extends Phaser.Scene {
             strokeThickness: 2
         });
         titleText.setOrigin(0.5);
-        titleText.setDepth(15003);
+        titleText.setDepth(1003); // Lower depth to not block dialogs
         
         // Add cabin atmosphere text
         const atmosphereText = this.add.text(centerX, centerY + 210, 'Relaxing in the Cozy Cabin', {
@@ -2002,9 +2351,9 @@ export default class CabinScene extends Phaser.Scene {
             fontStyle: 'italic'
         });
         atmosphereText.setOrigin(0.5);
-        atmosphereText.setDepth(15003);
+        atmosphereText.setDepth(1003); // Lower depth to not block dialogs
         
-        console.log('CabinScene: Center Mia portrait display created');
+        console.log('CabinScene: Center Mia portrait display created with lower depth layers (1000-1003)');
     }
 
     // --- PRIVATE HELPER METHODS FOR UI CREATION ---
@@ -2139,5 +2488,175 @@ export default class CabinScene extends Phaser.Scene {
         }
         
         return buttonContainer;
+    }
+
+    /**
+     * Show a brief notification when romance meter increases
+     * @param {string} npcId - The NPC ID
+     * @param {number} increase - Amount of increase
+     */
+    showRomanceIncreaseNotification(npcId, increase) {
+        const { width, height } = this.cameras.main;
+        const npc = this.dialogManager.getNPC(npcId);
+        const npcName = npc ? npc.name : npcId;
+        
+        // Create notification text
+        const notificationText = this.add.text(width/2, height/2 - 100, 
+            `💕 +${increase} Romance with ${npcName}!`, {
+            fontSize: '20px',
+            fontFamily: 'Georgia, serif',
+            fill: '#ff69b4',
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setOrigin(0.5).setDepth(10000);
+        
+        // Animate the notification
+        this.tweens.add({
+            targets: notificationText,
+            y: height/2 - 150,
+            alpha: 0,
+            duration: 2000,
+            ease: 'Power2',
+            onComplete: () => {
+                notificationText.destroy();
+            }
+        });
+        
+        console.log(`CabinScene: Showed romance increase notification: +${increase} for ${npcName}`);
+    }
+
+    /**
+     * Create a minimal fallback UI when main UI creation fails
+     * @param {number} width - Screen width
+     * @param {number} height - Screen height
+     */
+    createFallbackUI(width, height) {
+        console.log('CabinScene: Creating fallback UI...');
+        
+        // Simple background
+        this.add.rectangle(width/2, height/2, width, height, 0x2c3e50, 1);
+        
+        // Title
+        this.add.text(width/2, height/4, '⚓ Boat Cabin', {
+            fontSize: '32px',
+            fill: '#ffd700',
+            fontWeight: 'bold'
+        }).setOrigin(0.5);
+        
+        // Error message
+        this.add.text(width/2, height/2, 'Cabin is experiencing technical difficulties.\nSome features may not be available.', {
+            fontSize: '18px',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        // Simple chat button
+        const chatButton = this.add.rectangle(width/2, height/2 + 100, 200, 50, 0x3498db, 1);
+        chatButton.setStrokeStyle(2, 0x2980b9);
+        chatButton.setInteractive({ useHandCursor: true });
+        
+        const chatText = this.add.text(width/2, height/2 + 100, 'Chat with Mia', {
+            fontSize: '16px',
+            fill: '#ffffff',
+            fontWeight: 'bold'
+        }).setOrigin(0.5);
+        
+        chatButton.on('pointerdown', () => {
+            try {
+                this.startRomanceDialog();
+            } catch (error) {
+                console.error('CabinScene: Error starting dialog from fallback UI:', error);
+                alert('Dialog system is currently unavailable.');
+            }
+        });
+        
+        // Back button
+        const backButton = this.add.rectangle(width/2, height - 100, 150, 40, 0xe74c3c, 1);
+        backButton.setStrokeStyle(2, 0xc0392b);
+        backButton.setInteractive({ useHandCursor: true });
+        
+        const backText = this.add.text(width/2, height - 100, '← Back', {
+            fontSize: '16px',
+            fill: '#ffffff',
+            fontWeight: 'bold'
+        }).setOrigin(0.5);
+        
+        backButton.on('pointerdown', () => {
+            this.exitCabin();
+        });
+        
+        console.log('CabinScene: Fallback UI created successfully');
+    }
+
+    /**
+     * Test JSON dialog functionality
+     */
+    testJSONDialog() {
+        try {
+            console.log('CabinScene: Testing JSON dialog system...');
+            
+            // Validate prerequisites
+            if (!this.dialogManager) {
+                console.error('CabinScene: DialogManager not available for JSON dialog test');
+                this.showErrorMessage('Dialog system is currently unavailable.');
+                return;
+            }
+            
+            if (!this.selectedNPC) {
+                console.warn('CabinScene: No NPC selected, defaulting to mia');
+                this.selectedNPC = 'mia';
+            }
+            
+            console.log('CabinScene: Testing JSON dialog for', this.selectedNPC);
+            
+            // Prepare dialog scene data with JSON file
+            const dialogSceneData = {
+                npcId: this.selectedNPC,
+                script: 'mia_sample.json', // Use JSON file instead of markdown
+                callingScene: 'CabinScene',
+                dialogManager: this.dialogManager
+            };
+            console.log('CabinScene: JSON DialogScene data:', dialogSceneData);
+            
+            // Stop existing DialogScene if it exists
+            if (this.scene.get('DialogScene')) {
+                console.log('CabinScene: DialogScene already exists, stopping it first');
+                this.scene.stop('DialogScene');
+            }
+            
+            // Launch DialogScene with JSON data
+            try {
+                console.log('CabinScene: Pausing CabinScene for JSON dialog...');
+                this.scene.pause('CabinScene');
+                
+                console.log('CabinScene: Launching DialogScene with JSON...');
+                this.scene.launch('DialogScene', dialogSceneData);
+                
+                console.log('CabinScene: JSON DialogScene launch command sent successfully');
+                
+            } catch (sceneError) {
+                console.error('CabinScene: Error launching JSON DialogScene:', sceneError);
+                this.scene.resume('CabinScene'); // Resume if launch failed
+                this.showErrorMessage('Failed to start JSON dialog system.');
+                return;
+            }
+            
+            console.log('CabinScene: JSON dialog test started successfully');
+            
+        } catch (error) {
+            console.error('CabinScene: Error testing JSON dialog:', error);
+            console.error('CabinScene: Error stack:', error.stack);
+            
+            // Ensure scene is resumed if something went wrong
+            try {
+                this.scene.resume('CabinScene');
+            } catch (resumeError) {
+                console.error('CabinScene: Error resuming scene after JSON dialog error:', resumeError);
+            }
+            
+            // Show user-friendly error message
+            this.showErrorMessage('Unable to test JSON dialog. Please try again.');
+        }
     }
 } 

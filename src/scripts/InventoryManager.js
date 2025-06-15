@@ -1,84 +1,74 @@
-import InventoryValidator from './InventoryValidator.js';
 import { gameDataLoader } from './DataLoader.js';
+import { InventoryValidator } from './InventoryValidator.js';
 
 export class InventoryManager {
     constructor(gameState) {
         this.gameState = gameState;
-        this.validator = new InventoryValidator();
-        this.eventListeners = {};
-        this.equipSlotFixed = false; // Flag to track if equipSlots have been fixed
+        this.eventListeners = new Map();
         
-        // Initialize inventory structure if needed
+        // Initialize validator with gameState
+        this.validator = new InventoryValidator(gameState);
+        
+        // Wait for validator to load schema before initializing inventory
         this.initializeInventory();
-        
-        // Initialize player stats for consumables if they don't exist
-        this.initializePlayerStats();
-        
-        // Set up periodic cleanup of expired boosts
-        this.setupBoostCleanup();
     }
 
-    /**
-     * Initialize inventory structure with all expected categories
-     */
-        initializeInventory() {
-        console.log('InventoryManager: Initializing inventory system...');
-        
-        // 🚨 FORCE CLEAN: Remove all undefined/invalid items immediately
-        this.forceCleanAllUndefinedItems();
-        
-        // Initialize empty inventory structure if needed
-            if (!this.gameState.inventory) {
-                this.gameState.inventory = {};
+    async initializeInventory() {
+        // Wait for validator schema to load
+        if (this.validator && !this.validator.schema) {
+            // Wait up to 2 seconds for schema to load
+            let attempts = 0;
+            while (!this.validator.schema && attempts < 20) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
             }
-
-        // Initialize all inventory categories
-        const categories = ['rods', 'lures', 'bait', 'boats', 'upgrades', 'fish', 'consumables', 'materials', 'clothing', 'bikini_assistants'];
-        categories.forEach(category => {
-            if (!Array.isArray(this.gameState.inventory[category])) {
-                this.gameState.inventory[category] = [];
+            
+            if (!this.validator.schema) {
+                console.warn('InventoryManager: Validator schema not loaded, proceeding with fallback');
             }
-        });
-
-        // Initialize equipment slots
-        if (!this.gameState.equipment) {
-            this.gameState.equipment = {};
+        }
+        
+        // Initialize inventory structure
+        if (!this.gameState.inventory) {
+            this.gameState.inventory = {
+                rods: [],
+                lures: [],
+                bait: [],
+                boats: [],
+                clothing: [],
+                upgrades: [],
+                fish: [],
+                consumables: [],
+                materials: [],
+                bikini_assistants: []
+            };
         }
 
-        // Initialize working slot areas for equipment UI
-        if (!this.gameState.workingSlots) {
-            this.gameState.workingSlots = {
+        // Initialize equipped items
+        if (!this.gameState.equippedItems) {
+            this.gameState.equippedItems = {
                 rod: null,
                 lure: null,
+                bait: null,
                 boat: null,
-                head: null,
-                upper_body: null,
-                lower_body: null,
+                clothing: [],
                 bikini_assistant: null
             };
         }
 
-        // Fix missing equipment slots
-        this.fixMissingEquipSlots();
+        // Clean up any undefined items that might exist
+        this.cleanupUndefinedItems();
 
-        // Initialize player stats if needed
+        // Initialize player stats if they don't exist
         this.initializePlayerStats();
 
-        // 🚨 SAFETY CHECK: Only add sample items if inventory is empty AND DataLoader is properly loaded
-        if (this.isInventoryEmpty()) {
-            console.log('InventoryManager: Inventory is empty, checking if we should add sample items...');
-            
-            // 🚨 DISABLED: Automatic sample item generation to prevent undefined items
-            // Sample items can be added manually through the inventory UI debug buttons if needed
-            console.log('InventoryManager: Automatic sample item generation disabled to prevent undefined items');
-        } else {
-            console.log('InventoryManager: Inventory not empty, skipping sample items');
-        }
-
-        // Setup boost cleanup
+        // Set up boost cleanup
         this.setupBoostCleanup();
 
-        console.log('InventoryManager: Inventory system initialized successfully');
+        // Fix missing equipSlot properties for equipment items
+        this.fixMissingEquipSlots();
+
+        console.log('InventoryManager: Initialized successfully');
     }
 
     /**
@@ -347,38 +337,28 @@ export class InventoryManager {
      */
     addItem(category, itemData, quantity = 1) {
         try {
-            // 🚨 ENHANCED VALIDATION: Comprehensive checks to prevent undefined items
-            if (!category || typeof category !== 'string') {
-                console.error('InventoryManager: Invalid category provided:', category);
-                return false;
-            }
+            console.log(`InventoryManager: Adding item to ${category}:`, {
+                name: itemData.name,
+                id: itemData.id,
+                quantity: quantity
+            });
             
+            // 🚨 VALIDATION: Ensure itemData is valid object
             if (!itemData || typeof itemData !== 'object') {
-                console.error('InventoryManager: Invalid item data provided:', itemData);
+                console.error('InventoryManager: Invalid itemData provided:', itemData);
                 return false;
             }
             
-            // 🚨 CRITICAL: Prevent undefined items from being added
-            if (!itemData.name || itemData.name === 'undefined' || typeof itemData.name !== 'string') {
-                console.error('InventoryManager: Rejecting item with undefined or invalid name:', itemData);
-                return false;
+            // 🚨 VALIDATION: Ensure ID exists and is valid
+            if (!itemData.id || typeof itemData.id !== 'string' || itemData.id.trim() === '' || itemData.id === 'undefined') {
+                console.warn(`InventoryManager: Item missing/invalid ID, generating one:`, itemData);
+                itemData.id = `${category}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             }
             
-            // 🚨 CRITICAL: Check for 'undefined' string in name
-            if (itemData.name.includes('undefined') || itemData.name.trim() === '') {
-                console.error('InventoryManager: Rejecting item with undefined/empty name:', itemData);
-                return false;
-            }
-            
-            if (!itemData.id || itemData.id === 'undefined') {
-                console.error('InventoryManager: Rejecting item with undefined or missing ID:', itemData);
-                return false;
-            }
-            
-            // 🚨 CRITICAL: Check for 'undefined' string in ID
-            if (itemData.id.includes('undefined') || itemData.id.trim() === '') {
-                console.error('InventoryManager: Rejecting item with undefined/empty ID:', itemData);
-                return false;
+            // 🚨 VALIDATION: Ensure name exists and is valid
+            if (!itemData.name || typeof itemData.name !== 'string' || itemData.name.trim() === '' || itemData.name === 'undefined') {
+                console.warn(`InventoryManager: Item ${itemData.id} missing/invalid name, setting default`);
+                itemData.name = category === 'fish' ? 'Unknown Fish' : 'Unknown Item';
             }
             
             // 🚨 VALIDATION: Ensure description exists and is valid
@@ -411,7 +391,7 @@ export class InventoryManager {
             if (category === 'fish') {
                 processedItemData = {
                     id: itemData.id || `fish_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                    fishId: itemData.fishId || 'unknown',
+                    fishId: itemData.fishId || itemData.id || 'unknown',
                     name: (itemData.name && typeof itemData.name === 'string') ? itemData.name.trim() : 'Unknown Fish',
                     rarity: Math.min(Math.max(1, parseInt(itemData.rarity) || 1), 6),
                     weight: Math.max(0.1, parseFloat(itemData.weight) || 1.0),
@@ -427,12 +407,23 @@ export class InventoryManager {
                 console.log('InventoryManager: Processed fish data:', processedItemData);
             }
 
-            // Create proper item structure
-            const item = this.validator.createItem(category, processedItemData);
+            // Create proper item structure using validator
+            let item;
+            if (this.validator && this.validator.schema) {
+                item = this.validator.createItem(category, processedItemData);
+            } else {
+                // Fallback if validator not ready
+                console.warn('InventoryManager: Validator not ready, using fallback item creation');
+                item = {
+                    ...processedItemData,
+                    quantity: quantity || 1,
+                    owned: true
+                };
+            }
             
             // 🚨 FINAL VALIDATION: Double-check the created item
             if (!item || !item.name || item.name === 'undefined' || !item.id || item.id === 'undefined') {
-                console.error('InventoryManager: ❌ CRITICAL - Validator created invalid item:', item);
+                console.error('InventoryManager: ❌ CRITICAL - Created invalid item:', item);
                 console.error('InventoryManager: Original data:', itemData);
                 return false;
             }
@@ -443,27 +434,36 @@ export class InventoryManager {
                 category: category
             });
             
-            // Validate item
-            const validation = this.validator.validateItem(category, item);
-            if (!validation.valid) {
-                console.error(`Invalid item for category ${category}:`, validation.errors);
-                console.error(`Item data:`, item);
-                console.error(`Original item data:`, itemData);
-                
-                // For fish, try to proceed with a more lenient validation
-                if (category === 'fish') {
-                    console.warn('InventoryManager: Fish validation failed, but proceeding with corrected data');
-                    // Continue execution for fish items even if validation fails
-                } else {
-                    return false;
+            // Validate item (but be lenient for fish)
+            if (this.validator && this.validator.schema) {
+                const validation = this.validator.validateItem(category, item);
+                if (!validation.valid) {
+                    console.error(`Invalid item for category ${category}:`, validation.errors);
+                    console.error(`Item data:`, item);
+                    console.error(`Original item data:`, itemData);
+                    
+                    // For fish, try to proceed with a more lenient validation
+                    if (category === 'fish') {
+                        console.warn('InventoryManager: Fish validation failed, but proceeding with corrected data');
+                        // Continue execution for fish items even if validation fails
+                    } else {
+                        return false;
+                    }
                 }
+            } else {
+                console.warn('InventoryManager: Validator not available, skipping validation');
             }
 
             // Check if stackable and item already exists
-            if (this.validator.isStackable(category)) {
+            const isStackable = this.validator && this.validator.schema ? 
+                this.validator.isStackable(category) : 
+                (category === 'fish' || category === 'lures' || category === 'consumables' || category === 'materials');
+                
+            if (isStackable) {
                 const existingItem = this.findItem(category, item.id);
                 if (existingItem) {
-                    const maxStack = this.validator.getMaxStackSize();
+                    const maxStack = this.validator && this.validator.schema ? 
+                        this.validator.getMaxStackSize() : 999;
                     const newQuantity = Math.min(existingItem.quantity + quantity, maxStack);
                     const actualAdded = newQuantity - existingItem.quantity;
                     
@@ -477,41 +477,30 @@ export class InventoryManager {
             }
 
             // Check category limits
-            const limit = this.validator.getCategoryLimit(category);
+            const limit = this.validator && this.validator.schema ? 
+                this.validator.getCategoryLimit(category) : 100;
             if (this.gameState.inventory[category].length >= limit) {
                 console.error(`Category ${category} is full (${limit} items max)`);
                 return false;
             }
 
-            // Set quantity for stackable items
-            if (this.validator.isStackable(category)) {
-                item.quantity = Math.min(quantity, this.validator.getMaxStackSize());
-            }
-
-            // 🚨 FINAL CHECK: Ensure item is still valid before adding
-            if (!item.name || item.name === 'undefined' || !item.id || item.id === 'undefined') {
-                console.error('InventoryManager: ❌ CRITICAL - Item became invalid before adding to inventory:', item);
-                return false;
-            }
-
             // Add item to inventory
-            item.owned = true;
             this.gameState.inventory[category].push(item);
             this.gameState.markDirty();
-            
-            console.log(`InventoryManager: ✅ SUCCESS - Added ${item.name} to ${category} inventory`);
-            this.emit('itemAdded', { category, item, quantity: item.quantity || 1 });
+            this.emit('itemAdded', { category, item, quantity });
+
+            console.log(`InventoryManager: ✅ Successfully added ${item.name} to ${category}`);
             return true;
 
         } catch (error) {
-            console.error('InventoryManager: ❌ ERROR adding item:', error);
-            console.error('InventoryManager: Error stack:', error.stack);
-            console.error('InventoryManager: Category:', category);
-            console.error('InventoryManager: Item data:', itemData);
-            console.error('InventoryManager: Quantity:', quantity);
-            
-            // 🚨 NO FALLBACK: Do not create any items if there's an error
-            console.error('InventoryManager: ❌ REJECTING item due to error - no fallback creation');
+            console.error('InventoryManager: Error adding item:', error);
+            console.error('InventoryManager: Error details:', {
+                category,
+                itemData,
+                quantity,
+                error: error.message,
+                stack: error.stack
+            });
             return false;
         }
     }
@@ -536,7 +525,7 @@ export class InventoryManager {
             const item = items[itemIndex];
             
             // Handle stackable items
-            if (this.validator.isStackable(category) && item.quantity > 1) {
+            if (this.validator && this.validator.schema && this.validator.isStackable(category) && item.quantity > 1) {
                 const removeQuantity = Math.min(quantity, item.quantity);
                 item.quantity -= removeQuantity;
                 
@@ -586,7 +575,8 @@ export class InventoryManager {
             }
 
             // Check if item can be equipped
-            const maxEquipped = this.validator.getMaxEquipped(category);
+            const maxEquipped = this.validator && this.validator.schema ? 
+                this.validator.getMaxEquipped(category) : 0;
             if (maxEquipped === 0) {
                 console.error(`Items in category ${category} cannot be equipped`);
                 return false;
@@ -797,7 +787,8 @@ export class InventoryManager {
                 equipped: items.filter(item => item.equipped).length,
                 totalQuantity: 0,
                 totalValue: 0,
-                limit: this.validator.getCategoryLimit(category)
+                limit: this.validator && this.validator.schema ? 
+                    this.validator.getCategoryLimit(category) : 100
             };
 
             for (const item of items) {
@@ -874,13 +865,13 @@ export class InventoryManager {
      */
     on(event, callback) {
         try {
-            if (!this.eventListeners[event]) {
-                this.eventListeners[event] = [];
+            if (!this.eventListeners.has(event)) {
+                this.eventListeners.set(event, []);
             }
             
             // Check if callback is valid
             if (typeof callback === 'function') {
-                this.eventListeners[event].push(callback);
+                this.eventListeners.get(event).push(callback);
             } else {
                 console.error('InventoryManager: Invalid callback provided for event:', event);
             }
@@ -891,12 +882,12 @@ export class InventoryManager {
 
     off(event, callback) {
         try {
-            if (this.eventListeners[event] && typeof callback === 'function') {
-                this.eventListeners[event] = this.eventListeners[event].filter(cb => cb !== callback);
+            if (this.eventListeners.has(event)) {
+                this.eventListeners.get(event).filter(cb => cb !== callback);
                 
                 // Clean up empty event arrays
-                if (this.eventListeners[event].length === 0) {
-                    delete this.eventListeners[event];
+                if (this.eventListeners.get(event).length === 0) {
+                    this.eventListeners.delete(event);
                 }
             }
         } catch (error) {
@@ -906,9 +897,9 @@ export class InventoryManager {
 
     emit(event, data) {
         try {
-            if (this.eventListeners[event]) {
+            if (this.eventListeners.has(event)) {
                 // Create a copy of the listeners array to prevent issues if listeners are modified during iteration
-                const listeners = [...this.eventListeners[event]];
+                const listeners = [...this.eventListeners.get(event)];
                 
                 listeners.forEach(callback => {
                     try {

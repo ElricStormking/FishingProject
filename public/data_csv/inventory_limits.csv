@@ -1,0 +1,13 @@
+limit_type,category,value,description
+global,maxSlots,100,Maximum inventory slots
+global,maxStackSize,999,Maximum stack size for stackable items
+category,rods,20,Maximum fishing rods
+category,lures,30,Maximum lures
+category,bait,10,Maximum bait items
+category,boats,5,Maximum boats
+category,clothing,15,Maximum clothing items
+category,upgrades,50,Maximum upgrades
+category,fish,100,Maximum fish in inventory
+category,consumables,20,Maximum consumable items
+category,materials,50,Maximum crafting materials
+category,bikini_assistants,10,Maximum bikini assistants 

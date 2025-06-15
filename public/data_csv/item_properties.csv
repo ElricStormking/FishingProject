@@ -1,0 +1,18 @@
+property,data_type,description,required,min_value,max_value,default_value
+id,string,Unique identifier for the item,true,,,
+name,string,Display name of the item,true,,,
+type,string,"Item subtype (e.g., spinner, soft_plastic for lures)",false,,,
+equipSlot,string,"Equipment slot type (rod, lure, boat, head, upper_body, lower_body, bikini_assistant)",false,,,
+rarity,integer,"Item rarity level (1-6, 1=common, 6=legendary)",true,1,6,
+description,string,Flavor text describing the item,true,,,
+cost,integer,Purchase price in coins,false,0,,
+unlockLevel,integer,Player level required to use this item,false,1,,
+quantity,integer,Stack size for stackable items,false,1,,1
+durability,integer,Maximum durability points,false,1,,
+condition,integer,Current condition/durability,false,0,,
+craftingMaterials,array,List of materials needed to craft this item,false,,,
+craftingTime,integer,Time in minutes to craft this item,false,1,,
+owned,boolean,Whether player owns this item,false,,,false
+equipped,boolean,Whether this item is currently equipped,false,,,false
+unique,boolean,Whether this is a unique item (only one can be owned),false,,,false
+tradeable,boolean,Whether this item can be traded or sold,false,,,true 

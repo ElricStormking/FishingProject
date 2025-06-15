@@ -1,256 +1,504 @@
 {
-  "itemCategories": {
-    "rods": {
+  "itemCategories": [
+    {
+      "category": "rods",
       "type": "equipment",
       "stackable": false,
-      "equipSlot": "rod",
-      "maxEquipped": 1,
-      "requiredProperties": ["id", "name", "rarity", "stats", "description", "unlockLevel"],
-      "optionalProperties": ["cost", "craftingMaterials", "craftingTime", "durability", "condition"]
+      "equip_slot": "rod",
+      "max_equipped": 1,
+      "required_properties": "id,name,rarity,stats,description,unlockLevel",
+      "optional_properties": "cost,craftingMaterials,craftingTime,durability,condition"
     },
-    "lures": {
-      "type": "equipment", 
+    {
+      "category": "lures",
+      "type": "equipment",
       "stackable": true,
-      "equipSlot": "lure",
-      "maxEquipped": 1,
-      "requiredProperties": ["id", "name", "type", "rarity", "description", "unlockLevel"],
-      "optionalProperties": ["cost", "craftingMaterials", "craftingTime", "quantity", "durability", "condition"]
+      "equip_slot": "lure",
+      "max_equipped": 1,
+      "required_properties": "id,name,type,rarity,description,unlockLevel",
+      "optional_properties": "cost,craftingMaterials,craftingTime,quantity,durability,condition"
     },
-    "bait": {
+    {
+      "category": "bait",
       "type": "consumable",
       "stackable": true,
-      "equipSlot": "bait",
-      "maxEquipped": 1,
-      "requiredProperties": ["id", "name", "rarity", "description"],
-      "optionalProperties": ["cost", "quantity", "effectiveness", "duration"]
+      "equip_slot": "bait",
+      "max_equipped": 1,
+      "required_properties": "id,name,rarity,description",
+      "optional_properties": "cost,quantity,effectiveness,duration"
     },
-    "boats": {
+    {
+      "category": "boats",
       "type": "equipment",
       "stackable": false,
-      "equipSlot": "boat",
-      "maxEquipped": 1,
-      "requiredProperties": ["id", "name", "rarity", "stats", "description", "unlockLevel"],
-      "optionalProperties": ["cost", "craftingMaterials", "craftingTime", "durability", "condition"]
+      "equip_slot": "boat",
+      "max_equipped": 1,
+      "required_properties": "id,name,rarity,stats,description,unlockLevel",
+      "optional_properties": "cost,craftingMaterials,craftingTime,durability,condition"
     },
-    "clothing": {
+    {
+      "category": "clothing",
       "type": "equipment",
       "stackable": false,
-      "equipSlot": "clothing",
-      "maxEquipped": 3,
-      "requiredProperties": ["id", "name", "equipSlot", "rarity", "stats", "description", "unlockLevel"],
-      "optionalProperties": ["cost", "craftingMaterials", "craftingTime", "durability", "condition"]
+      "equip_slot": "clothing",
+      "max_equipped": 3,
+      "required_properties": "id,name,equipSlot,rarity,stats,description,unlockLevel",
+      "optional_properties": "cost,craftingMaterials,craftingTime,durability,condition"
     },
-    "upgrades": {
+    {
+      "category": "upgrades",
       "type": "upgrade",
       "stackable": false,
-      "equipSlot": "none",
-      "maxEquipped": 999,
-      "requiredProperties": ["id", "name", "rarity", "description", "effect"],
-      "optionalProperties": ["cost", "unlockLevel", "permanent"]
+      "equip_slot": "none",
+      "max_equipped": 999,
+      "required_properties": "id,name,rarity,description,effect",
+      "optional_properties": "cost,unlockLevel,permanent"
     },
-    "fish": {
+    {
+      "category": "fish",
       "type": "resource",
       "stackable": true,
-      "equipSlot": "none",
-      "maxEquipped": 0,
-      "requiredProperties": ["id", "name", "rarity", "weight", "value", "description"],
-      "optionalProperties": ["quantity", "catchLocation", "catchTime", "size", "experience"]
+      "equip_slot": "none",
+      "max_equipped": 0,
+      "required_properties": "id,name,rarity,weight,value,description",
+      "optional_properties": "quantity,catchLocation,catchTime,size,experience"
     },
-    "consumables": {
+    {
+      "category": "consumables",
       "type": "consumable",
       "stackable": true,
-      "equipSlot": "none",
-      "maxEquipped": 0,
-      "requiredProperties": ["id", "name", "rarity", "description", "effect"],
-      "optionalProperties": ["cost", "quantity", "duration", "cooldown"]
+      "equip_slot": "none",
+      "max_equipped": 0,
+      "required_properties": "id,name,rarity,description,effect",
+      "optional_properties": "cost,quantity,duration,cooldown"
     },
-    "materials": {
+    {
+      "category": "materials",
       "type": "resource",
       "stackable": true,
-      "equipSlot": "none",
-      "maxEquipped": 0,
-      "requiredProperties": ["id", "name", "rarity", "description"],
-      "optionalProperties": ["cost", "quantity", "effect", "successRate", "bonusMultiplier", "preventBreak", "preventDowngrade"]
+      "equip_slot": "none",
+      "max_equipped": 0,
+      "required_properties": "id,name,rarity,description",
+      "optional_properties": "cost,quantity,effect,successRate,bonusMultiplier,preventBreak,preventDowngrade"
     },
-    "bikini_assistants": {
+    {
+      "category": "bikini_assistants",
       "type": "equipment",
       "stackable": false,
-      "equipSlot": "bikini_assistant",
-      "maxEquipped": 1,
-      "requiredProperties": ["id", "name", "rarity", "stats", "description", "unlockLevel"],
-      "optionalProperties": ["cost", "craftingMaterials", "craftingTime", "specialAbility"]
+      "equip_slot": "bikini_assistant",
+      "max_equipped": 1,
+      "required_properties": "id,name,rarity,stats,description,unlockLevel",
+      "optional_properties": "cost,craftingMaterials,craftingTime,specialAbility"
     }
-  },
-  "itemProperties": {
-    "id": {
-      "type": "string",
+  ],
+  "itemProperties": [
+    {
+      "property": "id",
+      "data_type": "string",
       "description": "Unique identifier for the item",
-      "required": true
+      "required": true,
+      "min_value": null,
+      "max_value": null,
+      "default_value": null
     },
-    "name": {
-      "type": "string", 
+    {
+      "property": "name",
+      "data_type": "string",
       "description": "Display name of the item",
-      "required": true
+      "required": true,
+      "min_value": null,
+      "max_value": null,
+      "default_value": null
     },
-    "type": {
-      "type": "string",
+    {
+      "property": "type",
+      "data_type": "string",
       "description": "Item subtype (e.g., spinner, soft_plastic for lures)",
-      "required": false
+      "required": false,
+      "min_value": null,
+      "max_value": null,
+      "default_value": null
     },
-    "equipSlot": {
-      "type": "string",
+    {
+      "property": "equipSlot",
+      "data_type": "string",
       "description": "Equipment slot type (rod, lure, boat, head, upper_body, lower_body, bikini_assistant)",
-      "required": false
+      "required": false,
+      "min_value": null,
+      "max_value": null,
+      "default_value": null
     },
-    "rarity": {
-      "type": "integer",
+    {
+      "property": "rarity",
+      "data_type": "integer",
       "description": "Item rarity level (1-6, 1=common, 6=legendary)",
       "required": true,
-      "min": 1,
-      "max": 6
+      "min_value": 1,
+      "max_value": 6,
+      "default_value": null
     },
-    "description": {
-      "type": "string",
+    {
+      "property": "description",
+      "data_type": "string",
       "description": "Flavor text describing the item",
-      "required": true
+      "required": true,
+      "min_value": null,
+      "max_value": null,
+      "default_value": null
     },
-    "cost": {
-      "type": "integer",
+    {
+      "property": "cost",
+      "data_type": "integer",
       "description": "Purchase price in coins",
       "required": false,
-      "min": 0
+      "min_value": 0,
+      "max_value": null,
+      "default_value": null
     },
-    "unlockLevel": {
-      "type": "integer",
+    {
+      "property": "unlockLevel",
+      "data_type": "integer",
       "description": "Player level required to use this item",
       "required": false,
-      "min": 1
+      "min_value": 1,
+      "max_value": null,
+      "default_value": null
     },
-    "quantity": {
-      "type": "integer",
+    {
+      "property": "quantity",
+      "data_type": "integer",
       "description": "Stack size for stackable items",
       "required": false,
-      "min": 1,
-      "default": 1
+      "min_value": 1,
+      "max_value": null,
+      "default_value": 1
     },
-    "durability": {
-      "type": "integer",
+    {
+      "property": "durability",
+      "data_type": "integer",
       "description": "Maximum durability points",
       "required": false,
-      "min": 1
+      "min_value": 1,
+      "max_value": null,
+      "default_value": null
     },
-    "condition": {
-      "type": "integer",
+    {
+      "property": "condition",
+      "data_type": "integer",
       "description": "Current condition/durability",
       "required": false,
-      "min": 0
+      "min_value": 0,
+      "max_value": null,
+      "default_value": null
     },
-    "stats": {
-      "type": "object",
-      "description": "Item stat bonuses and effects",
-      "required": false,
-      "properties": {
-        "castAccuracy": {"type": "integer", "min": 0},
-        "tensionStability": {"type": "integer", "min": 0},
-        "rareFishChance": {"type": "integer", "min": 0},
-        "castingRange": {"type": "integer", "min": 0},
-        "reelSpeed": {"type": "integer", "min": 0},
-        "struggleResistance": {"type": "integer", "min": 0},
-        "biteRate": {"type": "integer", "min": 0},
-        "lureSuccess": {"type": "integer", "min": 0},
-        "lureDurability": {"type": "integer", "min": 0},
-        "lurePrecision": {"type": "integer", "min": 0},
-        "sunProtection": {"type": "integer", "min": 0},
-        "luck": {"type": "integer", "min": 0},
-        "comfort": {"type": "integer", "min": 0},
-        "storage": {"type": "integer", "min": 0},
-        "waterResistant": {"type": "integer", "min": 0},
-        "mobility": {"type": "integer", "min": 0},
-        "deepWaterAccess": {"type": "integer", "min": 0},
-        "fishingBonus": {"type": "integer", "min": 0},
-        "luckBonus": {"type": "integer", "min": 0},
-        "experienceBonus": {"type": "integer", "min": 0},
-        "nightFishing": {"type": "integer", "min": 0}
-      }
-    },
-    "craftingMaterials": {
-      "type": "array",
+    {
+      "property": "craftingMaterials",
+      "data_type": "array",
       "description": "List of materials needed to craft this item",
       "required": false,
-      "items": {"type": "string"}
+      "min_value": null,
+      "max_value": null,
+      "default_value": null
     },
-    "craftingTime": {
-      "type": "integer",
+    {
+      "property": "craftingTime",
+      "data_type": "integer",
       "description": "Time in minutes to craft this item",
       "required": false,
-      "min": 1
+      "min_value": 1,
+      "max_value": null,
+      "default_value": null
     },
-    "effect": {
-      "type": "object",
-      "description": "Special effects or abilities",
-      "required": false,
-      "properties": {
-        "type": {"type": "string"},
-        "value": {"type": "number"},
-        "duration": {"type": "integer"},
-        "target": {"type": "string"}
-      }
-    },
-    "owned": {
-      "type": "boolean",
+    {
+      "property": "owned",
+      "data_type": "boolean",
       "description": "Whether player owns this item",
       "required": false,
-      "default": false
+      "min_value": null,
+      "max_value": null,
+      "default_value": false
     },
-    "equipped": {
-      "type": "boolean",
+    {
+      "property": "equipped",
+      "data_type": "boolean",
       "description": "Whether this item is currently equipped",
       "required": false,
-      "default": false
+      "min_value": null,
+      "max_value": null,
+      "default_value": false
     },
-    "unique": {
-      "type": "boolean",
+    {
+      "property": "unique",
+      "data_type": "boolean",
       "description": "Whether this is a unique item (only one can be owned)",
       "required": false,
-      "default": false
+      "min_value": null,
+      "max_value": null,
+      "default_value": false
     },
-    "tradeable": {
-      "type": "boolean",
+    {
+      "property": "tradeable",
+      "data_type": "boolean",
       "description": "Whether this item can be traded or sold",
       "required": false,
-      "default": true
+      "min_value": null,
+      "max_value": null,
+      "default_value": true
     }
-  },
-  "rarityColors": {
-    "1": "#8C7853",
-    "2": "#FFFFFF", 
-    "3": "#1EFF00",
-    "4": "#0070DD",
-    "5": "#A335EE",
-    "6": "#FF8000"
-  },
-  "rarityNames": {
-    "1": "Common",
-    "2": "Uncommon",
-    "3": "Rare", 
-    "4": "Epic",
-    "5": "Legendary",
-    "6": "Mythic"
-  },
-  "inventoryLimits": {
-    "maxSlots": 100,
-    "maxStackSize": 999,
-    "categories": {
-      "rods": 20,
-      "lures": 30,
-      "bait": 10,
-      "boats": 5,
-      "clothing": 15,
-      "upgrades": 50,
-      "fish": 100,
-      "consumables": 20,
-      "materials": 50,
-      "bikini_assistants": 10
+  ],
+  "statProperties": [
+    {
+      "stat": "castAccuracy",
+      "data_type": "integer",
+      "description": "Improves casting precision",
+      "min_value": 0,
+      "category": "fishing"
+    },
+    {
+      "stat": "tensionStability",
+      "data_type": "integer",
+      "description": "Reduces line tension fluctuation",
+      "min_value": 0,
+      "category": "fishing"
+    },
+    {
+      "stat": "rareFishChance",
+      "data_type": "integer",
+      "description": "Increases chance of rare fish",
+      "min_value": 0,
+      "category": "fishing"
+    },
+    {
+      "stat": "castingRange",
+      "data_type": "integer",
+      "description": "Increases maximum casting distance",
+      "min_value": 0,
+      "category": "fishing"
+    },
+    {
+      "stat": "reelSpeed",
+      "data_type": "integer",
+      "description": "Increases reeling speed",
+      "min_value": 0,
+      "category": "fishing"
+    },
+    {
+      "stat": "struggleResistance",
+      "data_type": "integer",
+      "description": "Reduces fish struggle effectiveness",
+      "min_value": 0,
+      "category": "fishing"
+    },
+    {
+      "stat": "biteRate",
+      "data_type": "integer",
+      "description": "Increases fish bite frequency",
+      "min_value": 0,
+      "category": "lure"
+    },
+    {
+      "stat": "lureSuccess",
+      "data_type": "integer",
+      "description": "Improves lure effectiveness",
+      "min_value": 0,
+      "category": "lure"
+    },
+    {
+      "stat": "lureDurability",
+      "data_type": "integer",
+      "description": "Increases lure durability",
+      "min_value": 0,
+      "category": "lure"
+    },
+    {
+      "stat": "lurePrecision",
+      "data_type": "integer",
+      "description": "Improves lure control precision",
+      "min_value": 0,
+      "category": "lure"
+    },
+    {
+      "stat": "sunProtection",
+      "data_type": "integer",
+      "description": "Protects from sun damage",
+      "min_value": 0,
+      "category": "clothing"
+    },
+    {
+      "stat": "luck",
+      "data_type": "integer",
+      "description": "General luck bonus",
+      "min_value": 0,
+      "category": "general"
+    },
+    {
+      "stat": "comfort",
+      "data_type": "integer",
+      "description": "Improves comfort and stamina",
+      "min_value": 0,
+      "category": "clothing"
+    },
+    {
+      "stat": "storage",
+      "data_type": "integer",
+      "description": "Increases inventory capacity",
+      "min_value": 0,
+      "category": "boat"
+    },
+    {
+      "stat": "waterResistant",
+      "data_type": "integer",
+      "description": "Resistance to water damage",
+      "min_value": 0,
+      "category": "clothing"
+    },
+    {
+      "stat": "mobility",
+      "data_type": "integer",
+      "description": "Improves movement speed",
+      "min_value": 0,
+      "category": "boat"
+    },
+    {
+      "stat": "deepWaterAccess",
+      "data_type": "integer",
+      "description": "Allows access to deeper waters",
+      "min_value": 0,
+      "category": "boat"
+    },
+    {
+      "stat": "fishingBonus",
+      "data_type": "integer",
+      "description": "General fishing effectiveness bonus",
+      "min_value": 0,
+      "category": "general"
+    },
+    {
+      "stat": "luckBonus",
+      "data_type": "integer",
+      "description": "Additional luck bonus",
+      "min_value": 0,
+      "category": "general"
+    },
+    {
+      "stat": "experienceBonus",
+      "data_type": "integer",
+      "description": "Increases experience gain",
+      "min_value": 0,
+      "category": "general"
+    },
+    {
+      "stat": "nightFishing",
+      "data_type": "integer",
+      "description": "Enables or improves night fishing",
+      "min_value": 0,
+      "category": "fishing"
     }
-  }
-} 
+  ],
+  "raritySettings": [
+    {
+      "rarity": 1,
+      "name": "Common",
+      "color": "#8C7853"
+    },
+    {
+      "rarity": 2,
+      "name": "Uncommon",
+      "color": "#FFFFFF"
+    },
+    {
+      "rarity": 3,
+      "name": "Rare",
+      "color": "#1EFF00"
+    },
+    {
+      "rarity": 4,
+      "name": "Epic",
+      "color": "#0070DD"
+    },
+    {
+      "rarity": 5,
+      "name": "Legendary",
+      "color": "#A335EE"
+    },
+    {
+      "rarity": 6,
+      "name": "Mythic",
+      "color": "#FF8000"
+    }
+  ],
+  "inventoryLimits": [
+    {
+      "limit_type": "global",
+      "category": "maxSlots",
+      "value": 100,
+      "description": "Maximum inventory slots"
+    },
+    {
+      "limit_type": "global",
+      "category": "maxStackSize",
+      "value": 999,
+      "description": "Maximum stack size for stackable items"
+    },
+    {
+      "limit_type": "category",
+      "category": "rods",
+      "value": 20,
+      "description": "Maximum fishing rods"
+    },
+    {
+      "limit_type": "category",
+      "category": "lures",
+      "value": 30,
+      "description": "Maximum lures"
+    },
+    {
+      "limit_type": "category",
+      "category": "bait",
+      "value": 10,
+      "description": "Maximum bait items"
+    },
+    {
+      "limit_type": "category",
+      "category": "boats",
+      "value": 5,
+      "description": "Maximum boats"
+    },
+    {
+      "limit_type": "category",
+      "category": "clothing",
+      "value": 15,
+      "description": "Maximum clothing items"
+    },
+    {
+      "limit_type": "category",
+      "category": "upgrades",
+      "value": 50,
+      "description": "Maximum upgrades"
+    },
+    {
+      "limit_type": "category",
+      "category": "fish",
+      "value": 100,
+      "description": "Maximum fish in inventory"
+    },
+    {
+      "limit_type": "category",
+      "category": "consumables",
+      "value": 20,
+      "description": "Maximum consumable items"
+    },
+    {
+      "limit_type": "category",
+      "category": "materials",
+      "value": 50,
+      "description": "Maximum crafting materials"
+    },
+    {
+      "limit_type": "category",
+      "category": "bikini_assistants",
+      "value": 10,
+      "description": "Maximum bikini assistants"
+    }
+  ]
+}
