@@ -1,4 +1,4 @@
-import { questDataLoader } from './QuestDataLoader.js';
+import { QuestDataLoader } from './QuestDataLoader.js';
 import Logger from '../utils/Logger.js';
 
 /**
@@ -32,8 +32,8 @@ export class QuestManager {
         // Reward queue
         this.rewardsToShow = [];
         
-        // Quest data loader reference
-        this.questDataLoader = questDataLoader;
+        // Quest data loader reference - create new instance
+        this.questDataLoader = new QuestDataLoader();
         
         // Tutorial completion tracking
         this.tutorialQuestsCompleted = false;
@@ -43,6 +43,57 @@ export class QuestManager {
         this.initializationPromise = null;
         
             }
+
+    /**
+     * Create a minimal quest system as last resort
+     */
+    createMinimalQuestSystem() {
+        console.log('QuestManager: Creating minimal quest system...');
+        
+        // Create a basic tutorial quest manually
+        const basicTutorialQuest = {
+            id: 'story_001_tutorial',
+            type: 'main_story',
+            title: 'Welcome to Luxury Angling',
+            description: 'Learn the basics of fishing.',
+            status: 'available',
+            autoStart: true,
+            objectives: [
+                {
+                    id: 'visit_boat_menu',
+                    description: 'Access the boat menu',
+                    type: 'ui_interaction',
+                    target: 1,
+                    progress: 0,
+                    completed: false
+                },
+                {
+                    id: 'cast_first_time',
+                    description: 'Cast your line for the first time',
+                    type: 'action',
+                    target: 1,
+                    progress: 0,
+                    completed: false
+                }
+            ],
+            rewards: {
+                coins: 100,
+                experience: 50
+            },
+            requirements: [],
+            category: 'story'
+        };
+        
+        // Add to quest templates
+        this.questTemplates.set(basicTutorialQuest.id, basicTutorialQuest);
+        
+        // Auto-start the tutorial quest
+        if (basicTutorialQuest.autoStart) {
+            this.startQuest(basicTutorialQuest.id);
+        }
+        
+        console.log('QuestManager: Minimal quest system created with tutorial quest');
+    }
 
     /**
      * Initialize the quest system asynchronously
@@ -104,15 +155,35 @@ export class QuestManager {
             this.initializationPromise = null;
             this.isInitialized = false;
             
-            // Try to load fallback data to prevent complete failure
+                        // Try to load fallback data to prevent complete failure
             try {
-                                this.questDataLoader.loadFallbackData();
-                this.loadQuestTemplatesFromData();
-                                this.isInitialized = true;
+                console.warn('QuestManager: Loading fallback quest data...');
+                this.questDataLoader.loadFallbackData();
+                await this.loadQuestTemplatesFromData();
+                
+                // Try to initialize basic story quests with fallback data
+                try {
+                    this.initializeStoryQuests();
+                } catch (fallbackStoryError) {
+                    console.warn('QuestManager: Could not initialize story quests with fallback data:', fallbackStoryError.message);
+                }
+                
+                this.isInitialized = true;
+                console.log('QuestManager: ✅ Fallback initialization successful');
                 return true;
             } catch (fallbackError) {
                 console.error('QuestManager: Fallback initialization also failed:', fallbackError);
-                return false;
+                
+                // Last resort: create minimal quest system
+                try {
+                    this.createMinimalQuestSystem();
+                    this.isInitialized = true;
+                    console.log('QuestManager: ✅ Minimal quest system created');
+                    return true;
+                } catch (minimalError) {
+                    console.error('QuestManager: Even minimal quest system failed:', minimalError);
+                    return false;
+                }
             }
         }
     }

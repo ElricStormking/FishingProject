@@ -67,34 +67,47 @@ export default class BoatMenuScene extends Phaser.Scene {
             
             // Boat menu objective will be completed in async initialization
                     } else {
-                        // CRITICAL FIX: Create QuestManager automatically instead of waiting
+                                        // CRITICAL FIX: Create QuestManager automatically instead of waiting
             try {
-                                // Create QuestManager and store in GameState immediately
+                console.log('BoatMenuScene: Creating new QuestManager...');
+                
+                // Create QuestManager and store in GameState immediately
                 this.questManager = new QuestManager(this);
                 this.gameState.questManager = this.questManager;
                 
-                                // CRITICAL FIX: Initialize QuestManager asynchronously
-                                // await this.questManager.initialize(); // Removed - will be handled asynchronously
-                                this.logger?.debug('BoatMenuScene: QuestManager active quests:', Array.from(this.questManager.activeQuests.keys())) || Logger.debug(this.constructor.name, 'BoatMenuScene: QuestManager active quests:', Array.from(this.questManager.activeQuests.keys()));
-                                // Boat menu quest objective will be completed in async initialization
-                                // CRITICAL FIX: Set up quest event listeners on GameScene if available
-                const gameScene = this.scene.get('GameScene');
-                if (gameScene && gameScene.setupQuestEventListeners) {
-                                        gameScene.questManager = this.questManager;
-                    gameScene.setupQuestEventListeners();
-                                    } else {
-                                    }
-                
-                // Update Quest Tracker UI to use the new QuestManager
-                if (this.questTrackerUI && this.questTrackerUI.questProcessingDisabled) {
-                                        this.questTrackerUI.updateQuestManager(this.questManager);
-                } else if (this.questTrackerUI) {
-                                        this.questTrackerUI.refreshQuests();
-                } else {
-                                    }
+                // CRITICAL FIX: Initialize QuestManager asynchronously with proper error handling
+                this.questManager.initialize().then((success) => {
+                    if (success) {
+                        console.log('BoatMenuScene: ✅ QuestManager initialized successfully');
+                        this.logger?.debug('BoatMenuScene: QuestManager active quests:', Array.from(this.questManager.activeQuests.keys())) || Logger.debug(this.constructor.name, 'BoatMenuScene: QuestManager active quests:', Array.from(this.questManager.activeQuests.keys()));
+                        
+                        // Complete boat menu quest objective now that QuestManager is ready
+                        this.completeBoatMenuQuestObjective();
+                        
+                        // Set up quest event listeners on GameScene if available
+                        const gameScene = this.scene.get('GameScene');
+                        if (gameScene && gameScene.setupQuestEventListeners) {
+                            gameScene.questManager = this.questManager;
+                            gameScene.setupQuestEventListeners();
+                        }
+                        
+                        // Update Quest Tracker UI to use the new QuestManager
+                        if (this.questTrackerUI && this.questTrackerUI.questProcessingDisabled) {
+                            this.questTrackerUI.updateQuestManager(this.questManager);
+                        } else if (this.questTrackerUI) {
+                            this.questTrackerUI.refreshQuests();
+                        }
+                    } else {
+                        console.error('BoatMenuScene: ❌ QuestManager initialization failed');
+                        this.showErrorMessage('Quest system initialization failed');
+                    }
+                }).catch((error) => {
+                    console.error('BoatMenuScene: ❌ QuestManager initialization error:', error);
+                    this.showErrorMessage('Quest system error: ' + error.message);
+                });
                 
             } catch (error) {
-                console.error('BoatMenuScene: Error auto-creating QuestManager:', error);
+                console.error('BoatMenuScene: Error creating QuestManager:', error);
                 
                 // Fallback: Set up timer as backup
                 this.questManagerCheckTimer = this.time.addEvent({
