@@ -16,9 +16,7 @@ export default class MarkdownDialogParser {
      */
     async loadAndParseFile(filename, npcId) {
         try {
-            console.log(`MarkdownDialogParser: Loading ${filename} for ${npcId}`);
-            
-            // Try multiple possible paths for Vite dev server
+                        // Try multiple possible paths for Vite dev server
             const possiblePaths = [
                 `/assets/dialog/${filename}`,           // Public assets path (most likely)
                 `./assets/dialog/${filename}`,          // Relative public path
@@ -36,7 +34,7 @@ export default class MarkdownDialogParser {
                     if (response.ok) {
                         scriptContent = await response.text();
                         successfulPath = path;
-                        console.log(`MarkdownDialogParser: Successfully loaded dialog from ${path}`);
+                        if (import.meta.env.DEV) console.log(`MarkdownDialogParser: Successfully loaded dialog from ${path}`);
                         break;
                     }
                 } catch (fetchError) {
@@ -51,7 +49,7 @@ export default class MarkdownDialogParser {
             }
             
             const parsedData = this.parseScript(scriptContent, npcId);
-            console.log(`MarkdownDialogParser: Successfully parsed dialog for ${npcId}`);
+            if (import.meta.env.DEV) console.log(`MarkdownDialogParser: Successfully parsed dialog for ${npcId}`);
             
             return parsedData;
             

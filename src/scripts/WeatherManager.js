@@ -60,8 +60,7 @@ export class WeatherManager {
             console.warn('WeatherManager: TimeManager not available');
         }
         
-        console.log('WeatherManager: Initialized with dynamic weather system');
-    }
+            }
     
     initializeWeather() {
         // Set initial weather based on probability
@@ -301,8 +300,7 @@ export class WeatherManager {
     }
     
     startTransitionEffects() {
-        console.log(`Starting weather transition effects to ${this.nextWeather}`);
-        // Could add transition-specific effects here (clouds forming, etc.)
+                // Could add transition-specific effects here (clouds forming, etc.)
     }
     
     // Forecast system
@@ -485,8 +483,7 @@ export class WeatherManager {
             }
         });
         
-        console.log('WeatherManager: Updated weather probabilities for location:', this.weatherTypes);
-    }
+            }
     
     getLocationWeatherEffects() {
         // Get location-specific weather effects if available

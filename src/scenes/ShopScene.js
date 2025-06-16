@@ -8,15 +8,12 @@ export default class ShopScene extends Phaser.Scene {
     }
 
     create() {
-        console.log('ShopScene: create() method called - ShopScene is active');
-        const width = this.cameras.main.width;
+                const width = this.cameras.main.width;
         const height = this.cameras.main.height;
 
         // Get game state instance
         this.gameState = GameState.getInstance();
-        console.log('ShopScene: GameState retrieved, player money:', this.gameState.player.money);
-
-        // Create DOM button for selling all fish
+                // Create DOM button for selling all fish
         this.createSellAllFishButton();
 
         // Background
@@ -59,11 +56,8 @@ export default class ShopScene extends Phaser.Scene {
         currentY += sectionSpacing;
         
         // Fish inventory section for selling
-        console.log('ShopScene: About to create fish inventory section at Y:', currentY);
-        currentY = this.createFishInventorySection(currentY, itemSpacing);
-        console.log('ShopScene: Fish inventory section completed at Y:', currentY);
-
-        // Back button (fixed position)
+                currentY = this.createFishInventorySection(currentY, itemSpacing);
+                // Back button (fixed position)
         this.createButton(width / 2, height - 60, 'BACK TO MENU', () => {
             this.scene.start('MenuScene');
         });
@@ -116,8 +110,7 @@ export default class ShopScene extends Phaser.Scene {
         // Add to document
         document.body.appendChild(this.sellAllFishButton);
         
-        console.log('ShopScene: DOM Sell All Fish button created');
-    }
+            }
 
     createShopSection(title, startY, items, itemSpacing) {
         const width = this.cameras.main.width;
@@ -193,10 +186,7 @@ export default class ShopScene extends Phaser.Scene {
         
         // Get player's fish inventory with debug logging
         const fishInventory = this.gameState.inventory.fish || [];
-        console.log('ShopScene: Fish inventory:', fishInventory);
-        console.log('ShopScene: Full inventory:', this.gameState.inventory);
-        
-        // Section title (always show)
+                        // Section title (always show)
         const sectionTitle = this.add.text(width / 2, currentY, 'YOUR FISH INVENTORY', {
             fontSize: '22px',
             fill: '#e74c3c',
@@ -279,9 +269,7 @@ export default class ShopScene extends Phaser.Scene {
             fishGroups[key].totalWeight += (fish.weight || 1) * (fish.quantity || 1);
         });
         
-        console.log('ShopScene: Fish groups:', fishGroups);
-        
-        // Display each fish group
+                // Display each fish group
         Object.values(fishGroups).forEach((group, index) => {
             const itemY = currentY + (index * itemSpacing);
             this.createFishInventoryItem(group, itemY, width);
@@ -352,11 +340,8 @@ export default class ShopScene extends Phaser.Scene {
     }
 
     setupScrolling(contentHeight, screenHeight) {
-        console.log('ShopScene: Setting up scrolling - contentHeight:', contentHeight, 'screenHeight:', screenHeight);
-        const maxScroll = Math.max(0, contentHeight - (screenHeight - 140)); // Account for header and footer
-        console.log('ShopScene: Max scroll needed:', maxScroll);
-        
-        if (maxScroll > 0) {
+                const maxScroll = Math.max(0, contentHeight - (screenHeight - 140)); // Account for header and footer
+                if (maxScroll > 0) {
             // Add scroll instructions
             const scrollHint = this.add.text(this.cameras.main.width / 2, this.cameras.main.height - 100, 
                 'Use mouse wheel, arrow keys, or scroll bars to scroll', {
@@ -409,16 +394,14 @@ export default class ShopScene extends Phaser.Scene {
                     this.contentContainer.y - (deltaY > 0 ? scrollSpeed : -scrollSpeed),
                     -maxScroll, 0
                 );
-                console.log('ShopScene: Scrolling to Y:', newY);
-                this.contentContainer.setY(newY);
+                                this.contentContainer.setY(newY);
                 this.updateScrollIndicators(maxScroll);
             });
             
             // Keyboard scrolling
             this.cursors = this.input.keyboard.createCursorKeys();
         } else {
-            console.log('ShopScene: No scrolling needed, all content fits on screen');
-        }
+                    }
     }
 
     updateScrollIndicators(maxScroll) {
@@ -668,8 +651,7 @@ export default class ShopScene extends Phaser.Scene {
             this.sellAllFishButton = null;
         }
         
-        console.log('ShopScene: Scene destroyed, DOM button removed');
-        super.destroy();
+                super.destroy();
     }
 
     shutdown() {
@@ -679,6 +661,5 @@ export default class ShopScene extends Phaser.Scene {
             this.sellAllFishButton = null;
         }
         
-        console.log('ShopScene: Scene shut down, DOM button removed');
-    }
+            }
 } 

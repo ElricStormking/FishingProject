@@ -64,8 +64,7 @@ export class AudioManager {
         this.audioEvents = this.initializeAudioEvents();
         // --- End Enhanced Features ---
 
-        console.log('AudioManager: Initialized');
-    }
+            }
 
     initialize() {
         if (this.isInitialized) return;
@@ -84,8 +83,7 @@ export class AudioManager {
             this.initializeEnhancedAudio();
             
             this.isInitialized = true;
-            console.log('AudioManager: Successfully initialized');
-        } catch (error) {
+                    } catch (error) {
             console.warn('AudioManager: Failed to initialize audio context:', error);
             this.isInitialized = true; // Continue without advanced features
         }
@@ -146,9 +144,7 @@ export class AudioManager {
     }
 
     loadAudioAssetsWithFallback(audioAssets) {
-        console.log('AudioManager: Loading audio assets with smart fallback...');
-        
-        // Store asset definitions
+                // Store asset definitions
         this.audioAssetDefinitions = audioAssets;
         
         // Load each category of audio
@@ -156,8 +152,7 @@ export class AudioManager {
             Object.entries(assets).forEach(([name, asset]) => {
                 if (asset.url === 'placeholder') {
                     // Create placeholder immediately for missing files
-                    console.log(`AudioManager: Creating placeholder for ${asset.key} (no file available)`);
-                this.createPlaceholderSound(asset.key, asset.loop || false);
+                                    this.createPlaceholderSound(asset.key, asset.loop || false);
                 } else {
                     // Try to load real file
                     this.loadAudioFile(asset.key, asset.url, asset.loop || false, category);
@@ -227,8 +222,7 @@ export class AudioManager {
                         playPromise.then(() => {
                             soundObject.isPlaying = true;
                             soundObject.isPaused = false;
-                            console.log(`AudioManager: Playing ${key}`);
-                        }).catch(error => {
+                                                    }).catch(error => {
                             console.warn(`AudioManager: Failed to play ${key}:`, error);
                         });
                     }
@@ -244,8 +238,7 @@ export class AudioManager {
                     audio.currentTime = 0;
                     soundObject.isPlaying = false;
                     soundObject.isPaused = false;
-                    console.log(`AudioManager: Stopping ${key}`);
-                } catch (error) {
+                                    } catch (error) {
                     console.warn(`AudioManager: Error stopping ${key}:`, error);
                 }
                 return soundObject;
@@ -256,8 +249,7 @@ export class AudioManager {
                     audio.pause();
                     soundObject.isPaused = true;
                     soundObject.isPlaying = false;
-                    console.log(`AudioManager: Pausing ${key}`);
-                } catch (error) {
+                                    } catch (error) {
                     console.warn(`AudioManager: Error pausing ${key}:`, error);
                 }
                 return soundObject;
@@ -270,8 +262,7 @@ export class AudioManager {
                         playPromise.then(() => {
                             soundObject.isPlaying = true;
                             soundObject.isPaused = false;
-                            console.log(`AudioManager: Resuming ${key}`);
-                        }).catch(error => {
+                                                    }).catch(error => {
                             console.warn(`AudioManager: Failed to resume ${key}:`, error);
                         });
                     }
@@ -297,8 +288,7 @@ export class AudioManager {
                 try {
                     audio.pause();
                     audio.src = '';
-                    console.log(`AudioManager: Destroying ${key}`);
-                } catch (error) {
+                                    } catch (error) {
                     console.warn(`AudioManager: Error destroying ${key}:`, error);
                 }
             }
@@ -306,8 +296,7 @@ export class AudioManager {
 
         // Handle loading events
         audio.addEventListener('canplaythrough', () => {
-            console.log(`AudioManager: ${key} loaded successfully`);
-        });
+                    });
         
         audio.addEventListener('error', (error) => {
             console.warn(`AudioManager: Failed to load ${key}, using placeholder`);
@@ -352,8 +341,7 @@ export class AudioManager {
                 this.ambientSounds.set(key, sound);
             }
 
-            console.log(`AudioManager: Created real sound for ${key}`);
-            return sound;
+                        return sound;
         } catch (error) {
             console.warn(`AudioManager: Failed to create real sound for ${key}, using placeholder:`, error);
             return this.createPlaceholderSound(key, loop);
@@ -389,23 +377,19 @@ export class AudioManager {
             volume: 1,
             loop: loop,
             play: () => {
-                console.log(`AudioManager: [PLACEHOLDER] Playing ${key}`);
-                placeholderSound.isPlaying = true;
+                                placeholderSound.isPlaying = true;
                 return placeholderSound;
             },
             stop: () => {
-                console.log(`AudioManager: [PLACEHOLDER] Stopping ${key}`);
-                placeholderSound.isPlaying = false;
+                                placeholderSound.isPlaying = false;
                 return placeholderSound;
             },
             pause: () => {
-                console.log(`AudioManager: [PLACEHOLDER] Pausing ${key}`);
-                placeholderSound.isPaused = true;
+                                placeholderSound.isPaused = true;
                 return placeholderSound;
             },
             resume: () => {
-                console.log(`AudioManager: [PLACEHOLDER] Resuming ${key}`);
-                placeholderSound.isPaused = false;
+                                placeholderSound.isPaused = false;
                 return placeholderSound;
             },
             setVolume: (volume) => {
@@ -417,8 +401,7 @@ export class AudioManager {
                 return placeholderSound;
             },
             destroy: () => {
-                console.log(`AudioManager: [PLACEHOLDER] Destroying ${key}`);
-            }
+                            }
         };
 
         // Store in appropriate category
@@ -484,8 +467,7 @@ export class AudioManager {
                 this.fadeInMusic(music, fadeTime);
             }
             
-            console.log(`AudioManager: Playing music - ${trackKey}`);
-        }
+                    }
         
         return music;
     }
@@ -568,8 +550,7 @@ export class AudioManager {
                 });
             }
             
-            console.log(`AudioManager: Playing SFX - ${effectKey} (volume: ${finalVolume.toFixed(2)})`);
-            return sound;
+                        return sound;
         }
         
         return null;
@@ -590,8 +571,7 @@ export class AudioManager {
                 this.fadeInAmbient(ambient, finalVolume);
             }
             
-            console.log(`AudioManager: Playing ambient - ${ambientKey}`);
-        }
+                    }
         
         return ambient;
     }
@@ -681,8 +661,7 @@ export class AudioManager {
                 break;
         }
         
-        console.log(`AudioManager: Updated ${key} to ${value}`);
-    }
+            }
 
     updateAllVolumes() {
         // Update music volume
@@ -743,8 +722,7 @@ export class AudioManager {
                 if (!this.currentMusic.isPlaying) {
                     this.currentMusic.play();
                 }
-                console.log(`AudioManager: Continuing current music - ${config.music}`);
-            }
+                            }
             
             // Stop all ambient sounds first
             this.ambientSounds.forEach((ambient, key) => {
@@ -758,8 +736,7 @@ export class AudioManager {
                 this.playAmbient(ambientKey, 1.0, true);
             });
             
-            console.log(`AudioManager: Set audio for scene ${sceneKey}`);
-        } else {
+                    } else {
             console.warn(`AudioManager: No audio configuration found for scene ${sceneKey}`);
         }
     }
@@ -808,8 +785,7 @@ export class AudioManager {
             this.audioContext.close();
         }
         
-        console.log('AudioManager: Destroyed');
-    }
+            }
 
     // --- ENHANCED AUDIO MANAGER METHODS ---
 
@@ -1014,8 +990,7 @@ export class AudioManager {
         // Setup event listeners for enhanced features
         this.setupEnhancedEventListeners();
         
-        console.log('AudioManager: Enhanced features initialized');
-    }
+            }
 
     /**
      * Set up audio layers for dynamic mixing
@@ -1027,8 +1002,7 @@ export class AudioManager {
         this.audioLayers.set('action', { volume: 1.0, sounds: new Set() });
         this.audioLayers.set('dialogue', { volume: 1.0, sounds: new Set() });
         
-        console.log('AudioManager: Audio layers set up');
-    }
+            }
 
     /**
      * Initialize contextual audio system
@@ -1045,8 +1019,7 @@ export class AudioManager {
             sound: { key: 'sfx_heartbeat_slow', type: 'sfx', loop: true, volume: 0.4 }
         });
         
-        console.log('AudioManager: Contextual audio system initialized');
-    }
+            }
 
     /**
      * Setup enhanced event listeners for game events
@@ -1059,8 +1032,7 @@ export class AudioManager {
         this.eventSystem.on('achievement:unlocked', (achievementData) => this.onAchievementUnlock(achievementData));
         this.eventSystem.on('conversation:start', (conversationData) => this.onConversationStart(conversationData));
 
-        console.log('AudioManager: Enhanced event listeners set up');
-    }
+            }
 
     playAudioEvent(category, eventKey, options = {}) {
         if (!this.audioEvents[category] || !this.audioEvents[category][eventKey]) {

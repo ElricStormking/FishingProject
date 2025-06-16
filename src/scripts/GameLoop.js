@@ -1,11 +1,13 @@
 import Phaser from 'phaser';
 import GameState from './GameState.js';
 import { gameDataLoader } from './DataLoader.js';
+import Logger from '../utils/Logger.js';
 
 export default class GameLoop {
     constructor(scene) {
         this.scene = scene;
         this.gameState = GameState.getInstance();
+        this.logger = Logger.createModuleLogger('GameLoop');
         
         // Core game loop state
         this.currentMode = 'story'; // 'story' or 'practice'
@@ -30,12 +32,12 @@ export default class GameLoop {
             bossDefeated: { target: 10, current: 0 } // Boss fights every 5 levels
         };
         
-        console.log('GameLoop: Core game loop manager initialized');
+        this.logger.debug('Core game loop manager initialized');
     }
 
     // Main game loop entry point
     startGameLoop() {
-        console.log('GameLoop: Starting main game loop');
+        this.logger.debug('Starting main game loop');
         this.updateGameState();
         this.enterBoatMenu();
     }
@@ -56,7 +58,7 @@ export default class GameLoop {
     // Core game phases
     enterBoatMenu() {
         this.currentPhase = 'boat_menu';
-        console.log('GameLoop: Entered Boat Menu phase');
+        this.logger.debug('Entered Boat Menu phase');
         
         // Ensure location properties are synchronized
         const currentLocation = this.gameState.player.currentLocation || this.gameState.world?.currentLocation || 'Starting Port';
@@ -68,7 +70,7 @@ export default class GameLoop {
         this.gameState.player.currentLocation = currentLocation;
         this.gameState.world.currentLocation = currentLocation;
         
-        console.log('GameLoop: Synchronized location to:', currentLocation);
+        this.logger.trace('Synchronized location to:', currentLocation);
         
         // Update UI to show boat menu options
         this.scene.events.emit('gameloop:boatMenu', {
@@ -85,13 +87,13 @@ export default class GameLoop {
     // Travel system
     initiateTravel(targetMap, targetSpot) {
         if (!this.canTravel()) {
-            console.log('GameLoop: Cannot travel - insufficient energy or other constraints');
+            this.logger.debug('Cannot travel - insufficient energy or other constraints');
             return false;
         }
 
         this.currentPhase = 'traveling';
         const newLocation = `${targetMap} ${targetSpot}`;
-        console.log(`GameLoop: Traveling to ${newLocation}`);
+        this.logger.info(`Traveling to ${newLocation}`);
         
         // Consume resources
         this.gameState.spendEnergy(2);
@@ -106,7 +108,7 @@ export default class GameLoop {
         this.gameState.player.currentLocation = newLocation;
         this.gameState.world.currentLocation = newLocation;
         
-        console.log('GameLoop: Location updated to:', newLocation);
+        this.logger.trace('Location updated to:', newLocation);
         
         // Trigger travel animation/transition
         this.scene.events.emit('gameloop:travel', {
@@ -126,17 +128,17 @@ export default class GameLoop {
     // Fishing system integration
     initiateFishing(mode = 'story') {
         if (!this.canFish()) {
-            console.log('GameLoop: Cannot fish - insufficient energy or other constraints');
+            this.logger.debug('Cannot fish - insufficient energy or other constraints');
             return false;
         }
 
         this.currentMode = mode;
         this.currentPhase = 'fishing';
-        console.log(`GameLoop: Starting fishing in ${mode} mode`);
+        this.logger.info(`Starting fishing in ${mode} mode`);
         
         // Validate fishing location based on mode
         if (!this.isValidFishingLocation(mode)) {
-            console.log('GameLoop: Invalid fishing location for selected mode');
+            this.logger.warn('Invalid fishing location for selected mode');
             return false;
         }
         
@@ -146,7 +148,7 @@ export default class GameLoop {
     }
 
     startFishingSequence() {
-        console.log('GameLoop: Starting fishing sequence - Cast -> Lure -> Reel');
+        this.logger.debug('Starting fishing sequence - Cast -> Lure -> Reel');
         
         // Phase 1: Cast Minigame
         this.scene.events.emit('gameloop:startCast', {
@@ -158,12 +160,12 @@ export default class GameLoop {
 
     onCastComplete(success, accuracy) {
         if (!success) {
-            console.log('GameLoop: Cast failed - ending fishing attempt');
+            this.logger.debug('Cast failed - ending fishing attempt');
             this.endFishingAttempt(false);
             return;
         }
 
-        console.log(`GameLoop: Cast successful with ${accuracy}% accuracy`);
+        this.logger.trace(`Cast successful with ${accuracy}% accuracy`);
         
         // Phase 2: Lure Minigame
         this.scene.events.emit('gameloop:startLure', {
@@ -180,7 +182,7 @@ export default class GameLoop {
             return;
         }
 
-        console.log(`GameLoop: Fish hooked: ${fishHooked.name}`);
+        if (import.meta.env.DEV) console.log(`GameLoop: Fish hooked: ${fishHooked.name}`);
         
         // Phase 3: Reel-In Minigame
         this.scene.events.emit('gameloop:startReel', {
@@ -192,12 +194,12 @@ export default class GameLoop {
 
     onReelComplete(success, fishCaught) {
         if (!success) {
-            console.log('GameLoop: Reel failed - fish escaped');
+            if (import.meta.env.DEV) console.log('GameLoop: Reel failed - fish escaped');
             this.endFishingAttempt(false);
             return;
         }
 
-        console.log(`GameLoop: Successfully caught ${fishCaught.name}!`);
+        if (import.meta.env.DEV) console.log(`GameLoop: Successfully caught ${fishCaught.name}!`);
         this.processFishCatch(fishCaught);
         this.endFishingAttempt(true);
     }
@@ -245,9 +247,7 @@ export default class GameLoop {
     // Social system integration
     enterChatroom() {
         this.currentPhase = 'chatroom';
-        console.log('GameLoop: Entered Chatroom phase');
-        
-        this.scene.events.emit('gameloop:chatroom', {
+                this.scene.events.emit('gameloop:chatroom', {
             companions: this.gameState.companions,
             availableInteractions: this.getAvailableInteractions()
         });
@@ -261,9 +261,7 @@ export default class GameLoop {
         }
 
         this.currentPhase = 'shop';
-        console.log('GameLoop: Entered Shop phase');
-        
-        this.scene.events.emit('gameloop:shop', {
+                this.scene.events.emit('gameloop:shop', {
             playerMoney: this.gameState.player.money,
             shopInventory: this.getShopInventory(),
             dailyRefresh: this.getShopRefreshTime()
@@ -275,9 +273,7 @@ export default class GameLoop {
     // Inventory/Crafting system integration
     enterInventory() {
         this.currentPhase = 'inventory';
-        console.log('GameLoop: Entered Inventory phase');
-        
-        this.scene.events.emit('gameloop:inventory', {
+                this.scene.events.emit('gameloop:inventory', {
             inventory: this.gameState.inventory,
             craftingRecipes: this.getAvailableCraftingRecipes(),
             mergeOptions: this.getAvailableMergeOptions()
@@ -544,7 +540,7 @@ export default class GameLoop {
 
     // Event handlers for progression
     triggerLevelUp(newLevel) {
-        console.log(`GameLoop: Level up! Now level ${newLevel}`);
+        if (import.meta.env.DEV) console.log(`GameLoop: Level up! Now level ${newLevel}`);
         this.gameState.player.level = newLevel;
         
         this.scene.events.emit('gameloop:levelUp', {
@@ -555,7 +551,7 @@ export default class GameLoop {
     }
 
     triggerCollectionMilestone(fishCount) {
-        console.log(`GameLoop: Collection milestone! ${fishCount} unique fish`);
+        if (import.meta.env.DEV) console.log(`GameLoop: Collection milestone! ${fishCount} unique fish`);
         
         this.scene.events.emit('gameloop:collectionMilestone', {
             fishCount: fishCount,
@@ -564,7 +560,7 @@ export default class GameLoop {
     }
 
     triggerBossFightAvailable(level) {
-        console.log(`GameLoop: Boss fight available at level ${level}!`);
+        if (import.meta.env.DEV) console.log(`GameLoop: Boss fight available at level ${level}!`);
         
         this.scene.events.emit('gameloop:bossAvailable', {
             bossLevel: level,
@@ -682,8 +678,7 @@ export default class GameLoop {
     // Cleanup
     destroy() {
         this.isActive = false;
-        console.log('GameLoop: Game loop manager destroyed');
-    }
+            }
 }
 
 // Export singleton instance

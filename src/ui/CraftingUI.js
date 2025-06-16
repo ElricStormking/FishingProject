@@ -1,5 +1,6 @@
 import UITheme from './UITheme.js';
 import { BaseUI } from './BaseUI.js';
+import Logger from '../utils/Logger.js';
 
 export class CraftingUI extends BaseUI {
     constructor(scene, x, y, width, height) {
@@ -180,12 +181,16 @@ export class CraftingUI extends BaseUI {
         console.log('CraftingUI: Going back to Inventory');
         this.audioManager?.playSFX('button');
         
-        // Hide crafting UI
+        // Hide crafting UI (this will show DOM buttons)
         this.hide();
         
         // Show inventory UI
         if (this.scene.inventoryUI) {
             this.scene.inventoryUI.show();
+            // Ensure DOM buttons stay hidden when switching to inventory
+            if (this.scene.hideDOMButtons) {
+                this.scene.hideDOMButtons();
+            }
         } else {
             console.error('CraftingUI: InventoryUI not found in scene');
         }
@@ -394,6 +399,11 @@ export class CraftingUI extends BaseUI {
             this.scene.hideFishButton();
         }
         
+        // CRITICAL: Hide DOM buttons from BoatMenuScene when crafting UI is open
+        if (this.scene.hideDOMButtons) {
+            this.scene.hideDOMButtons();
+        }
+        
         // Show working tab areas
         Object.values(this.workingTabAreas).forEach(area => {
             area.setVisible(true);
@@ -420,6 +430,11 @@ export class CraftingUI extends BaseUI {
         // Show fish button when crafting is closed
         if (this.scene.showFishButton) {
             this.scene.showFishButton();
+        }
+        
+        // CRITICAL: Show DOM buttons from BoatMenuScene when crafting UI is closed
+        if (this.scene.showDOMButtons) {
+            this.scene.showDOMButtons();
         }
         
         // Hide working tab areas
@@ -876,9 +891,7 @@ export class CraftingUI extends BaseUI {
             }
         ).setOrigin(1);
         
-        console.log('CraftingUI: Created quantity text:', `${ingredient.quantity}/${available}`);
-        
-        // Add to container
+                // Add to container
         this.container.add([slot.sprite, slot.itemText, slot.quantityText]);
         
         console.log('CraftingUI: Container children after adding:', this.container.list.length);

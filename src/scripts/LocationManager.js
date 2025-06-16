@@ -55,8 +55,7 @@ export class LocationManager {
             this.initializeLocationProgress(location.id);
         });
         
-        console.log('LocationManager: Initialized with current location:', this.currentLocation?.name);
-    }
+            }
     
     initializeLocationProgress(locationId) {
         if (!this.locationProgress.has(locationId)) {

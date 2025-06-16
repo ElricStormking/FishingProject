@@ -408,15 +408,15 @@ export class RenJsSaveIntegration {
     }
 
     onQuestStarted(questData) {
-        console.log('RenJsSaveIntegration: Quest started, updating save data:', questData.id);
+        if (import.meta.env.DEV) console.log('RenJsSaveIntegration: Quest started, updating save data:', questData.id);
     }
 
     onQuestCompleted(questData) {
-        console.log('RenJsSaveIntegration: Quest completed, updating save data:', questData.id);
+        if (import.meta.env.DEV) console.log('RenJsSaveIntegration: Quest completed, updating save data:', questData.id);
     }
 
     onAchievementUnlocked(achievementData) {
-        console.log('RenJsSaveIntegration: Achievement unlocked, updating save data:', achievementData.id);
+        if (import.meta.env.DEV) console.log('RenJsSaveIntegration: Achievement unlocked, updating save data:', achievementData.id);
     }
 
     onRomanceMeterChanged(romanceData) {
@@ -574,8 +574,7 @@ export class RenJsSaveIntegration {
     loadGameSave() {
         // Try to load current save
         if (this.loadGameState('current')) {
-            console.log('RenJsSaveIntegration: Loaded existing save data');
-        } else {
+                    } else {
             console.log('RenJsSaveIntegration: No existing save found, starting fresh');
         }
     }
@@ -603,6 +602,5 @@ export class RenJsSaveIntegration {
         // Final save before cleanup
         this.saveGameState('cleanup');
         
-        console.log('RenJsSaveIntegration: Save system destroyed');
-    }
+            }
 } 

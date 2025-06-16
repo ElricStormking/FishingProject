@@ -10,17 +10,14 @@ export class QuestDataLoader {
         this.questCategories = new Map();
         this.questSettings = {};
         
-        console.log('QuestDataLoader: Initialized');
-    }
+            }
 
     /**
      * Load quest data from JSON file
      */
     async loadQuestData() {
         try {
-            console.log('QuestDataLoader: Loading quest data from JSON...');
-            
-            const response = await fetch('./src/data/quests.json');
+                        const response = await fetch('./src/data/quests.json');
             if (!response.ok) {
                 throw new Error(`Failed to load quest data: ${response.status}`);
             }
@@ -28,8 +25,7 @@ export class QuestDataLoader {
             this.questData = await response.json();
             this.processQuestData();
             
-            console.log('QuestDataLoader: Quest data loaded successfully');
-            console.log(`- Story quests: ${this.questData.questTemplates.story.length}`);
+                        console.log(`- Story quests: ${this.questData.questTemplates.story.length}`);
             console.log(`- NPC quests: ${this.questData.questTemplates.npc.length}`);
             console.log(`- Daily templates: ${this.questData.questTemplates.daily.length}`);
             console.log(`- Weekly templates: ${this.questData.questTemplates.weekly.length}`);
@@ -76,9 +72,7 @@ export class QuestDataLoader {
      * Load fallback data if JSON loading fails
      */
     loadFallbackData() {
-        console.log('QuestDataLoader: Loading fallback quest data...');
-        
-        // Basic fallback quest
+                // Basic fallback quest
         const fallbackQuest = {
             id: 'story_001_tutorial',
             type: 'main_story',

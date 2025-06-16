@@ -310,14 +310,12 @@ export default class HUDScene extends Phaser.Scene {
         try {
             const gameScene = this.scene.get('GameScene');
             if (gameScene && gameScene.events) {
-                console.log('HUDScene: Setting up GameScene event listeners');
-                gameScene.events.on('fishing:catchSuccess', this.onCatchSuccess.bind(this));
+                                gameScene.events.on('fishing:catchSuccess', this.onCatchSuccess.bind(this));
                 gameScene.events.on('fishing:catchFailure', this.onCatchFailure.bind(this));
                 gameScene.events.on('equipment:damaged', this.onEquipmentDamaged.bind(this));
                 gameScene.events.on('fishing:sessionStarted', this.onFishingSessionStarted.bind(this));
                 gameScene.events.on('fishing:sessionEnded', this.onFishingSessionEnded.bind(this));
-                console.log('HUDScene: GameScene event listeners setup complete');
-            } else {
+                            } else {
                 console.warn('HUDScene: GameScene not available yet, will set up listeners when scene becomes available');
                 
                 // Set up a delayed listener setup for when GameScene becomes available
@@ -339,14 +337,12 @@ export default class HUDScene extends Phaser.Scene {
             try {
                 const gameScene = this.scene.get('GameScene');
                 if (gameScene && gameScene.events && gameScene.scene.isActive()) {
-                    console.log('HUDScene: GameScene now available, setting up event listeners');
-                    gameScene.events.on('fishing:catchSuccess', this.onCatchSuccess.bind(this));
+                                        gameScene.events.on('fishing:catchSuccess', this.onCatchSuccess.bind(this));
                     gameScene.events.on('fishing:catchFailure', this.onCatchFailure.bind(this));
                     gameScene.events.on('equipment:damaged', this.onEquipmentDamaged.bind(this));
                     gameScene.events.on('fishing:sessionStarted', this.onFishingSessionStarted.bind(this));
                     gameScene.events.on('fishing:sessionEnded', this.onFishingSessionEnded.bind(this));
-                    console.log('HUDScene: Delayed GameScene event listeners setup complete');
-                    return true; // Stop checking
+                                        return true; // Stop checking
                 }
                 return false; // Continue checking
             } catch (error) {

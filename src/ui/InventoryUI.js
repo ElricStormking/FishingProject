@@ -1,5 +1,6 @@
 import UITheme from './UITheme.js';
 import { BaseUI } from './BaseUI.js';
+import Logger from '../utils/Logger.js';
 
 export class InventoryUI extends BaseUI {
     constructor(scene, x, y, width, height) {
@@ -115,15 +116,11 @@ export class InventoryUI extends BaseUI {
         const startX = 20;
         const startY = 70;
 
-        console.log('InventoryUI: Creating category tabs:', categories);
-
-        categories.forEach((category, index) => {
+                categories.forEach((category, index) => {
             const x = startX + (index % 4) * (tabWidth + 5);
             const y = startY + Math.floor(index / 4) * (tabHeight + 5);
 
-            console.log(`InventoryUI: Tab ${index} (${category}): x=${x}, y=${y}`);
-
-            // Tab background using UITheme
+                        // Tab background using UITheme
             const tabBg = this.scene.add.graphics();
             const isActive = category === this.currentCategory;
             const bgColor = isActive ? UITheme.colors.primary : UITheme.colors.darkSecondary;
@@ -146,19 +143,13 @@ export class InventoryUI extends BaseUI {
                 .setInteractive()
                 .setAlpha(0);
 
-            console.log(`InventoryUI: Setting up tab for category: ${category}`);
-            
-            tabArea.on('pointerdown', (pointer, localX, localY) => {
-                console.log(`InventoryUI: Tab clicked for category: ${category}`);
-                console.log(`InventoryUI: Tab area bounds:`, tabArea.getBounds());
-                console.log(`InventoryUI: Tab position: x=${x}, y=${y}, width=${tabWidth}, height=${tabHeight}`);
-                console.log(`InventoryUI: Local click position:`, localX, localY);
-                this.switchCategory(category);
+                        tabArea.on('pointerdown', (pointer, localX, localY) => {
+                                this.logger?.debug(`InventoryUI: Tab area bounds:`, tabArea.getBounds()) || Logger.debug(this.constructor.name, `InventoryUI: Tab area bounds:`, tabArea.getBounds());
+                                                this.switchCategory(category);
             });
             
             tabArea.on('pointerover', () => {
-                console.log(`InventoryUI: Tab hover for category: ${category}`);
-                if (category !== this.currentCategory) {
+                                if (category !== this.currentCategory) {
                     tabBg.clear();
                     tabBg.fillStyle(0x4a4a4a);
                     tabBg.fillRoundedRect(x, y, tabWidth, tabHeight, 5);
@@ -201,8 +192,7 @@ export class InventoryUI extends BaseUI {
             .setDepth(10003); // High depth to ensure it's above everything
             
             workingTabArea.on('pointerdown', () => {
-                console.log(`InventoryUI: Working tab area clicked for category: ${category}`);
-                this.switchCategory(category);
+                                this.switchCategory(category);
             });
             
             workingTabArea.on('pointerover', () => {
@@ -393,8 +383,7 @@ export class InventoryUI extends BaseUI {
     }
 
     forceCleanInventory() {
-        console.log('InventoryUI: Force clean inventory clicked!');
-        this.audioManager?.playSFX('button');
+                this.audioManager?.playSFX('button');
         
         try {
             if (this.inventoryManager && typeof this.inventoryManager.forceCleanInventory === 'function') {
@@ -419,8 +408,7 @@ export class InventoryUI extends BaseUI {
     }
 
     debugFixEquipment() {
-        console.log('InventoryUI: Debug fix equipment clicked!');
-        this.audioManager?.playSFX('button');
+                this.audioManager?.playSFX('button');
         
         try {
             // Force refresh equipment slots
@@ -436,11 +424,10 @@ export class InventoryUI extends BaseUI {
         }
     }
 
-    openCraftingUI() {
-        console.log('InventoryUI: Opening Crafting UI');
+        openCraftingUI() {
         this.audioManager?.playSFX('button');
         
-        // Hide inventory UI
+        // Hide inventory UI (this will show DOM buttons)
         this.hide();
         
         // Show crafting UI
@@ -449,17 +436,18 @@ export class InventoryUI extends BaseUI {
             
             // Store reference that crafting was opened from inventory
             this.scene.craftingUI.openedFromInventory = true;
+            
+            // Ensure DOM buttons stay hidden when switching to crafting
+            if (this.scene.hideDOMButtons) {
+                this.scene.hideDOMButtons();
+            }
         } else {
             console.error('InventoryUI: CraftingUI not found in scene');
         }
     }
 
     openEquipmentUI() {
-        console.log('InventoryUI: Opening Equipment Enhancement UI');
-        console.log('InventoryUI: Checking scene properties...');
-        console.log('InventoryUI: scene.equipmentEnhancementUI exists:', !!this.scene.equipmentEnhancementUI);
-        console.log('InventoryUI: scene.equipmentEnhancer exists:', !!this.scene.equipmentEnhancer);
-        console.log('InventoryUI: Available scene properties:', Object.keys(this.scene));
+                                        this.logger?.debug('InventoryUI: Available scene properties:', Object.keys(this.scene)) || Logger.debug(this.constructor.name, 'InventoryUI: Available scene properties:', Object.keys(this.scene));
         
         this.audioManager?.playSFX('button');
         
@@ -489,8 +477,7 @@ export class InventoryUI extends BaseUI {
                 
                 // Store reference that equipment UI was opened from inventory
                 this.scene.equipmentEnhancementUI.openedFromInventory = true;
-                console.log('InventoryUI: Equipment Enhancement UI opened successfully');
-            } catch (error) {
+                            } catch (error) {
                 console.error('InventoryUI: Error opening Equipment Enhancement UI:', error);
                 // Show inventory again since equipment UI failed
                 this.show();
@@ -516,9 +503,7 @@ export class InventoryUI extends BaseUI {
 
     async createEquipmentEnhancementUI() {
         try {
-            console.log('InventoryUI: Creating Equipment Enhancement UI...');
-            
-            // Import the EquipmentEnhancementUI class
+                        // Import the EquipmentEnhancementUI class
             const { EquipmentEnhancementUI } = await import('./EquipmentEnhancementUI.js');
             
             // Create the UI with reasonable defaults
@@ -535,9 +520,7 @@ export class InventoryUI extends BaseUI {
                 uiHeight
             );
             
-            console.log('InventoryUI: Equipment Enhancement UI created successfully');
-            
-            // Give it a moment to fully initialize
+                        // Give it a moment to fully initialize
             return new Promise(resolve => {
                 this.scene.time.delayedCall(100, () => {
                     resolve();
@@ -635,24 +618,21 @@ export class InventoryUI extends BaseUI {
                 workingSlotArea.on('pointerover', () => {
                     // Only respond if UI is visible
                     if (!this.isVisible) return;
-                    console.log(`InventoryUI: Working slot ${slotIndex} hover`);
-                    workingSlotArea.setAlpha(0.02); // Slight change for functionality
+                                        workingSlotArea.setAlpha(0.02); // Slight change for functionality
                     this.onSlotHover(slotIndex);
                 });
                 
                 workingSlotArea.on('pointerout', () => {
                     // Only respond if UI is visible
                     if (!this.isVisible) return;
-                    console.log(`InventoryUI: Working slot ${slotIndex} out`);
-                    workingSlotArea.setAlpha(0.01); // Back to barely visible
+                                        workingSlotArea.setAlpha(0.01); // Back to barely visible
                     this.onSlotOut(slotIndex);
                 });
                 
                 workingSlotArea.on('pointerdown', () => {
                     // Only respond if UI is visible
                     if (!this.isVisible) return;
-                    console.log(`InventoryUI: Working slot ${slotIndex} clicked`);
-                    this.onSlotClick(slotIndex);
+                                        this.onSlotClick(slotIndex);
                 });
                 
                 // Store reference for cleanup
@@ -681,22 +661,19 @@ export class InventoryUI extends BaseUI {
         slotArea.on('pointerover', () => {
             // Only respond if UI is visible
             if (!this.isVisible) return;
-            console.log(`InventoryUI: Slot ${index} hover`);
-            this.onSlotHover(index);
+                        this.onSlotHover(index);
         });
         
         slotArea.on('pointerout', () => {
             // Only respond if UI is visible
             if (!this.isVisible) return;
-            console.log(`InventoryUI: Slot ${index} out`);
-            this.onSlotOut(index);
+                        this.onSlotOut(index);
         });
 
         slotArea.on('pointerdown', () => {
             // Only respond if UI is visible
             if (!this.isVisible) return;
-            console.log(`InventoryUI: Slot ${index} clicked`);
-            this.onSlotClick(index);
+                        this.onSlotClick(index);
         });
 
         return {
@@ -817,9 +794,7 @@ export class InventoryUI extends BaseUI {
         workingSlotArea.on('pointerdown', (pointer, localX, localY, event) => {
             // Only respond if UI is visible
             if (!this.isVisible) return;
-            console.log('InventoryUI: Working equipment slot clicked:', slotType);
-            
-            // Stop event propagation to prevent UI from closing
+                        // Stop event propagation to prevent UI from closing
             if (event && event.stopPropagation) {
                 event.stopPropagation();
             }
@@ -829,23 +804,19 @@ export class InventoryUI extends BaseUI {
 
         workingSlotArea.on('pointerover', () => {
             if (!this.isVisible) return;
-            console.log('InventoryUI: Working equipment slot hover:', slotType);
-            workingSlotArea.setAlpha(0.05); // More visible on hover
+                        workingSlotArea.setAlpha(0.05); // More visible on hover
         });
 
         workingSlotArea.on('pointerout', () => {
             if (!this.isVisible) return;
-            console.log('InventoryUI: Working equipment slot out:', slotType);
-            workingSlotArea.setAlpha(0.01); // Back to barely visible
+                        workingSlotArea.setAlpha(0.01); // Back to barely visible
         });
 
         // Store reference to working area for cleanup
         this.workingAreas = this.workingAreas || [];
         this.workingAreas.push(workingSlotArea);
         
-        console.log(`InventoryUI: Created equipment slot working area for ${slotType} at x=${this.x + x + slotSize/2}, y=${this.y + y + slotSize/2}, depth=${workingSlotArea.depth}`);
-
-        return {
+                return {
             bg: slotBg,
             label: label,
             slotTypeText: slotTypeText,
@@ -902,25 +873,18 @@ export class InventoryUI extends BaseUI {
     getCompatibleItemsForSlot(slotType) {
         const allItems = [];
         
-        console.log('InventoryUI: Getting compatible items for slot:', slotType);
-        console.log('InventoryUI: Current inventory:', this.gameState.inventory);
-        
-        // Check all inventory categories
+                        // Check all inventory categories
         Object.entries(this.gameState.inventory).forEach(([category, items]) => {
             if (Array.isArray(items)) {
-                console.log(`InventoryUI: Checking category ${category} with ${items.length} items`);
-                items.forEach(item => {
-                    console.log(`InventoryUI: Checking item ${item.name} with equipSlot: ${item.equipSlot}`);
-                    if (this.isItemCompatibleWithSlot(item, slotType)) {
+                                items.forEach(item => {
+                                        if (this.isItemCompatibleWithSlot(item, slotType)) {
                         allItems.push({ ...item, category });
-                        console.log(`InventoryUI: Added compatible item: ${item.name}`);
-                    }
+                                            }
                 });
             }
         });
 
-        console.log(`InventoryUI: Found ${allItems.length} compatible items for ${slotType}:`, allItems);
-        return allItems;
+                return allItems;
     }
 
     createTooltip() {
@@ -968,14 +932,10 @@ export class InventoryUI extends BaseUI {
     onSlotClick(index) {
         if (this.isDestroyed) return;
         const slot = this.itemSlots[index];
-        console.log(`InventoryUI: Slot ${index} clicked, item:`, slot.item);
-        
-        if (slot.item) {
+                if (slot.item) {
             this.audioManager?.playSFX('button');
             this.selectedItem = slot.item;
-            console.log(`InventoryUI: Selected item: ${slot.item.name}`);
-            
-            // Add visual feedback for selected item using UITheme
+                        // Add visual feedback for selected item using UITheme
             slot.bg.clear();
             slot.bg.fillStyle(UITheme.colors.darkSecondary);
             slot.bg.fillRoundedRect(slot.x, slot.y, this.slotSize, this.slotSize, UITheme.borders.radius.small);
@@ -985,15 +945,12 @@ export class InventoryUI extends BaseUI {
             // Show item actions menu
             this.showItemActions(slot.item, slot.x + this.slotSize/2, slot.y + this.slotSize/2);
         } else {
-            console.log(`InventoryUI: Empty slot ${index} clicked`);
-        }
+                    }
     }
 
     onEquipmentSlotClick(slotType) {
         try {
-            console.log('InventoryUI: Equipment slot clicked:', slotType);
-            
-            // Play sound
+                        // Play sound
             this.audioManager?.playSFX('button');
             
             // Prevent event propagation that might close the UI
@@ -1002,11 +959,8 @@ export class InventoryUI extends BaseUI {
             // Get compatible items for this slot
             const compatibleItems = this.getCompatibleItemsForSlot(slotType);
             
-            console.log('InventoryUI: Compatible items for', slotType, ':', compatibleItems.length);
-            
-            if (compatibleItems.length === 0) {
-                console.log('InventoryUI: No compatible items found for slot:', slotType);
-                this.showMessage(`No ${slotType} equipment available.\nUse the shop or crafting to get equipment.`, UITheme.colors.warning);
+                        if (compatibleItems.length === 0) {
+                                this.showMessage(`No ${slotType} equipment available.\nUse the shop or crafting to get equipment.`, UITheme.colors.warning);
                 return;
             }
             
@@ -1027,9 +981,7 @@ export class InventoryUI extends BaseUI {
                 });
             }
             
-            console.log('InventoryUI: Currently equipped in', slotType, ':', currentItem?.name || 'none');
-            
-            // Show equipment selection dialog or quick-switch menu
+                        // Show equipment selection dialog or quick-switch menu
             this.showEquipmentSelectionMenu(slotType, compatibleItems, currentItem);
             
         } catch (error) {
@@ -1059,9 +1011,7 @@ export class InventoryUI extends BaseUI {
      */
     addSampleItemsForSlot(slotType) {
         try {
-            console.log(`InventoryUI: Adding validated sample items for slot: ${slotType}`);
-            
-            // 🚨 VALIDATION: Only add sample items if InventoryManager is available
+                        // 🚨 VALIDATION: Only add sample items if InventoryManager is available
             if (!this.inventoryManager) {
                 console.error('InventoryUI: InventoryManager not available, cannot add sample items');
                 return;
@@ -1194,18 +1144,14 @@ export class InventoryUI extends BaseUI {
                     break;
             }
             
-            console.log(`InventoryUI: Sample items added for ${slotType}`);
-            
-        } catch (error) {
+                    } catch (error) {
             console.error('InventoryUI: Error adding sample items:', error);
         }
     }
 
     showItemActions(item, x, y) {
         // Create context menu for item actions
-        console.log('InventoryUI: Showing item actions for:', item.name, 'Category:', this.currentCategory);
-        
-        // Determine if this is a consumable
+                // Determine if this is a consumable
         const isConsumable = this.currentCategory === 'consumables' && item.effect;
         
         // Create a more comprehensive action popup
@@ -1251,9 +1197,7 @@ export class InventoryUI extends BaseUI {
         
         // Add USE button for consumables
         if (isConsumable) {
-            console.log('InventoryUI: Adding USE button for consumable:', item.name);
-            
-            // Use button background
+                        // Use button background
             const useButtonBg = this.scene.add.graphics();
             useButtonBg.fillStyle(0x27ae60, 0.9); // Green for use button
             useButtonBg.fillRoundedRect(-60, 15, 120, 25, 5);
@@ -1287,9 +1231,7 @@ export class InventoryUI extends BaseUI {
             .setFillStyle(0x27ae60) // Green fill for functionality  
             .setDepth(11001); // Above the popup
             
-            console.log(`InventoryUI: Creating working USE button at absolute position: x=${absoluteX}, y=${absoluteY}`);
-            
-            // Use button effects for both areas
+                        // Use button effects for both areas
             const onHover = () => {
                 useButtonBg.clear();
                 useButtonBg.fillStyle(0x2ecc71, 1); // Brighter green on hover
@@ -1311,8 +1253,7 @@ export class InventoryUI extends BaseUI {
             };
             
             const onClick = () => {
-                console.log('InventoryUI: USE button clicked for:', item.name);
-                this.audioManager?.playSFX('button');
+                                this.audioManager?.playSFX('button');
                 
                 // Visual feedback
                 useButtonBg.clear();
@@ -1372,9 +1313,7 @@ export class InventoryUI extends BaseUI {
         .setDepth(10999); // Just below the popup
         
         outsideClickArea.on('pointerdown', () => {
-            console.log('InventoryUI: Closing item actions popup (outside click)');
-            
-            // Clean up working USE button if it exists
+                        // Clean up working USE button if it exists
             if (actionPopup.workingUseButton && actionPopup.workingUseButton.active) {
                 actionPopup.workingUseButton.destroy();
             }
@@ -1400,11 +1339,7 @@ export class InventoryUI extends BaseUI {
      * @param {object} item - The consumable item to use
      */
     useConsumable(item) {
-        console.log('InventoryUI: Starting useConsumable method for:', item.name);
-        console.log('InventoryUI: Item details:', item);
-        console.log('InventoryUI: InventoryManager available:', !!this.inventoryManager);
-        
-        try {
+                                try {
             // Validate that we have the inventory manager
             if (!this.inventoryManager) {
                 console.error('InventoryUI: InventoryManager not available');
@@ -1426,17 +1361,11 @@ export class InventoryUI extends BaseUI {
                 return;
             }
 
-            console.log('InventoryUI: Calling inventoryManager.useConsumable with ID:', item.id);
-            
-            // Use the consumable through inventory manager
+                        // Use the consumable through inventory manager
             const result = this.inventoryManager.useConsumable(item.id, 1);
             
-            console.log('InventoryUI: UseConsumable result:', result);
-            
-            if (result.success) {
-                console.log('InventoryUI: Consumable used successfully:', result.message);
-                
-                // Show success message with effects
+                        if (result.success) {
+                                // Show success message with effects
                 let message = result.message;
                 if (result.effects && result.effects.length > 0) {
                     const effectMessages = result.effects.map(effect => effect.message).join('\n');
@@ -1446,8 +1375,7 @@ export class InventoryUI extends BaseUI {
                 this.showMessage(message, '#27ae60'); // Green for success
                 
                 // Update inventory display
-                console.log('InventoryUI: Refreshing items after successful use');
-                this.refreshItems();
+                                this.refreshItems();
                 this.updateStats();
                 
                 // Show floating effect text
@@ -1569,9 +1497,7 @@ export class InventoryUI extends BaseUI {
         // Consumable usage handlers
         this.consumableUsedHandler = (data) => {
             if (this.isVisible && !this.isDestroyed) {
-                console.log('InventoryUI: Consumable used event received:', data);
-                
-                // Show notification in HUD scene if available
+                                // Show notification in HUD scene if available
                 const hudScene = this.scene.scene.get('HUDScene');
                 if (hudScene && hudScene.showNotification) {
                     let message = `Used ${data.item.name}`;
@@ -1590,9 +1516,7 @@ export class InventoryUI extends BaseUI {
 
         this.equipmentSlotsRefreshedHandler = () => {
             if (this.isVisible && !this.isDestroyed) {
-                console.log('InventoryUI: Equipment slots refreshed event received');
-                
-                // Refresh everything
+                                // Refresh everything
                 this.refreshItems();
                 this.updateStats();
                 this.updateEquipmentSlots();
@@ -1604,9 +1528,7 @@ export class InventoryUI extends BaseUI {
 
         this.allItemsRefreshedHandler = () => {
             if (this.isVisible && !this.isDestroyed) {
-                console.log('InventoryUI: All items refreshed event received');
-                
-                // Refresh everything
+                                // Refresh everything
                 this.refreshItems();
                 this.updateStats();
                 this.updateEquipmentSlots();
@@ -1617,9 +1539,7 @@ export class InventoryUI extends BaseUI {
         };
 
         this.temporaryBoostAppliedHandler = (data) => {
-            console.log('InventoryUI: Temporary boost applied:', data);
-            
-            // Show boost notification in HUD
+                        // Show boost notification in HUD
             const hudScene = this.scene.scene.get('HUDScene');
             if (hudScene && hudScene.showNotification) {
                 const minutes = Math.floor(data.duration / 60000);
@@ -1634,9 +1554,7 @@ export class InventoryUI extends BaseUI {
         };
 
         this.temporaryBoostExpiredHandler = (data) => {
-            console.log('InventoryUI: Temporary boost expired:', data);
-            
-            // Show expiration notification
+                        // Show expiration notification
             const hudScene = this.scene.scene.get('HUDScene');
             if (hudScene && hudScene.showNotification) {
                 hudScene.showNotification(
@@ -1658,8 +1576,7 @@ export class InventoryUI extends BaseUI {
                 this.inventoryManager.on('allItemsRefreshed', this.allItemsRefreshedHandler);
                 this.inventoryManager.on('temporaryBoostApplied', this.temporaryBoostAppliedHandler);
                 this.inventoryManager.on('temporaryBoostExpired', this.temporaryBoostExpiredHandler);
-                console.log('InventoryUI: Event listeners set up successfully');
-            } else {
+                            } else {
                 console.warn('InventoryUI: InventoryManager not available, skipping event listeners');
             }
         } catch (error) {
@@ -1672,9 +1589,7 @@ export class InventoryUI extends BaseUI {
             return;
         }
         
-        console.log('InventoryUI: Destroying...');
-        
-        // Stop listening to events
+                // Stop listening to events
         if (this.scene && this.scene.events) {
             this.scene.events.off('gameloop:inventoryUpdate', this.refreshItems, this);
         }
@@ -1716,8 +1631,7 @@ export class InventoryUI extends BaseUI {
         this.tooltip = null;
         
         this.isDestroyed = true;
-        console.log('InventoryUI: Successfully destroyed');
-    }
+            }
 
     showMessage(text, color = '#ffffff') {
         // Create a temporary message
@@ -1744,9 +1658,7 @@ export class InventoryUI extends BaseUI {
     // Show/Hide methods
     show() {
         try {
-            console.log('InventoryUI: Showing inventory');
-            
-            if (this.isDestroyed) {
+                        if (this.isDestroyed) {
                 console.error('InventoryUI: Cannot show destroyed UI');
                 return;
             }
@@ -1756,13 +1668,17 @@ export class InventoryUI extends BaseUI {
                 this.scene.hideFishButton();
             }
             
+            // CRITICAL: Hide DOM buttons from BoatMenuScene when inventory UI is open
+            if (this.scene.hideDOMButtons) {
+                this.scene.hideDOMButtons();
+            }
+            
             // 🚨 FORCE CLEAN: Remove any undefined items immediately when inventory opens
             try {
                 if (this.inventoryManager && this.inventoryManager.forceCleanAllUndefinedItems) {
                     const cleanedCount = this.inventoryManager.forceCleanAllUndefinedItems();
                     if (cleanedCount > 0) {
-                        console.log(`InventoryUI: ✅ Cleaned ${cleanedCount} undefined items from inventory`);
-                        this.gameState.save(); // Save immediately after cleaning
+                                                this.gameState.save(); // Save immediately after cleaning
                     }
                 }
             } catch (cleanError) {
@@ -1771,8 +1687,7 @@ export class InventoryUI extends BaseUI {
             
             // Force fix equipment slots when showing inventory
             if (this.inventoryManager && typeof this.inventoryManager.fixMissingEquipSlots === 'function') {
-                console.log('InventoryUI: Force-fixing equipment slots on show');
-                this.inventoryManager.fixMissingEquipSlots();
+                                this.inventoryManager.fixMissingEquipSlots();
             }
             
             this.isVisible = true;
@@ -1798,12 +1713,10 @@ export class InventoryUI extends BaseUI {
             
             // Show working equipment slot areas
             if (this.workingAreas) {
-                console.log(`InventoryUI: Showing ${this.workingAreas.length} equipment working areas`);
-                this.workingAreas.forEach((area, index) => {
+                                this.workingAreas.forEach((area, index) => {
                     if (area && !area.destroyed) {
                         area.setVisible(true);
-                        console.log(`InventoryUI: Equipment working area ${index} shown at depth ${area.depth}`);
-                    }
+                                            }
                 });
             }
             
@@ -1833,22 +1746,23 @@ export class InventoryUI extends BaseUI {
             this.updateStats();
             this.updateEquipmentSlots();
             
-            console.log('InventoryUI: Inventory shown successfully');
-            
-        } catch (error) {
+                    } catch (error) {
             console.error('InventoryUI: Error showing inventory:', error);
         }
     }
 
     hide() {
         try {
-            console.log('InventoryUI: Hiding inventory');
-            
-            this.isVisible = false;
+                        this.isVisible = false;
             
             // Show fish button when inventory is closed
             if (this.scene.showFishButton) {
                 this.scene.showFishButton();
+            }
+            
+            // CRITICAL: Show DOM buttons from BoatMenuScene when inventory UI is closed
+            if (this.scene.showDOMButtons) {
+                this.scene.showDOMButtons();
             }
             
             if (this.container && !this.container.destroyed) {
@@ -1903,9 +1817,7 @@ export class InventoryUI extends BaseUI {
             // Clear any open menus
             this.clearEquipmentSelectionMenu();
             
-            console.log('InventoryUI: Inventory hidden successfully');
-            
-        } catch (error) {
+                    } catch (error) {
             console.error('InventoryUI: Error hiding inventory:', error);
         }
     }
@@ -1915,11 +1827,8 @@ export class InventoryUI extends BaseUI {
      */
     switchCategory(category) {
         try {
-            console.log('InventoryUI: Switching to category:', category);
-            
-            if (this.currentCategory === category) {
-                console.log('InventoryUI: Already on category:', category);
-                return;
+                        if (this.currentCategory === category) {
+                                return;
             }
             
             // Play sound
@@ -1935,9 +1844,7 @@ export class InventoryUI extends BaseUI {
             // Refresh items for new category
             this.refreshItems();
             
-            console.log(`InventoryUI: Switched from ${oldCategory} to ${category}`);
-            
-        } catch (error) {
+                    } catch (error) {
             console.error('InventoryUI: Error switching category:', error);
         }
     }
@@ -1973,18 +1880,14 @@ export class InventoryUI extends BaseUI {
      */
     refreshItems() {
         try {
-            console.log('InventoryUI: Refreshing items for category:', this.currentCategory);
-            
-            if (!this.gameState || !this.gameState.inventory) {
+                        if (!this.gameState || !this.gameState.inventory) {
                 console.warn('InventoryUI: No inventory data available');
                 return;
             }
             
             // Get items for current category
             const categoryItems = this.gameState.inventory[this.currentCategory] || [];
-            console.log(`InventoryUI: Found ${categoryItems.length} items in ${this.currentCategory}`);
-            
-            // 🚨 CHECK FOR UNDEFINED ITEMS
+                        // 🚨 CHECK FOR UNDEFINED ITEMS
             this.checkForUndefinedItems(categoryItems);
             
             // Clear existing item displays
@@ -1997,9 +1900,7 @@ export class InventoryUI extends BaseUI {
                 }
             });
             
-            console.log('InventoryUI: Items refreshed successfully');
-            
-        } catch (error) {
+                    } catch (error) {
             console.error('InventoryUI: Error refreshing items:', error);
         }
     }
@@ -2227,8 +2128,7 @@ export class InventoryUI extends BaseUI {
                     slot.itemSprite.fillRoundedRect(iconX, iconY, iconSize, iconSize, UITheme.borders.radius.small);
                     this.container.add(slot.itemSprite);
                     
-                    console.log(`InventoryUI: Updated equipment slot ${slotType} with equipped item: ${equippedItem.name}`);
-                } else {
+                                    } else {
                     // Show empty slot
                     slot.bg.clear();
                     slot.bg.fillStyle(UITheme.colors.darkPrimary);
@@ -2236,8 +2136,7 @@ export class InventoryUI extends BaseUI {
                     slot.bg.lineStyle(UITheme.borders.width.medium, UITheme.colors.primary);
                     slot.bg.strokeRoundedRect(slotX, slotY, slotSize, slotSize, UITheme.borders.radius.small);
                     
-                    console.log(`InventoryUI: Updated equipment slot ${slotType} - empty`);
-                }
+                                    }
             });
             
         } catch (error) {
@@ -2250,9 +2149,7 @@ export class InventoryUI extends BaseUI {
      */
     onItemClick(item, category) {
         try {
-            console.log('InventoryUI: Item clicked:', item.name, 'Category:', category || this.currentCategory);
-            
-            if (!item) return;
+                        if (!item) return;
             
             this.audioManager?.playSFX('button');
             
@@ -2284,9 +2181,7 @@ export class InventoryUI extends BaseUI {
      */
     equipItem(item, category) {
         try {
-            console.log('InventoryUI: Equipping item:', item.name);
-            
-            const success = this.inventoryManager.equipItem(category, item.id);
+                        const success = this.inventoryManager.equipItem(category, item.id);
             
             if (success) {
                 this.showMessage(`✅ Equipped ${item.name}`, UITheme.colors.success);
@@ -2307,9 +2202,7 @@ export class InventoryUI extends BaseUI {
      */
     unequipItem(item, category) {
         try {
-            console.log('InventoryUI: Unequipping item:', item.name);
-            
-            const success = this.inventoryManager.unequipItem(category, item.id);
+                        const success = this.inventoryManager.unequipItem(category, item.id);
             
             if (success) {
                 this.showMessage(`✅ Unequipped ${item.name}`, UITheme.colors.success);
@@ -2489,8 +2382,7 @@ export class InventoryUI extends BaseUI {
             
             if (localX < menuBounds.x || localX > menuBounds.x + menuBounds.width ||
                 localY < menuBounds.y || localY > menuBounds.y + menuBounds.height) {
-                console.log('InventoryUI: Clicking outside equipment menu, closing');
-                this.clearEquipmentSelectionMenu();
+                                this.clearEquipmentSelectionMenu();
             }
         });
         this.container.add(this.equipmentMenuOverlay);
@@ -2686,19 +2578,14 @@ export class InventoryUI extends BaseUI {
             .setFillStyle(0x000000)
             .setDepth(10003); // Above equipment menu
             
-            console.log(`InventoryUI: Creating working equipment menu item area for ${item.name} at x=${this.x + menuX + menuWidth/2}, y=${this.y + itemY + 27}`);
-            
-            // Working area events with better visual feedback
+                        // Working area events with better visual feedback
             workingItemArea.on('pointerdown', () => {
-                console.log(`InventoryUI: Working equipment menu item clicked: ${item.name} (equipped: ${isEquipped})`);
-                this.audioManager?.playSFX('button');
+                                this.audioManager?.playSFX('button');
                 
                 if (!isEquipped) {
-                    console.log(`InventoryUI: Attempting to equip ${item.name} in category ${item.category}`);
-                    this.equipItem(item, item.category);
+                                        this.equipItem(item, item.category);
                 } else {
-                    console.log(`InventoryUI: Attempting to unequip ${item.name} in category ${item.category}`);
-                    this.unequipItem(item, item.category);
+                                        this.unequipItem(item, item.category);
                 }
                 this.clearEquipmentSelectionMenu();
             });
@@ -2747,32 +2634,25 @@ export class InventoryUI extends BaseUI {
         .setDepth(10003);
         
         workingCloseArea.on('pointerdown', () => {
-            console.log('InventoryUI: Working close button clicked');
-            this.audioManager?.playSFX('button');
+                        this.audioManager?.playSFX('button');
             this.clearEquipmentSelectionMenu();
         });
         
         this.equipmentMenuWorkingAreas.push(workingCloseArea);
         
-        console.log(`InventoryUI: Equipment menu created with ${this.equipmentMenuElements.length} tracked elements`);
-    }
+            }
 
     /**
      * Clear equipment selection menu
      */
     clearEquipmentSelectionMenu() {
         try {
-            console.log('InventoryUI: Starting equipment menu cleanup...');
-            
-            // Clean up tracked menu elements directly
+                        // Clean up tracked menu elements directly
             if (this.equipmentMenuElements && this.equipmentMenuElements.length > 0) {
-                console.log(`InventoryUI: Cleaning up ${this.equipmentMenuElements.length} tracked menu elements`);
-                
-                this.equipmentMenuElements.forEach((element, index) => {
+                                this.equipmentMenuElements.forEach((element, index) => {
                     try {
                         if (element && !element.destroyed) {
-                            console.log(`InventoryUI: Destroying menu element ${index}:`, element.type || 'unknown');
-                            element.destroy();
+                                                        element.destroy();
                         }
                     } catch (error) {
                         console.warn(`InventoryUI: Error destroying menu element ${index}:`, error);
@@ -2784,13 +2664,10 @@ export class InventoryUI extends BaseUI {
             
             // Clean up working interactive areas
             if (this.equipmentMenuWorkingAreas && this.equipmentMenuWorkingAreas.length > 0) {
-                console.log(`InventoryUI: Cleaning up ${this.equipmentMenuWorkingAreas.length} working areas`);
-                
-                this.equipmentMenuWorkingAreas.forEach((area, index) => {
+                                this.equipmentMenuWorkingAreas.forEach((area, index) => {
                     try {
                         if (area && !area.destroyed) {
-                            console.log(`InventoryUI: Destroying working area ${index}`);
-                            area.destroy();
+                                                        area.destroy();
                         }
                     } catch (error) {
                         console.warn(`InventoryUI: Error destroying working area ${index}:`, error);
@@ -2804,9 +2681,7 @@ export class InventoryUI extends BaseUI {
             this.equipmentMenu = null;
             this.equipmentMenuOverlay = null;
             
-            console.log('InventoryUI: Equipment menu cleanup completed successfully');
-            
-        } catch (error) {
+                    } catch (error) {
             console.error('InventoryUI: Error during equipment menu cleanup:', error);
             
             // Force cleanup of references even if cleanup failed
@@ -2822,9 +2697,7 @@ export class InventoryUI extends BaseUI {
      */
     manualRefreshEquipmentSlots() {
         try {
-            console.log('InventoryUI: Manual equipment slot refresh requested');
-            
-            if (this.inventoryManager && typeof this.inventoryManager.refreshEquipmentSlots === 'function') {
+                        if (this.inventoryManager && typeof this.inventoryManager.refreshEquipmentSlots === 'function') {
                 this.inventoryManager.refreshEquipmentSlots();
             } else {
                 console.error('InventoryUI: InventoryManager or refreshEquipmentSlots method not available');

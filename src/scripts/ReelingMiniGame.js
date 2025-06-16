@@ -65,8 +65,7 @@ export class ReelingMiniGame {
         this.fishMovementSpeed = 2;
         this.fishDirection = 1; // 1 for right, -1 for left
         
-        console.log('ReelingMiniGame: Initialized');
-    }
+            }
 
     start(options = {}) {
         this.isActive = true;
@@ -75,24 +74,22 @@ export class ReelingMiniGame {
         this.fishCaughtCalled = false; // Reset the flag for new session
         this.isCompleted = false; // Add additional completion flag
         
-        console.log('ReelingMiniGame: Starting with options:', options);
-        
-        // Get selected fish from luring result
+                // Get selected fish from luring result
         this.selectedFish = options.selectedFish || null;
         this.fishId = options.fishId || null;
         
         // Configure fish behavior based on database
         if (this.selectedFish && this.gameState.fishDatabase) {
-            console.log('ReelingMiniGame: Using selected fish:', this.selectedFish.name);
-            
-            // Check if this is a boss fish
+            if (import.meta.env.DEV) console.log('Debug statement');
+        // Check if this is a boss fish
             this.isBoss = this.selectedFish.isBoss || false;
             
             // Get struggle style data
             const struggleStyle = this.gameState.fishDatabase.getStruggleStyle(this.selectedFish.struggleStyle);
             if (struggleStyle) {
-                console.log('ReelingMiniGame: Using struggle style:', struggleStyle.name);
-                this.struggleStyle = struggleStyle;
+                if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        this.struggleStyle = struggleStyle;
             }
             
             // Set fish properties
@@ -110,7 +107,9 @@ export class ReelingMiniGame {
             // Calculate fish stamina - bosses have much higher stamina
             if (this.isBoss) {
                 this.fishStamina = this.selectedFish.stamina || 300; // Boss stamina from data
-                console.log(`ReelingMiniGame: BOSS FIGHT! ${this.selectedFish.name} with ${this.fishStamina} stamina`);
+                if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        console.log('ReelingMiniGame: Boss fish stamina:', this.fishStamina);
             } else {
                 this.fishStamina = 50 + (this.selectedFish.endurance * 15); // 65-200 stamina for normal fish
             }
@@ -122,8 +121,9 @@ export class ReelingMiniGame {
             
         } else {
             // Fallback to default fish properties
-            console.log('ReelingMiniGame: Using default fish properties');
-            
+            if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        console.log('ReelingMiniGame: Using fallback fish properties');
             this.fishProperties = {
                 name: 'Unknown Fish',
                 size: 5,
@@ -215,6 +215,8 @@ export class ReelingMiniGame {
             experienceBonus: 0
         };
         
+        if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
         console.log('ReelingMiniGame: Equipment effects applied:', this.equipmentEffects);
     }
 
@@ -268,8 +270,9 @@ export class ReelingMiniGame {
         // Create fish name label
         this.createFishNameLabel();
         
-        console.log('ReelingMiniGame: Fish created');
-    }
+        if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        }
 
     createUI() {
         // Additional UI elements
@@ -437,8 +440,9 @@ export class ReelingMiniGame {
         // Create fish stamina bar
         this.createStaminaBar();
         
-        console.log('ReelingMiniGame: Fish visuals created with name:', fishName);
-    }
+        if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        }
 
     drawFish() {
         if (!this.fishGraphic) return;
@@ -507,8 +511,9 @@ export class ReelingMiniGame {
         // Initial line drawing
         this.updateFishingLine();
         
-        console.log('ReelingMiniGame: Fishing line created');
-    }
+        if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        }
 
     updateFishingLine() {
         if (!this.fishingLine || !this.scene.rodTipPosition) return;
@@ -604,8 +609,9 @@ export class ReelingMiniGame {
             });
         }
         
-        console.log(`ReelingMiniGame: Fish name label created: ${fishName} (Rarity: ${rarity})`);
-    }
+        if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        }
 
     updateStaminaBar() {
         if (!this.staminaBarBg || !this.staminaBar) return;
@@ -729,8 +735,9 @@ export class ReelingMiniGame {
         this.lineIntegrityText.setOrigin(0.5);
         this.uiContainer.add(this.lineIntegrityText);
         
-        console.log('ReelingMiniGame: Tension meter created with standard Phaser graphics');
-    }
+        if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        }
 
     createTensionZones(meterX, meterY, meterWidth, meterHeight) {
         // Create visual zones for different tension levels
@@ -770,16 +777,16 @@ export class ReelingMiniGame {
     setupInputHandling() {
         // Mouse input for reeling with enhanced debugging
         this.mouseHandler = (pointer) => {
-            console.log('ReelingMiniGame: Mouse click detected! Pointer:', pointer);
-            console.log('ReelingMiniGame: Current state - isActive:', this.isActive, 'activeQTE:', !!this.activeQTE);
-            
-            if (!this.isActive) {
-                console.log('ReelingMiniGame: Mouse click ignored - game not active');
-                return;
+            if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        if (import.meta.env.DEV) console.log('Debug statement');
+        if (!this.isActive) {
+                if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        return;
             }
             
-            console.log('ReelingMiniGame: Processing mouse click for reeling');
-            this.handleInput('reel', { pointer: pointer });
+                        this.handleInput('reel', { pointer: pointer });
         };
         
         // CONSOLIDATED keyboard input - use DOM events for consistency with QTEDebugTool
@@ -788,21 +795,24 @@ export class ReelingMiniGame {
             
             // Ignore key repeat events to prevent hold time corruption
             if (event.repeat) {
-                console.log('ReelingMiniGame: Ignoring key repeat event for', event.code);
-                return;
+                if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        return;
             }
             
             // Add debugging for hold QTEs
             if (this.activeQTE.type === 'hold') {
-                console.log('ReelingMiniGame: KeyDown event for HOLD QTE:', event.code, 'at time:', this.scene.time.now);
-            }
+                if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        }
             
             switch (event.code) {
                 case 'Space':
                     event.preventDefault();
                     if (this.activeQTE.type === 'hold') {
-                        console.log('ReelingMiniGame: HOLD START detected at time:', this.scene.time.now);
-                        this.handleInput('holdStart');
+                        if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        this.handleInput('holdStart');
                     } else if (this.activeQTE.type === 'tap') {
                         this.handleInput('tap');
                     } else if (this.activeQTE.type === 'timing') {
@@ -837,57 +847,55 @@ export class ReelingMiniGame {
             
             if (event.code === 'Space' && this.activeQTE.type === 'hold') {
                 event.preventDefault();
-                console.log('ReelingMiniGame: HOLD END detected at time:', this.scene.time.now);
-                this.handleInput('holdEnd');
+                if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        this.handleInput('holdEnd');
             }
         };
         
         // Enhanced input setup with debugging
         try {
-            console.log('ReelingMiniGame: Setting up input handlers...');
-            console.log('ReelingMiniGame: Scene input object:', this.scene.input);
-            console.log('ReelingMiniGame: Scene input enabled:', this.scene.input?.enabled);
-            
-            // Ensure scene input is enabled
+                                                // Ensure scene input is enabled
             if (this.scene.input && !this.scene.input.enabled) {
-                console.log('ReelingMiniGame: Scene input was disabled, enabling it...');
-                this.scene.input.enabled = true;
+                                this.scene.input.enabled = true;
             }
             
             // Attach mouse handler
             if (this.scene.input) {
                 this.scene.input.on('pointerdown', this.mouseHandler);
-                console.log('ReelingMiniGame: Mouse handler attached successfully');
-                
-                // Test if input is working by adding a temporary test listener
+                if (import.meta.env.DEV) console.log('Debug statement');
+        // Test if input is working by adding a temporary test listener
                 const testHandler = (pointer) => {
-                    console.log('ReelingMiniGame: TEST - Input working! Pointer at:', pointer.x, pointer.y);
-                    console.log('ReelingMiniGame: TEST - Pointer button:', pointer.button);
-                    console.log('ReelingMiniGame: TEST - Pointer isDown:', pointer.isDown);
-                };
+                    if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        if (import.meta.env.DEV) console.log('Debug statement');
+        if (import.meta.env.DEV) console.log('ReelingMiniGame: Debug statement');
+        };
                 this.scene.input.once('pointerdown', testHandler);
-                console.log('ReelingMiniGame: Test input listener added');
-            } else {
+                if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        } else {
                 console.error('ReelingMiniGame: Scene input not available');
             }
             
             // Add global click test for debugging
             this.globalClickTest = (event) => {
-                console.log('ReelingMiniGame: GLOBAL CLICK TEST - DOM click detected at:', event.clientX, event.clientY);
-                // Try to manually trigger the handleInput method
+                if (import.meta.env.DEV) console.log('Debug statement');
+        // Try to manually trigger the handleInput method
                 if (this.isActive) {
-                    console.log('ReelingMiniGame: Manually triggering reel input from DOM event');
-                    this.handleInput('reel', { pointer: { x: event.clientX, y: event.clientY, button: 0 } });
+                    if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        this.handleInput('reel', { pointer: { x: event.clientX, y: event.clientY, button: 0 } });
                 }
             };
             document.addEventListener('click', this.globalClickTest);
-            console.log('ReelingMiniGame: Global DOM click listener added for testing');
-            
-            // Use DOM events for keyboard input to match QTEDebugTool implementation
+            if (import.meta.env.DEV) console.log('Debug statement');
+        // Use DOM events for keyboard input to match QTEDebugTool implementation
             document.addEventListener('keydown', this.keyDownHandler);
             document.addEventListener('keyup', this.keyUpHandler);
             
-            console.log('ReelingMiniGame: Consolidated input handling set up with DOM events and enhanced debugging');
+            if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
         } catch (error) {
             console.error('ReelingMiniGame: Error setting up input handlers:', error);
         }
@@ -1352,8 +1360,7 @@ export class ReelingMiniGame {
         // Play fish struggle audio
         this.audioManager?.playSFX('fish_struggle');
         
-        console.log(`ReelingMiniGame: Fish struggling - ${this.struggleType}`);
-        
+        if (import.meta.env.DEV) console.log('Debug statement');
         // Emit struggle event
         this.scene.events.emit('fishing:fishStruggle', {
             struggleType: this.struggleType,
@@ -1425,8 +1432,7 @@ export class ReelingMiniGame {
                 break;
         }
         
-        console.log(`ReelingMiniGame: QTE started - ${qteType}, difficulty ${difficulty}`);
-        
+        if (import.meta.env.DEV) console.log('Debug statement');
         // Create visual QTE elements
         this.createQTEVisuals();
         
@@ -1970,41 +1976,43 @@ export class ReelingMiniGame {
                     // Only set holdStartTime if it's not already set (prevent key repeat from overwriting)
                     if (!qte.holdStartTime) {
                     qte.holdStartTime = this.scene.time.now;
-                        console.log('ReelingMiniGame: Hold started at time:', qte.holdStartTime);
-                        
-                    // Visual feedback for hold start
+                        if (import.meta.env.DEV) console.log('Debug statement');
+        // Visual feedback for hold start
                     if (this.qteTapIndicator && this.qteTapIndicator.active) {
                         this.qteTapIndicator.clear();
                         this.qteTapIndicator.fillStyle(0x00FF00);
                         this.qteTapIndicator.fillRoundedRect(-40, -15, 80, 30, 8);
                         this.qteTapIndicator.lineStyle(2, 0xFFFFFF);
                         this.qteTapIndicator.strokeRoundedRect(-40, -15, 80, 30, 8);
-                            console.log('ReelingMiniGame: Visual feedback updated for hold start');
-                        }
+                                                    }
                     } else {
-                        console.log('ReelingMiniGame: Hold start ignored (key repeat) - already holding since:', qte.holdStartTime);
-                    }
+                        if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        }
                 } else if (inputType === 'holdEnd') {
                     const currentTime = this.scene.time.now;
-                    console.log('ReelingMiniGame: Hold end detected at time:', currentTime);
-                    console.log('ReelingMiniGame: Hold start time was:', qte.holdStartTime);
-                    
-                    if (qte.holdStartTime) {
+                    if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        if (import.meta.env.DEV) console.log('Debug statement');
+        if (qte.holdStartTime) {
                         const holdDuration = currentTime - qte.holdStartTime;
-                        console.log('ReelingMiniGame: Hold ended. Duration:', holdDuration, 'ms. Required: 1500ms');
-                        
-                    if (holdDuration >= 1500) { // Fixed 1.5 seconds
+                        if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        if (holdDuration >= 1500) { // Fixed 1.5 seconds
                         success = true;
-                            console.log('ReelingMiniGame: Hold QTE SUCCESS! Duration was sufficient.');
-                    } else {
+                            if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        } else {
                         // Failed to hold long enough
-                            console.log('ReelingMiniGame: Hold QTE FAILED - too short. Actual:', holdDuration, 'ms');
-                            this.completeQTE(false);
+                            if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        this.completeQTE(false);
                             return true;
                         }
                     } else {
-                        console.log('ReelingMiniGame: Hold QTE FAILED - no start time recorded!');
-                        this.completeQTE(false);
+                        if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        this.completeQTE(false);
                         return true;
                     }
                 }
@@ -2127,8 +2135,9 @@ export class ReelingMiniGame {
                 // Show stamina damage popup
                 this.showStaminaDamage(1);
                 
-                console.log('ReelingMiniGame: Reeling - tension increased, fish stamina reduced');
-                break;
+                if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        break;
             case 'release':
                 // Reduce tension but slow progress
                 this.tension -= 2;
@@ -2191,9 +2200,8 @@ export class ReelingMiniGame {
             this.qteSuccess++;
             // Reduce tension on successful QTE
             this.tension = Math.max(0, this.tension - 10);
-            console.log(`ReelingMiniGame: QTE success! Tension reduced.`);
-            
-            // Success visual feedback
+            if (import.meta.env.DEV) console.log('Debug statement');
+        // Success visual feedback
             if (this.qteContainer) {
                 this.scene.tweens.add({
                     targets: this.qteContainer,
@@ -2211,9 +2219,8 @@ export class ReelingMiniGame {
             this.qteFails++;
             // Increase tension on failed QTE
             this.tension = Math.min(100, this.tension + 15);
-            console.log(`ReelingMiniGame: QTE failed! Tension increased.`);
-            
-            // Failure visual feedback - flash effects removed to prevent visual problems
+            if (import.meta.env.DEV) console.log('Debug statement');
+        // Failure visual feedback - flash effects removed to prevent visual problems
             if (this.qteContainer) {
                 this.scene.tweens.add({
                     targets: this.qteContainer,
@@ -2256,8 +2263,7 @@ export class ReelingMiniGame {
             return false;
         }
         
-        console.log(`ReelingMiniGame: Debug triggering QTE - ${qteType}, difficulty ${difficulty}`);
-        
+        if (import.meta.env.DEV) console.log('Debug statement');
         // Clear any existing QTE timer
         if (this.qteTimer) {
             this.qteTimer.destroy();
@@ -2324,8 +2330,7 @@ export class ReelingMiniGame {
             return false;
         }
         
-        console.log(`ReelingMiniGame: Debug triggering struggle - ${struggleType}, intensity ${intensity}`);
-        
+        if (import.meta.env.DEV) console.log('Debug statement');
         // Clear any existing struggle timer
         if (this.struggleTimer) {
             this.struggleTimer.destroy();
@@ -2430,8 +2435,9 @@ export class ReelingMiniGame {
         // Clamp tension to valid range
         this.tension = Phaser.Math.Clamp(this.tension, 0, 100);
         
-        console.log(`ReelingMiniGame: Applied ${struggleType} effects - tension: ${this.tension}`);
-    }
+        if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        }
 
     /**
      * Get appropriate QTE type for struggle pattern
@@ -2466,8 +2472,9 @@ export class ReelingMiniGame {
         // Stop all struggle-related movement patterns
         this.stopAllMovementPatterns();
         
-        console.log('ReelingMiniGame: Debug struggle ended');
-    }
+        if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        }
 
     /**
      * Start erratic movement pattern
@@ -2672,8 +2679,9 @@ export class ReelingMiniGame {
     complete(success, result, fishData, stats) {
         // Prevent multiple completions
         if (this.isCompleted) {
-            console.log('ReelingMiniGame: Already completed, ignoring duplicate completion call');
-            return;
+            if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        return;
         }
         
         this.isCompleted = true;
@@ -2696,8 +2704,7 @@ export class ReelingMiniGame {
             console.warn('ReelingMiniGame: Error cleaning up timers:', error);
         }
         
-        console.log(`ReelingMiniGame: ${success ? 'Success' : 'Failed'} - ${result}`);
-        
+        if (import.meta.env.DEV) console.log('Debug statement');
         // Clean up input handlers to prevent interference with main game controls
         try {
             if (this.scene.input) {
@@ -2760,8 +2767,8 @@ export class ReelingMiniGame {
     }
 
     destroy() {
-        console.log('ReelingMiniGame: Destroying minigame');
-        
+        if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
         this.isActive = false;
         
         // Clear all timers
@@ -2809,11 +2816,11 @@ export class ReelingMiniGame {
         if (this.globalClickTest && document) {
             document.removeEventListener('click', this.globalClickTest);
             this.globalClickTest = null;
-            console.log('ReelingMiniGame: Global click test listener removed');
+            if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
         }
         
-        console.log('ReelingMiniGame: Input event listeners cleaned up');
-        
+        if (import.meta.env.DEV) console.log('Debug statement');
         // Clear tweens first to prevent issues during destruction
         if (this.scene.tweens) {
             this.scene.tweens.killTweensOf(this);
@@ -2903,21 +2910,22 @@ export class ReelingMiniGame {
             this.splashEffects = [];
         }
         
-        console.log('ReelingMiniGame: Cleanup completed');
-    }
+        if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        }
 
     fishCaught() {
         // Prevent multiple calls to fishCaught with enhanced checking
         if (!this.isActive || this.fishCaughtCalled || this.isCompleted) {
-            console.log('ReelingMiniGame: Preventing duplicate fishCaught call - active:', this.isActive, 'fishCaughtCalled:', this.fishCaughtCalled, 'isCompleted:', this.isCompleted);
-            return;
+            if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        return;
         }
         
         this.fishCaughtCalled = true;
         this.isActive = false; // Immediately stop the game loop to prevent multiple calls
         
-        console.log('ReelingMiniGame: Fish caught successfully!');
-        
+        if (import.meta.env.DEV) console.log('Debug statement');
         // Calculate actual weight based on fish properties
         let actualWeight = 2.5; // Default weight
         
@@ -2960,9 +2968,9 @@ export class ReelingMiniGame {
             }
         };
         
-        console.log('ReelingMiniGame: Fish data being processed:', fishData);
-        console.log('ReelingMiniGame: Selected fish original data:', this.selectedFish);
-        
+        if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        if (import.meta.env.DEV) console.log('Debug statement');
         // Let GameState handle the catch with error handling
         let catchResult;
         try {
@@ -3202,9 +3210,8 @@ export class ReelingMiniGame {
         
         // Auto-close celebration after 4 seconds to prevent getting stuck
         this.celebrationCloseTimer = this.scene.time.delayedCall(4000, () => {
-            console.log('ReelingMiniGame: Auto-closing celebration dialog');
-            
-            // Stop the title animation
+            if (import.meta.env.DEV) console.log('Debug statement');
+        // Stop the title animation
             if (titleTween) {
                 titleTween.destroy();
             }
@@ -3231,9 +3238,8 @@ export class ReelingMiniGame {
         // Make celebration clickable to close early
         bg.setInteractive();
         bg.on('pointerdown', () => {
-            console.log('ReelingMiniGame: Celebration clicked, closing early');
-            
-            // Cancel auto-close timer
+            if (import.meta.env.DEV) console.log('Debug statement');
+        // Cancel auto-close timer
             if (this.celebrationCloseTimer) {
                 this.celebrationCloseTimer.destroy();
                 this.celebrationCloseTimer = null;
@@ -3275,15 +3281,15 @@ export class ReelingMiniGame {
             
             // Debug logging every 250ms to track progress
             if (Math.floor(holdTime / 250) !== Math.floor((holdTime - 50) / 250)) {
-                console.log(`ReelingMiniGame: Hold progress: ${(progress * 100).toFixed(1)}% (${holdTime.toFixed(0)}ms / 1500ms)`);
-            }
+                if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
+        }
             
             // Visual feedback when complete
             if (progress >= 1 && !this.holdCompleted) {
                 this.holdCompleted = true;
-                console.log('ReelingMiniGame: Hold duration reached! Player can release now.');
-                
-                // Flash the indicator green to show completion
+                if (import.meta.env.DEV) console.log('Debug statement');
+        // Flash the indicator green to show completion
                 if (this.qteTapIndicator && this.qteTapIndicator.active) {
                     this.scene.tweens.add({
                         targets: this.qteTapIndicator,
@@ -3335,8 +3341,7 @@ export class ReelingMiniGame {
     }
 
     onBossPhaseChange() {
-        console.log(`ReelingMiniGame: Boss phase changed to ${this.bossPhase}`);
-        
+        if (import.meta.env.DEV) console.log('Debug statement');
         // Visual effects for phase change
         if (this.scene.cameras && this.scene.cameras.main) {
             this.scene.cameras.main.shake(500, 5);
@@ -3421,7 +3426,8 @@ export class ReelingMiniGame {
 
     // Boss Special Attack Methods
     bassFuryAttack() {
-        console.log('ReelingMiniGame: Giant Bass - Bass Fury Attack!');
+        if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('ReelingMiniGame: Debug statement');
         this.tension = Math.min(100, this.tension + 30);
         this.fishStruggling = true;
         this.struggleType = 'jump';
@@ -3435,7 +3441,7 @@ export class ReelingMiniGame {
     }
 
     pikeAmbushAttack() {
-        console.log('ReelingMiniGame: Giant Pike - Ambush Attack!');
+        if (import.meta.env.DEV) console.log('Debug statement');
         // Sudden line damage
         this.lineIntegrity = Math.max(0, this.lineIntegrity - 15);
         this.tension = Math.min(100, this.tension + 25);
@@ -3449,7 +3455,7 @@ export class ReelingMiniGame {
     }
 
     eelShockAttack() {
-        console.log('ReelingMiniGame: Electric Eel - Shock Attack!');
+        if (import.meta.env.DEV) console.log('Debug statement');
         // Control reversal effect (simulated by making QTEs harder)
         this.controlsReversed = true;
         this.tension = Math.min(100, this.tension + 20);
@@ -3461,14 +3467,14 @@ export class ReelingMiniGame {
     }
 
     ancientWisdomAttack() {
-        console.log('ReelingMiniGame: Coelacanth - Ancient Wisdom Attack!');
+        if (import.meta.env.DEV) console.log('Debug statement');
         // Increase QTE difficulty
         this.qteSuccess = Math.max(0, this.qteSuccess - 1);
         this.fishStamina = Math.min(this.maxFishStamina, this.fishStamina + 10);
     }
 
     marlinSpeedAttack() {
-        console.log('ReelingMiniGame: Giant Marlin - Speed Attack!');
+        if (import.meta.env.DEV) console.log('Debug statement');
         // Multiple quick QTEs
         for (let i = 0; i < 3; i++) {
             this.scene.time.delayedCall(i * 1000, () => {
@@ -3480,7 +3486,7 @@ export class ReelingMiniGame {
     }
 
     sharkFrenzyAttack() {
-        console.log('ReelingMiniGame: Tiger Shark - Frenzy Attack!');
+        if (import.meta.env.DEV) console.log('Debug statement');
         // Increase all subsequent QTE difficulty
         this.tension = Math.min(100, this.tension + 35);
         this.fishStruggling = true;
@@ -3488,8 +3494,7 @@ export class ReelingMiniGame {
     }
 
     whaleDepthAttack() {
-        console.log('ReelingMiniGame: Whale - Deep Sound Attack!');
-        // Long hold QTE required
+                // Long hold QTE required
         this.scene.time.delayedCall(1000, () => {
             if (!this.activeQTE) {
                 this.debugTriggerQTE('hold', 5);
@@ -3498,7 +3503,7 @@ export class ReelingMiniGame {
     }
 
     megalodonDestroyerAttack() {
-        console.log('ReelingMiniGame: Megalodon - Destroyer Attack!');
+        if (import.meta.env.DEV) console.log('Debug statement');
         // Potential boat damage (reduce all effectiveness)
         this.tension = Math.min(100, this.tension + 40);
         this.lineIntegrity = Math.max(0, this.lineIntegrity - 20);
@@ -3510,7 +3515,7 @@ export class ReelingMiniGame {
     }
 
     mosasaurusAncientAttack() {
-        console.log('ReelingMiniGame: Mosasaurus - Ancient Attack!');
+        if (import.meta.env.DEV) console.log('Debug statement');
         // Complex sequence QTE
         this.scene.time.delayedCall(800, () => {
             if (!this.activeQTE) {
@@ -3520,7 +3525,7 @@ export class ReelingMiniGame {
     }
 
     leviathanChaosAttack() {
-        console.log('ReelingMiniGame: Leviathan - Chaos Attack!');
+        if (import.meta.env.DEV) console.log('Debug statement');
         // Ultimate challenge - random QTE type
         const qteTypes = ['tap', 'hold', 'sequence', 'timing'];
         const randomType = Phaser.Utils.Array.GetRandom(qteTypes);

@@ -294,8 +294,7 @@ label ${dialogData.id}:
             start_minigame: (minigameId) => {
                 if (window.LuxuryAnglerGame) {
                     // Handle minigame start
-                    console.log('RenJs: Starting minigame:', minigameId);
-                }
+                                    }
             },
             open_ui: (uiId) => {
                 if (window.LuxuryAnglerGame) {

@@ -1,4 +1,5 @@
 import { gameDataLoader } from './DataLoader.js';
+import Logger from '../utils/Logger.js';
 
 export class CraftingManager {
     constructor(gameState, inventoryManager) {
@@ -19,8 +20,7 @@ export class CraftingManager {
         try {
             // Load recipes from external data or use default recipes
             this.recipes = this.getDefaultRecipes();
-            console.log('CraftingManager: Loaded', Object.keys(this.recipes).length, 'recipe categories');
-        } catch (error) {
+                    } catch (error) {
             console.error('CraftingManager: Error loading recipes:', error);
             this.recipes = {};
         }
@@ -648,8 +648,7 @@ export class CraftingManager {
                 });
                 
                 const total = matchingCards.reduce((total, card) => total + (card.quantity || 1), 0);
-                console.log(`CraftingManager: Found ${matchingCards.length} matching cards with total quantity: ${total}`);
-                return total;
+                                return total;
             } else if (ingredient.type === 'equipment') {
                 // Count equipment items
                 for (const category of ['rods', 'lures', 'boats', 'clothing']) {

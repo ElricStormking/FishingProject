@@ -20,8 +20,7 @@ export class LoadingStateManager {
         };
         
         this.createGlobalLoadingContainer();
-        console.log('LoadingStateManager: Professional loading system initialized');
-    }
+            }
 
     /**
      * Create global loading container
@@ -70,8 +69,7 @@ export class LoadingStateManager {
             }, config.timeout);
         }
         
-        console.log(`LoadingStateManager: Showing loader: ${loaderId}`);
-        return loader;
+                return loader;
     }
 
     /**
@@ -101,8 +99,7 @@ export class LoadingStateManager {
             }
         });
         
-        console.log(`LoadingStateManager: Hiding loader: ${loaderId} (${reason})`);
-    }
+            }
 
     /**
      * Update loading progress
@@ -609,6 +606,5 @@ export class LoadingStateManager {
             this.loadingContainer = null;
         }
         
-        console.log('LoadingStateManager: Loading system destroyed');
-    }
+            }
 } 

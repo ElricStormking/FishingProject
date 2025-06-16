@@ -24,6 +24,7 @@ import { AchievementPopupSystem } from '../ui/AchievementPopupSystem.js';
 import { RenJsSaveIntegration } from '../scripts/RenJsSaveIntegration.js';
 import { QTEDebugTool } from '../ui/QTEDebugTool.js';
 import { QuestTrackerUI } from '../ui/QuestTrackerUI.js';
+import Logger from '../utils/Logger.js';
 
 export default class GameScene extends Phaser.Scene {
     constructor() {
@@ -49,9 +50,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     async create(data) {
-        console.log('GameScene: CREATE called with data:', data);
-        
-        // Initialize async components in the background
+                // Initialize async components in the background
         this.initializeAsyncComponents(data).catch(error => {
             console.error('GameScene: Async component initialization failed, but scene will continue:', error);
         });
@@ -65,9 +64,7 @@ export default class GameScene extends Phaser.Scene {
         this.callingScene = this.sceneData.callingScene || null;
         this.fishingSession = this.sceneData.fishingSession || false;
         
-        console.log('GameScene: Created with data:', this.sceneData);
-        
-        // Get game state instance and scene manager
+                // Get game state instance and scene manager
         this.gameState = GameState.getInstance();
         this.gameState.startAutoSave();
         this.sceneManager = SceneManager.getInstance();
@@ -76,17 +73,14 @@ export default class GameScene extends Phaser.Scene {
         // Initialize LoadingStateManager first (Priority 2.0 - RenJs Component 4)
         try {
             this.loadingStateManager = new LoadingStateManager(this);
-            console.log('GameScene: LoadingStateManager initialized successfully');
-        } catch (error) {
+                    } catch (error) {
             console.error('GameScene: Error initializing LoadingStateManager:', error);
             this.loadingStateManager = null;
         }
 
         // Initialize RenJs Integration Components (Priority 2.0 Final Polish)
         try {
-            console.log('GameScene: Initializing RenJs integration systems...');
-            
-            // Initialize Debug UI (Component 1)
+                        // Initialize Debug UI (Component 1)
             this.renJsDebugUI = new RenJsDebugUI(this);
             
             // Initialize Achievement Popup System (Component 2)
@@ -97,8 +91,7 @@ export default class GameScene extends Phaser.Scene {
             
             // Initialize Save Integration (Component 3) - will be completed after other managers
             
-            console.log('GameScene: RenJs integration components initialized successfully');
-        } catch (error) {
+                    } catch (error) {
             console.error('GameScene: Error initializing RenJs integration:', error);
             this.renJsDebugUI = null;
             this.achievementPopupSystem = null;
@@ -109,8 +102,7 @@ export default class GameScene extends Phaser.Scene {
         this.audioManager = this.gameState.getAudioManager(this);
         if (this.audioManager) {
             this.audioManager.setSceneAudio('GameScene');
-            console.log('GameScene: Audio manager initialized');
-        }
+                    }
 
         // Show loading for scene initialization
         if (this.loadingStateManager) {
@@ -123,26 +115,21 @@ export default class GameScene extends Phaser.Scene {
 
         // Initialize Time & Weather Systems (Priority 1.4) with error handling
         try {
-            console.log('GameScene: Initializing Time & Weather systems...');
-            
-            // Update loading progress
+                        // Update loading progress
             if (this.loadingStateManager) {
                 this.loadingStateManager.updateProgress('scene_init', 20, 'Setting up time and weather...');
             }
             
             // Initialize TimeManager first (it's more stable)
             this.timeManager = new TimeManager(this, this.gameState);
-            console.log('GameScene: TimeManager created successfully');
-            
-            // Store TimeManager in gameState for access by other systems
+                        // Store TimeManager in gameState for access by other systems
             this.gameState.timeManager = this.timeManager;
             
             // Try to initialize WeatherManager separately with additional error handling
             try {
                 this.weatherManager = new WeatherManager(this, this.gameState, this.timeManager);
                 this.gameState.weatherManager = this.weatherManager;
-                console.log('GameScene: WeatherManager created successfully');
-            } catch (weatherError) {
+                            } catch (weatherError) {
                 console.error('GameScene: WeatherManager initialization failed:', weatherError);
                 console.error('GameScene: WeatherManager error details:', weatherError.message);
                 
@@ -153,9 +140,7 @@ export default class GameScene extends Phaser.Scene {
                 console.warn('GameScene: Continuing with TimeManager only (WeatherManager disabled)');
             }
             
-            console.log('GameScene: Time & Weather systems initialization completed');
-            
-        } catch (error) {
+                    } catch (error) {
             console.error('GameScene: Critical error in Time & Weather systems initialization:', error);
             console.error('GameScene: Error stack:', error.stack);
             
@@ -214,8 +199,7 @@ export default class GameScene extends Phaser.Scene {
         
         // Set up quest event listeners for active quest processing
         if (this.questManager) {
-            console.log('GameScene: Setting up quest event listeners');
-            this.setupQuestEventListeners();
+                        this.setupQuestEventListeners();
         }
         
         // Initialize input manager and player controller
@@ -265,11 +249,7 @@ export default class GameScene extends Phaser.Scene {
 
         // Initialize Equipment Enhancement System (Priority 1.7) - BEFORE InventoryUI
         try {
-            console.log('GameScene: Initializing Equipment Enhancement system...');
-            console.log('GameScene: gameState available:', !!this.gameState);
-            console.log('GameScene: inventoryManager available:', !!this.gameState?.inventoryManager);
-            
-            // Validate prerequisites
+                                                // Validate prerequisites
             if (!this.gameState) {
                 throw new Error('GameState not available for Equipment Enhancement system');
             }
@@ -280,21 +260,12 @@ export default class GameScene extends Phaser.Scene {
             
             // Create EquipmentEnhancer
             this.equipmentEnhancer = new EquipmentEnhancer(this.gameState, this.gameState.inventoryManager);
-            console.log('GameScene: EquipmentEnhancer created successfully');
-            
-            // Store enhancer in gameState for access by other systems
+                        // Store enhancer in gameState for access by other systems
             this.gameState.equipmentEnhancer = this.equipmentEnhancer;
             
             // Create Equipment Enhancement UI
-            console.log('GameScene: Creating EquipmentEnhancementUI...');
-            this.equipmentEnhancementUI = new EquipmentEnhancementUI(this, 50, 50, 800, 550);
-            console.log('GameScene: EquipmentEnhancementUI created successfully');
-            
-            console.log('GameScene: Equipment Enhancement system initialized successfully');
-            console.log('GameScene: equipmentEnhancer attached to scene:', !!this.equipmentEnhancer);
-            console.log('GameScene: equipmentEnhancementUI exists:', !!this.equipmentEnhancementUI);
-            console.log('GameScene: Scene instance has equipmentEnhancementUI:', !!this.equipmentEnhancementUI);
-        } catch (error) {
+                        this.equipmentEnhancementUI = new EquipmentEnhancementUI(this, 50, 50, 800, 550);
+                                                                    } catch (error) {
             console.error('GameScene: Error initializing Equipment Enhancement system:', error);
             console.error('GameScene: Equipment Enhancement error details:', error.message);
             console.error('GameScene: Error stack:', error.stack);
@@ -321,18 +292,14 @@ export default class GameScene extends Phaser.Scene {
                 if (this.weatherManager) {
                     // Both TimeManager and WeatherManager available
                     this.timeWeatherUI = new TimeWeatherUI(this, this.timeManager, this.weatherManager, this.gameState);
-                    console.log('GameScene: TimeWeatherUI initialized with both Time and Weather systems');
-                } else {
+                                    } else {
                     // Only TimeManager available (WeatherManager failed)
                     console.warn('GameScene: WeatherManager not available, initializing TimeWeatherUI with TimeManager only');
                     this.timeWeatherUI = new TimeWeatherUI(this, this.timeManager, null, this.gameState);
-                    console.log('GameScene: TimeWeatherUI initialized with TimeManager only');
-                }
+                                    }
                 
                 this.timeWeatherUI.show(); // Show by default
-                console.log('GameScene: TimeWeatherUI shown successfully');
-                
-            } catch (error) {
+                            } catch (error) {
                 console.error('GameScene: Error initializing TimeWeatherUI:', error);
                 console.error('GameScene: TimeWeatherUI error details:', error.message);
                 this.timeWeatherUI = null;
@@ -345,8 +312,7 @@ export default class GameScene extends Phaser.Scene {
         // Create map selection UI
         try {
             // this.mapSelectionUI = new MapSelectionUI(this, this.gameState.locationManager, this.gameState);
-            console.log('GameScene: MapSelectionUI initialized');
-        } catch (error) {
+                    } catch (error) {
             console.error('GameScene: Error initializing MapSelectionUI:', error);
             this.mapSelectionUI = null;
         }
@@ -357,15 +323,11 @@ export default class GameScene extends Phaser.Scene {
         // Initialize Enhanced Achievement System (Priority 1.9)
         // This will be properly initialized when tournament manager becomes available
         try {
-            console.log('GameScene: Setting up enhanced achievement system initialization...');
-            
-            // Listen for when tournament manager becomes available (typically when transitioning to boat menu)
+                        // Listen for when tournament manager becomes available (typically when transitioning to boat menu)
             this.events.on('tournamentManagerReady', (tournamentManager) => {
                 try {
                     if (this.gameState.playerProgression && !this.gameState.playerProgression.achievementEnhancer) {
-                        console.log('GameScene: Initializing enhanced achievement system...');
-                        
-                        if (this.gameState.playerProgression.initializeAchievementEnhancer) {
+                                                if (this.gameState.playerProgression.initializeAchievementEnhancer) {
                             this.gameState.playerProgression.initializeAchievementEnhancer(tournamentManager);
                         }
                         
@@ -393,15 +355,13 @@ export default class GameScene extends Phaser.Scene {
                             });
                         }
                         
-                        console.log('GameScene: Enhanced achievement system initialized successfully');
-                    }
+                                            }
                 } catch (achievementError) {
                     console.error('GameScene: Error initializing enhanced achievement system:', achievementError);
                 }
             });
             
-            console.log('GameScene: Enhanced achievement system setup complete');
-        } catch (error) {
+                    } catch (error) {
             console.error('GameScene: Error setting up enhanced achievement system:', error);
         }
 
@@ -410,45 +370,36 @@ export default class GameScene extends Phaser.Scene {
 
         // Initialize Dialog System for NPC interactions
         try {
-            console.log('GameScene: Initializing Dialog system...');
-            
-            // Validate prerequisites
+                        // Validate prerequisites
             if (!this.gameState) {
                 throw new Error('GameState not available for Dialog system');
             }
             
             this.dialogManager = new DialogManager(this);
-            console.log('GameScene: DialogManager created successfully');
-            
-            // Load NPC data from save
+                        // Load NPC data from save
             try {
                 this.dialogManager.loadAllNPCData();
-                console.log('GameScene: NPC data loaded successfully');
-            } catch (npcError) {
+                            } catch (npcError) {
                 console.warn('GameScene: Error loading NPC data, using defaults:', npcError.message);
             }
             
             // Set up dialog event listeners
             this.events.on('romance-meter-updated', (data) => {
-                console.log('Romance meter updated:', data);
-                // Could trigger UI updates or achievement checks here
+                                // Could trigger UI updates or achievement checks here
             });
             
             this.events.on('relationship-changed', (data) => {
-                console.log('Relationship changed:', data);
-                // Could show relationship level up notification
+                                // Could show relationship level up notification
             });
             
             this.events.on('hcg-unlocked', (data) => {
-                console.log('HCG unlocked:', data);
-                // Show HCG unlock notification
+                                // Show HCG unlock notification
             });
             
             // Store dialog manager in gameState for access by other systems
             this.gameState.dialogManager = this.dialogManager;
             
-            console.log('GameScene: Dialog system initialized successfully');
-        } catch (error) {
+                    } catch (error) {
             console.error('GameScene: Error initializing Dialog system:', error);
             console.error('GameScene: Dialog system error details:', error.message);
             this.dialogManager = null;
@@ -460,9 +411,7 @@ export default class GameScene extends Phaser.Scene {
 
         // Complete RenJs Save Integration (Component 3) - after all managers are initialized
         try {
-            console.log('GameScene: Finalizing RenJs Save Integration...');
-            
-            this.renJsSaveIntegration = new RenJsSaveIntegration(
+                        this.renJsSaveIntegration = new RenJsSaveIntegration(
                 this.gameState,
                 this.questManager,
                 this.dialogManager
@@ -479,12 +428,10 @@ export default class GameScene extends Phaser.Scene {
                         this.questManager.on('quest-completed', (questData) => {
                             this.achievementPopupSystem.onQuestCompleted(questData.id, questData);
                         });
-                        console.log('GameScene: Achievement system linked to quest completion via events');
-                    } else {
+                                            } else {
                         // Alternative approach: store reference for manual calling
                         this.questManager.achievementPopupSystem = this.achievementPopupSystem;
-                        console.log('GameScene: Achievement system linked to quest completion via reference');
-                    }
+                                            }
                 } catch (eventError) {
                     console.warn('GameScene: Could not link achievement system to quest events:', eventError.message);
                     // Fallback: store reference for manual calling
@@ -494,21 +441,17 @@ export default class GameScene extends Phaser.Scene {
                 }
             }
             
-            console.log('GameScene: RenJs Save Integration completed successfully');
-        } catch (error) {
+                    } catch (error) {
             console.error('GameScene: Error completing RenJs Save Integration:', error);
             this.renJsSaveIntegration = null;
         }
 
         // Initialize Fish Tuning Tool for testing fish AI and reeling difficulty
         try {
-            console.log('GameScene: Initializing Fish Tuning Tool...');
-            
-            // Import the Fish Tuning Tool
+                        // Import the Fish Tuning Tool
             import('../ui/FishTuningTool.js').then(({ FishTuningTool }) => {
                 this.fishTuningTool = new FishTuningTool(this, this.playerController);
-                console.log('GameScene: Fish Tuning Tool initialized successfully');
-            }).catch(importError => {
+                            }).catch(importError => {
                 console.error('GameScene: Error importing Fish Tuning Tool:', importError);
                 this.fishTuningTool = null;
             });
@@ -519,13 +462,10 @@ export default class GameScene extends Phaser.Scene {
 
         // Initialize Luring Debug Tool for testing lure mechanics
         try {
-            console.log('GameScene: Initializing Luring Debug Tool...');
-            
-            // Import the Luring Debug Tool
+                        // Import the Luring Debug Tool
             import('../ui/LuringDebugTool.js').then(({ LuringDebugTool }) => {
                 this.luringDebugTool = new LuringDebugTool(this);
-                console.log('GameScene: Luring Debug Tool initialized successfully');
-            }).catch(importError => {
+                            }).catch(importError => {
                 console.error('GameScene: Error importing Luring Debug Tool:', importError);
                 this.luringDebugTool = null;
             });
@@ -541,8 +481,7 @@ export default class GameScene extends Phaser.Scene {
             // Hide loading after brief delay
             this.time.delayedCall(500, () => {
                 this.loadingStateManager.hideLoading('scene_init');
-                console.log('GameScene: Scene initialization completed');
-            });
+                            });
         }
 
         // Event listeners and final setup
@@ -554,8 +493,7 @@ export default class GameScene extends Phaser.Scene {
             this.showFishingSessionStatus();
         }
 
-        console.log('GameScene: Full scene creation completed with RenJs integration');
-    }
+            }
 
     setupEventListeners() {
         // Keyboard shortcuts
@@ -612,8 +550,7 @@ export default class GameScene extends Phaser.Scene {
                 if (this.questTrackerUI) {
                     this.questTrackerUI.toggleVisibility();
                 } else {
-                    console.log('GameScene: Quest Tracker UI not yet initialized, attempting to initialize...');
-                    // Fallback initialization if async hasn't completed
+                                        // Fallback initialization if async hasn't completed
                     this.initializeQuestTrackerUIFallback();
                 }
             }
@@ -639,20 +576,17 @@ export default class GameScene extends Phaser.Scene {
 
         // Dialog shortcuts
         this.input.keyboard.on('keydown-B', () => {
-            console.log('GameScene: Opening Mia dialog (B key pressed)');
-            this.openMiaDialog();
+                        this.openMiaDialog();
         });
 
         this.input.keyboard.on('keydown-F', () => {
-            console.log('GameScene: Opening Sophie dialog (F key pressed)');
-            if (this.dialogManager) {
+                        if (this.dialogManager) {
                 this.dialogManager.startDialog('sophie', 'GameScene');
             }
         });
 
         this.input.keyboard.on('keydown-G', () => {
-            console.log('GameScene: Opening Luna dialog (G key pressed)');
-            if (this.dialogManager) {
+                        if (this.dialogManager) {
                 this.dialogManager.startDialog('luna', 'GameScene');
             }
         });
@@ -669,8 +603,7 @@ export default class GameScene extends Phaser.Scene {
             if (this.luringDebugTool) {
                 // If there's an active result overlay being shown, don't toggle
                 if (this.luringDebugTool.resultOverlay) {
-                    console.log('GameScene: Luring debug test result is showing, ignoring toggle');
-                    return;
+                                        return;
                 }
                 this.luringDebugTool.toggle();
             }
@@ -678,16 +611,14 @@ export default class GameScene extends Phaser.Scene {
 
         // Return to boat (ESC or fishing session)
         this.input.keyboard.on('keydown-ESC', () => {
-            console.log('GameScene: ESC pressed, fishingSession:', this.fishingSession);
-            if (this.fishingSession) {
+                        if (this.fishingSession) {
                 this.returnToBoat();
             } else {
                 this.sceneManager.goToMenu(this);
             }
         });
 
-        console.log('GameScene: Event listeners setup completed');
-    }
+            }
 
     /**
      * Ensure proper depth ordering for overlays and UI elements
@@ -709,8 +640,7 @@ export default class GameScene extends Phaser.Scene {
             overlayElement.setDepth(depth);
         }
         
-        console.log(`GameScene: Set overlay depth to ${depth} for type: ${type}`);
-        return depth;
+                return depth;
     }
 
     /**
@@ -764,8 +694,7 @@ export default class GameScene extends Phaser.Scene {
         // Start HUD scene
         this.scene.launch('HUDScene');
 
-        console.log('GameScene: Action buttons and UI elements created');
-    }
+            }
 
     update() {
         // Update input manager and player controller
@@ -841,9 +770,7 @@ export default class GameScene extends Phaser.Scene {
             fishScale: fishingConfig?.fishScale || 0.8
         };
         
-        console.log('GameScene: Using fishing config:', config);
-        
-        // Create fish sprites using graphics (no texture dependency)
+                // Create fish sprites using graphics (no texture dependency)
         const createFishSprite = (x, y) => {
             try {
                 // Create a graphics fish sprite
@@ -998,8 +925,7 @@ export default class GameScene extends Phaser.Scene {
             });
         }
         
-        console.log(`GameScene: Created ${regularFishCount} regular fish and ${hotspotFishCount} hotspot fish`);
-    }
+            }
 
     generateRandomFishData() {
         try {
@@ -1010,8 +936,7 @@ export default class GameScene extends Phaser.Scene {
                 return null;
             }
             const selectedFish = Phaser.Utils.Array.GetRandom(allFish);
-            console.log(`GameScene: Selected random fish: ${selectedFish.name} (rarity: ${selectedFish.rarity})`);
-            return selectedFish;
+                        return selectedFish;
         } catch (error) {
             console.error('GameScene: Error generating random fish data:', error);
             return null;
@@ -1030,14 +955,12 @@ export default class GameScene extends Phaser.Scene {
             const rareFish = allFish.filter(fish => fish.rarity >= 4);
             if (rareFish.length > 0) {
                 const selectedFish = Phaser.Utils.Array.GetRandom(rareFish);
-                console.log(`GameScene: Selected hotspot fish: ${selectedFish.name} (rarity: ${selectedFish.rarity})`);
-                return selectedFish;
+                                return selectedFish;
             }
             
             // Use any available fish if no rare fish found
             const selectedFish = Phaser.Utils.Array.GetRandom(allFish);
-            console.log(`GameScene: Selected fallback hotspot fish: ${selectedFish.name} (rarity: ${selectedFish.rarity})`);
-            return selectedFish;
+                        return selectedFish;
         } catch (error) {
             console.error('GameScene: Error generating hotspot fish data:', error);
             return null;
@@ -1052,8 +975,7 @@ export default class GameScene extends Phaser.Scene {
                 return null;
             }
             const selectedFish = Phaser.Utils.Array.GetRandom(allFish);
-            console.log(`GameScene: Selected spot fish for ${spot.type}: ${selectedFish.name} (rarity: ${selectedFish.rarity})`);
-            return selectedFish;
+                        return selectedFish;
         } catch (error) {
             console.error('GameScene: Error generating spot fish data:', error);
             return null;
@@ -1331,8 +1253,7 @@ export default class GameScene extends Phaser.Scene {
         // Draw initial fishing line
         this.updateFishingLine(rodTipX, rodTipY + 30);
         
-        console.log('GameScene: Fishing rod and lure created');
-    }
+            }
 
     createLure(x, y, equippedLure) {
         // Create lure graphics
@@ -1508,8 +1429,7 @@ export default class GameScene extends Phaser.Scene {
         // Store hotspot position for other systems to use
         this.hotspotPosition = { x: hotspotX, y: hotspotY, radius: 100 };
         
-        console.log('GameScene: Permanent hotspot created at', hotspotX, hotspotY);
-    }
+            }
 
     createFishingSpots() {
         const width = this.cameras.main.width;
@@ -1609,8 +1529,7 @@ export default class GameScene extends Phaser.Scene {
         // Start the spot activation system
         this.startSpotRotation();
         
-        console.log('GameScene: Created', this.fishingSpots.length, 'fishing spot locations');
-    }
+            }
 
     startSpotRotation() {
         // Activate 2-3 spots initially
@@ -1625,8 +1544,7 @@ export default class GameScene extends Phaser.Scene {
             loop: true
         });
         
-        console.log('GameScene: Fishing spot rotation system started');
-    }
+            }
 
     activateRandomSpots(count) {
         // Get inactive spots that are off cooldown
@@ -1658,8 +1576,7 @@ export default class GameScene extends Phaser.Scene {
             this.deactivateFishingSpot(spot);
         });
         
-        console.log(`GameScene: Activated fishing spot: ${spot.config.name} at (${spot.x.toFixed(0)}, ${spot.y.toFixed(0)})`);
-    }
+            }
 
     createSpotVisuals(spot) {
         const config = spot.config;
@@ -1892,8 +1809,7 @@ export default class GameScene extends Phaser.Scene {
             });
         }
         
-        console.log(`GameScene: Deactivated fishing spot: ${spot.config.name}`);
-    }
+            }
 
     rotateActiveSpots() {
         // Deactivate some current spots (25% chance each)
@@ -1911,8 +1827,7 @@ export default class GameScene extends Phaser.Scene {
             this.activateRandomSpots(targetCount - currentActiveCount);
         }
         
-        console.log(`GameScene: Rotated spots - ${this.activeSpots.size} active spots`);
-    }
+            }
 
     // Method to check if a cast location hits any fishing spot
     checkFishingSpotHit(x, y) {
@@ -2049,8 +1964,7 @@ export default class GameScene extends Phaser.Scene {
         this.playerButton = playerBtn.button;
         this.playerButtonText = playerBtn.text;
         
-        console.log('GameScene: Player button created with UITheme styling');
-    }
+            }
 
     createCollectionButton() {
         const width = this.cameras.main.width;
@@ -2087,8 +2001,7 @@ export default class GameScene extends Phaser.Scene {
         this.collectionButton = collectionBtn.button;
         this.collectionButtonText = collectionBtn.text;
         
-        console.log('GameScene: Collection button created with UITheme styling');
-    }
+            }
 
     createEnhancementButton() {
         const width = this.cameras.main.width;
@@ -2167,8 +2080,7 @@ export default class GameScene extends Phaser.Scene {
         // Store references for cleanup
         this.enhancementButtonHitArea = buttonHitArea;
         
-        console.log('GameScene: Enhancement button created next to Collection button with UITheme styling');
-    }
+            }
 
     createQuestButton() {
         const width = this.cameras.main.width;
@@ -2205,26 +2117,21 @@ export default class GameScene extends Phaser.Scene {
         this.questButton = questBtn.button;
         this.questButtonText = questBtn.text;
         
-        console.log('GameScene: Quest button created with UITheme styling');
-    }
+            }
 
     /**
      * Initialize Quest Manager with proper context from scene transition
      */
     initializeQuestManager(data) {
         try {
-            console.log('GameScene: Initializing QuestManager with scene data');
-            
-            // Check if quest manager was passed from BoatMenuScene
+                        // Check if quest manager was passed from BoatMenuScene
             if (data && data.questManager) {
-                console.log('GameScene: Using QuestManager from BoatMenuScene');
-                this.questManager = data.questManager;
+                                this.questManager = data.questManager;
                 // Ensure the scene context is updated
                 this.questManager.scene = this;
             } else {
                 // Fallback to getting from GameState
-                console.log('GameScene: Getting QuestManager from GameState');
-                this.questManager = this.gameState.getQuestManager(this);
+                                this.questManager = this.gameState.getQuestManager(this);
                 
                 if (!this.questManager) {
                     console.warn('GameScene: QuestManager not available, creating new instance');
@@ -2233,8 +2140,7 @@ export default class GameScene extends Phaser.Scene {
                         import('../scripts/QuestManager.js').then((module) => {
                             const { QuestManager } = module;
                             this.questManager = new QuestManager(this);
-                            console.log('GameScene: QuestManager imported and created');
-                        }).catch(importError => {
+                                                    }).catch(importError => {
                             console.error('GameScene: Failed to import QuestManager:', importError);
                             this.questManager = null;
                         });
@@ -2247,15 +2153,12 @@ export default class GameScene extends Phaser.Scene {
             
             // Restore quest context if provided
             if (data && data.questContext && this.questManager) {
-                console.log('GameScene: Restoring quest context from BoatMenuScene');
-                if (this.questManager.setState && data.questContext.questManagerState) {
+                                if (this.questManager.setState && data.questContext.questManagerState) {
                     this.questManager.setState(data.questContext.questManagerState);
                 }
             }
             
-            console.log('GameScene: QuestManager initialized successfully');
-            
-        } catch (error) {
+                    } catch (error) {
             console.error('GameScene: Error initializing QuestManager:', error);
             this.questManager = null;
         }
@@ -2266,17 +2169,13 @@ export default class GameScene extends Phaser.Scene {
      * This was the MISSING PIECE preventing quest completion!
      */
     setupQuestEventListeners() {
-        console.log('GameScene: setupQuestEventListeners called');
-        
-        if (!this.questManager) {
+                if (!this.questManager) {
             console.warn('GameScene: Cannot setup quest event listeners - QuestManager not available');
             return;
         }
 
         // Debug current state before setup
-        console.log('GameScene: Quest state before setup - tutorialCompleted:', this.questManager.tutorialQuestsCompleted);
-        console.log('GameScene: Active quests before setup:', this.questManager.activeQuests.size);
-        console.log('GameScene: Completed quests before setup:', Array.from(this.questManager.completedQuests));
+                        this.logger?.debug('GameScene: Completed quests before setup:', Array.from(this.questManager.completedQuests)) || Logger.debug(this.constructor.name, 'GameScene: Completed quests before setup:', Array.from(this.questManager.completedQuests));
 
         // CRITICAL FIX: NEVER skip quest listener setup if there are ANY active quests
         // Only skip if both no active quests AND all story quests are genuinely completed
@@ -2285,26 +2184,22 @@ export default class GameScene extends Phaser.Scene {
                                        this.questManager.completedQuests.has('story_002_first_companion');
         
         if (!hasActiveQuests && allStoryQuestsCompleted) {
-            console.log('GameScene: 🚫 No active quests and all story quests completed, skipping quest event listener setup');
-            this.removeQuestEventListeners();
+                        this.removeQuestEventListeners();
             return;
         }
 
         // CRITICAL: ALWAYS set up boat menu listener if tutorial quest is active
         const tutorialActive = this.questManager.activeQuests.has('story_001_tutorial');
         if (tutorialActive) {
-            console.log('GameScene: ✅ Tutorial quest is ACTIVE - ensuring boat menu listener is set up');
-        }
+                    }
 
         // CRITICAL: Check if listeners are already set up to prevent duplicates
         if (this.questEventHandlers && this.events.listenerCount('boat:menuAccessed') > 0) {
-            console.log('GameScene: ⚠️  Quest event listeners already set up, checking boat menu listener...');
-            console.log('GameScene: Current boat:menuAccessed listeners:', this.events.listenerCount('boat:menuAccessed'));
+                        this.logger?.debug('GameScene: Current boat:menuAccessed listeners:', this.events.listenerCount('boat:menuAccessed')) || Logger.debug(this.constructor.name, 'GameScene: Current boat:menuAccessed listeners:', this.events.listenerCount('boat:menuAccessed'));
             
             // If tutorial is active but boat menu listener is missing, force re-setup
             if (tutorialActive && this.events.listenerCount('boat:menuAccessed') === 0) {
-                console.log('GameScene: 🔧 Tutorial active but boat menu listener missing - forcing re-setup');
-                this.removeQuestEventListeners(); // Clear and restart
+                                this.removeQuestEventListeners(); // Clear and restart
             } else {
                 return; // Already set up properly
             }
@@ -2313,76 +2208,56 @@ export default class GameScene extends Phaser.Scene {
         // ADDITIONAL CHECK: Remove any existing quest listeners first
         this.removeQuestEventListeners();
 
-        console.log('GameScene: Setting up quest event listeners...');
-
-        // Store quest event handler references for cleanup
+                // Store quest event handler references for cleanup
         this.questEventHandlers = {
             castComplete: (data) => {
                 if (this.questManager.activeQuests && this.questManager.activeQuests.size > 0) {
-                    console.log('GameScene: Cast completed, notifying QuestManager:', data);
-                    this.questManager.onCast(data);
+                                        this.questManager.onCast(data);
                 } else {
-                    console.log('GameScene: No active quests, skipping cast quest processing');
-                }
+                                    }
             },
 
             fishCaught: (data) => {
                 if (this.questManager.activeQuests && this.questManager.activeQuests.size > 0) {
-                    console.log('GameScene: Fish caught success, notifying QuestManager:', data);
-                    // Forward to QuestManager with fish data
+                                        // Forward to QuestManager with fish data
                     this.questManager.onFishCaught(data.fish || data);
                 } else {
-                    console.log('GameScene: No active quests, skipping fish caught quest processing');
-                }
+                                    }
             },
 
             boatMenuAccessed: () => {
-                console.log('GameScene: 🚢 Boat menu accessed event received - ALWAYS processing');
-                if (this.questManager) {
-                    console.log('GameScene: Forwarding boat menu access to QuestManager');
-                    console.log('GameScene: QuestManager available:', !!this.questManager);
-                    console.log('GameScene: QuestManager.onBoatMenuAccessed available:', !!this.questManager.onBoatMenuAccessed);
-                    
-                    try {
-                        console.log('GameScene: Calling QuestManager.onBoatMenuAccessed()...');
-                        this.questManager.onBoatMenuAccessed();
-                        console.log('GameScene: ✅ QuestManager.onBoatMenuAccessed() called successfully');
-                    } catch (error) {
+                                if (this.questManager) {
+                                                                                try {
+                                                this.questManager.onBoatMenuAccessed();
+                                            } catch (error) {
                         console.error('GameScene: ❌ Error calling QuestManager.onBoatMenuAccessed():', error);
                         console.error('GameScene: Error stack:', error.stack);
                     }
                 } else {
-                    console.log('GameScene: QuestManager not available for boat menu processing');
-                }
+                                    }
             },
 
             dialogCompleted: (data) => {
                 if (this.questManager.activeQuests && this.questManager.activeQuests.size > 0) {
-                    console.log('GameScene: Dialog completed, notifying QuestManager:', data);
-                    this.questManager.onDialogCompleted(data.npcId, data);
+                                        this.questManager.onDialogCompleted(data.npcId, data);
                 } else {
-                    console.log('GameScene: No active quests, skipping dialog quest processing');
-                }
+                                    }
             },
 
             romanceMeterChanged: (data) => {
                 if (this.questManager.activeQuests && this.questManager.activeQuests.size > 0) {
-                    console.log('GameScene: Romance meter changed, notifying QuestManager:', data);
-                    this.questManager.onRomanceMeterChanged(data.npcId, data.newValue);
+                                        this.questManager.onRomanceMeterChanged(data.npcId, data.newValue);
                 } else {
-                    console.log('GameScene: No active quests, skipping romance quest processing');
-                }
+                                    }
             },
 
             questCompleted: (data) => {
-                console.log('GameScene: 🎉 Quest completed event received:', data);
-                // The reward UI is now shown automatically by QuestManager.completeQuest()
+                                // The reward UI is now shown automatically by QuestManager.completeQuest()
                 // But we can add additional GameScene-specific handling here if needed
                 
                 // Update Quest Tracker UI
                 if (this.questTrackerUI) {
-                    console.log('GameScene: Refreshing Quest Tracker UI after quest completion');
-                    this.questTrackerUI.refreshQuests();
+                                        this.questTrackerUI.refreshQuests();
                 }
                 
                 // Play completion sound effect if available
@@ -2390,8 +2265,7 @@ export default class GameScene extends Phaser.Scene {
                     try {
                         this.audioManager.playSound('quest_complete');
                     } catch (audioError) {
-                        console.log('GameScene: Quest completion sound not available');
-                    }
+                                            }
                 }
                 
                 // Show brief success message
@@ -2409,19 +2283,13 @@ export default class GameScene extends Phaser.Scene {
 
         // Listen for quest completion to remove event listeners
         this.game.events.on('quest-completed', (questData) => {
-            console.log('GameScene: Quest completed, checking if all quests finished:', questData);
-            
-            // Only remove listeners if genuinely NO active quests remain
+                        // Only remove listeners if genuinely NO active quests remain
             if (this.questManager.activeQuests.size === 0) {
-                console.log('GameScene: All quests completed, removing quest event listeners');
-                this.removeQuestEventListeners();
+                                this.removeQuestEventListeners();
             }
         });
 
-        console.log('GameScene: Quest event listeners setup complete');
-        console.log('GameScene: 🚢 Boat menu access listener is NOW ACTIVE');
-        
-        // Debug: Log current event listener status
+                        // Debug: Log current event listener status
         this.debugEventListeners();
     }
 
@@ -2429,25 +2297,15 @@ export default class GameScene extends Phaser.Scene {
      * Debug method to log current event listener status
      */
     debugEventListeners() {
-        console.log('=== QUEST EVENT LISTENER DEBUG ===');
-        console.log('Quest Manager available:', !!this.questManager);
-        console.log('Quest Event Handlers set:', !!this.questEventHandlers);
-        console.log('Tutorial quests completed:', this.questManager?.tutorialQuestsCompleted);
-        console.log('Active quests count:', this.questManager?.activeQuests?.size || 0);
-        console.log('Completed quests:', this.questManager ? Array.from(this.questManager.completedQuests) : []);
-        console.log('=== END EVENT LISTENER DEBUG ===');
-    }
+                                                this.logger?.debug('Completed quests:', this.questManager ? Array.from(this.questManager.completedQuests) : []) || Logger.debug(this.constructor.name, 'Completed quests:', this.questManager ? Array.from(this.questManager.completedQuests) : []);
+            }
 
     /**
      * Remove quest event listeners when all quests are completed
      */
     removeQuestEventListeners() {
-        console.log('GameScene: Attempting to remove quest event listeners...');
-        
-        // CRITICAL FIX: Only remove listeners, DON'T disable the entire quest system
-        console.log('GameScene: 🔥 Removing quest event listeners (keeping quest system active)');
-        
-        // Remove ALL instances of quest-related event listeners (not just specific handlers)
+                // CRITICAL FIX: Only remove listeners, DON'T disable the entire quest system
+                // Remove ALL instances of quest-related event listeners (not just specific handlers)
         this.game.events.removeAllListeners('fishing:castComplete');
         this.game.events.removeAllListeners('fishing:catchSuccess'); 
         this.game.events.removeAllListeners('boat:menuAccessed');
@@ -2456,17 +2314,13 @@ export default class GameScene extends Phaser.Scene {
         this.game.events.removeAllListeners('quest-completed');
         this.game.events.removeAllListeners('tutorial-quests-completed');
         
-        console.log('GameScene: 🧹 Quest event listeners removed');
-
-        // CRITICAL FIX: Clean up QuestTrackerUI listeners to prevent duplicate fish
+                // CRITICAL FIX: Clean up QuestTrackerUI listeners to prevent duplicate fish
         if (this.questTrackerUI) {
-            console.log('GameScene: 🔥 CLEANING UP QUEST TRACKER UI LISTENERS');
-            try {
+                        try {
                 // Force QuestTrackerUI to remove its event listeners
                 this.questTrackerUI.destroy();
                 this.questTrackerUI = null;
-                console.log('GameScene: ✅ QuestTrackerUI destroyed and cleaned up');
-            } catch (error) {
+                            } catch (error) {
                 console.error('GameScene: Error destroying QuestTrackerUI:', error);
             }
         }
@@ -2481,8 +2335,7 @@ export default class GameScene extends Phaser.Scene {
                 this.game.events.off('dialog:completed', this.questEventHandlers.dialogCompleted);
                 this.game.events.off('romance:meterChanged', this.questEventHandlers.romanceMeterChanged);
                 this.game.events.off('quest-completed', this.questEventHandlers.questCompleted);
-                console.log('GameScene: Specific quest handlers also removed');
-            } catch (error) {
+                            } catch (error) {
                 console.warn('GameScene: Error removing specific handlers (expected after removeAllListeners):', error.message);
             }
         }
@@ -2492,15 +2345,14 @@ export default class GameScene extends Phaser.Scene {
 
         // CRITICAL FIX: DO NOT mark quest system as disabled - let it complete naturally
         // This was the main bug causing objectives to never complete!
-        console.log('GameScene: ✅ Quest event listener cleanup finished (quest system remains active)');
-        
-        // Final verification - debug what listeners remain
-        console.log('GameScene: Final listener counts:');
-        console.log('  - fishing:catchSuccess:', this.game.events.listenerCount('fishing:catchSuccess'));
-        console.log('  - fishing:castComplete:', this.game.events.listenerCount('fishing:castComplete'));
-        console.log('  - boat:menuAccessed:', this.game.events.listenerCount('boat:menuAccessed'));
-        console.log('  - dialog:completed:', this.game.events.listenerCount('dialog:completed'));
-        console.log('  - quest-completed:', this.game.events.listenerCount('quest-completed'));
+                // Final verification - debug what listeners remain
+        if (import.meta.env.DEV) {
+            this.logger?.debug('  - fishing:catchSuccess:', this.game.events.listenerCount('fishing:catchSuccess')) || Logger.debug(this.constructor.name, '  - fishing:catchSuccess:', this.game.events.listenerCount('fishing:catchSuccess'));
+        }
+        this.logger?.debug('  - fishing:castComplete:', this.game.events.listenerCount('fishing:castComplete')) || Logger.debug(this.constructor.name, '  - fishing:castComplete:', this.game.events.listenerCount('fishing:castComplete'));
+        this.logger?.debug('  - boat:menuAccessed:', this.game.events.listenerCount('boat:menuAccessed')) || Logger.debug(this.constructor.name, '  - boat:menuAccessed:', this.game.events.listenerCount('boat:menuAccessed'));
+        this.logger?.debug('  - dialog:completed:', this.game.events.listenerCount('dialog:completed')) || Logger.debug(this.constructor.name, '  - dialog:completed:', this.game.events.listenerCount('dialog:completed'));
+        this.logger?.debug('  - quest-completed:', this.game.events.listenerCount('quest-completed')) || Logger.debug(this.constructor.name, '  - quest-completed:', this.game.events.listenerCount('quest-completed'));
     }
 
     /**
@@ -2512,13 +2364,10 @@ export default class GameScene extends Phaser.Scene {
             return;
         }
 
-        console.log('GameScene: Setting up RenJs quest integration...');
-
-        // Expose QuestManager globally for RenJs access
+                // Expose QuestManager globally for RenJs access
         if (typeof window !== 'undefined') {
             window.LuxuryAnglerQuests = this.questManager.exportForRenJs();
-            console.log('GameScene: QuestManager exposed globally as window.LuxuryAnglerQuests');
-        }
+                    }
 
         // Setup DialogManager integration with QuestManager
         if (this.dialogManager) {
@@ -2531,16 +2380,14 @@ export default class GameScene extends Phaser.Scene {
             // Initialize DialogManager's RenJs global integration
             this.dialogManager.initializeRenJsGlobalIntegration();
             
-            console.log('GameScene: DialogManager-QuestManager integration complete');
-        }
+                    }
 
         // Setup RenJs command integration for DialogScene
         this.events.on('dialog-scene-ready', (dialogScene) => {
             this.integrateQuestManagerWithDialogScene(dialogScene);
         });
 
-        console.log('GameScene: RenJs quest integration setup complete');
-    }
+            }
 
     /**
      * Setup event listeners for dialog-quest integration
@@ -2574,9 +2421,7 @@ export default class GameScene extends Phaser.Scene {
 
             // Listen for RenJs quest commands
             this.events.on('renjs-quest-command', (data) => {
-                console.log('GameScene: RenJs quest command executed:', data);
-                
-                // Update UI if quest log is open
+                                // Update UI if quest log is open
                 try {
                     const questScene = this.scene.get('QuestScene');
                     if (questScene && questScene.scene.isActive()) {
@@ -2589,8 +2434,7 @@ export default class GameScene extends Phaser.Scene {
                 }
             });
 
-            console.log('GameScene: Dialog-quest event listeners setup complete');
-        } catch (error) {
+                    } catch (error) {
             console.error('GameScene: Error setting up dialog-quest event listeners:', error);
         }
     }
@@ -2605,9 +2449,7 @@ export default class GameScene extends Phaser.Scene {
             return;
         }
 
-        console.log('GameScene: Integrating QuestManager with DialogScene...');
-
-        // Expose quest manager methods to dialog scene
+                // Expose quest manager methods to dialog scene
         dialogScene.questManager = this.questManager;
         
         // Add RenJs command handlers
@@ -2625,8 +2467,7 @@ export default class GameScene extends Phaser.Scene {
             return this.questManager.executeRenJsCommand(command, ...args);
         };
 
-        console.log('GameScene: DialogScene-QuestManager integration complete');
-    }
+            }
 
     /**
      * RenJs hook for quest system - called from dialog scripts
@@ -2690,8 +2531,7 @@ export default class GameScene extends Phaser.Scene {
         this.returnToBoatButton = returnBtn.button;
         this.returnToBoatButtonText = returnBtn.text;
         
-        console.log('GameScene: Return to Boat button created with UITheme styling');
-    }
+            }
 
     showFishingSessionStatus() {
         const sessionData = this.gameState.currentFishingSession;
@@ -2763,8 +2603,7 @@ export default class GameScene extends Phaser.Scene {
         testMiaText.setDepth(this.getUIDepth('ui_text'));
         
         testMiaButton.on('pointerdown', () => {
-            console.log('GameScene: Test Mia button clicked');
-            this.scene.launch('CabinScene', {
+                        this.scene.launch('CabinScene', {
                 callingScene: 'GameScene',
                 selectedNPC: 'mia'
             });
@@ -2778,13 +2617,10 @@ export default class GameScene extends Phaser.Scene {
             testMiaButton.setFillStyle(0x9c27b0, 0.9);
         });
         
-        console.log('GameScene: Test Mia button created');
-    }
+            }
 
     openMiaDialog() {
-        console.log('GameScene: Opening Mia dialog');
-        
-        try {
+                try {
             // Check if DialogManager is available
             if (!this.dialogManager) {
                 console.warn('GameScene: DialogManager not available, launching DialogScene directly');
@@ -2802,8 +2638,7 @@ export default class GameScene extends Phaser.Scene {
         } catch (error) {
             console.error('GameScene: Error opening Mia dialog:', error);
             // Fallback: Launch CabinScene with Mia selected
-            console.log('GameScene: Fallback - opening CabinScene with Mia selected');
-            this.scene.launch('CabinScene', {
+                        this.scene.launch('CabinScene', {
                 callingScene: 'GameScene',
                 selectedNPC: 'mia'
             });
@@ -2811,8 +2646,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     returnToBoat() {
-        console.log('GameScene: Preparing to return to boat...');
-        if (this.isReturning) {
+                if (this.isReturning) {
             console.warn('GameScene: Return to boat already in progress.');
             return;
         }
@@ -2822,9 +2656,7 @@ export default class GameScene extends Phaser.Scene {
         this.physics.pause();
         this.time.removeAllEvents();
         this.tweens.killAll();
-        console.log('GameScene: All activities paused.');
-
-        // 2. Clean up all UI and game objects
+                // 2. Clean up all UI and game objects
         try {
             // Destroy UI Panels
             if (this.inventoryUI) this.inventoryUI.destroy();
@@ -2863,8 +2695,7 @@ export default class GameScene extends Phaser.Scene {
                 spot.label?.destroy();
             });
 
-            console.log('GameScene: All UI and game objects destroyed.');
-        } catch (e) {
+                    } catch (e) {
             console.error('GameScene: Error during cleanup, continuing transition...', e);
         }
 
@@ -2876,21 +2707,17 @@ export default class GameScene extends Phaser.Scene {
             }
             this.gameState.player.currentActivity = 'boat';
             this.gameState.save();
-            console.log('GameScene: Game state finalized and saved.');
-        }
+                    }
 
         // 4. Transition to BoatMenuScene
-        console.log('GameScene: Transitioning to BoatMenuScene...');
-        this.scene.start('BoatMenuScene', {
+                this.scene.start('BoatMenuScene', {
             returnedFromFishing: true,
             fishingSessionData: this.gameState?.currentFishingSession || null
         });
     }
 
     destroy() {
-        console.log('GameScene: Starting cleanup and destroy process');
-        
-        try {
+                try {
             // Set flag to prevent new operations
             this.destroying = true;
             
@@ -3066,9 +2893,7 @@ export default class GameScene extends Phaser.Scene {
                 console.warn('GameScene: Error cleaning up Quest Tracker UI:', questTrackerError);
             }
             
-            console.log('GameScene: Cleanup completed successfully');
-            
-        } catch (error) {
+                    } catch (error) {
             console.error('GameScene: Error during destroy cleanup:', error);
             console.error('GameScene: Destroy error stack:', error.stack);
         }
@@ -3080,16 +2905,13 @@ export default class GameScene extends Phaser.Scene {
             console.error('GameScene: Error in parent destroy:', superError);
         }
         
-        console.log('GameScene: Destroy process completed');
-    }
+            }
 
     /**
      * Show a brief quest completion message
      */
     showQuestCompletionMessage(quest) {
-        console.log('GameScene: Showing quest completion message for:', quest.title);
-        
-        try {
+                try {
             const width = this.cameras.main.width;
             const height = this.cameras.main.height;
             
@@ -3141,9 +2963,7 @@ export default class GameScene extends Phaser.Scene {
                 }
             });
             
-            console.log('GameScene: Quest completion message created successfully');
-            
-        } catch (error) {
+                    } catch (error) {
             console.error('GameScene: Error creating quest completion message:', error);
         }
     }
@@ -3153,13 +2973,10 @@ export default class GameScene extends Phaser.Scene {
      */
     async initializeAsyncComponents(data) {
         try {
-            console.log('GameScene: Starting async component initialization...');
-            
-            // Initialize Quest Manager asynchronously
+                        // Initialize Quest Manager asynchronously
             await this.initializeQuestManagerAsync();
             
-            console.log('GameScene: Async component initialization completed');
-        } catch (error) {
+                    } catch (error) {
             console.error('GameScene: Error in async component initialization:', error);
         }
     }
@@ -3169,48 +2986,38 @@ export default class GameScene extends Phaser.Scene {
      */
     async initializeQuestManagerAsync() {
         try {
-            console.log('GameScene: Initializing Quest Manager asynchronously...');
-            
-            // CRITICAL FIX: Ensure gameState is available before proceeding
+                        // CRITICAL FIX: Ensure gameState is available before proceeding
             if (!this.gameState) {
-                console.log('GameScene: GameState not available, initializing...');
-                this.gameState = GameState.getInstance();
+                                this.gameState = GameState.getInstance();
                 if (!this.gameState) {
                     console.error('GameScene: Failed to get GameState instance');
                     return;
                 }
-                console.log('GameScene: GameState initialized successfully');
-            }
+                            }
             
             if (this.gameState.questManager) {
-                console.log('GameScene: Using existing QuestManager from GameState');
-                this.questManager = this.gameState.questManager;
+                                this.questManager = this.gameState.questManager;
                 
                 // Update scene reference
                 this.questManager.scene = this;
                 
                 // Ensure it's initialized
                 if (!this.questManager.isInitialized) {
-                    console.log('GameScene: QuestManager not initialized, initializing now...');
-                    const initResult = await this.questManager.initialize();
+                                        const initResult = await this.questManager.initialize();
                     if (initResult) {
-                        console.log('GameScene: ✅ QuestManager initialization completed successfully');
-                    } else {
+                                            } else {
                         console.error('GameScene: ❌ QuestManager initialization failed');
                         return;
                     }
                 }
             } else {
-                console.log('GameScene: Creating new QuestManager and storing in GameState');
-                this.questManager = new QuestManager(this);
+                                this.questManager = new QuestManager(this);
                 this.gameState.questManager = this.questManager;
                 
                 // Initialize the QuestManager asynchronously
-                console.log('GameScene: Initializing QuestManager asynchronously...');
-                const initResult = await this.questManager.initialize();
+                                const initResult = await this.questManager.initialize();
                 if (initResult) {
-                    console.log('GameScene: ✅ QuestManager initialization completed successfully');
-                } else {
+                                    } else {
                     console.error('GameScene: ❌ QuestManager initialization failed');
                     return;
                 }
@@ -3221,18 +3028,14 @@ export default class GameScene extends Phaser.Scene {
             
             // Initialize Quest Tracker UI after QuestManager is ready
             try {
-                console.log('GameScene: Initializing Quest Tracker UI...');
-                const { QuestTrackerUI } = await import('../ui/QuestTrackerUI.js');
+                                const { QuestTrackerUI } = await import('../ui/QuestTrackerUI.js');
                 this.questTrackerUI = new QuestTrackerUI(this, this.questManager);
-                console.log('GameScene: Quest Tracker UI initialized successfully');
-            } catch (trackerError) {
+                            } catch (trackerError) {
                 console.error('GameScene: Error initializing Quest Tracker UI:', trackerError);
                 this.questTrackerUI = null;
             }
             
-            console.log('GameScene: Quest Manager initialized successfully');
-            
-        } catch (error) {
+                    } catch (error) {
             console.error('GameScene: Error initializing Quest Manager:', error);
             console.error('GameScene: Error stack:', error.stack);
             this.questManager = null;
@@ -3244,13 +3047,10 @@ export default class GameScene extends Phaser.Scene {
      */
     async initializeQuestTrackerUIFallback() {
         try {
-            console.log('GameScene: Attempting fallback Quest Tracker UI initialization...');
-            
-            // Wait for QuestManager if it's still initializing
+                        // Wait for QuestManager if it's still initializing
             if (!this.questManager && this.gameState?.questManager) {
                 this.questManager = this.gameState.questManager;
-                console.log('GameScene: Retrieved QuestManager from GameState');
-            }
+                            }
             
             if (!this.questManager) {
                 console.warn('GameScene: QuestManager not available for Quest Tracker UI fallback');
@@ -3260,9 +3060,7 @@ export default class GameScene extends Phaser.Scene {
             // Initialize Quest Tracker UI
             const { QuestTrackerUI } = await import('../ui/QuestTrackerUI.js');
             this.questTrackerUI = new QuestTrackerUI(this, this.questManager);
-            console.log('GameScene: Quest Tracker UI fallback initialization successful');
-            
-            // Now toggle it since user requested it
+                        // Now toggle it since user requested it
             this.questTrackerUI.toggleVisibility();
             
         } catch (error) {

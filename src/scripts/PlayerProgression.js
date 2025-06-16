@@ -1,5 +1,6 @@
 import { EventEmitter } from './EventEmitter.js';
 import { AchievementEnhancer } from './AchievementEnhancer.js';
+import Logger from '../utils/Logger.js';
 
 // PlayerProgression.js - Comprehensive player progression and leveling system
 export class PlayerProgression extends EventEmitter {
@@ -580,7 +581,7 @@ export class PlayerProgression extends EventEmitter {
                 rewards: this.levelRewards[player.level] || null
             });
             
-            console.log(`PlayerProgression: Level up! Now level ${player.level} (+${skillPointsAwarded} skill points)`);
+            if (import.meta.env.DEV) if (import.meta.env.DEV) console.log(`PlayerProgression: Level up! Now level ${player.level} (+${skillPointsAwarded} skill points)`);
         }
         
         // Update experience to next level
@@ -962,8 +963,7 @@ export class PlayerProgression extends EventEmitter {
         this.gameState.player.skillPoints.available += amount;
         this.gameState.player.skillPoints.total += amount;
         this.gameState.markDirty();
-        console.log(`PlayerProgression: Added ${amount} skill points (debug)`);
-    }
+            }
 
     debugMaxSkill(treeId, skillId) {
         const skill = this.skillTrees[treeId]?.skills[skillId];
@@ -1104,7 +1104,7 @@ export class PlayerProgression extends EventEmitter {
                 rewards: achievement.rewards
             });
             
-            console.log(`PlayerProgression: Achievement unlocked: ${achievement.name}`);
+            if (import.meta.env.DEV) console.log(`PlayerProgression: Achievement unlocked: ${achievement.name}`);
             return true;
         }
         return false;
@@ -1373,7 +1373,7 @@ export class PlayerProgression extends EventEmitter {
                 this.emit('achievementChainCompleted', data);
             });
             
-            console.log('PlayerProgression: Achievement enhancement system initialized');
+            if (import.meta.env.DEV) console.log('PlayerProgression: Achievement enhancement system initialized');
         }
     }
 

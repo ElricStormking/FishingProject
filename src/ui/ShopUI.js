@@ -23,8 +23,7 @@ export class ShopUI {
         this.createUI();
         this.setupEventListeners();
         
-        console.log('ShopUI: Shop UI component created successfully');
-    }
+            }
 
     createUI() {
         // Main panel background
@@ -183,9 +182,30 @@ export class ShopUI {
     }
 
     createShopItem(item, itemY, category) {
-        const isOwned = this.gameState.inventory[category] && this.gameState.inventory[category].some(owned => owned.id === item.id);
-        const canAfford = this.gameState.player.money >= item.cost;
-        const isUnlocked = this.gameState.player.level >= (item.unlockLevel || 1);
+        // 🔧 SAFE FIELD ACCESS: Handle both transformed and original CSV field names
+        const itemId = item.id || item.rod_id || item.lure_id || item.boat_id || item.clothing_id || 'unknown';
+        const itemName = item.name || item.rod_name || item.lure_name || item.boat_name || item.clothing_name || 'Unknown Item';
+        const itemCost = item.cost || 100;
+        const itemDescription = item.description || 'No description available';
+        const itemUnlockLevel = item.unlockLevel || item.unlock_level || 1;
+        
+        // Validate that we have valid data
+        if (!itemName || itemName === 'undefined' || itemName.includes('undefined')) {
+            console.error('ShopUI: Invalid item name detected, skipping item:', item);
+            return; // Skip this item
+        }
+        
+        if (!itemId || itemId === 'undefined' || itemId.includes('undefined')) {
+            console.error('ShopUI: Invalid item ID detected, skipping item:', item);
+            return; // Skip this item
+        }
+        
+        const isOwned = this.gameState.inventory[category] && this.gameState.inventory[category].some(owned => {
+            const ownedId = owned.id || owned.rod_id || owned.lure_id || owned.boat_id || owned.clothing_id;
+            return ownedId === itemId;
+        });
+        const canAfford = this.gameState.player.money >= itemCost;
+        const isUnlocked = this.gameState.player.level >= itemUnlockLevel;
         
         // Item background
         const itemBg = this.scene.add.graphics();
@@ -203,10 +223,10 @@ export class ShopUI {
 
         // Item name and price
         const textColor = isOwned ? '#888888' : (canAfford && isUnlocked ? '#ffffff' : '#666666');
-        const statusText = isOwned ? ' (OWNED)' : (!isUnlocked ? ` (LVL ${item.unlockLevel})` : '');
+        const statusText = isOwned ? ' (OWNED)' : (!isUnlocked ? ` (LVL ${itemUnlockLevel})` : '');
         
         const itemText = this.scene.add.text(this.x + 65, itemY - 8, 
-            `${item.name}${statusText}`, {
+            `${itemName}${statusText}`, {
             fontSize: '14px',
             fill: textColor,
             fontFamily: 'Arial',
@@ -215,7 +235,7 @@ export class ShopUI {
         this.scrollContainer.add(itemText);
 
         const priceText = this.scene.add.text(this.x + 65, itemY + 5, 
-            `${item.cost} coins`, {
+            `${itemCost} coins`, {
             fontSize: '12px',
             fill: '#f39c12',
             fontFamily: 'Arial'
@@ -224,7 +244,7 @@ export class ShopUI {
 
         // Item description (wrapped)
         const descText = this.scene.add.text(this.x + this.width * 0.5, itemY - 4, 
-            item.description || 'No description', {
+            itemDescription, {
             fontSize: '11px',
             fill: '#cccccc',
             fontFamily: 'Arial',
@@ -289,7 +309,22 @@ export class ShopUI {
                     buyButton.lineStyle(1, 0x2ecc71);
                     buyButton.strokeRoundedRect(this.x + this.width - 80, itemY - 8, 50, 20, 5);
                 });
-                buyHitArea.on('pointerdown', () => this.buyItem(category, item));
+                buyHitArea.on('pointerdown', () => {
+                    // Create a normalized item object for the buyItem method
+                    const normalizedItem = {
+                        id: itemId,
+                        name: itemName,
+                        cost: itemCost,
+                        description: itemDescription,
+                        unlockLevel: itemUnlockLevel,
+                        rarity: item.rarity || 1,
+                        equipSlot: item.equipSlot || item.equip_slot || category.slice(0, -1), // Remove 's' from category
+                        stats: item.stats || {},
+                        // Keep original item data for compatibility
+                        ...item
+                    };
+                    this.buyItem(category, normalizedItem);
+                });
                 this.scrollContainer.add(buyHitArea);
             } else {
                 // Add disabled button feedback
@@ -297,9 +332,9 @@ export class ShopUI {
                 disabledHitArea.setInteractive({ useHandCursor: false });
                 disabledHitArea.on('pointerdown', () => {
                     if (!isUnlocked) {
-                        this.showNotification(`Requires Level ${item.unlockLevel}!`, 0xe67e22);
+                        this.showNotification(`Requires Level ${itemUnlockLevel}!`, 0xe67e22);
                     } else if (!canAfford) {
-                        this.showNotification(`Need ${item.cost - this.gameState.player.money} more coins!`, 0xe74c3c);
+                        this.showNotification(`Need ${itemCost - this.gameState.player.money} more coins!`, 0xe74c3c);
                     }
                 });
                 this.scrollContainer.add(disabledHitArea);
@@ -517,6 +552,11 @@ export class ShopUI {
             this.scene.hideFishButton();
         }
         
+        // CRITICAL: Hide DOM buttons from BoatMenuScene when shop UI is open
+        if (this.scene.hideDOMButtons) {
+            this.scene.hideDOMButtons();
+        }
+        
         // Show DOM button
         if (this.sellAllFishButton) {
             this.sellAllFishButton.style.display = 'block';
@@ -533,8 +573,7 @@ export class ShopUI {
             this.scene.audioManager.playSFX('button');
         }
         
-        console.log('ShopUI: Shop interface opened');
-    }
+            }
 
     hide() {
         this.isVisible = false;
@@ -547,13 +586,17 @@ export class ShopUI {
             this.scene.showFishButton();
         }
         
+        // CRITICAL: Show DOM buttons from BoatMenuScene when shop UI is closed
+        if (this.scene.showDOMButtons) {
+            this.scene.showDOMButtons();
+        }
+        
         // Hide DOM button
         if (this.sellAllFishButton) {
             this.sellAllFishButton.style.display = 'none';
         }
         
-        console.log('ShopUI: Shop interface closed');
-    }
+            }
 
     destroy() {
         // Remove DOM button
@@ -565,8 +608,7 @@ export class ShopUI {
         if (this.container) {
             this.container.destroy();
         }
-        console.log('ShopUI: Shop UI destroyed');
-    }
+            }
 
     createFishInventorySection(startY, itemSpacing) {
         let currentY = startY;

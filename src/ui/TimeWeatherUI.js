@@ -29,8 +29,7 @@ export class TimeWeatherUI {
         this.createUI();
         this.setupEventListeners();
         
-        console.log('TimeWeatherUI: Initialized');
-    }
+            }
     
     createUI() {
         // Main container

@@ -8,8 +8,7 @@ export default class SceneManager {
         this.sceneHistory = [];
         this.transitionData = {};
         
-        console.log('SceneManager initialized');
-    }
+            }
 
     // Static instance for singleton pattern
     static getInstance() {
@@ -32,15 +31,12 @@ export default class SceneManager {
         }
         
         const currentKey = scene.scene ? scene.scene.key : scene.key;
-        console.log(`SceneManager: Current scene set to ${currentKey || 'Unknown'}`);
-    }
+            }
 
     // Start a new scene with optional data
     startScene(fromScene, targetSceneKey, data = {}) {
         const fromKey = fromScene.scene ? fromScene.scene.key : fromScene.key || 'Unknown';
-        console.log(`SceneManager: Transitioning from ${fromKey} to ${targetSceneKey}`);
-        
-        // Store transition data
+                // Store transition data
         this.transitionData[targetSceneKey] = data;
         
         // Save game state before transition
@@ -63,9 +59,7 @@ export default class SceneManager {
     // Switch to scene (keeps current scene active)
     switchToScene(fromScene, targetSceneKey, data = {}) {
         const fromKey = fromScene.scene ? fromScene.scene.key : fromScene.key || 'Unknown';
-        console.log(`SceneManager: Switching from ${fromKey} to ${targetSceneKey}`);
-        
-        this.transitionData[targetSceneKey] = data;
+                this.transitionData[targetSceneKey] = data;
         fromScene.scene.switch(targetSceneKey);
         
         this.gameState.emit('sceneSwitched', {
@@ -78,9 +72,7 @@ export default class SceneManager {
     // Launch scene as overlay
     launchScene(fromScene, targetSceneKey, data = {}) {
         const fromKey = fromScene.scene ? fromScene.scene.key : fromScene.key || 'Unknown';
-        console.log(`SceneManager: Launching ${targetSceneKey} as overlay from ${fromKey}`);
-        
-        this.transitionData[targetSceneKey] = data;
+                this.transitionData[targetSceneKey] = data;
         fromScene.scene.launch(targetSceneKey, data);
         
         this.gameState.emit('sceneLaunched', {
@@ -93,9 +85,7 @@ export default class SceneManager {
     // Stop/close a scene
     stopScene(fromScene, targetSceneKey) {
         const fromKey = fromScene.scene ? fromScene.scene.key : fromScene.key || 'Unknown';
-        console.log(`SceneManager: Stopping scene ${targetSceneKey} from ${fromKey}`);
-        
-        fromScene.scene.stop(targetSceneKey);
+                fromScene.scene.stop(targetSceneKey);
         
         this.gameState.emit('sceneStopped', {
             from: fromKey,
@@ -107,9 +97,7 @@ export default class SceneManager {
     goBack(fromScene, data = {}) {
         if (this.sceneHistory.length > 0) {
             const previousSceneKey = this.sceneHistory.pop();
-            console.log(`SceneManager: Going back to ${previousSceneKey}`);
-            
-            this.startScene(fromScene, previousSceneKey, data);
+                        this.startScene(fromScene, previousSceneKey, data);
         } else {
             console.warn('SceneManager: No previous scene to go back to');
             // Default to menu scene
@@ -146,9 +134,7 @@ export default class SceneManager {
 
     goToInventory(fromScene, data = {}) {
         // Instead of launching a scene, show inventory UI overlay
-        console.log('SceneManager: Opening inventory UI overlay');
-        
-        // Create inventory UI if it doesn't exist on the scene
+                // Create inventory UI if it doesn't exist on the scene
         if (!fromScene.inventoryUI) {
             // Import InventoryUI and create it
             import('../ui/InventoryUI.js').then((module) => {
@@ -173,9 +159,7 @@ export default class SceneManager {
 
     // Pause/Resume functionality
     pauseGame(fromScene) {
-        console.log('SceneManager: Pausing game');
-        
-        // Pause current scene
+                // Pause current scene
         fromScene.scene.pause();
         
         // Launch pause menu
@@ -185,9 +169,7 @@ export default class SceneManager {
     }
 
     resumeGame(fromScene) {
-        console.log('SceneManager: Resuming game');
-        
-        // Stop pause menu
+                // Stop pause menu
         this.stopScene(fromScene, 'PauseScene');
         
         // Resume game scene
@@ -201,8 +183,7 @@ export default class SceneManager {
         const sceneStates = this.gameState.getSceneStates();
         sceneStates[sceneKey] = state;
         this.gameState.setSceneStates(sceneStates);
-        console.log(`SceneManager: Saved state for ${sceneKey}`);
-    }
+            }
 
     loadSceneState(sceneKey) {
         const sceneStates = this.gameState.getSceneStates();
@@ -213,14 +194,11 @@ export default class SceneManager {
         const sceneStates = this.gameState.getSceneStates();
         delete sceneStates[sceneKey];
         this.gameState.setSceneStates(sceneStates);
-        console.log(`SceneManager: Cleared state for ${sceneKey}`);
-    }
+            }
 
     // Transition effects (can be expanded)
     fadeTransition(fromScene, targetSceneKey, duration = 500, data = {}) {
-        console.log(`SceneManager: Fade transition to ${targetSceneKey}`);
-        
-        // Create fade overlay
+                // Create fade overlay
         const fadeOverlay = fromScene.add.rectangle(
             fromScene.cameras.main.centerX,
             fromScene.cameras.main.centerY,
@@ -254,8 +232,7 @@ export default class SceneManager {
     // Clear scene history
     clearSceneHistory() {
         this.sceneHistory = [];
-        console.log('SceneManager: Scene history cleared');
-    }
+            }
 
     // Debug information
     getDebugInfo() {

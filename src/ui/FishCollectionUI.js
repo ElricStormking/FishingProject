@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import Logger from '../utils/Logger.js';
 
 export class FishCollectionUI extends Phaser.GameObjects.Container {
     constructor(scene, x, y, width, height) {
@@ -33,7 +34,7 @@ export class FishCollectionUI extends Phaser.GameObjects.Container {
             
             scene.add.existing(this);
             
-            console.log('FishCollectionUI: Successfully initialized');
+            if (import.meta.env.DEV) console.log('FishCollectionUI: Successfully initialized');
         } catch (error) {
             console.error('FishCollectionUI: Error during initialization:', error);
             // Create a minimal error display
@@ -726,6 +727,11 @@ export class FishCollectionUI extends Phaser.GameObjects.Container {
             this.scene.hideFishButton();
         }
         
+        // CRITICAL: Hide DOM buttons from BoatMenuScene when fish collection UI is open
+        if (this.scene.hideDOMButtons) {
+            this.scene.hideDOMButtons();
+        }
+        
         this.refreshDisplay();
     }
     
@@ -736,6 +742,11 @@ export class FishCollectionUI extends Phaser.GameObjects.Container {
         // Show fish button when fish collection is closed
         if (this.scene.showFishButton) {
             this.scene.showFishButton();
+        }
+        
+        // CRITICAL: Show DOM buttons from BoatMenuScene when fish collection UI is closed
+        if (this.scene.showDOMButtons) {
+            this.scene.showDOMButtons();
         }
     }
     

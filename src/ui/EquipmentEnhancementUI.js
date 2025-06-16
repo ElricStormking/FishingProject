@@ -1,4 +1,5 @@
 import UITheme from './UITheme.js';
+import Logger from '../utils/Logger.js';
 
 export class EquipmentEnhancementUI {
     constructor(scene, x, y, width, height) {
@@ -35,9 +36,7 @@ export class EquipmentEnhancementUI {
                         const EquipmentEnhancer = module.default || module.EquipmentEnhancer;
                         this.enhancer = new EquipmentEnhancer(this.scene.gameState, this.scene.gameState.inventoryManager);
                         this.scene.equipmentEnhancer = this.enhancer;
-                        console.log('EquipmentEnhancementUI: Created temporary enhancer successfully');
-                        
-                        // Refresh UI now that we have the enhancer
+                                                // Refresh UI now that we have the enhancer
                         if (this.isVisible) {
                             this.refreshContent();
                         }
@@ -70,8 +69,7 @@ export class EquipmentEnhancementUI {
             try {
                 this.createUI();
                 this.setupEventListeners();
-                console.log('EquipmentEnhancementUI: Initialized successfully with enhancer:', !!this.enhancer, 'and inventoryManager:', !!this.inventoryManager);
-            } catch (error) {
+                            } catch (error) {
                 console.error('EquipmentEnhancementUI: Error during UI creation:', error);
                 this.createErrorUI();
             }
@@ -111,8 +109,7 @@ export class EquipmentEnhancementUI {
         closeBtn.on('pointerout', () => closeBtn.setScale(1));
         this.container.add(closeBtn);
 
-        console.log('EquipmentEnhancementUI: Created error UI as fallback');
-    }
+            }
 
     createUI() {
         // Main container
@@ -343,8 +340,7 @@ export class EquipmentEnhancementUI {
         let equipped = {};
         try {
             equipped = this.inventoryManager.getEquippedItems() || {};
-            console.log('EquipmentEnhancementUI: Retrieved equipped items:', equipped);
-        } catch (error) {
+                    } catch (error) {
             console.error('EquipmentEnhancementUI: Error getting equipped items:', error);
             const errorText = UITheme.createText(this.scene, x, y + 40, 'Error loading equipped items.\nPlease check your equipment.', 'error');
             this.contentContainer.add(errorText);
@@ -358,8 +354,7 @@ export class EquipmentEnhancementUI {
         Object.entries(equipped).forEach(([category, items]) => {
             if (items && Array.isArray(items) && items.length > 0) {
                 hasEquippedItems = true;
-                console.log(`EquipmentEnhancementUI: Found ${items.length} items in category ${category}`);
-                items.forEach((item, index) => {
+                                items.forEach((item, index) => {
                     try {
                         this.createEquipmentSlot(x, slotY, item, category);
                         slotY += 70;
@@ -372,8 +367,7 @@ export class EquipmentEnhancementUI {
 
         // If no equipped items found, add debug test equipment
         if (!hasEquippedItems) {
-            console.log('EquipmentEnhancementUI: No equipped items found, adding debug test equipment');
-            this.addDebugTestEquipment(x, slotY);
+                        this.addDebugTestEquipment(x, slotY);
         }
     }
 
@@ -527,8 +521,7 @@ export class EquipmentEnhancementUI {
 
         this.contentContainer.add([slotBg, itemIcon, nameText, levelText, slotArea]);
         
-        console.log('EquipmentEnhancementUI: Created equipment slot for:', item.name, 'at position:', x, y);
-    }
+            }
 
     createUpgradePanel(x, y) {
         if (!this.selectedItem) return;
@@ -995,16 +988,13 @@ export class EquipmentEnhancementUI {
                 if (window.EquipmentEnhancer) {
                     this.enhancer = new window.EquipmentEnhancer(this.scene.gameState, this.scene.gameState.inventoryManager);
                     this.scene.equipmentEnhancer = this.enhancer;
-                    console.log('EquipmentEnhancementUI: Created enhancer from global reference');
-                } else {
+                                    } else {
                     // Import asynchronously
                     import('../scripts/EquipmentEnhancer.js').then(module => {
                         const EquipmentEnhancer = module.default || module.EquipmentEnhancer;
                         this.enhancer = new EquipmentEnhancer(this.scene.gameState, this.scene.gameState.inventoryManager);
                         this.scene.equipmentEnhancer = this.enhancer;
-                        console.log('EquipmentEnhancementUI: Created enhancer via async import');
-                        
-                        // Refresh content now that we have enhancer
+                                                // Refresh content now that we have enhancer
                         if (this.isVisible) {
                             this.refreshContent();
                         }
@@ -1020,8 +1010,7 @@ export class EquipmentEnhancementUI {
         // Update inventory manager reference
         if (!this.inventoryManager && this.scene.gameState?.inventoryManager) {
             this.inventoryManager = this.scene.gameState.inventoryManager;
-            console.log('EquipmentEnhancementUI: Updated inventory manager reference');
-        }
+                    }
 
         this.isVisible = true;
         this.container.setVisible(true);

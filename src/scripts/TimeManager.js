@@ -49,19 +49,16 @@ export class TimeManager {
             this.startTimeUpdates();
         } else {
             // Scene not ready yet, use polling approach instead of events
-            console.log('TimeManager: Scene not ready, will poll for readiness...');
-            this.waitForSceneReady();
+                        this.waitForSceneReady();
         }
         
-        console.log('TimeManager: Initialized, waiting for scene ready...');
-    }
+            }
     
     waitForSceneReady() {
         // Poll for scene readiness instead of relying on events
         const checkReady = () => {
             if (this.scene && this.scene.time && this.scene.time.addEvent) {
-                console.log('TimeManager: Scene is now ready, starting time updates...');
-                this.startTimeUpdates();
+                                this.startTimeUpdates();
             } else {
                 // Check again in 100ms
                 setTimeout(checkReady, 100);

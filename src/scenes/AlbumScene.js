@@ -17,8 +17,7 @@ export default class AlbumScene extends Phaser.Scene {
     }
     
     init(data) {
-        console.log('AlbumScene: Initialized with data:', data);
-        this.callingScene = data.callingScene || 'CabinScene';
+                this.callingScene = data.callingScene || 'CabinScene';
         this.unlockedHCGs = new Set(data.unlockedHCGs || []);
     }
     
@@ -478,9 +477,7 @@ export default class AlbumScene extends Phaser.Scene {
     }
     
     previewHCG(hcgData) {
-        console.log('AlbumScene: Previewing HCG:', hcgData.title);
-        
-        // Create full-screen preview modal
+                // Create full-screen preview modal
         const preview = this.add.container(400, 300);
         preview.setDepth(1000);
         
@@ -573,16 +570,14 @@ export default class AlbumScene extends Phaser.Scene {
             if (saved) {
                 const unlockedArray = JSON.parse(saved);
                 this.unlockedHCGs = new Set(unlockedArray);
-                console.log('AlbumScene: Loaded unlocked HCGs:', unlockedArray);
-            }
+                            }
         } catch (error) {
             console.error('AlbumScene: Failed to load unlocked HCGs:', error);
         }
     }
     
     exitAlbum() {
-        console.log('AlbumScene: Returning to', this.callingScene);
-        this.scene.stop();
+                this.scene.stop();
         this.scene.resume(this.callingScene);
     }
 } 

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { gameDataLoader } from '../scripts/DataLoader.js';
+import Logger from '../utils/Logger.js';
 
 export default class PreloadScene extends Phaser.Scene {
     constructor() {
@@ -13,8 +14,7 @@ export default class PreloadScene extends Phaser.Scene {
             
             // Wait for image loading to complete before creating placeholders
             this.load.once('complete', () => {
-                console.log('PreloadScene: Image loading complete, now creating placeholders...');
-                // Create placeholder graphics using Phaser's built-in graphics
+                                // Create placeholder graphics using Phaser's built-in graphics
                 this.createPlaceholderAssets();
             });
             
@@ -44,8 +44,7 @@ export default class PreloadScene extends Phaser.Scene {
                 
                 await Promise.race([loadPromise, timeoutPromise]);
                 
-                console.log('PreloadScene: Data loading completed successfully');
-                loadingText.setText('Game data loaded successfully!');
+                                loadingText.setText('Game data loaded successfully!');
                 loadingText.setStyle({ fill: '#00ff66' });
                 
                 // Proceed to menu with enhanced data
@@ -83,9 +82,7 @@ export default class PreloadScene extends Phaser.Scene {
 
     loadPortraitImages() {
         // Load actual NPC portrait images
-        console.log('PreloadScene: Loading actual portrait images...');
-        
-        // Set up error handling before loading
+                // Set up error handling before loading
         this.load.on('loaderror', (file) => {
             console.warn(`PreloadScene: Failed to load file: ${file.src} (key: ${file.key})`);
             console.warn(`PreloadScene: Full file info:`, file);
@@ -94,23 +91,14 @@ export default class PreloadScene extends Phaser.Scene {
         
         this.load.on('filecomplete', (key, type, data) => {
             if (key.includes('portrait') || key.includes('mia')) {
-                console.log(`PreloadScene: Successfully loaded ${key} (${type})`);
-                console.log(`PreloadScene: File data:`, {
-                    key: key,
-                    type: type,
-                    width: data?.width || 'unknown',
-                    height: data?.height || 'unknown',
-                    src: data?.src || 'unknown'
-                });
-            }
+                                            }
         });
         
         // Load Mia's portrait with the correct path for Vite.
         // The asset is located at 'public/assets/dialog/portraits/mia.png',
         // and Vite serves the 'public' directory at the root.
         const miaPortraitPath = 'assets/dialog/portraits/mia.png';
-        console.log(`PreloadScene: Attempting to load Mia portrait from: ${miaPortraitPath}`);
-        this.load.image('mia-portrait', miaPortraitPath);
+                this.load.image('mia-portrait', miaPortraitPath);
         this.load.image('portrait-mia', miaPortraitPath);
         this.load.image('mia-full', miaPortraitPath);
         
@@ -118,17 +106,14 @@ export default class PreloadScene extends Phaser.Scene {
         // this.load.image('sophie-portrait', 'assets/dialog/portraits/sophie.png');
         // this.load.image('luna-portrait', 'assets/dialog/portraits/luna.png');
         
-        console.log('PreloadScene: Portrait images queued for loading');
-    }
+            }
 
     createPlaceholderAssets() {
         // Create a graphics object for generating placeholder textures
         const graphics = this.add.graphics();
         
         try {
-            console.log('PreloadScene: Generating placeholder assets...');
-            
-            // === PLAYER PLACEHOLDER ===
+                        // === PLAYER PLACEHOLDER ===
             this.createSafeTexture(graphics, 'player', 32, 32, () => {
                 graphics.fillStyle(0x4a90e2);
                 graphics.fillRect(0, 0, 32, 32);
@@ -201,11 +186,9 @@ export default class PreloadScene extends Phaser.Scene {
             // === CHARACTER PORTRAIT PLACEHOLDERS ===
             // Only create placeholder portraits if actual images weren't loaded
             if (!this.textures.exists('mia-portrait') && !this.textures.exists('portrait-mia') && !this.textures.exists('mia-full')) {
-                console.log('PreloadScene: No actual Mia portrait found, creating placeholder');
-                this.createCharacterPortrait(graphics, 'portrait-mia-placeholder', 0xff69b4, 'M'); // Pink for Mia
+                                this.createCharacterPortrait(graphics, 'portrait-mia-placeholder', 0xff69b4, 'M'); // Pink for Mia
             } else {
-                console.log('PreloadScene: Actual Mia portrait found, skipping placeholder creation');
-            }
+                            }
             if (!this.textures.exists('portrait-sophie')) {
                 this.createCharacterPortrait(graphics, 'portrait-sophie', 0x87ceeb, 'S'); // Blue for Sophie
             }

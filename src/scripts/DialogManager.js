@@ -147,9 +147,7 @@ export default class DialogManager {
                 return false;
             }
 
-            console.log(`DialogManager: Starting dialog with ${npc.name} from ${callingScene}`);
-            
-            // CRITICAL FIX: Handle placeholder NPCs with Phaser dialog
+                        // CRITICAL FIX: Handle placeholder NPCs with Phaser dialog
             if (npc.isPlaceholder) {
                 console.log(`DialogManager: NPC ${npcId} is a placeholder, showing Phaser dialog`);
                 return this.showPlaceholderDialog(npc, callingScene, specificDialog);
@@ -633,9 +631,7 @@ export default class DialogManager {
      * @param {string} callingScene - The scene that called the dialog
      */
     endDialog(npcId, callingScene = 'GameScene') {
-        console.log(`Ending dialog with ${npcId}, returning to ${callingScene}`);
-        
-        // Remove from active dialogs
+                // Remove from active dialogs
         this.activeDialogs.delete(npcId);
 
         // Trigger quest manager hooks if available
@@ -891,9 +887,7 @@ export default class DialogManager {
      * @param {Object} choiceData - Additional choice data
      */
     processRenJsChoice(dialogId, choiceId, npcId, choiceData = {}) {
-        console.log(`DialogManager: Processing RenJs choice - Dialog: ${dialogId}, Choice: ${choiceId}, NPC: ${npcId}`);
-
-        // Update romance meter based on choice
+                // Update romance meter based on choice
         this.processRomanceChoice(choiceId, npcId, choiceData);
 
         // Process quest objectives

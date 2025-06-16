@@ -45,14 +45,10 @@ export class CastingMiniGame {
         this.isAnimating = false;
         this.castComplete = false;
         
-        console.log('CastingMiniGame: Initialized with cast meter system');
-    }
+            }
 
     start(playerStats, targetArea) {
-        console.log('CastingMiniGame: Starting with player stats:', playerStats);
-        console.log('CastingMiniGame: Target area:', targetArea);
-        
-        // Store references
+                        // Store references
         this.playerStats = playerStats;
         this.targetArea = targetArea;
         this.isActive = true;
@@ -106,8 +102,7 @@ export class CastingMiniGame {
                 };
                 document.addEventListener('keydown', this.keyboardHandler);
                 
-                console.log('CastingMiniGame: Input handling set up successfully');
-            } else {
+                            } else {
                 console.error('CastingMiniGame: Scene input not available');
             }
         } catch (inputError) {
@@ -128,9 +123,7 @@ export class CastingMiniGame {
             }
         });
         
-        console.log('CastingMiniGame: Started with accurate section:', this.accurateSection);
-        console.log('CastingMiniGame: Timeout timer set for 15 seconds');
-    }
+                    }
 
     calculateAccurateSection() {
         // Base accurate section is 20% of the meter (20 units out of 100)
@@ -161,23 +154,19 @@ export class CastingMiniGame {
             accuracyBonus: accuracyBonus
         };
         
-        console.log(`CastingMiniGame: Accurate section ${this.accurateSection.start}-${this.accurateSection.end}% (size: ${sectionSize}%)`);
-        console.log('CastingMiniGame: Equipment effects:', this.equipmentEffects);
-    }
+                    }
 
     createVisualElements() {
         // Use the permanent hotspot from GameScene instead of creating a random one
         if (this.scene.hotspotPosition) {
             this.hotspotPosition = this.scene.hotspotPosition;
-            console.log('CastingMiniGame: Using permanent hotspot at', this.hotspotPosition);
-        } else {
+                    } else {
             // Fallback: create temporary hotspot if none exists
             const waterArea = this.targetArea;
             const hotspotX = waterArea.x + waterArea.width * 0.3;
             const hotspotY = waterArea.y + waterArea.height * 0.5;
             this.hotspotPosition = { x: hotspotX, y: hotspotY, radius: 100 };
-            console.log('CastingMiniGame: Created fallback hotspot at', this.hotspotPosition);
-        }
+                    }
         
         // Use existing fishing rod and lure from GameScene (with safety checks)
         this.fishingRod = this.scene.fishingRod || null;
@@ -189,8 +178,7 @@ export class CastingMiniGame {
         // Store original positions for restoration
         this.originalLurePosition = { ...this.lurePosition };
         
-        console.log('CastingMiniGame: Visual elements created, using existing rod and lure');
-    }
+            }
 
     createUI() {
         try {
@@ -346,8 +334,7 @@ export class CastingMiniGame {
                 });
             }
             
-            console.log('CastingMiniGame: UI created successfully');
-        } catch (error) {
+                    } catch (error) {
             console.error('CastingMiniGame: Error creating UI:', error);
             throw error;
         }
@@ -484,13 +471,9 @@ export class CastingMiniGame {
     }
 
     startCastMeter() {
-        console.log('CastingMiniGame: Starting cast meter animation...');
-        
-        // Initialize meter value
+                // Initialize meter value
         this.meterValue = 0;
-        console.log('CastingMiniGame: Initial meterValue set to:', this.meterValue);
-        
-        // Verify scene and tweens are available
+                // Verify scene and tweens are available
         if (!this.scene) {
             console.error('CastingMiniGame: Scene not available for meter animation');
             return;
@@ -530,20 +513,17 @@ export class CastingMiniGame {
                         const currentPercent = Math.floor(this.meterValue / 10) * 10;
                         const lastPercent = Math.floor((this.meterValue - 1) / 10) * 10;
                         if (currentPercent !== lastPercent && currentPercent % 20 === 0) {
-                            console.log(`CastingMiniGame: Meter at ${currentPercent}%`);
-                        }
+                                                    }
                     } catch (updateError) {
                         console.error('CastingMiniGame: Error in meter update:', updateError);
                     }
                 },
                 onComplete: () => {
-                    console.log('CastingMiniGame: Meter tween completed (should not happen with repeat: -1)');
-                }
+                                    }
             });
             
             if (this.meterTween) {
-                console.log('CastingMiniGame: Meter tween created successfully');
-            } else {
+                            } else {
                 console.warn('CastingMiniGame: Meter tween creation returned null, falling back to manual animation');
                 this.startManualMeterAnimation();
             }
@@ -551,15 +531,12 @@ export class CastingMiniGame {
         } catch (tweenError) {
             console.error('CastingMiniGame: Error creating meter tween:', tweenError);
             console.error('CastingMiniGame: Tween error stack:', tweenError.stack);
-            console.log('CastingMiniGame: Falling back to manual meter animation...');
-            this.startManualMeterAnimation();
+                        this.startManualMeterAnimation();
         }
     }
     
     startManualMeterAnimation() {
-        console.log('CastingMiniGame: Starting manual meter animation fallback');
-        
-        let direction = 1;
+                let direction = 1;
         const speed = 1; // 1% per frame at 60fps = ~1.67 seconds for full sweep
         
         this.manualMeterTimer = this.scene.time.addEvent({
@@ -581,14 +558,12 @@ export class CastingMiniGame {
                 const currentPercent = Math.floor(this.meterValue / 10) * 10;
                 const lastPercent = Math.floor((this.meterValue - speed) / 10) * 10;
                 if (currentPercent !== lastPercent) {
-                    console.log(`CastingMiniGame: Manual meter at ${currentPercent}%`);
-                }
+                                    }
             },
             repeat: -1
         });
         
-        console.log('CastingMiniGame: Manual meter timer created');
-    }
+            }
 
     updateMeterVisual() {
         if (!this.meterIndicator) return;
@@ -610,16 +585,13 @@ export class CastingMiniGame {
 
             // Stop meter animation
             if (this.meterTween) {
-                console.log('CastingMiniGame: Stopping meter tween');
-                this.meterTween.stop();
+                                this.meterTween.stop();
             } else {
-                console.log('CastingMiniGame: No meter tween to stop');
-            }
+                            }
             
             // Stop manual meter timer if it's running
             if (this.manualMeterTimer) {
-                console.log('CastingMiniGame: Stopping manual meter timer');
-                this.manualMeterTimer.destroy();
+                                this.manualMeterTimer.destroy();
                 this.manualMeterTimer = null;
             }
 
@@ -627,16 +599,12 @@ export class CastingMiniGame {
             const inAccurateSection = this.meterValue >= this.accurateSection.start && 
                                      this.meterValue <= this.accurateSection.end;
             
-            console.log(`CastingMiniGame: Accuracy check - meterValue: ${this.meterValue}, section: ${this.accurateSection.start}-${this.accurateSection.end}, inAccurateSection: ${inAccurateSection}`);
-            
-            // Play audio feedback based on accuracy
+                        // Play audio feedback based on accuracy
             if (inAccurateSection) {
                 this.audioManager?.playSFX('cast_perfect');
-                console.log('CastingMiniGame: Playing perfect cast audio');
-            } else {
+                            } else {
                 this.audioManager?.playSFX('cast_normal');
-                console.log('CastingMiniGame: Playing normal cast audio');
-            }
+                            }
             
             // Calculate accuracy based on how close to center of accurate section
             let accuracy = 0;
@@ -650,11 +618,8 @@ export class CastingMiniGame {
                 accuracy = Math.max(10, 30 - Math.abs(this.meterValue - 50) * 0.4);
             }
 
-            console.log(`CastingMiniGame: Meter at ${this.meterValue.toFixed(1)}%, In accurate section: ${inAccurateSection}, Accuracy: ${accuracy.toFixed(1)}%`);
-            
-            // Start casting animation instead of immediately completing
-            console.log('CastingMiniGame: Starting casting animation...');
-            this.startCastingAnimation(inAccurateSection, accuracy, this.meterValue);
+                        // Start casting animation instead of immediately completing
+                        this.startCastingAnimation(inAccurateSection, accuracy, this.meterValue);
         } catch (error) {
             console.error('CastingMiniGame: Error in handleClick:', error);
             console.error('CastingMiniGame: Error stack:', error.stack);
@@ -704,9 +669,7 @@ export class CastingMiniGame {
             // Verify the target is within hotspot bounds
             const distanceFromCenter = Math.sqrt((targetX - this.hotspotPosition.x) ** 2 + (targetY - this.hotspotPosition.y) ** 2);
             
-            console.log(`CastingMiniGame: Targeting hotspot center (${this.hotspotPosition.x}, ${this.hotspotPosition.y})`);
-            console.log(`CastingMiniGame: Target position (${targetX.toFixed(1)}, ${targetY.toFixed(1)}) - Distance from center: ${distanceFromCenter.toFixed(1)}px (hotspot radius: ${hotspotRadius}px)`);
-        } else {
+                                } else {
             // Land outside the hotspot
             const waterArea = this.targetArea;
             targetX = Phaser.Math.Between(waterArea.x + 50, waterArea.x + waterArea.width - 50);
@@ -722,8 +685,7 @@ export class CastingMiniGame {
                 targetY = this.hotspotPosition.y + Math.sin(angle) * (hotspotRadius + 50);
             }
             
-            console.log(`CastingMiniGame: Targeting outside hotspot, distance: ${Phaser.Math.Distance.Between(targetX, targetY, this.hotspotPosition.x, this.hotspotPosition.y).toFixed(1)}px`);
-        }
+                    }
         
         // Step 1: Rod casting animation
         this.animateRodCast(() => {
@@ -759,8 +721,7 @@ export class CastingMiniGame {
             }
         });
         
-        console.log('CastingMiniGame: Rod casting animation (rod stays in place)');
-    }
+            }
 
     animateLureThrow(targetX, targetY, hitAccurateSection, onComplete) {
         try {
@@ -783,9 +744,7 @@ export class CastingMiniGame {
             // Move lure to rod tip first (instant)
             this.lure.setPosition(startX, startY);
             
-            console.log(`CastingMiniGame: Throwing lure from rod tip (${startX}, ${startY}) to target (${targetX}, ${targetY})`);
-            
-            // SIMPLIFIED ANIMATION: Use direct tween instead of complex curve
+                        // SIMPLIFIED ANIMATION: Use direct tween instead of complex curve
             // This prevents potential issues with QuadraticBezier curves
             
             // Calculate arc midpoint for simple arc effect
@@ -810,9 +769,7 @@ export class CastingMiniGame {
                 },
                 onComplete: () => {
                     animationStage = 1;
-                    console.log('CastingMiniGame: Animation stage 1 complete - at arc peak');
-                    
-                    // Stage 2: Animate from arc peak to target
+                                        // Stage 2: Animate from arc peak to target
                     this.scene.tweens.add({
                         targets: this.lure,
                         x: targetX,
@@ -833,15 +790,11 @@ export class CastingMiniGame {
                                     this.scene.updateFishingLine(targetX, targetY);
                                 }
                                 
-                                console.log(`CastingMiniGame: Animation complete - Final lure position: (${this.lure.x}, ${this.lure.y})`);
-                                
-                                // Create splash effect at final position
+                                                                // Create splash effect at final position
                                 this.createSplashEffect(targetX, targetY, hitAccurateSection);
                                 
                                 // Play splash sound
-                                console.log(`CastingMiniGame: Splash! ${hitAccurateSection ? 'Hit hotspot!' : 'Missed hotspot'}`);
-                                
-                                // Store final lure position
+                                                                // Store final lure position
                                 this.finalLurePosition = { x: targetX, y: targetY };
                                 
                                 // Complete the animation
@@ -1117,15 +1070,13 @@ export class CastingMiniGame {
                 if (this.globalClickTest) {
                     document.removeEventListener('click', this.globalClickTest);
                     this.globalClickTest = null;
-                    console.log('CastingMiniGame: Global click test listener removed');
-                }
+                                    }
                 
                 // Clean up keyboard fallback
                 if (this.keyboardHandler) {
                     document.removeEventListener('keydown', this.keyboardHandler);
                     this.keyboardHandler = null;
-                    console.log('CastingMiniGame: Keyboard fallback listener removed');
-                }
+                                    }
             } catch (inputError) {
                 console.warn('CastingMiniGame: Error cleaning up input:', inputError);
             }
@@ -1211,15 +1162,13 @@ export class CastingMiniGame {
             this.fishingLine = null;
             this.lure = null;
             
-            console.log('CastingMiniGame: Minigame elements destroyed, lure restored');
-        } catch (error) {
+                    } catch (error) {
             console.error('CastingMiniGame: Error during destroy:', error);
         }
     }
 
     processSuccessfulCast(isAccurate) {
-        console.log('CastingMiniGame: Successful cast! Accurate:', isAccurate);
-        
+        if (import.meta.env.DEV) console.log('Debug statement');
         try {
             // Get gameState safely from scene
             const gameState = this.scene.gameState;
@@ -1241,21 +1190,17 @@ export class CastingMiniGame {
             
             // SIMPLIFIED: Don't try to select fish here, let the luring phase handle it
             // The casting phase should just complete and pass the accuracy information
-            console.log('CastingMiniGame: Cast completed, proceeding to completion');
-            
-            // Complete the casting minigame immediately with proper values
+                        // Complete the casting minigame immediately with proper values
             const accuracy = isAccurate ? 85 : 50; // Simplified accuracy calculation
             const meterValue = this.meterValue || 50;
             
             // Complete immediately instead of using delay
-            console.log('CastingMiniGame: Calling complete method...');
-            this.complete(isAccurate, accuracy, meterValue);
+                        this.complete(isAccurate, accuracy, meterValue);
             
         } catch (error) {
             console.error('CastingMiniGame: Error in processSuccessfulCast:', error);
             // Fallback completion to prevent getting stuck
-            console.log('CastingMiniGame: Error occurred, calling fallback complete...');
-            this.complete(isAccurate || false, 50, this.meterValue || 50);
+                        this.complete(isAccurate || false, 50, this.meterValue || 50);
         }
     }
 

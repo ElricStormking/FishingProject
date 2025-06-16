@@ -298,8 +298,7 @@ export class SaveUtility {
             const backup = backups[backups.length - 1 - backupIndex];
             await this.applySaveData(backup.data);
             
-            console.log(`SaveUtility: Loaded from backup '${backup.label}'`);
-            this.gameState.emit('gameLoadedFromBackup', { 
+                        this.gameState.emit('gameLoadedFromBackup', { 
                 label: backup.label, 
                 timestamp: backup.timestamp 
             });
@@ -674,8 +673,7 @@ export class SaveUtility {
      */
     destroy() {
         this.stopAutoSave();
-        console.log('SaveUtility: Utility destroyed');
-    }
+            }
 }
 
 // Export singleton instance creator

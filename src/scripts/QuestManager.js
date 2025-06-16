@@ -1,4 +1,5 @@
 import { questDataLoader } from './QuestDataLoader.js';
+import Logger from '../utils/Logger.js';
 
 /**
  * Quest Manager - Handles all quest types: main story, side events, NPC quests
@@ -41,8 +42,7 @@ export class QuestManager {
         this.isInitialized = false;
         this.initializationPromise = null;
         
-        console.log('QuestManager: Constructor completed, ready for initialization');
-    }
+            }
 
     /**
      * Initialize the quest system asynchronously
@@ -50,34 +50,28 @@ export class QuestManager {
      */
     async initialize() {
         if (this.isInitialized) {
-            console.log('QuestManager: Already initialized, skipping');
-            return true;
+                        return true;
         }
         
         if (this.initializationPromise) {
-            console.log('QuestManager: Initialization already in progress, waiting...');
-            return await this.initializationPromise;
+                        return await this.initializationPromise;
         }
         
-        console.log('QuestManager: Starting initialization process...');
-        this.initializationPromise = this.initializeQuests();
+                this.initializationPromise = this.initializeQuests();
         
         try {
             await this.initializationPromise;
             this.isInitialized = true;
             
             // Verify quest data was loaded
-            console.log('QuestManager: Verifying quest data after initialization...');
-            console.log('QuestManager: Quest templates loaded:', this.questTemplates.size);
-            console.log('QuestManager: Available quest template IDs:', Array.from(this.questTemplates.keys()));
+                                    this.logger?.debug('QuestManager: Available quest template IDs:', Array.from(this.questTemplates.keys())) || Logger.debug(this.constructor.name, 'QuestManager: Available quest template IDs:', Array.from(this.questTemplates.keys()));
             
             // Check specifically for tutorial quest
             const tutorialTemplate = this.questTemplates.get('story_001_tutorial');
             if (tutorialTemplate) {
-                console.log('QuestManager: ✅ Tutorial quest template found:', tutorialTemplate.title);
-            } else {
+                            } else {
                 console.error('QuestManager: ❌ Tutorial quest template NOT found!');
-                console.log('QuestManager: Available templates:', Array.from(this.questTemplates.keys()));
+                this.logger?.debug('QuestManager: Available templates:', Array.from(this.questTemplates.keys())) || Logger.debug(this.constructor.name, 'QuestManager: Available templates:', Array.from(this.questTemplates.keys()));
             }
             
             // Register RenJs commands for quest integration
@@ -101,9 +95,8 @@ export class QuestManager {
                 console.warn('QuestManager: Error registering test functions:', testError.message);
             }
             
-            console.log('QuestManager: Full initialization completed successfully');
-            console.log('QuestManager: Final state - Active quests:', Array.from(this.activeQuests.keys()));
-            console.log('QuestManager: Final state - Available quests:', Array.from(this.availableQuests.keys()));
+                        this.logger?.debug('QuestManager: Final state - Active quests:', Array.from(this.activeQuests.keys())) || Logger.debug(this.constructor.name, 'QuestManager: Final state - Active quests:', Array.from(this.activeQuests.keys()));
+            this.logger?.debug('QuestManager: Final state - Available quests:', Array.from(this.availableQuests.keys())) || Logger.debug(this.constructor.name, 'QuestManager: Final state - Available quests:', Array.from(this.availableQuests.keys()));
             return true;
         } catch (error) {
             console.error('QuestManager: Initialization failed:', error);
@@ -113,11 +106,9 @@ export class QuestManager {
             
             // Try to load fallback data to prevent complete failure
             try {
-                console.log('QuestManager: Attempting fallback initialization...');
-                this.questDataLoader.loadFallbackData();
+                                this.questDataLoader.loadFallbackData();
                 this.loadQuestTemplatesFromData();
-                console.log('QuestManager: Fallback initialization completed');
-                this.isInitialized = true;
+                                this.isInitialized = true;
                 return true;
             } catch (fallbackError) {
                 console.error('QuestManager: Fallback initialization also failed:', fallbackError);
@@ -127,29 +118,22 @@ export class QuestManager {
     }
 
     async initializeQuests() {
-        console.log('QuestManager: Starting quest initialization...');
-        
-        try {
+                try {
             // CRITICAL FIX: Load quest data from JSON first
-            console.log('QuestManager: Loading quest data from JSON...');
-            
-            if (!this.questDataLoader) {
+                        if (!this.questDataLoader) {
                 console.error('QuestManager: questDataLoader not available');
                 throw new Error('QuestDataLoader not available');
             }
             
             const loadResult = await this.questDataLoader.loadQuestData();
             if (loadResult) {
-                console.log('QuestManager: Quest data loaded from JSON successfully');
-            } else {
+                            } else {
                 console.warn('QuestManager: Quest data loading failed, using fallback data');
             }
             
             // Load quest data
             await this.loadQuestTemplatesFromData();
-            console.log('QuestManager: Quest templates loaded successfully');
-            
-            // Initialize story quests (auto-start if enabled)
+                        // Initialize story quests (auto-start if enabled)
             try {
                 this.initializeStoryQuests();
             } catch (storyError) {
@@ -163,9 +147,8 @@ export class QuestManager {
                 console.error('QuestManager: Error initializing NPC quests:', npcError.message);
             }
             
-            console.log('QuestManager: Quest system initialized successfully');
-            console.log('QuestManager: Active quests:', Array.from(this.activeQuests.keys()));
-            console.log('QuestManager: Available quests:', Array.from(this.availableQuests.keys()));
+                        this.logger?.debug('QuestManager: Active quests:', Array.from(this.activeQuests.keys())) || Logger.debug(this.constructor.name, 'QuestManager: Active quests:', Array.from(this.activeQuests.keys()));
+            this.logger?.debug('QuestManager: Available quests:', Array.from(this.availableQuests.keys())) || Logger.debug(this.constructor.name, 'QuestManager: Available quests:', Array.from(this.availableQuests.keys()));
             
         } catch (error) {
             console.error('QuestManager: Failed to initialize quest system:', error);
@@ -194,8 +177,7 @@ export class QuestManager {
                 this.questTemplates.set(template.id, template);
             });
             
-            console.log(`QuestManager: Loaded ${allTemplates.length} quest templates from JSON data`);
-        } catch (error) {
+                    } catch (error) {
             console.error('QuestManager: Error loading quest templates:', error);
             throw error;
         }
@@ -207,11 +189,7 @@ export class QuestManager {
             const storyQuests = this.questDataLoader.getStoryQuests();
             const settings = this.questDataLoader.getQuestSettings();
             
-            console.log('QuestManager: Initializing story quests...');
-            console.log('QuestManager: Found', storyQuests ? storyQuests.length : 0, 'story quests');
-            console.log('QuestManager: Auto-start setting:', settings ? settings.autoStartStoryQuests : 'unknown');
-            
-            if (!storyQuests || storyQuests.length === 0) {
+                                                if (!storyQuests || storyQuests.length === 0) {
                 console.warn('QuestManager: No story quests available to initialize');
                 return;
             }
@@ -224,48 +202,37 @@ export class QuestManager {
             if (settings.autoStartStoryQuests) {
                 storyQuests.forEach(quest => {
                     try {
-                        console.log(`QuestManager: Processing story quest: ${quest.title} (ID: ${quest.id})`);
-                        console.log(`QuestManager: Quest autoStart: ${quest.autoStart}`);
-                        
-                        // Don't auto-start if already completed or active
+                                                                        // Don't auto-start if already completed or active
                         if (this.completedQuests.has(quest.id)) {
-                            console.log(`QuestManager: Story quest ${quest.title} already completed, skipping auto-start`);
-                            return;
+                                                        return;
                         }
                         
                         if (this.activeQuests.has(quest.id)) {
-                            console.log(`QuestManager: Story quest ${quest.title} already active, skipping auto-start`);
-                            return;
+                                                        return;
                         }
                         
                         // Don't auto-start if template is marked as completed
                         const template = this.questTemplates.get(quest.id);
                         if (template && template.status === 'completed') {
-                            console.log(`QuestManager: Story quest ${quest.title} template marked as completed, skipping auto-start`);
-                            return;
+                                                        return;
                         }
                         
                         if (quest.autoStart) {
-                            console.log(`QuestManager: Starting auto-start quest: ${quest.title}`);
-                            const startResult = this.startQuest(quest.id);
+                                                        const startResult = this.startQuest(quest.id);
                             if (startResult) {
-                                console.log(`QuestManager: ✅ Auto-started story quest: ${quest.title}`);
-                            } else {
+                                                            } else {
                                 console.error(`QuestManager: ❌ Failed to auto-start story quest: ${quest.title}`);
                             }
                         } else {
-                            console.log(`QuestManager: Story quest ${quest.title} has autoStart=false, skipping`);
-                        }
+                                                    }
                     } catch (questError) {
                         console.error(`QuestManager: Error processing story quest ${quest.id}:`, questError.message);
                     }
                 });
             } else {
-                console.log('QuestManager: Auto-start story quests is disabled in settings');
-            }
+                            }
             
-            console.log('QuestManager: Story quest initialization complete');
-            console.log('QuestManager: Active quests after initialization:', Array.from(this.activeQuests.keys()));
+                        this.logger?.debug('QuestManager: Active quests after initialization:', Array.from(this.activeQuests.keys())) || Logger.debug(this.constructor.name, 'QuestManager: Active quests after initialization:', Array.from(this.activeQuests.keys()));
         } catch (error) {
             console.error('QuestManager: Error in initializeStoryQuests:', error);
             throw error;
@@ -279,26 +246,22 @@ export class QuestManager {
         npcQuests.forEach(quest => {
             // Don't add to available if already completed or active
             if (this.completedQuests.has(quest.id)) {
-                console.log(`QuestManager: NPC quest ${quest.title} already completed, not adding to available`);
-                return;
+                                return;
             }
             
             if (this.activeQuests.has(quest.id)) {
-                console.log(`QuestManager: NPC quest ${quest.title} already active, not adding to available`);
-                return;
+                                return;
             }
             
             // Don't add if template is marked as completed
             const template = this.questTemplates.get(quest.id);
             if (template && template.status === 'completed') {
-                console.log(`QuestManager: NPC quest ${quest.title} template marked as completed, not adding to available`);
-                return;
+                                return;
             }
             
             if (this.checkRequirements(quest.requirements)) {
                 this.availableQuests.set(quest.id, quest);
-                console.log(`QuestManager: Made NPC quest available: ${quest.title}`);
-            }
+                            }
         });
     }
 
@@ -320,13 +283,10 @@ export class QuestManager {
         this.activeQuests.set(questId, activeQuest);
         this.availableQuests.delete(questId);
 
-        console.log('QuestManager: Started quest:', activeQuest.title);
-        
-        // Emit quest started event for UI updates
+                // Emit quest started event for UI updates
         if (this.scene && this.scene.events) {
             this.scene.events.emit('quest-started', { questId, quest: activeQuest });
-            console.log('QuestManager: Emitted quest-started event for:', questId);
-        }
+                    }
         
         return true;
     }
@@ -334,24 +294,21 @@ export class QuestManager {
     completeObjective(questId, objectiveId) {
         const quest = this.activeQuests.get(questId);
         if (!quest) {
-            console.log(`QuestManager: Cannot complete objective ${objectiveId} - quest ${questId} not found in active quests`);
-            return false;
+                        return false;
         }
 
         const objective = quest.objectives.find(obj => obj.id === objectiveId);
         if (!objective) {
-            console.log(`QuestManager: Cannot complete objective ${objectiveId} - objective not found in quest ${questId}`);
-            return false;
+                        return false;
         }
 
         // Don't complete if already completed
         if (objective.completed) {
-            console.log(`QuestManager: Objective ${objectiveId} in quest ${questId} already completed, skipping`);
-            return false;
+                        return false;
         }
 
         objective.completed = true;
-        console.log('QuestManager: Objective completed:', objectiveId);
+        if (import.meta.env.DEV) console.log(`QuestManager: Objective completed: ${objectiveId} for quest ${questId}`);
         
         // CRITICAL FIX: Emit objective completion events globally for UI updates
         const eventData = { questId, objectiveId, objective };
@@ -366,8 +323,7 @@ export class QuestManager {
         if (this.scene && this.scene.game && this.scene.game.events) {
             this.scene.game.events.emit('quest-objective-completed', eventData);
             this.scene.game.events.emit('quest-objective-updated', eventData);
-            console.log('QuestManager: 📢 Emitted global quest objective completion events');
-        }
+                    }
         
         this.checkQuestCompletion(questId);
         return true;
@@ -385,9 +341,7 @@ export class QuestManager {
     }
 
     completeQuest(questId) {
-        console.log('QuestManager: Attempting to complete quest:', questId);
-        
-        const quest = this.activeQuests.get(questId);
+                const quest = this.activeQuests.get(questId);
         if (!quest) {
             console.warn('QuestManager: Quest not found or not active:', questId);
             return false;
@@ -401,7 +355,7 @@ export class QuestManager {
         this.activeQuests.delete(questId);
         this.completedQuests.add(questId);
         
-        console.log('QuestManager: Quest completed successfully:', quest.title);
+        if (import.meta.env.DEV) console.log(`QuestManager: Quest completed: ${questId}`);
         
         // Give rewards
         this.giveQuestRewards(quest);
@@ -427,14 +381,11 @@ export class QuestManager {
         
         // Check if this completes the tutorial sequence
         if (questId === 'story_001_tutorial') {
-            console.log('QuestManager: Tutorial quest completed!');
-            
-            // Check if we should move to next story quest
+                        // Check if we should move to next story quest
             if (this.questTemplates.has('story_002_first_companion') && 
                 !this.activeQuests.has('story_002_first_companion') &&
                 !this.completedQuests.has('story_002_first_companion')) {
-                console.log('QuestManager: Starting next story quest: story_002_first_companion');
-                this.startQuest('story_002_first_companion');
+                                this.startQuest('story_002_first_companion');
             }
         }
         
@@ -451,8 +402,7 @@ export class QuestManager {
     getAndClearPendingRewards() {
         const rewards = [...this.rewardsToShow];
         this.rewardsToShow = [];
-        console.log('QuestManager: Cleared reward queue. Rewards given to caller:', rewards);
-        return rewards;
+                return rewards;
     }
 
     calculateRewardSummary(quest) {
@@ -513,15 +463,13 @@ export class QuestManager {
         // Give items (would integrate with inventory system)
         if (quest.rewards.items) {
             quest.rewards.items.forEach(itemId => {
-                console.log('QuestManager: Rewarded item:', itemId);
-            });
+                            });
         }
         
         // Give romance points
         if (quest.rewards.romance) {
             Object.entries(quest.rewards.romance).forEach(([npcId, points]) => {
-                console.log(`QuestManager: Rewarded ${points} romance points with ${npcId}`);
-            });
+                            });
         }
     }
 
@@ -533,18 +481,15 @@ export class QuestManager {
                 if (questTemplate && this.checkRequirements(questTemplate.requirements)) {
                     // Don't unlock if already completed or active
                     if (this.completedQuests.has(questId)) {
-                        console.log(`QuestManager: Quest ${questTemplate.title} already completed, not unlocking`);
-                        return;
+                                                return;
                     }
                     
                     if (this.activeQuests.has(questId)) {
-                        console.log(`QuestManager: Quest ${questTemplate.title} already active, not unlocking`);
-                        return;
+                                                return;
                     }
                     
                     this.availableQuests.set(questId, questTemplate);
-                    console.log('QuestManager: Unlocked new quest:', questTemplate.title);
-                }
+                                    }
             });
         }
     }
@@ -623,8 +568,7 @@ export class QuestManager {
     }
 
     showQuestLog() {
-        console.log('QuestManager: Opening quest log');
-        try {
+                try {
             this.scene.scene.launch('QuestScene', {
                 callingScene: this.scene.scene.key,
                 questManager: this
@@ -636,10 +580,7 @@ export class QuestManager {
 
     // Event handlers for quest progression
     onFishCaught(fishData) {
-        console.log('QuestManager: 🐟 Fish caught event received:', fishData);
-        console.log('QuestManager: Tutorial completed flag:', this.tutorialQuestsCompleted);
-        console.log('QuestManager: Active quests count:', this.activeQuests.size);
-        console.log('QuestManager: Completed quests:', Array.from(this.completedQuests));
+                                this.logger?.debug('QuestManager: Completed quests:', Array.from(this.completedQuests)) || Logger.debug(this.constructor.name, 'QuestManager: Completed quests:', Array.from(this.completedQuests));
         
         // Process fish caught objectives for active quests
         this.activeQuests.forEach((quest, questId) => {
@@ -650,8 +591,7 @@ export class QuestManager {
                         if (objective.id === 'catch_first_fish' || 
                             objective.id === 'catch_with_technique' ||
                             objective.type === 'catch_fish') {
-                            console.log(`QuestManager: Completing objective ${objective.id} for quest ${questId}`);
-                            this.completeObjective(questId, objective.id);
+                                                        this.completeObjective(questId, objective.id);
                         }
                     }
                 });
@@ -660,8 +600,7 @@ export class QuestManager {
     }
 
     onRomanceMeterChanged(npcId, newValue) {
-        console.log(`QuestManager: Romance meter changed for ${npcId} to ${newValue}`);
-        this.activeQuests.forEach(quest => {
+                this.activeQuests.forEach(quest => {
             quest.objectives.forEach(objective => {
                 if (objective.type === 'romance' && !objective.completed) {
                     if (objective.target === npcId && newValue >= objective.value) {
@@ -673,23 +612,17 @@ export class QuestManager {
     }
 
     onDialogCompleted(npcId, choiceData) {
-        console.log('QuestManager: Dialog completed with:', npcId);
-        
-        // CRITICAL FIX: Only complete dialog objectives if quests are still active
+                // CRITICAL FIX: Only complete dialog objectives if quests are still active
         // Objective for 'Meeting New Friends'
         if (npcId === 'mia' && this.activeQuests.has('story_002_first_companion')) {
-            console.log('QuestManager: First companion quest is active, completing dialog objectives');
-            this.completeObjective('story_002_first_companion', 'talk_to_mia');
+                        this.completeObjective('story_002_first_companion', 'talk_to_mia');
             this.completeObjective('story_002_first_companion', 'learn_fishing_technique');
         } else if (npcId === 'mia') {
-            console.log('QuestManager: First companion quest not active, skipping dialog objective completion');
-        }
+                    }
     }
 
     onCast(castData) {
-        console.log('QuestManager: Cast completed:', castData);
-        
-        // Process cast objectives for active quests
+                // Process cast objectives for active quests
         this.activeQuests.forEach((quest, questId) => {
             if (quest.objectives) {
                 quest.objectives.forEach(objective => {
@@ -697,8 +630,7 @@ export class QuestManager {
                         // Check if this objective should be completed by casting
                         if (objective.id === 'cast_first_time' || 
                             objective.type === 'cast_line') {
-                            console.log(`QuestManager: Completing objective ${objective.id} for quest ${questId}`);
-                            this.completeObjective(questId, objective.id);
+                                                        this.completeObjective(questId, objective.id);
                         }
                     }
                 });
@@ -708,47 +640,33 @@ export class QuestManager {
 
     onBoatMenuAccessed() {
         try {
-            console.log('QuestManager: 🚢 Boat menu accessed event received');
-            console.log('QuestManager: Active quests count:', this.activeQuests.size);
-            console.log('QuestManager: Active quest IDs:', Array.from(this.activeQuests.keys()));
-            console.log('QuestManager: Completed quests:', Array.from(this.completedQuests));
+                                    this.logger?.debug('QuestManager: Active quest IDs:', Array.from(this.activeQuests.keys())) || Logger.debug(this.constructor.name, 'QuestManager: Active quest IDs:', Array.from(this.activeQuests.keys()));
+            this.logger?.debug('QuestManager: Completed quests:', Array.from(this.completedQuests)) || Logger.debug(this.constructor.name, 'QuestManager: Completed quests:', Array.from(this.completedQuests));
             
             // CRITICAL FIX: Check if tutorial quest is specifically active
             const tutorialQuest = this.activeQuests.get('story_001_tutorial');
             if (!tutorialQuest) {
-                console.log('QuestManager: Tutorial quest not found in active quests - boat menu objective cannot be completed');
-                return;
+                                return;
             }
             
-            console.log('QuestManager: Tutorial quest found:', tutorialQuest.title);
-            console.log('QuestManager: Tutorial quest objectives:', tutorialQuest.objectives);
-            
-            // Process boat menu objectives for the tutorial quest specifically
+                                    // Process boat menu objectives for the tutorial quest specifically
             if (tutorialQuest.objectives) {
                 tutorialQuest.objectives.forEach((objective, index) => {
-                    console.log(`QuestManager: Checking objective ${index}: ${objective.id} - ${objective.description} (completed: ${objective.completed})`);
-                    
-                    if (!objective.completed) {
+                                        if (!objective.completed) {
                         // Check if this objective should be completed by accessing boat menu
                         if (objective.id === 'visit_boat_menu' || 
                             objective.id === 'access_boat_menu' ||
                             objective.type === 'ui_interaction') {
-                            console.log(`QuestManager: ✅ Completing objective ${objective.id} for tutorial quest`);
-                            const result = this.completeObjective('story_001_tutorial', objective.id);
-                            console.log(`QuestManager: Objective completion result: ${result}`);
-                            
-                            if (result) {
-                                console.log(`QuestManager: Successfully completed objective ${objective.id}`);
-                                console.log(`QuestManager: Objective state after completion:`, objective);
+                                                        const result = this.completeObjective('story_001_tutorial', objective.id);
+                                                        if (result) {
+                                if (import.meta.env.DEV) console.log(`QuestManager: Completed objective ${objective.id}`);
                             } else {
                                 console.warn(`QuestManager: Failed to complete objective ${objective.id}`);
                             }
                         } else {
-                            console.log(`QuestManager: Objective ${objective.id} (type: ${objective.type}) does not match boat menu criteria`);
-                        }
+                                                    }
                     } else {
-                        console.log(`QuestManager: Objective ${objective.id} already completed, skipping`);
-                    }
+                                            }
                 });
             } else {
                 console.warn(`QuestManager: Tutorial quest has no objectives`);
@@ -757,9 +675,7 @@ export class QuestManager {
             // ADDITIONAL FIX: Also process any other active quests that might have boat menu objectives
             this.activeQuests.forEach((quest, questId) => {
                 if (questId !== 'story_001_tutorial') { // Skip tutorial quest as we handled it above
-                    console.log(`QuestManager: Processing quest ${questId} (${quest.title}) for boat menu objectives`);
-                    
-                    if (quest.objectives) {
+                                        if (quest.objectives) {
                         quest.objectives.forEach((objective, index) => {
                             if (!objective.completed) {
                                 // Check if this objective should be completed by accessing boat menu
@@ -767,51 +683,38 @@ export class QuestManager {
                                     objective.id === 'access_boat_menu' ||
                                     objective.type === 'visit_location' ||
                                     objective.type === 'ui_interaction') {
-                                    console.log(`QuestManager: ✅ Completing objective ${objective.id} for quest ${questId}`);
-                                    const result = this.completeObjective(questId, objective.id);
-                                    console.log(`QuestManager: Objective completion result for ${questId}: ${result}`);
-                                }
+                                                                        const result = this.completeObjective(questId, objective.id);
+                                                                    }
                             }
                         });
                     }
                 }
             });
             
-            console.log('QuestManager: Finished processing boat menu access event');
-            
-        } catch (error) {
+                    } catch (error) {
             console.error('QuestManager: ❌ ERROR in onBoatMenuAccessed method:', error);
             console.error('QuestManager: Error stack:', error.stack);
             
             // Try manual completion as fallback
             try {
-                console.log('QuestManager: Attempting manual objective completion as fallback...');
-                const result = this.completeObjective('story_001_tutorial', 'visit_boat_menu');
-                console.log('QuestManager: Manual fallback result:', result);
-            } catch (fallbackError) {
+                                const result = this.completeObjective('story_001_tutorial', 'visit_boat_menu');
+                            } catch (fallbackError) {
                 console.error('QuestManager: Manual fallback also failed:', fallbackError);
             }
         }
     }
 
     showQuestRewardUI(quest) {
-        console.log('QuestManager: Showing reward UI for:', quest.title);
-        
-        try {
+                try {
             // Try Phaser-based UI first (better integration with game)
             if (this.scene && this.scene.add && this.scene.cameras) {
-                console.log('QuestManager: Creating Phaser-based reward UI');
-                this.createPhaserRewardUI(quest);
+                                this.createPhaserRewardUI(quest);
             } else {
-                console.log('QuestManager: Scene not available, falling back to DOM reward UI');
-                this.createDOMRewardUI(quest);
+                                this.createDOMRewardUI(quest);
             }
         } catch (error) {
-            console.log('QuestManager: Reward UI error, showing console summary');
-            console.log('🎉 Quest Complete:', quest.title);
-            if (quest.rewards) {
-                console.log('Rewards: +' + (quest.rewards.experience || 0) + ' XP, +' + (quest.rewards.coins || 0) + ' coins');
-            }
+                                    if (quest.rewards) {
+                            }
         }
     }
 
@@ -948,14 +851,12 @@ export class QuestManager {
         // Make interactive
         closeButton.setInteractive({ useHandCursor: true });
         closeButton.on('pointerdown', () => {
-            console.log('QuestManager: Closing Phaser reward overlay');
-            overlay.destroy();
+                        overlay.destroy();
         });
         
         // Also allow clicking background to close
         bg.on('pointerdown', () => {
-            console.log('QuestManager: Closing Phaser reward overlay (background click)');
-            overlay.destroy();
+                        overlay.destroy();
         });
         
         // Animate in
@@ -978,8 +879,7 @@ export class QuestManager {
             closeText.setScale(1.0);
         });
         
-        console.log('QuestManager: Phaser reward UI created successfully');
-        return true;
+                return true;
     }
 
     createDOMRewardUI(quest) {
@@ -1018,8 +918,8 @@ export class QuestManager {
     getPlayerLevel() { return 1; }
     getPlayerExperience() { return 0; }
     getPlayerCoins() { return 0; }
-    addPlayerExperience(amount) { console.log('Added experience:', amount); }
-    addPlayerCoins(amount) { console.log('Added coins:', amount); }
+    addPlayerExperience(amount) { this.logger?.debug('Added experience:', amount) || Logger.debug(this.constructor.name, 'Added experience:', amount); }
+    addPlayerCoins(amount) { this.logger?.debug('Added coins:', amount) || Logger.debug(this.constructor.name, 'Added coins:', amount); }
     
     getItemDisplayName(itemId) { return itemId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()); }
     getItemDescription(itemId) { return `A ${this.getItemDisplayName(itemId)}`; }
@@ -1042,8 +942,7 @@ export class QuestManager {
         if (callback) {
             try {
                 const result = callback(...args);
-                console.log(`QuestManager: RenJs command '${command}' executed:`, result);
-                return result;
+                                return result;
             } catch (error) {
                 console.error(`QuestManager: Error executing RenJs command '${command}':`, error);
                 return false;
@@ -1114,27 +1013,23 @@ export class QuestManager {
         
         // CRITICAL FIX: Don't add to available quests if already completed or active
         if (this.completedQuests.has(questData.id)) {
-            console.log(`QuestManager: Quest ${questData.title} already completed, not adding to available`);
-            return questData;
+                        return questData;
         }
         
         if (this.activeQuests.has(questData.id)) {
-            console.log(`QuestManager: Quest ${questData.title} already active, not adding to available`);
-            return questData;
+                        return questData;
         }
         
         // ADDITIONAL CHECK: Don't add if template is marked as completed
         const existingTemplate = this.questTemplates.get(questData.id);
         if (existingTemplate && existingTemplate.status === 'completed') {
-            console.log(`QuestManager: Quest ${questData.title} template marked as completed, not adding to available`);
-            return questData;
+                        return questData;
         }
         
         // Add to available quests if requirements are met and not already completed/active
         if (this.checkRequirements(questData.requirements)) {
             this.availableQuests.set(questData.id, questData);
-            console.log(`QuestManager: Added quest: ${questData.title}`);
-        }
+                    }
         
         return questData;
     }
@@ -1192,23 +1087,19 @@ export class QuestManager {
      * Clean up duplicate quests and ensure state consistency
      */
     cleanupQuestStates() {
-        console.log('QuestManager: Cleaning up quest states...');
-        
-        // Remove completed quests from available quests
+                // Remove completed quests from available quests
         const completedQuestIds = Array.from(this.completedQuests);
         completedQuestIds.forEach(questId => {
             if (this.availableQuests.has(questId)) {
                 this.availableQuests.delete(questId);
-                console.log(`QuestManager: Removed completed quest ${questId} from available quests`);
-            }
+                            }
             
             // Mark template as completed to prevent re-adding
             const template = this.questTemplates.get(questId);
             if (template && template.status !== 'completed') {
                 template.status = 'completed';
                 template.dateCompleted = new Date();
-                console.log(`QuestManager: Marked template ${questId} as completed`);
-            }
+                            }
         });
         
         // Remove active quests from available quests
@@ -1216,8 +1107,7 @@ export class QuestManager {
         activeQuestIds.forEach(questId => {
             if (this.availableQuests.has(questId)) {
                 this.availableQuests.delete(questId);
-                console.log(`QuestManager: Removed active quest ${questId} from available quests`);
-            }
+                            }
         });
         
         // Remove any quests from available that have completed status in template
@@ -1226,22 +1116,19 @@ export class QuestManager {
             const template = this.questTemplates.get(questId);
             if (template && template.status === 'completed') {
                 this.availableQuests.delete(questId);
-                console.log(`QuestManager: Removed quest ${questId} from available (template marked completed)`);
-            }
+                            }
         });
         
-        console.log(`QuestManager: Cleanup complete - Active: ${this.activeQuests.size}, Available: ${this.availableQuests.size}, Completed: ${this.completedQuests.size}`);
-    }
+            }
     
     /**
      * Debug method to log all quest states
      */
     debugQuestStates() {
-        console.log('=== QUEST STATE DEBUG ===');
-        console.log('Active Quests:', Array.from(this.activeQuests.keys()));
-        console.log('Available Quests:', Array.from(this.availableQuests.keys()));
-        console.log('Completed Quests:', Array.from(this.completedQuests));
-        console.log('Quest Templates:', Array.from(this.questTemplates.keys()));
+                this.logger?.debug('Active Quests:', Array.from(this.activeQuests.keys())) || Logger.debug(this.constructor.name, 'Active Quests:', Array.from(this.activeQuests.keys()));
+        this.logger?.debug('Available Quests:', Array.from(this.availableQuests.keys())) || Logger.debug(this.constructor.name, 'Available Quests:', Array.from(this.availableQuests.keys()));
+        this.logger?.debug('Completed Quests:', Array.from(this.completedQuests)) || Logger.debug(this.constructor.name, 'Completed Quests:', Array.from(this.completedQuests));
+        this.logger?.debug('Quest Templates:', Array.from(this.questTemplates.keys())) || Logger.debug(this.constructor.name, 'Quest Templates:', Array.from(this.questTemplates.keys()));
         
         // Check for duplicates
         const activeIds = Array.from(this.activeQuests.keys());
@@ -1262,8 +1149,7 @@ export class QuestManager {
             console.warn('DUPLICATE: Available & Completed:', duplicatesAvailableCompleted);
         }
         
-        console.log('=== END QUEST DEBUG ===');
-    }
+            }
 
     /**
      * Trigger a story dialog with RenJs support
@@ -1272,35 +1158,29 @@ export class QuestManager {
      * @param {string} callingScene - Scene that initiated the dialog
      */
     triggerStoryDialog(storyId, npcId = 'mia', callingScene = 'GameScene') {
-        console.log(`QuestManager: Triggering story dialog ${storyId} with ${npcId}`);
-        
-        try {
+                try {
             // CRITICAL FIX: Check multiple sources for DialogManager
             let dialogManager = null;
             
             // Priority 1: Check if DialogManager is directly attached to QuestManager
             if (this.dialogManager) {
                 dialogManager = this.dialogManager;
-                console.log('QuestManager: Using DialogManager from QuestManager reference');
-            }
+                            }
             // Priority 2: Check scene's DialogManager
             else if (this.scene && this.scene.dialogManager) {
                 dialogManager = this.scene.dialogManager;
-                console.log('QuestManager: Using DialogManager from scene reference');
-            }
+                            }
             // Priority 3: Check GameState's DialogManager
             else if (this.gameState && this.gameState.dialogManager) {
                 dialogManager = this.gameState.dialogManager;
-                console.log('QuestManager: Using DialogManager from GameState reference');
-            }
+                            }
             // Priority 4: Try to get it from the calling scene
             else {
                 const sceneManager = this.scene.scene;
                 const targetScene = sceneManager.get(callingScene);
                 if (targetScene && targetScene.dialogManager) {
                     dialogManager = targetScene.dialogManager;
-                    console.log(`QuestManager: Using DialogManager from ${callingScene} scene`);
-                }
+                                    }
             }
             
             if (!dialogManager) {
@@ -1313,13 +1193,11 @@ export class QuestManager {
             const useRenJs = storyId === 'Story03' || (storyId.startsWith('Story') && parseInt(storyId.slice(5)) >= 3);
             
             if (useRenJs) {
-                console.log(`QuestManager: Using RenJs format for ${storyId}`);
-                // Use the enhanced startDialog method with specificDialog parameter
+                                // Use the enhanced startDialog method with specificDialog parameter
                 return dialogManager.startDialog(npcId, callingScene, storyId);
             } else {
                 // Use standard dialog system for earlier stories
-                console.log(`QuestManager: Using standard format for ${storyId}`);
-                return dialogManager.startDialog(npcId, callingScene);
+                                return dialogManager.startDialog(npcId, callingScene);
             }
             
         } catch (error) {
@@ -1337,9 +1215,7 @@ export class QuestManager {
      */
     showStoryDialogFallback(storyId, npcId, callingScene) {
         try {
-            console.log(`QuestManager: Showing fallback notification for ${storyId}`);
-            
-            if (!this.scene || !this.scene.add) {
+                        if (!this.scene || !this.scene.add) {
                 console.warn('QuestManager: Scene not available for fallback notification');
                 return false;
             }
@@ -1413,14 +1289,12 @@ export class QuestManager {
             // Make interactive
             continueButton.setInteractive({ useHandCursor: true });
             continueButton.on('pointerdown', () => {
-                console.log('QuestManager: Closing story fallback notification');
-                overlay.destroy();
+                                overlay.destroy();
             });
             
             // Also allow clicking background to close
             bg.on('pointerdown', () => {
-                console.log('QuestManager: Closing story fallback notification (background click)');
-                overlay.destroy();
+                                overlay.destroy();
             });
             
             // Animate in
@@ -1443,8 +1317,7 @@ export class QuestManager {
                 continueText.setScale(1.0);
             });
             
-            console.log('QuestManager: Story fallback notification created successfully');
-            return true;
+                        return true;
             
         } catch (error) {
             console.error('QuestManager: Error creating story fallback notification:', error);
@@ -1467,9 +1340,7 @@ export class QuestManager {
         
         const storyId = storyDialogMappings[questId];
         if (storyId) {
-            console.log(`QuestManager: Quest ${questId} completed, triggering ${storyId}`);
-            
-            // Determine NPC for the story dialog with fallbacks
+                        // Determine NPC for the story dialog with fallbacks
             let npcId = 'captain'; // Default fallback
             
             // Map specific stories to appropriate NPCs
@@ -1480,9 +1351,7 @@ export class QuestManager {
             if (storyId === 'Story06') npcId = 'luna';
             if (storyId === 'Story07') npcId = 'luna';
             
-            console.log(`QuestManager: Using NPC '${npcId}' for ${storyId}`);
-            
-            // Delay the dialog trigger slightly to allow quest completion UI to show
+                        // Delay the dialog trigger slightly to allow quest completion UI to show
             setTimeout(() => {
                 try {
                     const result = this.triggerStoryDialog(storyId, npcId, 'GameScene');
@@ -1492,16 +1361,15 @@ export class QuestManager {
                         const fallbackNpcs = ['mia', 'sophie', 'luna', 'captain'];
                         for (const fallbackNpc of fallbackNpcs) {
                             if (fallbackNpc !== npcId) {
-                                console.log(`QuestManager: Trying fallback NPC: ${fallbackNpc}`);
-                                const fallbackResult = this.triggerStoryDialog(storyId, fallbackNpc, 'GameScene');
+                                                                const fallbackResult = this.triggerStoryDialog(storyId, fallbackNpc, 'GameScene');
                                 if (fallbackResult) {
-                                    console.log(`QuestManager: Successfully triggered ${storyId} with fallback NPC ${fallbackNpc}`);
+                                    if (import.meta.env.DEV) console.log(`QuestManager: Fallback story dialog ${storyId} triggered with ${fallbackNpc}`);
                                     break;
                                 }
                             }
                         }
                     } else {
-                        console.log(`QuestManager: Successfully triggered ${storyId} with ${npcId}`);
+                        if (import.meta.env.DEV) console.log(`QuestManager: Story dialog ${storyId} triggered successfully with ${npcId}`);
                     }
                 } catch (error) {
                     console.error(`QuestManager: Error triggering story dialog ${storyId}:`, error);
@@ -1515,39 +1383,31 @@ export class QuestManager {
      * Call from browser console: window.testStory03RenJs()
      */
     testStory03RenJs() {
-        console.log('QuestManager: Registering Story03 RenJs test function');
-        
-        // Only register the global function, don't trigger immediately
+                // Only register the global function, don't trigger immediately
         if (typeof window !== 'undefined') {
             window.testStory03RenJs = () => {
-                console.log('QuestManager: Testing Story03 with RenJs format (called from window)');
-                
-                // CRITICAL FIX: Check multiple sources for DialogManager
+                                // CRITICAL FIX: Check multiple sources for DialogManager
                 let dialogManager = null;
                 
                 // Priority 1: Check if DialogManager is directly attached to QuestManager
                 if (this.dialogManager) {
                     dialogManager = this.dialogManager;
-                    console.log('QuestManager: Using DialogManager from QuestManager reference');
-                }
+                                    }
                 // Priority 2: Check scene's DialogManager
                 else if (this.scene && this.scene.dialogManager) {
                     dialogManager = this.scene.dialogManager;
-                    console.log('QuestManager: Using DialogManager from scene reference');
-                }
+                                    }
                 // Priority 3: Check GameState's DialogManager
                 else if (this.gameState && this.gameState.dialogManager) {
                     dialogManager = this.gameState.dialogManager;
-                    console.log('QuestManager: Using DialogManager from GameState reference');
-                }
+                                    }
                 // Priority 4: Try to get it from GameScene
                 else {
                     try {
                         const gameScene = window.game?.scene?.getScene('GameScene');
                         if (gameScene?.dialogManager) {
                             dialogManager = gameScene.dialogManager;
-                            console.log('QuestManager: Using DialogManager from GameScene');
-                        }
+                                                    }
                     } catch (sceneError) {
                         console.warn('QuestManager: Could not access GameScene:', sceneError.message);
                     }
@@ -1561,8 +1421,7 @@ export class QuestManager {
                 // Trigger the story dialog
                 return this.triggerStoryDialog('Story03', 'mia', 'GameScene');
             };
-            console.log('QuestManager: ✅ window.testStory03RenJs() function registered successfully');
-        }
+                    }
         
         // Don't trigger immediately during initialization
         return true;

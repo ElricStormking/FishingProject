@@ -28,8 +28,7 @@ export class AudioSettingsUI {
         };
         
         this.initializeUI();
-        console.log('AudioSettingsUI: Audio settings interface initialized');
-    }
+            }
 
     /**
      * Initialize the audio settings UI
@@ -572,8 +571,7 @@ export class AudioSettingsUI {
                 break;
         }
         
-        console.log(`AudioSettingsUI: Playing test audio - ${type}: ${sample}`);
-    }
+            }
 
     /**
      * Setup event listeners
@@ -654,8 +652,7 @@ export class AudioSettingsUI {
             ease: 'Power2'
         });
         
-        console.log('AudioSettingsUI: Audio settings panel opened');
-    }
+            }
 
     /**
      * Hide the audio settings UI
@@ -676,8 +673,7 @@ export class AudioSettingsUI {
             }
         });
         
-        console.log('AudioSettingsUI: Audio settings panel closed');
-    }
+            }
 
     /**
      * Toggle visibility
@@ -707,8 +703,7 @@ export class AudioSettingsUI {
         this.testButtons.clear();
         this.infoDisplays.clear();
         
-        console.log('AudioSettingsUI: Destroyed');
-    }
+            }
 }
 
 export default AudioSettingsUI; 

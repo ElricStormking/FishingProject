@@ -1,4 +1,5 @@
 import UITheme from './UITheme.js';
+import Logger from '../utils/Logger.js';
 
 /**
  * Achievement Popup System - Visual achievement unlock notifications
@@ -22,7 +23,7 @@ export class AchievementPopupSystem {
             glow: { duration: 2000, ease: 'Sine.easeInOut' }
         };
         
-        console.log('AchievementPopupSystem: Achievement notification system initialized');
+        if (import.meta.env.DEV) console.log('AchievementPopupSystem: Achievement notification system initialized');
     }
 
     /**
@@ -77,7 +78,7 @@ export class AchievementPopupSystem {
         // Play achievement sound
         this.playAchievementSound(popupData.rarity);
         
-        console.log(`AchievementPopupSystem: Showing achievement: ${popupData.title}`);
+        if (import.meta.env.DEV) console.log(`AchievementPopupSystem: Showing achievement: ${popupData.title}`);
     }
 
     /**
@@ -417,7 +418,7 @@ export class AchievementPopupSystem {
         // Process queue
         this.processPopupQueue();
         
-        console.log('AchievementPopupSystem: Popup removed and cleaned up');
+        if (import.meta.env.DEV) console.log('AchievementPopupSystem: Popup removed and cleaned up');
     }
 
     /**
@@ -584,7 +585,7 @@ export class AchievementPopupSystem {
         this.activePopups = [];
         this.popupQueue = [];
         
-        console.log('AchievementPopupSystem: All popups cleared');
+        if (import.meta.env.DEV) console.log('AchievementPopupSystem: All popups cleared');
     }
 
     /**

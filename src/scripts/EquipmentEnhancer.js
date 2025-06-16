@@ -1,4 +1,5 @@
 import { EventEmitter } from './EventEmitter.js';
+import Logger from '../utils/Logger.js';
 
 export class EquipmentEnhancer extends EventEmitter {
     constructor(gameState, inventoryManager) {
@@ -33,13 +34,11 @@ export class EquipmentEnhancer extends EventEmitter {
         
         // Load enhancement data with error handling
         try {
-            console.log('EquipmentEnhancer: Loading enhancement data...');
-            this.enhancementData = this.loadEnhancementData();
+                        this.enhancementData = this.loadEnhancementData();
             this.setData = this.loadSetData();
             this.specializationData = this.loadSpecializationData();
             console.log('EquipmentEnhancer: Enhancement data loaded successfully');
-            console.log('EquipmentEnhancer: Initialized with enhancement system');
-        } catch (error) {
+                    } catch (error) {
             console.error('EquipmentEnhancer: Error loading enhancement data:', error);
             // Provide minimal fallback data
             this.enhancementData = { 
@@ -74,9 +73,7 @@ export class EquipmentEnhancer extends EventEmitter {
      */
     loadEnhancementData() {
         try {
-            console.log('EquipmentEnhancer: Loading enhancement stones and rates...');
-            
-            const data = {
+                        const data = {
                 // Enhancement stones
                 enhancementStones: {
                     'basic_stone': { 
@@ -155,9 +152,7 @@ export class EquipmentEnhancer extends EventEmitter {
      */
     loadSetData() {
         try {
-            console.log('EquipmentEnhancer: Loading equipment set data...');
-            
-            const data = {
+                        const data = {
                 // Beginner's Set
                 'beginners_luck': {
                     name: "Beginner's Luck Set",
@@ -279,9 +274,7 @@ export class EquipmentEnhancer extends EventEmitter {
      */
     loadSpecializationData() {
         try {
-            console.log('EquipmentEnhancer: Loading specialization data...');
-            
-            const data = {
+                        const data = {
                 // Fish-specific specializations
                 fishSpecializations: {
                     'bass_hunter': {

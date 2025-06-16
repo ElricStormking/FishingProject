@@ -1,4 +1,5 @@
 import { LOCATION_DATA, getUnlockedLocations, getLocationById } from '../data/LocationData.js';
+import Logger from '../utils/Logger.js';
 
 export class MapSelectionUI {
     constructor(scene, locationManager, gameState) {
@@ -15,8 +16,7 @@ export class MapSelectionUI {
         this.locationList = [];
         this.selectedLocationDisplay = null;
         
-        console.log('MapSelectionUI: Initialized with location data');
-    }
+            }
 
     show() {
         if (this.isVisible) return;
@@ -422,7 +422,7 @@ export class MapSelectionUI {
                     // Close the map interface
                     this.hide();
                     
-                    console.log('MapSelectionUI: Successfully initiated travel via GameLoop');
+                    if (import.meta.env.DEV) console.log('MapSelectionUI: Successfully initiated travel via GameLoop');
                 } else {
                     console.warn('MapSelectionUI: GameLoop travel failed - insufficient resources or constraints');
                     if (this.scene.showErrorMessage) {
@@ -466,7 +466,7 @@ export class MapSelectionUI {
                 // Close the map interface
                 this.hide();
                 
-                console.log('MapSelectionUI: Successfully traveled using direct update');
+                if (import.meta.env.DEV) console.log('MapSelectionUI: Successfully traveled using direct update');
             }
             
         } catch (error) {

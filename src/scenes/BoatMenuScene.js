@@ -12,6 +12,7 @@ import { FishCollectionUI } from '../ui/FishCollectionUI.js';
 import { MapSelectionUI } from '../ui/MapSelectionUI.js';
 import { ShopUI } from '../ui/ShopUI.js';
 import { LoadingStateManager } from '../ui/LoadingStateManager.js';
+import Logger from '../utils/Logger.js';
 
 export default class BoatMenuScene extends Phaser.Scene {
     constructor() {
@@ -19,19 +20,14 @@ export default class BoatMenuScene extends Phaser.Scene {
     }
 
     create(data) {
-        console.log('BoatMenuScene: CREATE called with data:', data);
-        
-        // Initialize async components in the background
+                // Initialize async components in the background
         this.initializeAsyncComponents(data);
         
         // Continue with synchronous initialization
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
         
-        console.log('BoatMenuScene: Creating scene with dimensions:', width, 'x', height);
-        console.log('BoatMenuScene: Scene data received:', data);
-        
-        // CRITICAL: Clean up any leftover DOM buttons from previous sessions
+                        // CRITICAL: Clean up any leftover DOM buttons from previous sessions
         this.forceCleanupAllDOMButtons();
         
         // Store data for later use
@@ -39,15 +35,12 @@ export default class BoatMenuScene extends Phaser.Scene {
         
         // Handle return from fishing session
         if (data?.returnedFromFishing) {
-            console.log('BoatMenuScene: Returned from fishing session');
-            if (data.fishingSessionData) {
-                console.log('BoatMenuScene: Processing fishing session results:', data.fishingSessionData);
-                this.processFishingSessionResults(data.fishingSessionData);
+                        if (data.fishingSessionData) {
+                                this.processFishingSessionResults(data.fishingSessionData);
             }
             
             if (data.errorRecovery) {
-                console.log('BoatMenuScene: Scene loaded in error recovery mode');
-                this.showInfoMessage('Returned to boat (error recovery mode)');
+                                this.showInfoMessage('Returned to boat (error recovery mode)');
             } else {
                 this.showSuccessMessage('Welcome back! Fishing session completed.');
             }
@@ -57,73 +50,48 @@ export default class BoatMenuScene extends Phaser.Scene {
         this.gameState = GameState.getInstance();
             
         // Initialize quest manager and ensure it has scene context
-        console.log('BoatMenuScene: Initializing QuestManager...');
-        
-        // Quest Manager will be initialized asynchronously in initializeAsyncComponents
+                // Quest Manager will be initialized asynchronously in initializeAsyncComponents
         this.boatMenuAccessed = true; // Track that boat menu was accessed for retroactive quest completion
         
         if (this.gameState.questManager) {
-            console.log('BoatMenuScene: Using existing QuestManager from GameState');
-            console.log('BoatMenuScene: QuestManager active quests:', Array.from(this.gameState.questManager.activeQuests.keys()));
-            console.log('BoatMenuScene: QuestManager quest templates count:', this.gameState.questManager.questTemplates.size);
-            this.questManager = this.gameState.questManager;
+                        this.logger?.debug('BoatMenuScene: QuestManager active quests:', Array.from(this.gameState.questManager.activeQuests.keys())) || Logger.debug(this.constructor.name, 'BoatMenuScene: QuestManager active quests:', Array.from(this.gameState.questManager.activeQuests.keys()));
+                        this.questManager = this.gameState.questManager;
             
             // Update scene reference
             this.questManager.scene = this;
             
             // Ensure it's initialized
             if (!this.questManager.isInitialized) {
-                console.log('BoatMenuScene: QuestManager not initialized, will be initialized asynchronously...');
-                // await this.questManager.initialize(); // Removed - will be handled asynchronously
+                                // await this.questManager.initialize(); // Removed - will be handled asynchronously
             }
             
             // Boat menu objective will be completed in async initialization
-            console.log('BoatMenuScene: QuestManager found, boat menu objective will be completed asynchronously');
-        } else {
-            console.log('BoatMenuScene: 🔄 Auto-creating QuestManager for immediate availability...');
-            
-            // CRITICAL FIX: Create QuestManager automatically instead of waiting
+                    } else {
+                        // CRITICAL FIX: Create QuestManager automatically instead of waiting
             try {
-                console.log('BoatMenuScene: Creating QuestManager directly (import already available)');
-                
-                // Create QuestManager and store in GameState immediately
+                                // Create QuestManager and store in GameState immediately
                 this.questManager = new QuestManager(this);
                 this.gameState.questManager = this.questManager;
                 
-                console.log('BoatMenuScene: ✅ QuestManager auto-created and stored in GameState');
-                
-                // CRITICAL FIX: Initialize QuestManager asynchronously
-                console.log('BoatMenuScene: Initializing QuestManager asynchronously...');
-                // await this.questManager.initialize(); // Removed - will be handled asynchronously
-                console.log('BoatMenuScene: QuestManager initialization will complete asynchronously');
-                
-                console.log('BoatMenuScene: QuestManager active quests:', Array.from(this.questManager.activeQuests.keys()));
-                console.log('BoatMenuScene: QuestManager templates count:', this.questManager.questTemplates.size);
-                
-                // Boat menu quest objective will be completed in async initialization
-                console.log('BoatMenuScene: QuestManager created, boat menu objective will be completed asynchronously');
-                
-                // CRITICAL FIX: Set up quest event listeners on GameScene if available
+                                // CRITICAL FIX: Initialize QuestManager asynchronously
+                                // await this.questManager.initialize(); // Removed - will be handled asynchronously
+                                this.logger?.debug('BoatMenuScene: QuestManager active quests:', Array.from(this.questManager.activeQuests.keys())) || Logger.debug(this.constructor.name, 'BoatMenuScene: QuestManager active quests:', Array.from(this.questManager.activeQuests.keys()));
+                                // Boat menu quest objective will be completed in async initialization
+                                // CRITICAL FIX: Set up quest event listeners on GameScene if available
                 const gameScene = this.scene.get('GameScene');
                 if (gameScene && gameScene.setupQuestEventListeners) {
-                    console.log('BoatMenuScene: Setting up quest event listeners on GameScene...');
-                    gameScene.questManager = this.questManager;
+                                        gameScene.questManager = this.questManager;
                     gameScene.setupQuestEventListeners();
-                    console.log('BoatMenuScene: ✅ Quest event listeners set up on GameScene');
-                } else {
-                    console.log('BoatMenuScene: GameScene not available for quest listener setup');
-                }
+                                    } else {
+                                    }
                 
                 // Update Quest Tracker UI to use the new QuestManager
                 if (this.questTrackerUI && this.questTrackerUI.questProcessingDisabled) {
-                    console.log('BoatMenuScene: Enabling quest processing on existing QuestTrackerUI...');
-                    this.questTrackerUI.updateQuestManager(this.questManager);
+                                        this.questTrackerUI.updateQuestManager(this.questManager);
                 } else if (this.questTrackerUI) {
-                    console.log('BoatMenuScene: QuestTrackerUI already has active quest processing, refreshing...');
-                    this.questTrackerUI.refreshQuests();
+                                        this.questTrackerUI.refreshQuests();
                 } else {
-                    console.log('BoatMenuScene: QuestTrackerUI not available yet for updating');
-                }
+                                    }
                 
             } catch (error) {
                 console.error('BoatMenuScene: Error auto-creating QuestManager:', error);
@@ -142,8 +110,7 @@ export default class BoatMenuScene extends Phaser.Scene {
         this.audioManager = this.gameState.getAudioManager(this);
         if (this.audioManager) {
             this.audioManager.setSceneAudio('BoatMenuScene');
-            console.log('BoatMenuScene: Audio manager initialized');
-        }
+                    }
         
         // Create visual elements
         this.createSceneBackground(width, height);
@@ -168,25 +135,17 @@ export default class BoatMenuScene extends Phaser.Scene {
         
         // Create Quest Tracker UI
         try {
-            console.log('BoatMenuScene: Creating Quest Tracker UI...');
-            
-            // CRITICAL FIX: Only create QuestTrackerUI if we have a valid QuestManager
+                        // CRITICAL FIX: Only create QuestTrackerUI if we have a valid QuestManager
             if (this.questManager) {
                 // Check if tutorial is completed through QuestManager
                 const tutorialCompleted = this.questManager.completedQuests.has('story_001_tutorial');
-                console.log('BoatMenuScene: Tutorial completion status:', tutorialCompleted);
-                
-                if (tutorialCompleted) {
-                    console.log('BoatMenuScene: 🚫 Tutorial completed - creating QuestTrackerUI with disabled quest processing');
-                    this.questTrackerUI = new QuestTrackerUI(this, null, 20, 100);
+                                if (tutorialCompleted) {
+                                        this.questTrackerUI = new QuestTrackerUI(this, null, 20, 100);
                 } else {
-                    console.log('BoatMenuScene: ✅ Tutorial not completed - creating QuestTrackerUI with active quest processing');
-                    this.questTrackerUI = new QuestTrackerUI(this, this.questManager, 20, 100);
+                                        this.questTrackerUI = new QuestTrackerUI(this, this.questManager, 20, 100);
                 }
-                console.log('BoatMenuScene: Quest Tracker UI created successfully');
-            } else {
-                console.log('BoatMenuScene: No QuestManager available - creating QuestTrackerUI with disabled quest processing');
-                this.questTrackerUI = new QuestTrackerUI(this, null, 20, 100);
+                            } else {
+                                this.questTrackerUI = new QuestTrackerUI(this, null, 20, 100);
             }
         } catch (error) {
             console.error('BoatMenuScene: Error creating Quest Tracker UI:', error);
@@ -201,8 +160,7 @@ export default class BoatMenuScene extends Phaser.Scene {
             this.checkAndShowCompletedQuestRewards();
         });
         
-        console.log('BoatMenuScene: Scene created successfully');
-    }
+            }
 
     createSceneBackground(width, height) {
         // Create a more dynamic ocean background with multiple layers
@@ -518,8 +476,7 @@ export default class BoatMenuScene extends Phaser.Scene {
 
         // Add container to document
         document.body.appendChild(this.domButtonsContainer);
-        console.log('BoatMenuScene: DOM button system created with', Object.keys(this.domButtons).length, 'buttons');
-    }
+            }
 
     /**
      * Create a single DOM button with enhanced styling and functionality
@@ -601,9 +558,7 @@ export default class BoatMenuScene extends Phaser.Scene {
         button.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log(`BoatMenuScene: DOM button '${config.id}' clicked`);
-            
-            // Add click animation
+                        // Add click animation
             button.style.animation = 'buttonPulse 0.3s ease-out';
             setTimeout(() => {
                 button.style.animation = '';
@@ -626,9 +581,7 @@ export default class BoatMenuScene extends Phaser.Scene {
         // Add pulse animation keyframes if not already added
         this.addButtonAnimations();
 
-        console.log(`BoatMenuScene: Created DOM button '${config.id}' at (${config.x}, ${config.y})`);
-        
-        return button;
+                return button;
     }
 
     /**
@@ -787,50 +740,41 @@ export default class BoatMenuScene extends Phaser.Scene {
             this.domButtons.playerLevel.innerHTML = `👤 Lvl ${this.gameState.player.level}`;
         }
 
-        console.log(`BoatMenuScene: Updated DOM button states - Location: ${currentLocation}, Shop available: ${!this.domButtons.shop?.disabled}, Return button: ${shouldShowReturn}`);
-    }
+            }
 
     /**
      * Destroy all DOM buttons
      */
     destroyDOMButtons() {
-        console.log('BoatMenuScene: Starting DOM button destruction process');
-        
-        // Remove main container
+                // Remove main container
         if (this.domButtonsContainer && this.domButtonsContainer.parentNode) {
             this.domButtonsContainer.parentNode.removeChild(this.domButtonsContainer);
-            console.log('BoatMenuScene: Main DOM button container removed');
-        }
+                    }
         
         // Remove animations style
         const animationStyle = document.querySelector('#boat-menu-button-animations');
         if (animationStyle && animationStyle.parentNode) {
             animationStyle.parentNode.removeChild(animationStyle);
-            console.log('BoatMenuScene: DOM button animations style removed');
-        }
+                    }
         
         // Force cleanup of any orphaned DOM buttons from this scene
         this.forceCleanupAllDOMButtons();
         
         this.domButtonsContainer = null;
         this.domButtons = {};
-        console.log('BoatMenuScene: DOM buttons destroyed completely');
-    }
+            }
 
     /**
      * Force cleanup of all DOM buttons regardless of their state
      * This is a safety net to ensure no DOM buttons are left behind
      */
     forceCleanupAllDOMButtons() {
-        console.log('BoatMenuScene: Force cleaning up all DOM buttons');
-        
-        // Remove all boat menu button containers
+                // Remove all boat menu button containers
         const containers = document.querySelectorAll('#boat-menu-buttons-container');
         containers.forEach((container, index) => {
             if (container.parentNode) {
                 container.parentNode.removeChild(container);
-                console.log(`BoatMenuScene: Force removed container ${index + 1}`);
-            }
+                            }
         });
         
         // Remove all boat menu buttons by ID pattern
@@ -838,8 +782,7 @@ export default class BoatMenuScene extends Phaser.Scene {
         buttons.forEach((button, index) => {
             if (button.parentNode) {
                 button.parentNode.removeChild(button);
-                console.log(`BoatMenuScene: Force removed button ${button.id}`);
-            }
+                            }
         });
         
         // Remove animation styles
@@ -847,12 +790,10 @@ export default class BoatMenuScene extends Phaser.Scene {
         animationStyles.forEach(style => {
             if (style.parentNode) {
                 style.parentNode.removeChild(style);
-                console.log('BoatMenuScene: Force removed animation style');
-            }
+                            }
         });
         
-        console.log('BoatMenuScene: Force cleanup completed');
-    }
+            }
 
     /**
      * Hide all DOM buttons
@@ -964,8 +905,7 @@ export default class BoatMenuScene extends Phaser.Scene {
         
         // Debug: Add F5 key to reset fish inventory for testing
         this.input.keyboard.on('keydown-F5', () => {
-            console.log('BoatMenuScene: F5 pressed - resetting fish inventory for testing');
-            this.gameState.forceResetFishInventory();
+                        this.gameState.forceResetFishInventory();
             this.showSuccessMessage('Fish inventory reset! 5 trout cards added.');
             
             // Refresh inventory UI if open
@@ -981,15 +921,13 @@ export default class BoatMenuScene extends Phaser.Scene {
         
         // Debug: Add F6 key to debug current fish inventory
         this.input.keyboard.on('keydown-F6', () => {
-            console.log('BoatMenuScene: F6 pressed - debugging fish inventory');
-            const fishInventory = this.gameState.debugFishInventory();
+                        const fishInventory = this.gameState.debugFishInventory();
             this.showInfoMessage(`Fish inventory: ${fishInventory.length} types. Check console for details.`);
         });
         
         // Debug: Add F7 key to add 50,000 coins for testing
         this.input.keyboard.on('keydown-F7', () => {
-            console.log('BoatMenuScene: F7 pressed - adding 50,000 coins for testing');
-            const newTotal = this.gameState.forceAddTestingCoins();
+                        const newTotal = this.gameState.forceAddTestingCoins();
             this.showSuccessMessage(`Added 50,000 coins! Total: ${newTotal}`);
             
             // Update the money display immediately
@@ -998,8 +936,7 @@ export default class BoatMenuScene extends Phaser.Scene {
         
         // Debug: Add F8 key to set player level to 15 for testing
         this.input.keyboard.on('keydown-F8', () => {
-            console.log('BoatMenuScene: F8 pressed - setting player level to 15 for testing');
-            const newLevel = this.gameState.forceSetTestingLevel();
+                        const newLevel = this.gameState.forceSetTestingLevel();
             this.showSuccessMessage(`Player level set to ${newLevel}!`);
             
             // Update the level display immediately
@@ -1013,16 +950,14 @@ export default class BoatMenuScene extends Phaser.Scene {
         
         // Debug: Add F9 key to test reward UI
         this.input.keyboard.on('keydown-F9', () => {
-            console.log('BoatMenuScene: F9 pressed - testing reward UI');
-            try {
+                        try {
                 // Try to get or initialize QuestManager
                 const questManager = this.questManager || this.gameState.getQuestManager(this);
                 if (questManager) {
                     // Ensure scene context is set
                     questManager.scene = this;
                     questManager.debugTestRewardUI();
-                    console.log('BoatMenuScene: Reward UI test executed');
-                } else {
+                                    } else {
                     console.error('BoatMenuScene: QuestManager not available for F9 test');
                     this.showErrorMessage('QuestManager not available - cannot test reward UI');
                 }
@@ -1034,16 +969,14 @@ export default class BoatMenuScene extends Phaser.Scene {
         
         // Debug: Add F10 key to force complete tutorial quest
         this.input.keyboard.on('keydown-F10', () => {
-            console.log('BoatMenuScene: F10 pressed - force completing tutorial quest');
-            try {
+                        try {
                 // Try to get or initialize QuestManager
                 const questManager = this.questManager || this.gameState.getQuestManager(this);
                 if (questManager) {
                     // Ensure scene context is set
                     questManager.scene = this;
                     questManager.debugCompleteQuest('story_001_tutorial');
-                    console.log('BoatMenuScene: Tutorial quest completion executed');
-                } else {
+                                    } else {
                     console.error('BoatMenuScene: QuestManager not available for F10 test');
                     this.showErrorMessage('QuestManager not available - cannot complete quest');
                 }
@@ -1055,16 +988,14 @@ export default class BoatMenuScene extends Phaser.Scene {
 
         // Debug: Add F11 key to force simple reward UI test
         this.input.keyboard.on('keydown-F11', () => {
-            console.log('BoatMenuScene: F11 pressed - force simple reward UI test');
-            try {
+                        try {
                 // Try to get or initialize QuestManager
                 const questManager = this.questManager || this.gameState.getQuestManager(this);
                 if (questManager) {
                     // Force test with this scene
                     const success = questManager.forceShowTestRewardUI(this);
                     if (success) {
-                        console.log('BoatMenuScene: Force reward UI test succeeded');
-                        this.showSuccessMessage('Simple reward UI test completed');
+                                                this.showSuccessMessage('Simple reward UI test completed');
                     } else {
                         console.error('BoatMenuScene: Force reward UI test failed');
                         this.showErrorMessage('Force reward UI test failed');
@@ -1081,8 +1012,7 @@ export default class BoatMenuScene extends Phaser.Scene {
         
         // Debug: Add F12 key to show direct reward UI (bypassing QuestManager entirely)
         this.input.keyboard.on('keydown-F12', () => {
-            console.log('BoatMenuScene: F12 pressed - direct reward UI test (no QuestManager needed)');
-            try {
+                        try {
                 this.showDirectRewardUI();
                 this.showSuccessMessage('Direct reward UI test completed');
             } catch (error) {
@@ -1104,28 +1034,23 @@ export default class BoatMenuScene extends Phaser.Scene {
 
     // Action handlers
     openTravelMenu() {
-        console.log('BoatMenuScene: Opening travel menu');
-        this.audioManager?.playSFX('button');
+                this.audioManager?.playSFX('button');
         
         // Hide DOM buttons when opening UI
         this.hideDOMButtons();
-        console.log('BoatMenuScene: DOM buttons hidden for travel UI');
-        
-        if (this.mapSelectionUI) {
+                if (this.mapSelectionUI) {
             // Set up close callback to show buttons again
             if (!this.mapSelectionUI.closeCallbackSet) {
                 const originalHide = this.mapSelectionUI.hide;
                 this.mapSelectionUI.hide = () => {
                     originalHide.call(this.mapSelectionUI);
                     this.showDOMButtons();
-                    console.log('BoatMenuScene: DOM buttons shown after travel close');
-                };
+                                    };
                 this.mapSelectionUI.closeCallbackSet = true;
             }
             
             this.mapSelectionUI.show();
-            console.log('BoatMenuScene: MapSelectionUI opened successfully');
-        } else {
+                    } else {
             console.error('BoatMenuScene: MapSelectionUI not available');
             this.showErrorMessage('Map selection not available - MapSelectionUI failed to initialize');
             // Show buttons again on error
@@ -1134,15 +1059,12 @@ export default class BoatMenuScene extends Phaser.Scene {
     }
 
     startFishing() {
-        console.log('BoatMenuScene: Starting fishing');
-        this.audioManager?.playSFX('button');
+                this.audioManager?.playSFX('button');
         
         try {
             // CRITICAL: Hide all DOM buttons before scene transition
             this.hideDOMButtons();
-            console.log('BoatMenuScene: DOM buttons hidden before fishing scene transition');
-            
-            // Show loading for fishing preparation
+                        // Show loading for fishing preparation
             if (this.loadingStateManager) {
                 this.loadingStateManager.showFishingLoading('Preparing fishing equipment...');
             }
@@ -1193,9 +1115,7 @@ export default class BoatMenuScene extends Phaser.Scene {
                     
                     // ENSURE DOM buttons are completely destroyed before scene transition
                     this.destroyDOMButtons();
-                    console.log('BoatMenuScene: DOM buttons destroyed before GameScene transition');
-                    
-                    // Pass quest manager reference to maintain quest context
+                                        // Pass quest manager reference to maintain quest context
                     this.scene.start('GameScene', {
                         callingScene: 'BoatMenuScene',
                         mode: this.gameLoop?.currentMode || 'story',
@@ -1207,8 +1127,7 @@ export default class BoatMenuScene extends Phaser.Scene {
                             questManagerState: this.questManager.getState ? this.questManager.getState() : null
                         } : null
                     });
-                    console.log('BoatMenuScene: Transitioned to GameScene for fishing with quest context');
-                });
+                                    });
             
         } catch (error) {
             console.error('BoatMenuScene: Error starting fishing:', error);
@@ -1235,14 +1154,12 @@ export default class BoatMenuScene extends Phaser.Scene {
             
             // Initialize player energy if it doesn't exist
             if (typeof this.gameState.player.energy === 'undefined' || this.gameState.player.energy === null) {
-                console.log('BoatMenuScene: Initializing player energy to 100');
-                this.gameState.player.energy = 100;
+                                this.gameState.player.energy = 100;
             }
             
             // Check energy
             const playerEnergy = this.gameState.player.energy;
-            console.log('BoatMenuScene: Checking player energy:', playerEnergy);
-            if (playerEnergy < 10) {
+                        if (playerEnergy < 10) {
                 return { canFish: false, reason: `Not enough energy to fish! Energy: ${playerEnergy}/100` };
             }
             
@@ -1280,9 +1197,7 @@ export default class BoatMenuScene extends Phaser.Scene {
             const isValidLocation = fishableAreas.some(area => currentLocation.startsWith(area));
             
             if (!isValidLocation) {
-                console.log('BoatMenuScene: Invalid fishing location:', currentLocation);
-                console.log('BoatMenuScene: Valid areas:', fishableAreas);
-                return { canFish: false, reason: 'Cannot fish at this location: ' + currentLocation };
+                                                return { canFish: false, reason: 'Cannot fish at this location: ' + currentLocation };
             }
             
             // Check if player has fishing equipment (optional check since equipment might not be implemented)
@@ -1323,10 +1238,8 @@ export default class BoatMenuScene extends Phaser.Scene {
             // Save current state before fishing (check if method exists)
             if (typeof this.gameState.save === 'function') {
                 this.gameState.save();
-                console.log('BoatMenuScene: Game state saved before fishing');
-                    } else {
-            console.log('BoatMenuScene: save method not available, skipping save');
-        }
+                                    } else {
+                    }
             
             // Set up fishing session data with safe property access
             const fishingData = {
@@ -1340,28 +1253,22 @@ export default class BoatMenuScene extends Phaser.Scene {
             // Store fishing session data
             this.gameState.currentFishingSession = fishingData;
             
-            console.log('BoatMenuScene: Fishing session prepared successfully:', fishingData);
-            
-        } catch (error) {
+                    } catch (error) {
             console.error('BoatMenuScene: Error preparing fishing session:', error);
             throw new Error('Failed to prepare fishing session: ' + error.message);
         }
     }
 
     openCabin() {
-        console.log('BoatMenuScene: Opening cabin');
-        this.audioManager?.playSFX('button');
+                this.audioManager?.playSFX('button');
         
         try {
             // Hide DOM buttons when opening cabin scene
             this.hideDOMButtons();
-            console.log('BoatMenuScene: DOM buttons hidden for cabin scene');
-            
-            // Set up event listener for when cabin scene closes
+                        // Set up event listener for when cabin scene closes
             this.events.once('resume', () => {
                 this.showDOMButtons();
-                console.log('BoatMenuScene: DOM buttons shown after cabin scene resume');
-            });
+                            });
             
             // Pause current scene and launch Cabin scene to preserve audio state
             // This prevents the audio manager from being destroyed and recreated
@@ -1369,8 +1276,7 @@ export default class BoatMenuScene extends Phaser.Scene {
             this.scene.launch('CabinScene', {
                 callingScene: 'BoatMenuScene'
             });
-            console.log('BoatMenuScene: CabinScene launched (scene paused)');
-        } catch (error) {
+                    } catch (error) {
             console.error('BoatMenuScene: Error launching CabinScene:', error);
             this.showErrorMessage('Failed to open cabin. Check console for details.');
             // Show buttons again on error
@@ -1379,14 +1285,10 @@ export default class BoatMenuScene extends Phaser.Scene {
     }
 
     openInventory() {
-        console.log('BoatMenuScene: Opening inventory');
-        
-        try {
+                try {
             // Hide DOM buttons when opening UI
             this.hideDOMButtons();
-            console.log('BoatMenuScene: DOM buttons hidden for inventory UI');
-            
-            // Play sound safely
+                        // Play sound safely
             if (this.audioManager && typeof this.audioManager.playSFX === 'function') {
                 this.audioManager.playSFX('button');
             }
@@ -1395,16 +1297,14 @@ export default class BoatMenuScene extends Phaser.Scene {
             if (this.gameLoop && typeof this.gameLoop.enterInventory === 'function') {
                 this.gameLoop.enterInventory();
                     } else {
-            console.log('BoatMenuScene: GameLoop not available or enterInventory method missing');
-        }
+                    }
             
             // 🚨 FORCE CLEAN: Remove any undefined items immediately on scene start
             try {
                 if (this.gameState.inventoryManager && this.gameState.inventoryManager.forceCleanAllUndefinedItems) {
                     const cleanedCount = this.gameState.inventoryManager.forceCleanAllUndefinedItems();
                     if (cleanedCount > 0) {
-                        console.log(`BoatMenuScene: ✅ Cleaned ${cleanedCount} undefined items from inventory`);
-                        this.gameState.save(); // Save immediately after cleaning
+                                                this.gameState.save(); // Save immediately after cleaning
                     }
                 }
             } catch (cleanError) {
@@ -1413,9 +1313,7 @@ export default class BoatMenuScene extends Phaser.Scene {
             
             // 🚨 DISABLED: Automatic sample item generation to prevent undefined items
             // Sample items can be added manually through the inventory UI debug buttons if needed
-            console.log('BoatMenuScene: Automatic sample item generation disabled to prevent undefined items');
-            
-            // Ensure both UIs are created and cross-referenced
+                        // Ensure both UIs are created and cross-referenced
             this.ensureUIsCreated();
             
             // Set up close callback to show buttons again
@@ -1424,8 +1322,7 @@ export default class BoatMenuScene extends Phaser.Scene {
                 this.inventoryUI.hide = () => {
                     originalHide.call(this.inventoryUI);
                     this.showDOMButtons();
-                    console.log('BoatMenuScene: DOM buttons shown after inventory close');
-                };
+                                    };
                 this.inventoryUI.closeCallbackSet = true;
             }
             
@@ -1434,8 +1331,7 @@ export default class BoatMenuScene extends Phaser.Scene {
                 // Check if UI is not destroyed before showing
                 if (!this.inventoryUI.isDestroyed) {
                     this.inventoryUI.show();
-                    console.log('BoatMenuScene: Inventory UI shown successfully');
-                } else {
+                                    } else {
                     console.warn('BoatMenuScene: Inventory UI is destroyed, recreating...');
                     // Recreate the inventory UI
                     this.inventoryUI = null;
@@ -1465,14 +1361,11 @@ export default class BoatMenuScene extends Phaser.Scene {
     }
 
     openCrafting() {
-        console.log('BoatMenuScene: Opening crafting workshop');
-        this.audioManager?.playSFX('button');
+                this.audioManager?.playSFX('button');
         
         // Hide DOM buttons when opening UI
         this.hideDOMButtons();
-        console.log('BoatMenuScene: DOM buttons hidden for crafting UI');
-        
-        // Ensure both UIs are created and cross-referenced
+                // Ensure both UIs are created and cross-referenced
         this.ensureUIsCreated();
         
         // Set up close callback to show buttons again
@@ -1481,23 +1374,28 @@ export default class BoatMenuScene extends Phaser.Scene {
             this.craftingUI.hide = () => {
                 originalHide.call(this.craftingUI);
                 this.showDOMButtons();
-                console.log('BoatMenuScene: DOM buttons shown after crafting close');
-            };
+                            };
             this.craftingUI.closeCallbackSet = true;
         }
         
-        // Show the crafting UI
-        this.craftingUI.show();
+        // Show the crafting UI and ensure DOM buttons are hidden
+        if (this.craftingUI) {
+            this.craftingUI.show();
+            // Double-check DOM buttons are hidden after UI shows
+            this.hideDOMButtons();
+        } else {
+            console.error('BoatMenuScene: CraftingUI not available');
+            this.showErrorMessage('Crafting interface not available');
+            // Show buttons again on error
+            this.showDOMButtons();
+        }
     }
 
     openShop() {
-        console.log('BoatMenuScene: Opening shop');
-        
-        // Check if at Starting Port before allowing shop access
+                // Check if at Starting Port before allowing shop access
         const currentLocation = this.gameState?.player?.currentLocation || 'Starting Port';
         if (currentLocation !== 'Starting Port') {
-            console.log('BoatMenuScene: Shop not available - not at Starting Port. Current location:', currentLocation);
-            this.audioManager?.playSFX('fail');
+                        this.audioManager?.playSFX('fail');
             this.showErrorMessage('Shop only available at Starting Port!\nCurrent location: ' + currentLocation);
             return;
         }
@@ -1506,23 +1404,19 @@ export default class BoatMenuScene extends Phaser.Scene {
         
         // Hide DOM buttons when opening UI
         this.hideDOMButtons();
-        console.log('BoatMenuScene: DOM buttons hidden for shop UI');
-        
-        if (this.shopUI) {
+                if (this.shopUI) {
             // Set up close callback to show buttons again
             if (!this.shopUI.closeCallbackSet) {
                 const originalHide = this.shopUI.hide;
                 this.shopUI.hide = () => {
                     originalHide.call(this.shopUI);
                     this.showDOMButtons();
-                    console.log('BoatMenuScene: DOM buttons shown after shop close');
-                };
+                                    };
                 this.shopUI.closeCallbackSet = true;
             }
             
             this.shopUI.show();
-            console.log('BoatMenuScene: ShopUI opened successfully');
-        } else {
+                    } else {
             console.error('BoatMenuScene: ShopUI not available');
             this.showErrorMessage('Shop interface not available - ShopUI failed to initialize');
             // Show buttons again on error
@@ -1531,37 +1425,30 @@ export default class BoatMenuScene extends Phaser.Scene {
     }
 
     openQuest() {
-        console.log('BoatMenuScene: Opening quest log');
-        this.audioManager?.playSFX('button');
+                this.audioManager?.playSFX('button');
         
         try {
             // Hide DOM buttons when opening quest scene
             this.hideDOMButtons();
-            console.log('BoatMenuScene: DOM buttons hidden for quest scene');
-            
-            // Set up event listener for when this scene resumes (quest scene closes)
+                        // Set up event listener for when this scene resumes (quest scene closes)
             this.events.once('resume', () => {
                 this.showDOMButtons();
-                console.log('BoatMenuScene: DOM buttons shown after quest scene close');
-            });
+                            });
             
             // Check if QuestScene exists before launching
             const questScene = this.scene.manager.getScene('QuestScene');
             if (!questScene) {
                 console.warn('BoatMenuScene: QuestScene not found in scene manager');
-                console.log('BoatMenuScene: Available scenes:', this.scene.manager.scenes.map(s => s.scene.key));
+                this.logger?.debug('BoatMenuScene: Available scenes:', this.scene.manager.scenes.map(s => s.scene.key)) || Logger.debug(this.constructor.name, 'BoatMenuScene: Available scenes:', this.scene.manager.scenes.map(s => s.scene.key));
                 this.showErrorMessage('Quest scene not available. Quest functionality may not be loaded.');
                 this.showDOMButtons();
                 return;
             }
             
-            console.log('BoatMenuScene: QuestScene found, proceeding to launch');
-            
-            // Pause current scene and launch quest scene
+                        // Pause current scene and launch quest scene
             this.scene.pause('BoatMenuScene');
             this.scene.launch('QuestScene', { fromScene: 'BoatMenuScene' });
-            console.log('BoatMenuScene: Quest log opened successfully');
-        } catch (error) {
+                    } catch (error) {
             console.error('BoatMenuScene: Error opening quest log:', error);
             this.audioManager?.playSFX('fail');
             this.showErrorMessage('Failed to open quest log: ' + error.message);
@@ -1584,18 +1471,15 @@ export default class BoatMenuScene extends Phaser.Scene {
             this.showTournamentStatus();
         }
         
-        console.log(`BoatMenuScene: Switched to ${this.gameLoop.currentMode} mode`);
-    }
+            }
 
     returnToPort() {
-        console.log('BoatMenuScene: Returning to port');
-        this.audioManager?.playSFX('button');
+                this.audioManager?.playSFX('button');
         this.gameLoop.initiateTravel('Starting', 'Port');
     }
 
     openTournamentMenu() {
-        console.log('BoatMenuScene: Opening tournament menu');
-        this.audioManager?.playSFX('button');
+                this.audioManager?.playSFX('button');
         
         // Check if tournament is available
         if (!this.isTournamentAvailable()) {
@@ -1608,14 +1492,11 @@ export default class BoatMenuScene extends Phaser.Scene {
     }
 
     openPlayerProgression() {
-        console.log('BoatMenuScene: Opening player progression');
-        this.audioManager?.playSFX('button');
+                this.audioManager?.playSFX('button');
         
         // Hide DOM buttons when opening UI
         this.hideDOMButtons();
-        console.log('BoatMenuScene: DOM buttons hidden for player progression UI');
-        
-        // Ensure UI is created
+                // Ensure UI is created
         this.ensureUIsCreated();
         
         if (this.playerProgressionUI) {
@@ -1625,14 +1506,12 @@ export default class BoatMenuScene extends Phaser.Scene {
                 this.playerProgressionUI.hide = () => {
                     originalHide.call(this.playerProgressionUI);
                     this.showDOMButtons();
-                    console.log('BoatMenuScene: DOM buttons shown after player progression close');
-                };
+                                    };
                 this.playerProgressionUI.closeCallbackSet = true;
             }
             
             this.playerProgressionUI.show();
-            console.log('BoatMenuScene: Player progression UI opened successfully');
-        } else {
+                    } else {
             console.error('BoatMenuScene: Player progression UI not available');
             this.showErrorMessage('Player progression interface not available');
             // Show buttons again on error
@@ -1641,14 +1520,11 @@ export default class BoatMenuScene extends Phaser.Scene {
     }
 
     openFishCollection() {
-        console.log('BoatMenuScene: Opening fish collection');
-        this.audioManager?.playSFX('button');
+                this.audioManager?.playSFX('button');
         
         // Hide DOM buttons when opening UI
         this.hideDOMButtons();
-        console.log('BoatMenuScene: DOM buttons hidden for fish collection UI');
-        
-        // Ensure UI is created
+                // Ensure UI is created
         this.ensureUIsCreated();
         
         if (this.fishCollectionUI) {
@@ -1658,14 +1534,12 @@ export default class BoatMenuScene extends Phaser.Scene {
                 this.fishCollectionUI.hide = () => {
                     originalHide.call(this.fishCollectionUI);
                     this.showDOMButtons();
-                    console.log('BoatMenuScene: DOM buttons shown after fish collection close');
-                };
+                                    };
                 this.fishCollectionUI.closeCallbackSet = true;
             }
             
             this.fishCollectionUI.show();
-            console.log('BoatMenuScene: Fish collection UI opened successfully');
-        } else {
+                    } else {
             console.error('BoatMenuScene: Fish collection UI not available');
             this.showErrorMessage('Fish collection interface not available');
             // Show buttons again on error
@@ -1716,9 +1590,7 @@ export default class BoatMenuScene extends Phaser.Scene {
     showTournamentSelectionOverlay() {
         // Hide DOM buttons when showing tournament overlay
         this.hideDOMButtons();
-        console.log('BoatMenuScene: DOM buttons hidden for tournament overlay');
-        
-        // Create tournament overlay background
+                // Create tournament overlay background
         const overlay = this.add.graphics();
         overlay.fillStyle(0x000000, 0.8);
         overlay.fillRect(0, 0, this.cameras.main.width, this.cameras.main.height);
@@ -1801,9 +1673,7 @@ export default class BoatMenuScene extends Phaser.Scene {
 
     enterTournament(tournamentInfo) {
         if (this.tournamentManager.isEntering) return;
-        console.log('BoatMenuScene: Entering tournament:', tournamentInfo.name);
-        
-        const tournament = tournamentInfo.tournament;
+                const tournament = tournamentInfo.tournament;
         const result = this.tournamentManager.enterTournament(tournament);
         
         if (!result.success) {
@@ -1832,9 +1702,7 @@ export default class BoatMenuScene extends Phaser.Scene {
     }
 
     showTournamentLeaderboard() {
-        console.log('BoatMenuScene: Showing tournament leaderboard');
-        
-        // Close current overlay
+                // Close current overlay
         this.closeTournamentOverlay();
         
         // Create leaderboard overlay
@@ -1908,8 +1776,7 @@ export default class BoatMenuScene extends Phaser.Scene {
             
             // Show DOM buttons again when tournament overlay closes
             this.showDOMButtons();
-            console.log('BoatMenuScene: DOM buttons shown after tournament overlay close');
-        }
+                    }
     }
 
     closeLeaderboardOverlay() {
@@ -1924,8 +1791,7 @@ export default class BoatMenuScene extends Phaser.Scene {
             
             // Show DOM buttons again when leaderboard overlay closes
             this.showDOMButtons();
-            console.log('BoatMenuScene: DOM buttons shown after leaderboard overlay close');
-        }
+                    }
     }
 
     // UI update methods
@@ -1994,8 +1860,7 @@ export default class BoatMenuScene extends Phaser.Scene {
         
         // FISH button is now part of the DOM button system and handled by updateDOMButtonStates
         
-        console.log(`BoatMenuScene: Updated button states using DOM system - Location: ${currentLocation}`);
-    }
+            }
 
     updateProgressBars() {
         // Calculate progression manually since getProgressionStatus doesn't exist
@@ -2169,13 +2034,11 @@ export default class BoatMenuScene extends Phaser.Scene {
 
     createPlayerButton(width, height) {
         // Player button is now created as part of the DOM button system in createActionButtons
-        console.log('BoatMenuScene: Player button created as DOM button in createActionButtons');
-    }
+            }
 
     createCollectionButton(width, height) {
         // Collection button is now created as part of the DOM button system in createActionButtons
-        console.log('BoatMenuScene: Collection button created as DOM button in createActionButtons');
-    }
+            }
 
     update() {
         // Update game loop
@@ -2185,9 +2048,7 @@ export default class BoatMenuScene extends Phaser.Scene {
     }
 
     destroy() {
-        console.log('BoatMenuScene: Destroying scene and cleaning up DOM buttons');
-        
-        // CRITICAL: Clean up all DOM buttons before scene destruction
+                // CRITICAL: Clean up all DOM buttons before scene destruction
         this.destroyDOMButtons();
         
         // Clean up any remaining standalone DOM FISH button (legacy)
@@ -2201,8 +2062,7 @@ export default class BoatMenuScene extends Phaser.Scene {
         existingContainers.forEach(container => {
             if (container.parentNode) {
                 container.parentNode.removeChild(container);
-                console.log('BoatMenuScene: Removed orphaned DOM button container');
-            }
+                            }
         });
         
         // Clean up any individual DOM buttons that might have escaped
@@ -2210,8 +2070,7 @@ export default class BoatMenuScene extends Phaser.Scene {
         existingButtons.forEach(button => {
             if (button.parentNode) {
                 button.parentNode.removeChild(button);
-                console.log('BoatMenuScene: Removed orphaned DOM button:', button.id);
-            }
+                            }
         });
         
         if (this.inventoryUI) {
@@ -2245,8 +2104,7 @@ export default class BoatMenuScene extends Phaser.Scene {
             try {
                 this.questTrackerUI.destroy();
                 this.questTrackerUI = null;
-                console.log('BoatMenuScene: Quest Tracker UI cleaned up');
-            } catch (error) {
+                            } catch (error) {
                 console.warn('BoatMenuScene: Error cleaning up Quest Tracker UI:', error);
             }
         }
@@ -2255,24 +2113,18 @@ export default class BoatMenuScene extends Phaser.Scene {
         if (this.questManagerCheckTimer) {
             this.questManagerCheckTimer.destroy();
             this.questManagerCheckTimer = null;
-            console.log('BoatMenuScene: Cleaned up QuestManager check timer');
-        }
+                    }
         
-        console.log('BoatMenuScene: Scene destruction completed');
-        super.destroy();
+                super.destroy();
     }
 
     ensureUIsCreated() {
-        console.log('BoatMenuScene: Ensuring UIs are created');
-        
-        try {
+                try {
             // Create inventory UI if it doesn't exist or is destroyed
             if (!this.inventoryUI || this.inventoryUI.isDestroyed) {
                 try {
-                    console.log('BoatMenuScene: Creating InventoryUI');
-                    this.inventoryUI = new InventoryUI(this, 100, 50, 800, 600);
-                    console.log('BoatMenuScene: InventoryUI created successfully');
-                } catch (error) {
+                                        this.inventoryUI = new InventoryUI(this, 100, 50, 800, 600);
+                                    } catch (error) {
                     console.error('BoatMenuScene: Error creating InventoryUI:', error);
                     this.inventoryUI = null;
                 }
@@ -2281,10 +2133,8 @@ export default class BoatMenuScene extends Phaser.Scene {
             // Create crafting UI if it doesn't exist or is destroyed
             if (!this.craftingUI || this.craftingUI.isDestroyed) {
                 try {
-                    console.log('BoatMenuScene: Creating CraftingUI');
-                    this.craftingUI = new CraftingUI(this, 50, 50, 900, 600);
-                    console.log('BoatMenuScene: CraftingUI created successfully');
-                } catch (error) {
+                                        this.craftingUI = new CraftingUI(this, 50, 50, 900, 600);
+                                    } catch (error) {
                     console.error('BoatMenuScene: Error creating CraftingUI:', error);
                     this.craftingUI = null;
                 }
@@ -2293,10 +2143,8 @@ export default class BoatMenuScene extends Phaser.Scene {
             // Create fish collection UI if it doesn't exist or is destroyed
             if (!this.fishCollectionUI || this.fishCollectionUI.isDestroyed) {
                 try {
-                    console.log('BoatMenuScene: Creating FishCollectionUI');
-                    this.fishCollectionUI = new FishCollectionUI(this, 50, 50, 900, 650);
-                    console.log('BoatMenuScene: FishCollectionUI created successfully');
-                } catch (error) {
+                                        this.fishCollectionUI = new FishCollectionUI(this, 50, 50, 900, 650);
+                                    } catch (error) {
                     console.error('BoatMenuScene: Error creating FishCollectionUI:', error);
                     this.fishCollectionUI = null;
                 }
@@ -2305,10 +2153,8 @@ export default class BoatMenuScene extends Phaser.Scene {
             // Create map selection UI if it doesn't exist or is destroyed
             if (!this.mapSelectionUI || this.mapSelectionUI.isDestroyed) {
                 try {
-                    console.log('BoatMenuScene: Creating MapSelectionUI');
-                    this.mapSelectionUI = new MapSelectionUI(this, this.gameState.locationManager, this.gameState);
-                    console.log('BoatMenuScene: MapSelectionUI created successfully');
-                } catch (error) {
+                                        this.mapSelectionUI = new MapSelectionUI(this, this.gameState.locationManager, this.gameState);
+                                    } catch (error) {
                     console.error('BoatMenuScene: Error creating MapSelectionUI:', error);
                     this.mapSelectionUI = null;
                 }
@@ -2317,10 +2163,8 @@ export default class BoatMenuScene extends Phaser.Scene {
             // Create shop UI if it doesn't exist or is destroyed
             if (!this.shopUI || this.shopUI.isDestroyed) {
                 try {
-                    console.log('BoatMenuScene: Creating ShopUI');
-                    this.shopUI = new ShopUI(this, 50, 50, 900, 600);
-                    console.log('BoatMenuScene: ShopUI created successfully');
-                } catch (error) {
+                                        this.shopUI = new ShopUI(this, 50, 50, 900, 600);
+                                    } catch (error) {
                     console.error('BoatMenuScene: Error creating ShopUI:', error);
                     this.shopUI = null;
                 }
@@ -2328,23 +2172,18 @@ export default class BoatMenuScene extends Phaser.Scene {
             
             // Establish cross-references so UIs can access each other
             // This allows the inventory UI to open crafting UI and vice versa
-            console.log('BoatMenuScene: Establishing UI cross-references');
-            
-            // Set up cross-references with error handling
+                        // Set up cross-references with error handling
             try {
                 if (this.inventoryUI && this.craftingUI) {
                     // Allow inventory to access crafting
                     this.inventoryUI.craftingUI = this.craftingUI;
                     this.craftingUI.inventoryUI = this.inventoryUI;
-                    console.log('BoatMenuScene: Inventory-Crafting cross-reference established');
-                }
+                                    }
             } catch (crossRefError) {
                 console.error('BoatMenuScene: Error establishing cross-references:', crossRefError);
             }
             
-            console.log('BoatMenuScene: UI creation process completed');
-            
-        } catch (error) {
+                    } catch (error) {
             console.error('BoatMenuScene: Critical error in ensureUIsCreated:', error);
         }
     }
@@ -2352,31 +2191,26 @@ export default class BoatMenuScene extends Phaser.Scene {
     initializePlayerStats() {
         try {
                     if (!this.gameState || !this.gameState.player) {
-            console.log('BoatMenuScene: Cannot initialize player stats - gameState or player not available');
-            return;
+                        return;
         }
 
             // Initialize energy if not set
             if (typeof this.gameState.player.energy === 'undefined' || this.gameState.player.energy === null) {
                 this.gameState.player.energy = 100;
-                console.log('BoatMenuScene: Initialized player energy to 100');
-            }
+                            }
 
             // Initialize other essential stats if not set
             if (typeof this.gameState.player.level === 'undefined' || this.gameState.player.level === null) {
                 this.gameState.player.level = 1;
-                console.log('BoatMenuScene: Initialized player level to 1');
-            }
+                            }
 
             if (typeof this.gameState.player.money === 'undefined' || this.gameState.player.money === null) {
                 this.gameState.player.money = 100;
-                console.log('BoatMenuScene: Initialized player money to 100');
-            }
+                            }
 
             if (typeof this.gameState.player.currentLocation === 'undefined' || this.gameState.player.currentLocation === null) {
                 this.gameState.player.currentLocation = 'Starting Port';
-                console.log('BoatMenuScene: Initialized player location to Starting Port');
-            }
+                            }
 
             // Initialize inventory if not set
             if (!this.gameState.inventory) {
@@ -2386,20 +2220,15 @@ export default class BoatMenuScene extends Phaser.Scene {
                     lures: [],
                     items: []
                 };
-                console.log('BoatMenuScene: Initialized player inventory');
-            }
+                            }
 
-            console.log('BoatMenuScene: Player stats initialized successfully');
-            
-        } catch (error) {
+                    } catch (error) {
             console.error('BoatMenuScene: Error initializing player stats:', error);
         }
     }
 
     createUIComponents() {
-        console.log('BoatMenuScene: Creating UI components');
-        
-        // Create UI components with error handling
+                // Create UI components with error handling
         try {
             this.playerProgressionUI = new PlayerProgressionUI(this, 50, 50, 900, 700);
             
@@ -2409,13 +2238,11 @@ export default class BoatMenuScene extends Phaser.Scene {
                 this.playerProgressionUI.hide = () => {
                     originalHide.call(this.playerProgressionUI);
                     this.showDOMButtons();
-                    console.log('BoatMenuScene: DOM buttons shown after player progression close');
-                };
+                                    };
                 this.playerProgressionUI.closeCallbackSet = true;
             }
             
-            console.log('BoatMenuScene: PlayerProgressionUI created successfully');
-        } catch (error) {
+                    } catch (error) {
             console.error('BoatMenuScene: Error creating PlayerProgressionUI:', error);
             this.playerProgressionUI = null;
         }
@@ -2429,63 +2256,53 @@ export default class BoatMenuScene extends Phaser.Scene {
                 this.fishCollectionUI.hide = () => {
                     originalHide.call(this.fishCollectionUI);
                     this.showDOMButtons();
-                    console.log('BoatMenuScene: DOM buttons shown after fish collection close');
-                };
+                                    };
                 this.fishCollectionUI.closeCallbackSet = true;
             }
             
-            console.log('BoatMenuScene: FishCollectionUI created successfully');
-        } catch (error) {
+                    } catch (error) {
             console.error('BoatMenuScene: Error creating FishCollectionUI:', error);
             this.fishCollectionUI = null;
         }
         
         try {
             this.mapSelectionUI = new MapSelectionUI(this, this.gameState.locationManager, this.gameState);
-            console.log('BoatMenuScene: MapSelectionUI created successfully');
-        } catch (error) {
+                    } catch (error) {
             console.error('BoatMenuScene: Error creating MapSelectionUI:', error);
             this.mapSelectionUI = null;
         }
         
         try {
             this.shopUI = new ShopUI(this, 50, 50, 900, 600);
-            console.log('BoatMenuScene: ShopUI created successfully');
-        } catch (error) {
+                    } catch (error) {
             console.error('BoatMenuScene: Error creating ShopUI:', error);
             this.shopUI = null;
         }
         
         try {
             this.inventoryUI = new InventoryUI(this, 100, 50, 800, 600);
-            console.log('BoatMenuScene: InventoryUI created successfully');
-        } catch (error) {
+                    } catch (error) {
             console.error('BoatMenuScene: Error creating InventoryUI:', error);
             this.inventoryUI = null;
         }
         
         try {
             this.craftingUI = new CraftingUI(this, 50, 50, 900, 600);
-            console.log('BoatMenuScene: CraftingUI created successfully');
-        } catch (error) {
+                    } catch (error) {
             console.error('BoatMenuScene: Error creating CraftingUI:', error);
             this.craftingUI = null;
         }
         
-        console.log('BoatMenuScene: UI components creation completed');
-    }
+            }
     
     /**
      * Complete quest objective for accessing boat menu
      */
     completeBoatMenuQuestObjective() {
-        console.log('BoatMenuScene: Attempting to complete boat menu quest objective...');
-        
-        try {
+                try {
             // CRITICAL FIX: Ensure gameState is available before proceeding
             if (!this.gameState) {
-                console.log('BoatMenuScene: GameState not available, initializing...');
-                this.gameState = GameState.getInstance();
+                                this.gameState = GameState.getInstance();
                 if (!this.gameState) {
                     console.error('BoatMenuScene: Failed to get GameState instance');
                     this.time.delayedCall(1000, () => {
@@ -2493,38 +2310,27 @@ export default class BoatMenuScene extends Phaser.Scene {
                     });
                     return;
                 }
-                console.log('BoatMenuScene: GameState initialized successfully');
-            }
+                            }
             
             // CRITICAL FIX: Use shared QuestManager from GameState instead of local instance
             const questManager = this.gameState.questManager;
         
         if (!questManager) {
-            console.log('BoatMenuScene: No QuestManager available in GameState - cannot complete quest objective');
-            this.time.delayedCall(1000, () => {
+                        this.time.delayedCall(1000, () => {
                 this.showInfoMessage('Boat menu accessed\n(QuestManager not available)');
             });
             return;
         }
         
-        console.log('BoatMenuScene: QuestManager found, processing quest objective...');
-        console.log('BoatMenuScene: Active quests before processing:', Array.from(questManager.activeQuests.keys()));
-        console.log('BoatMenuScene: Completed quests:', Array.from(questManager.completedQuests));
-        console.log('BoatMenuScene: Available quests:', Array.from(questManager.availableQuests.keys()));
-        console.log('BoatMenuScene: Quest templates count:', questManager.questTemplates.size);
-        
-        // Debug: Check if tutorial quest is in templates
+                this.logger?.debug('BoatMenuScene: Active quests before processing:', Array.from(questManager.activeQuests.keys())) || Logger.debug(this.constructor.name, 'BoatMenuScene: Active quests before processing:', Array.from(questManager.activeQuests.keys()));
+        this.logger?.debug('BoatMenuScene: Completed quests:', Array.from(questManager.completedQuests)) || Logger.debug(this.constructor.name, 'BoatMenuScene: Completed quests:', Array.from(questManager.completedQuests));
+        this.logger?.debug('BoatMenuScene: Available quests:', Array.from(questManager.availableQuests.keys())) || Logger.debug(this.constructor.name, 'BoatMenuScene: Available quests:', Array.from(questManager.availableQuests.keys()));
+                // Debug: Check if tutorial quest is in templates
         const tutorialTemplate = questManager.questTemplates.get('story_001_tutorial');
         if (tutorialTemplate) {
-            console.log('BoatMenuScene: Tutorial template found:', {
-                id: tutorialTemplate.id,
-                title: tutorialTemplate.title,
-                status: tutorialTemplate.status,
-                autoStart: tutorialTemplate.autoStart
-            });
-        } else {
+                    } else {
             console.warn('BoatMenuScene: Tutorial template NOT found in questTemplates');
-            console.log('BoatMenuScene: Available templates:', Array.from(questManager.questTemplates.keys()));
+            this.logger?.debug('BoatMenuScene: Available templates:', Array.from(questManager.questTemplates.keys())) || Logger.debug(this.constructor.name, 'BoatMenuScene: Available templates:', Array.from(questManager.questTemplates.keys()));
         }
         
         // CRITICAL FIX: Check if tutorial quest is actually active before processing
@@ -2535,13 +2341,10 @@ export default class BoatMenuScene extends Phaser.Scene {
             // Check if tutorial quest exists in quest templates
             const tutorialTemplate = questManager.questTemplates.get('story_001_tutorial');
             if (tutorialTemplate) {
-                console.log('BoatMenuScene: Tutorial quest template found, attempting to start quest');
-                
-                // Try to start the tutorial quest
+                                // Try to start the tutorial quest
                 const questStarted = questManager.startQuest('story_001_tutorial');
                 if (questStarted) {
-                    console.log('BoatMenuScene: ✅ Tutorial quest started successfully');
-                    tutorialQuest = questManager.activeQuests.get('story_001_tutorial');
+                                        tutorialQuest = questManager.activeQuests.get('story_001_tutorial');
                 } else {
                     console.error('BoatMenuScene: ❌ Failed to start tutorial quest');
                 }
@@ -2559,9 +2362,7 @@ export default class BoatMenuScene extends Phaser.Scene {
             }
         }
         
-        console.log('BoatMenuScene: Tutorial quest found, checking objectives:', tutorialQuest.objectives);
-        
-        // Check if visit_boat_menu objective exists and is not completed
+                // Check if visit_boat_menu objective exists and is not completed
         const boatMenuObjective = tutorialQuest.objectives.find(obj => obj.id === 'visit_boat_menu');
         if (!boatMenuObjective) {
             console.warn('BoatMenuScene: visit_boat_menu objective not found in tutorial quest');
@@ -2572,46 +2373,36 @@ export default class BoatMenuScene extends Phaser.Scene {
         }
         
         if (boatMenuObjective.completed) {
-            console.log('BoatMenuScene: visit_boat_menu objective already completed');
-            this.time.delayedCall(1000, () => {
+                        this.time.delayedCall(1000, () => {
                 this.showInfoMessage('Boat menu accessed\n(Objective already completed)');
             });
             return;
         }
         
-        console.log('BoatMenuScene: visit_boat_menu objective found and incomplete, proceeding...');
-        
-        // CRITICAL FIX: Emit the event GLOBALLY using the game's event bus
-        console.log('BoatMenuScene: Emitting boat:menuAccessed event GLOBALLY...');
-        this.game.events.emit('boat:menuAccessed');
+                // CRITICAL FIX: Emit the event GLOBALLY using the game's event bus
+                this.game.events.emit('boat:menuAccessed');
         
         // CRITICAL FIX: Wait for quest processing to complete, then verify completion
         this.time.delayedCall(300, () => {
-            console.log('BoatMenuScene: Verifying quest objective completion...');
-            
-            // Re-check the objective to see if it was completed
+                        // Re-check the objective to see if it was completed
             const updatedQuest = questManager.activeQuests.get('story_001_tutorial');
             if (updatedQuest) {
                 const updatedObjective = updatedQuest.objectives.find(obj => obj.id === 'visit_boat_menu');
                 if (updatedObjective && updatedObjective.completed) {
-                    console.log('BoatMenuScene: ✅ visit_boat_menu objective confirmed as completed');
-                    this.showSuccessMessage('✅ Quest Objective Complete!\nAccessed the boat menu');
+                                        this.showSuccessMessage('✅ Quest Objective Complete!\nAccessed the boat menu');
                     
                     // Trigger UI refresh for quest tracker
                     if (this.questTrackerUI) {
-                        console.log('BoatMenuScene: Refreshing quest tracker UI');
-                        this.questTrackerUI.refreshQuests();
+                                                this.questTrackerUI.refreshQuests();
                     }
                 } else {
                     console.warn('BoatMenuScene: ❌ visit_boat_menu objective was not completed after processing');
                     
                     // MANUAL FIX: Try to complete the objective directly
-                    console.log('BoatMenuScene: Attempting manual objective completion...');
-                    const manualResult = questManager.completeObjective('story_001_tutorial', 'visit_boat_menu');
+                                        const manualResult = questManager.completeObjective('story_001_tutorial', 'visit_boat_menu');
                     
                     if (manualResult) {
-                        console.log('BoatMenuScene: ✅ Manual objective completion successful');
-                        this.showSuccessMessage('✅ Quest Objective Complete!\nAccessed the boat menu');
+                                                this.showSuccessMessage('✅ Quest Objective Complete!\nAccessed the boat menu');
                         
                         // Trigger UI refresh for quest tracker
                         if (this.questTrackerUI) {
@@ -2638,9 +2429,7 @@ export default class BoatMenuScene extends Phaser.Scene {
     
     processFishingSessionResults(sessionData) {
         try {
-            console.log('BoatMenuScene: Processing fishing session results:', sessionData);
-            
-            if (!sessionData) {
+                        if (!sessionData) {
                 console.warn('BoatMenuScene: No session data to process');
                 return;
             }
@@ -2673,9 +2462,7 @@ export default class BoatMenuScene extends Phaser.Scene {
                 this.createDOMFishButton(50 + buttonSpacing * 1, buttonY);
             }
             
-            console.log('BoatMenuScene: Fishing session results processed successfully');
-            
-        } catch (error) {
+                    } catch (error) {
             console.error('BoatMenuScene: Error processing fishing session results:', error);
         }
     }
@@ -2684,9 +2471,7 @@ export default class BoatMenuScene extends Phaser.Scene {
      * Create DOM-based FISH button for enhanced interaction
      */
     createDOMFishButton(x, y) {
-        console.log('BoatMenuScene: Creating DOM FISH button at', x, y);
-        
-        // Remove existing button if it exists
+                // Remove existing button if it exists
         if (this.domFishButton) {
             this.domFishButton.remove();
             this.domFishButton = null;
@@ -2757,22 +2542,18 @@ export default class BoatMenuScene extends Phaser.Scene {
         
         // Click event
         this.domFishButton.addEventListener('click', () => {
-            console.log('BoatMenuScene: DOM FISH button clicked');
-            this.startFishing();
+                        this.startFishing();
         });
         
         // Add to document
         document.body.appendChild(this.domFishButton);
-        console.log('BoatMenuScene: DOM FISH button created and added to document');
-    }
+            }
 
     /**
      * Create Mia's portrait display in the center of the screen
      */
     createMiaPortraitDisplay(width, height) {
-        console.log('BoatMenuScene: Creating Mia portrait display on right side');
-        
-        // Right side position
+                // Right side position
         const portraitX = width - 150;  // 150px from right edge
         const portraitY = height / 2;   // Centered vertically
         
@@ -2801,34 +2582,20 @@ export default class BoatMenuScene extends Phaser.Scene {
         let portraitAdded = false;
         
         // Debug: Check all available textures
-        console.log('BoatMenuScene: All available textures:', Object.keys(this.textures.list));
-        console.log('BoatMenuScene: Checking for Mia portrait keys:', portraitKeys);
-        
-        for (const key of portraitKeys) {
-            console.log(`BoatMenuScene: Checking texture key '${key}' - exists: ${this.textures.exists(key)}`);
-            if (this.textures.exists(key)) {
+        this.logger?.debug('BoatMenuScene: All available textures:', Object.keys(this.textures.list)) || Logger.debug(this.constructor.name, 'BoatMenuScene: All available textures:', Object.keys(this.textures.list));
+                for (const key of portraitKeys) {
+                        if (this.textures.exists(key)) {
                 try {
-                    console.log(`🎯 BoatMenuScene: Creating Mia portrait with key '${key}'`);
-                    
-                    // Get texture info for debugging
+                                        // Get texture info for debugging
                     const texture = this.textures.get(key);
-                    console.log(`🔍 BoatMenuScene: Texture '${key}' info:`, {
-                        source: texture.source?.[0]?.image?.src || 'unknown',
-                        width: texture.source?.[0]?.width || 'unknown',
-                        height: texture.source?.[0]?.height || 'unknown',
-                        type: texture.source?.[0]?.image ? 'image' : 'canvas'
-                    });
-                    
-                    const miaPortrait = this.add.image(portraitX, portraitY, key);
+                                        const miaPortrait = this.add.image(portraitX, portraitY, key);
                     miaPortrait.setDisplaySize(180, 280);
                     miaPortrait.setOrigin(0.5);
                     miaPortrait.setDepth(5002);
                     miaPortrait.setVisible(true);
                     miaPortrait.setAlpha(1);
                     
-                    console.log(`✅ BoatMenuScene: Mia portrait '${key}' created successfully on right side - size: ${miaPortrait.displayWidth}x${miaPortrait.displayHeight}, position: (${miaPortrait.x}, ${miaPortrait.y}), depth: ${miaPortrait.depth}`);
-                    
-                    portraitAdded = true;
+                                        portraitAdded = true;
                     break;
             } catch (error) {
                     console.error(`❌ BoatMenuScene: Error creating portrait with key '${key}':`, error);
@@ -2838,8 +2605,7 @@ export default class BoatMenuScene extends Phaser.Scene {
         
         // Fallback if no actual portrait found
         if (!portraitAdded) {
-            console.log('BoatMenuScene: No actual portrait found, creating fallback');
-            const fallbackText = this.add.text(portraitX, portraitY, 'MIA', {
+                        const fallbackText = this.add.text(portraitX, portraitY, 'MIA', {
                 fontSize: '64px',
                 fontFamily: 'Georgia, serif',
                 fill: '#ffd700',
@@ -2863,8 +2629,7 @@ export default class BoatMenuScene extends Phaser.Scene {
         titleText.setOrigin(0.5);
         titleText.setDepth(5003);
         
-        console.log('BoatMenuScene: Mia portrait display created on right side of screen');
-    }
+            }
 
     hideFishButton() {
         if (this.domFishButton) {
@@ -2883,21 +2648,16 @@ export default class BoatMenuScene extends Phaser.Scene {
      */
     checkAndShowCompletedQuestRewards() {
         try {
-            console.log('BoatMenuScene: Checking for pending quest rewards...');
-            
-            if (this.questManager) {
+                        if (this.questManager) {
                 // Use the new reward queue system
                 const pendingRewards = this.questManager.getAndClearPendingRewards();
                 
                 if (pendingRewards.length > 0) {
-                    console.log(`BoatMenuScene: Found ${pendingRewards.length} quests with pending rewards.`);
-                    
-                    // Process each pending reward
+                                        // Process each pending reward
                     pendingRewards.forEach((questId, index) => {
                         const questData = this.questManager.getQuestData(questId);
                         if (questData) {
-                            console.log(`BoatMenuScene: Showing reward UI for quest: ${questData.title}`);
-                            // Use a delay to show multiple reward popups one after another
+                                                        // Use a delay to show multiple reward popups one after another
                             this.time.delayedCall(index * 2000, () => {
                                 this.questManager.showQuestRewardUI(questData);
                             });
@@ -2906,8 +2666,7 @@ export default class BoatMenuScene extends Phaser.Scene {
                         }
                     });
                 } else {
-                    console.log('BoatMenuScene: No pending quest rewards to show.');
-                }
+                                    }
             } else {
                 console.warn('BoatMenuScene: QuestManager not available for reward check');
             }
@@ -2920,9 +2679,7 @@ export default class BoatMenuScene extends Phaser.Scene {
      * Show direct reward UI without QuestManager (for testing)
      */
     showDirectRewardUI() {
-        console.log('BoatMenuScene: Creating direct reward UI');
-        
-        const width = this.cameras.main.width;
+                const width = this.cameras.main.width;
         const height = this.cameras.main.height;
         
         // Create overlay
@@ -3010,13 +2767,11 @@ export default class BoatMenuScene extends Phaser.Scene {
         // Make interactive
         closeButton.setInteractive({ useHandCursor: true });
         closeButton.on('pointerdown', () => {
-            console.log('BoatMenuScene: Closing direct reward overlay');
-            overlay.destroy();
+                        overlay.destroy();
         });
         
         bg.on('pointerdown', () => {
-            console.log('BoatMenuScene: Closing direct reward overlay (background click)');
-            overlay.destroy();
+                        overlay.destroy();
         });
         
         overlay.setDepth(10000);
@@ -3030,8 +2785,7 @@ export default class BoatMenuScene extends Phaser.Scene {
             ease: 'Power2'
         });
         
-        console.log('BoatMenuScene: Direct reward UI created successfully');
-    }
+            }
 
     // --- LEGACY PHASER BUTTON METHODS REMOVED ---
     // All buttons are now DOM-based for better interaction and styling
@@ -3040,105 +2794,75 @@ export default class BoatMenuScene extends Phaser.Scene {
      * Check if QuestManager has become available and complete boat menu objective retroactively
      */
     checkForQuestManagerAndCompleteObjective() {
-        console.log('BoatMenuScene: Checking for available QuestManager...');
-        
-        // CRITICAL FIX: Ensure gameState is available before proceeding
+                // CRITICAL FIX: Ensure gameState is available before proceeding
         if (!this.gameState) {
-            console.log('BoatMenuScene: GameState not available, initializing...');
-            this.gameState = GameState.getInstance();
+                        this.gameState = GameState.getInstance();
             if (!this.gameState) {
                 console.error('BoatMenuScene: Failed to get GameState instance');
                 return;
             }
-            console.log('BoatMenuScene: GameState initialized successfully');
-        }
+                    }
         
-        console.log('BoatMenuScene: GameState QuestManager exists:', !!this.gameState.questManager);
-        console.log('BoatMenuScene: Current QuestManager reference:', !!this.questManager);
-        
-        // ENHANCED FIX: Check all possible sources for QuestManager
+                        // ENHANCED FIX: Check all possible sources for QuestManager
         let foundQuestManager = null;
         
         // Priority 1: GameState QuestManager
         if (this.gameState.questManager) {
             foundQuestManager = this.gameState.questManager;
-            console.log('BoatMenuScene: QuestManager found in GameState');
-        } else {
+                    } else {
             // Priority 2: Check other running scenes
             const gameScene = this.scene.get('GameScene');
             const questScene = this.scene.get('QuestScene');
             
             if (gameScene && gameScene.questManager) {
                 foundQuestManager = gameScene.questManager;
-                console.log('BoatMenuScene: QuestManager found in GameScene');
-                
-                // Store it in GameState for future use
+                                // Store it in GameState for future use
                 this.gameState.questManager = foundQuestManager;
-                console.log('BoatMenuScene: QuestManager stored in GameState from GameScene');
-            } else if (questScene && questScene.questManager) {
+                            } else if (questScene && questScene.questManager) {
                 foundQuestManager = questScene.questManager;
-                console.log('BoatMenuScene: QuestManager found in QuestScene');
-                
-                // Store it in GameState for future use
+                                // Store it in GameState for future use
                 this.gameState.questManager = foundQuestManager;
-                console.log('BoatMenuScene: QuestManager stored in GameState from QuestScene');
-            }
+                            }
         }
         
         if (foundQuestManager && !this.questManager) {
-            console.log('BoatMenuScene: 🎉 QuestManager now available! Setting up retroactive quest completion...');
-            
-            // Set the QuestManager reference
+                        // Set the QuestManager reference
             this.questManager = foundQuestManager;
             
             // Debug QuestManager state
-            console.log('BoatMenuScene: QuestManager active quests:', Array.from(this.questManager.activeQuests.keys()));
-            console.log('BoatMenuScene: QuestManager quest templates count:', this.questManager.questTemplates.size);
-            
-            // Complete the boat menu quest objective
-            console.log('BoatMenuScene: Attempting retroactive boat menu objective completion...');
-            this.completeBoatMenuQuestObjective();
+            this.logger?.debug('BoatMenuScene: QuestManager active quests:', Array.from(this.questManager.activeQuests.keys())) || Logger.debug(this.constructor.name, 'BoatMenuScene: QuestManager active quests:', Array.from(this.questManager.activeQuests.keys()));
+                        // Complete the boat menu quest objective
+                        this.completeBoatMenuQuestObjective();
             
             // Update QuestTrackerUI if it exists and was created with null QuestManager
             if (this.questTrackerUI && this.questTrackerUI.questProcessingDisabled) {
-                console.log('BoatMenuScene: Updating QuestTrackerUI with newly available QuestManager...');
-                try {
+                                try {
                     // Check if tutorial is completed
                     const tutorialCompleted = this.questManager.completedQuests.has('story_001_tutorial');
-                    console.log('BoatMenuScene: Tutorial completed status:', tutorialCompleted);
-                    
-                    if (!tutorialCompleted) {
+                                        if (!tutorialCompleted) {
                         // Use the new updateQuestManager method instead of recreating
-                        console.log('BoatMenuScene: Enabling quest processing on existing QuestTrackerUI...');
-                        this.questTrackerUI.updateQuestManager(this.questManager);
-                        console.log('BoatMenuScene: ✅ QuestTrackerUI updated with active quest processing');
-                    } else {
-                        console.log('BoatMenuScene: Tutorial already completed, keeping QuestTrackerUI disabled');
-                    }
+                                                this.questTrackerUI.updateQuestManager(this.questManager);
+                                            } else {
+                                            }
                 } catch (error) {
                     console.error('BoatMenuScene: Error updating QuestTrackerUI:', error);
                 }
             } else if (this.questTrackerUI) {
-                console.log('BoatMenuScene: QuestTrackerUI already has quest processing enabled, refreshing...');
-                this.questTrackerUI.refreshQuests();
+                                this.questTrackerUI.refreshQuests();
             }
             
             // Stop the timer since we found the QuestManager
             if (this.questManagerCheckTimer) {
                 this.questManagerCheckTimer.destroy();
                 this.questManagerCheckTimer = null;
-                console.log('BoatMenuScene: ✅ Stopped QuestManager check timer - retroactive setup complete');
-            }
+                            }
             
         } else if (!foundQuestManager) {
-            console.log('BoatMenuScene: QuestManager still not available, will check again...');
-        } else if (this.questManager) {
-            console.log('BoatMenuScene: QuestManager already set, stopping check timer');
-            if (this.questManagerCheckTimer) {
+                    } else if (this.questManager) {
+                        if (this.questManagerCheckTimer) {
                 this.questManagerCheckTimer.destroy();
                 this.questManagerCheckTimer = null;
-                console.log('BoatMenuScene: Stopped redundant QuestManager check timer');
-            }
+                            }
         }
     }
 
@@ -3147,13 +2871,10 @@ export default class BoatMenuScene extends Phaser.Scene {
      */
     async initializeAsyncComponents(data) {
         try {
-            console.log('BoatMenuScene: Starting async component initialization...');
-            
-            // Initialize Quest Manager asynchronously
+                        // Initialize Quest Manager asynchronously
             await this.initializeQuestManagerAsync();
             
-            console.log('BoatMenuScene: Async component initialization completed');
-        } catch (error) {
+                    } catch (error) {
             console.error('BoatMenuScene: Error in async component initialization:', error);
         }
     }
@@ -3163,65 +2884,52 @@ export default class BoatMenuScene extends Phaser.Scene {
      */
     async initializeQuestManagerAsync() {
         try {
-            console.log('BoatMenuScene: Initializing Quest Manager asynchronously...');
-            
-            // CRITICAL FIX: Ensure gameState is available before proceeding
+                        // CRITICAL FIX: Ensure gameState is available before proceeding
             if (!this.gameState) {
-                console.log('BoatMenuScene: GameState not available, initializing...');
-                this.gameState = GameState.getInstance();
+                                this.gameState = GameState.getInstance();
                 if (!this.gameState) {
                     console.error('BoatMenuScene: Failed to get GameState instance');
                     return;
                 }
-                console.log('BoatMenuScene: GameState initialized successfully');
-            }
+                            }
             
             if (this.gameState.questManager) {
-                console.log('BoatMenuScene: Using existing QuestManager from GameState');
-                console.log('BoatMenuScene: QuestManager active quests:', Array.from(this.gameState.questManager.activeQuests.keys()));
-                console.log('BoatMenuScene: QuestManager quest templates count:', this.gameState.questManager.questTemplates.size);
-                this.questManager = this.gameState.questManager;
+                                this.logger?.debug('BoatMenuScene: QuestManager active quests:', Array.from(this.gameState.questManager.activeQuests.keys())) || Logger.debug(this.constructor.name, 'BoatMenuScene: QuestManager active quests:', Array.from(this.gameState.questManager.activeQuests.keys()));
+                                this.questManager = this.gameState.questManager;
                 
                 // Update scene reference
                 this.questManager.scene = this;
                 
                 // Ensure it's initialized
                 if (!this.questManager.isInitialized) {
-                    console.log('BoatMenuScene: QuestManager not initialized, initializing now...');
-                    const initResult = await this.questManager.initialize();
+                                        const initResult = await this.questManager.initialize();
                     if (initResult) {
-                        console.log('BoatMenuScene: ✅ QuestManager initialization completed successfully');
-                    } else {
+                                            } else {
                         console.error('BoatMenuScene: ❌ QuestManager initialization failed');
                         return;
                     }
                 }
             } else {
-                console.log('BoatMenuScene: Creating new QuestManager and storing in GameState');
-                this.questManager = new QuestManager(this);
+                                this.questManager = new QuestManager(this);
                 this.gameState.questManager = this.questManager;
                 
                 // Initialize the QuestManager asynchronously
-                console.log('BoatMenuScene: Initializing QuestManager asynchronously...');
-                const initResult = await this.questManager.initialize();
+                                const initResult = await this.questManager.initialize();
                 if (initResult) {
-                    console.log('BoatMenuScene: ✅ QuestManager initialization completed successfully');
-                } else {
+                                    } else {
                     console.error('BoatMenuScene: ❌ QuestManager initialization failed');
                     return;
                 }
             }
             
             // Now that QuestManager is properly initialized, complete the boat menu objective
-            console.log('BoatMenuScene: QuestManager ready, completing boat menu objective...');
-            this.completeBoatMenuQuestObjective();
+                        this.completeBoatMenuQuestObjective();
             
             // Set up quest event listeners for GameScene
             if (this.scene.get('GameScene')) {
                 const gameScene = this.scene.get('GameScene');
                 if (gameScene.setupQuestEventListeners && typeof gameScene.setupQuestEventListeners === 'function') {
-                    console.log('BoatMenuScene: Setting up quest event listeners in GameScene');
-                    gameScene.setupQuestEventListeners();
+                                        gameScene.setupQuestEventListeners();
                 } else {
                     console.warn('BoatMenuScene: GameScene.setupQuestEventListeners not available');
                 }
@@ -3229,16 +2937,12 @@ export default class BoatMenuScene extends Phaser.Scene {
             
             // Initialize quest tracker UI after QuestManager is ready
             if (!this.questTrackerUI) {
-                console.log('BoatMenuScene: Creating QuestTrackerUI with initialized QuestManager');
-                this.questTrackerUI = new QuestTrackerUI(this, this.questManager, 20, 100);
+                                this.questTrackerUI = new QuestTrackerUI(this, this.questManager, 20, 100);
             } else if (this.questTrackerUI.questProcessingDisabled) {
-                console.log('BoatMenuScene: Updating existing QuestTrackerUI with initialized QuestManager');
-                this.questTrackerUI.updateQuestManager(this.questManager);
+                                this.questTrackerUI.updateQuestManager(this.questManager);
             }
             
-            console.log('BoatMenuScene: Quest Manager initialized successfully');
-            
-        } catch (error) {
+                    } catch (error) {
             console.error('BoatMenuScene: Error initializing Quest Manager:', error);
             this.questManager = null;
         }

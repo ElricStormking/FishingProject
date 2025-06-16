@@ -22,9 +22,7 @@ export default class DialogScene extends Phaser.Scene {
 
     init(data) {
         try {
-            console.log('DialogScene: INIT called with data:', data);
-            
-            // Validate input data
+                        // Validate input data
             if (!data || typeof data !== 'object') {
                 console.warn('DialogScene: Invalid or missing data, using defaults');
                 data = {};
@@ -45,13 +43,7 @@ export default class DialogScene extends Phaser.Scene {
                 console.warn('DialogScene: No DialogManager provided, will create fallback');
             }
             
-            console.log('DialogScene: Initialized with:', {
-                callingScene: this.callingScene,
-                npcId: this.currentNPCId,
-                scriptFile: this.scriptFile,
-                hasDialogManager: !!this.dialogManager
-            });
-        } catch (error) {
+                    } catch (error) {
             console.error('DialogScene: Error in init method:', error);
             // Set safe defaults
             this.callingScene = 'CabinScene';
@@ -62,15 +54,11 @@ export default class DialogScene extends Phaser.Scene {
     }
 
     async create() {
-        console.log('DialogScene: CREATE called');
-        
-        try {
+                try {
             const width = this.cameras.main.width;
             const height = this.cameras.main.height;
             
-            console.log('DialogScene: Camera dimensions:', { width, height });
-            
-            // Force scene to top
+                        // Force scene to top
             this.scene.bringToTop();
             
             // Load dialog content first
@@ -82,9 +70,7 @@ export default class DialogScene extends Phaser.Scene {
             // Start dialog
             this.startDialog();
             
-            console.log('DialogScene: Dialog interface created successfully');
-            
-        } catch (error) {
+                    } catch (error) {
             console.error('DialogScene: Error in create:', error);
             console.error('DialogScene: Error stack:', error.stack);
             this.createErrorFallback(error);
@@ -92,26 +78,20 @@ export default class DialogScene extends Phaser.Scene {
     }
     
     async loadDialogContent() {
-        console.log('DialogScene: Loading dialog content for', this.currentNPCId, 'with script', this.scriptFile);
-        
-        try {
+                try {
             if (this.scriptFile && this.scriptFile.endsWith('.md')) {
                 // Load markdown file
                 this.dialogData = await this.parser.loadAndParseFile(this.scriptFile, this.currentNPCId);
-                console.log('DialogScene: Loaded markdown dialog data:', this.dialogData);
-            } else if (this.scriptFile && this.scriptFile.endsWith('.json')) {
+                            } else if (this.scriptFile && this.scriptFile.endsWith('.json')) {
                 // Load JSON dialog file
                 this.dialogData = await this.loadJSONDialogFile(this.scriptFile);
-                console.log('DialogScene: Loaded JSON dialog data:', this.dialogData);
-            } else if (typeof this.scriptFile === 'object') {
+                            } else if (typeof this.scriptFile === 'object') {
                 // Direct JSON dialog data passed
                 this.dialogData = this.processJSONDialogData(this.scriptFile);
-                console.log('DialogScene: Using direct JSON dialog data:', this.dialogData);
-            } else {
+                            } else {
                 // Fallback to basic dialog
                 this.dialogData = this.createFallbackDialogData();
-                console.log('DialogScene: Using fallback dialog data');
-            }
+                            }
         } catch (error) {
             console.error('DialogScene: Error loading dialog content:', error);
             this.dialogData = this.createFallbackDialogData();
@@ -136,13 +116,11 @@ export default class DialogScene extends Phaser.Scene {
         
         for (const path of possiblePaths) {
             try {
-                console.log(`DialogScene: Attempting to load JSON from: ${path}`);
-                const response = await fetch(path);
+                                const response = await fetch(path);
                 
                 if (response.ok) {
                     const jsonData = await response.json();
-                    console.log(`DialogScene: Successfully loaded JSON from: ${path}`);
-                    return this.processJSONDialogData(jsonData);
+                                        return this.processJSONDialogData(jsonData);
                 }
             } catch (error) {
                 console.warn(`DialogScene: Failed to load from ${path}:`, error.message);
@@ -456,9 +434,7 @@ export default class DialogScene extends Phaser.Scene {
             return;
         }
         
-        console.log('DialogScene: Starting dialog with data:', this.dialogData);
-        
-        // The parser returns a single dialog object with sections array
+                // The parser returns a single dialog object with sections array
         // Start with the main dialog data (which represents the START section)
         this.currentSection = this.dialogData;
         this.displayCurrentSection();
@@ -470,9 +446,7 @@ export default class DialogScene extends Phaser.Scene {
             return;
         }
         
-        console.log('DialogScene: Displaying section:', this.currentSection);
-        
-        // Update dialog text
+                // Update dialog text
         const speaker = this.currentSection.speaker || this.dialogManager?.getNPC(this.currentNPCId)?.name || 'Mia';
         const text = this.currentSection.text || this.currentSection.message || 'Hello! How are you today?';
         
@@ -483,8 +457,7 @@ export default class DialogScene extends Phaser.Scene {
         
         // Apply any effects from the current section BEFORE creating choices
         if (this.currentSection.effects && this.currentSection.effects.length > 0) {
-            console.log('DialogScene: Applying section effects:', this.currentSection.effects);
-            this.applyEffects(this.currentSection.effects);
+                        this.applyEffects(this.currentSection.effects);
         }
         
         // Create choice buttons
@@ -569,9 +542,7 @@ export default class DialogScene extends Phaser.Scene {
     }
     
     handleChoiceTarget(target) {
-        console.log('DialogScene: Handling choice target:', target);
-        
-        // Find the target section in dialog data
+                // Find the target section in dialog data
         if (this.dialogData.sections) {
             const targetSection = this.dialogData.sections.find(section => 
                 section.label === target || section.id === target
@@ -591,8 +562,7 @@ export default class DialogScene extends Phaser.Scene {
         }
         
         // If target not found, provide a graceful fallback
-        console.log('DialogScene: Target section not found, providing fallback response');
-        this.currentSection = {
+                this.currentSection = {
             speaker: this.dialogData.speaker || 'Mia',
             text: "That's interesting! Let's continue our conversation.",
             choices: [{
@@ -605,9 +575,7 @@ export default class DialogScene extends Phaser.Scene {
     }
     
     makeChoice(choiceId, choiceData) {
-        console.log('DialogScene: Choice made:', choiceId, choiceData);
-        
-        // Apply romance changes based on choice data first
+                // Apply romance changes based on choice data first
         if (choiceData.romanceChange) {
             this.updateRomanceMeter(choiceData.romanceChange);
         }
@@ -649,9 +617,7 @@ export default class DialogScene extends Phaser.Scene {
                 return;
             }
             
-            console.log(`DialogScene: Updating romance meter for ${this.currentNPCId} by ${amount}`);
-            
-            // Get current NPC data before update
+                        // Get current NPC data before update
             const npc = this.dialogManager.getNPC(this.currentNPCId);
             if (!npc) {
                 console.warn(`DialogScene: NPC ${this.currentNPCId} not found`);
@@ -670,9 +636,7 @@ export default class DialogScene extends Phaser.Scene {
             const updatedNpc = this.dialogManager.getNPC(this.currentNPCId);
             const newMeter = updatedNpc.romanceMeter;
             
-            console.log(`DialogScene: Romance meter updated from ${oldMeter} to ${newMeter}`);
-            
-            // Update visual romance meter in dialog interface
+                        // Update visual romance meter in dialog interface
             if (this.romanceMeter) {
                 const fillPercent = newMeter / updatedNpc.maxRomance;
                 const fillWidth = fillPercent * 196; // width - 4
@@ -689,8 +653,7 @@ export default class DialogScene extends Phaser.Scene {
                 this.romanceMeter.fillStyle(fillColor, 1);
                 this.romanceMeter.fillRoundedRect(2, 2, fillWidth, 16, 8);
                 
-                console.log(`DialogScene: Visual romance meter updated - ${fillPercent * 100}% (${newMeter}/${updatedNpc.maxRomance})`);
-            }
+                            }
             
             // Also update the romance text if it exists
             if (this.romanceText) {
@@ -716,8 +679,7 @@ export default class DialogScene extends Phaser.Scene {
                 });
             }
             
-            console.log(`DialogScene: Romance meter update completed for ${this.currentNPCId}`);
-        } catch (error) {
+                    } catch (error) {
             console.error('DialogScene: Error updating romance meter:', error);
             console.error('DialogScene: Romance meter amount:', amount);
         }
@@ -725,27 +687,22 @@ export default class DialogScene extends Phaser.Scene {
     
     applyEffects(effects) {
         effects.forEach(effect => {
-            console.log('DialogScene: Applying effect:', effect);
-            
-            switch (effect.command) {
+                        switch (effect.command) {
                 case 'romance_meter_increase':
                     const amount = effect.params?.amount || 5;
                     const npcId = effect.params?.npc || this.currentNPCId;
-                    console.log(`DialogScene: Increasing romance meter for ${npcId} by ${amount}`);
-                    this.updateRomanceMeter(amount);
+                                        this.updateRomanceMeter(amount);
                     break;
                     
                 case 'achievement_unlock':
                     if (this.dialogManager && effect.params?.achievement) {
-                        console.log('DialogScene: Unlocking achievement:', effect.params.achievement);
-                        this.dialogManager.unlockAchievement(effect.params.achievement);
+                                                this.dialogManager.unlockAchievement(effect.params.achievement);
                     }
                     break;
                     
                 case 'quest_progress':
                     if (this.dialogManager && effect.params?.questId) {
-                        console.log('DialogScene: Progressing quest:', effect.params.questId);
-                        // Emit quest progress event to GameScene
+                                                // Emit quest progress event to GameScene
                         const gameScene = this.scene.get('GameScene');
                         if (gameScene && gameScene.questManager) {
                             gameScene.questManager.progressQuest(effect.params.questId);
@@ -755,8 +712,7 @@ export default class DialogScene extends Phaser.Scene {
                     
                 case 'unlock_quest':
                     if (this.dialogManager && effect.params?.questId) {
-                        console.log('DialogScene: Unlocking quest:', effect.params.questId);
-                        const gameScene = this.scene.get('GameScene');
+                                                const gameScene = this.scene.get('GameScene');
                         if (gameScene && gameScene.questManager) {
                             gameScene.questManager.unlockQuest(effect.params.questId);
                         }
@@ -765,8 +721,7 @@ export default class DialogScene extends Phaser.Scene {
                     
                 case 'add_experience':
                     if (effect.params?.amount) {
-                        console.log('DialogScene: Adding experience:', effect.params.amount);
-                        const gameScene = this.scene.get('GameScene');
+                                                const gameScene = this.scene.get('GameScene');
                         if (gameScene && gameScene.gameState) {
                             gameScene.gameState.addExperience(effect.params.amount);
                         }
@@ -775,8 +730,7 @@ export default class DialogScene extends Phaser.Scene {
                     
                 case 'add_coins':
                     if (effect.params?.amount) {
-                        console.log('DialogScene: Adding coins:', effect.params.amount);
-                        const gameScene = this.scene.get('GameScene');
+                                                const gameScene = this.scene.get('GameScene');
                         if (gameScene && gameScene.gameState) {
                             gameScene.gameState.addCoins(effect.params.amount);
                         }
@@ -786,8 +740,7 @@ export default class DialogScene extends Phaser.Scene {
                 case 'add_item':
                     if (effect.params?.itemId) {
                         const quantity = effect.params.quantity || 1;
-                        console.log(`DialogScene: Adding item ${effect.params.itemId} x${quantity}`);
-                        const gameScene = this.scene.get('GameScene');
+                                                const gameScene = this.scene.get('GameScene');
                         if (gameScene && gameScene.gameState) {
                             gameScene.gameState.addInventoryItem(effect.params.itemId, quantity);
                         }
@@ -796,8 +749,7 @@ export default class DialogScene extends Phaser.Scene {
                     
                 case 'open_ui':
                     if (effect.params?.uiType) {
-                        console.log('DialogScene: Opening UI:', effect.params.uiType);
-                        // Close dialog first, then open UI
+                                                // Close dialog first, then open UI
                         this.time.delayedCall(500, () => {
                             this.closeDialog();
                             // Emit event to calling scene to open specific UI
@@ -810,13 +762,11 @@ export default class DialogScene extends Phaser.Scene {
                     break;
                     
                 case 'dialog_end':
-                    console.log('DialogScene: Dialog end effect triggered');
-                    this.time.delayedCall(1000, () => this.closeDialog());
+                                        this.time.delayedCall(1000, () => this.closeDialog());
                     break;
                     
                 default:
-                    console.log('DialogScene: Unknown effect command:', effect.command);
-            }
+                                }
         });
     }
     
@@ -850,9 +800,7 @@ export default class DialogScene extends Phaser.Scene {
     
     closeDialog() {
         try {
-            console.log('DialogScene: Closing dialog');
-            
-            // Store final romance meter data before closing
+                        // Store final romance meter data before closing
             let finalRomanceData = null;
             if (this.dialogManager && this.currentNPCId) {
                 const npc = this.dialogManager.getNPC(this.currentNPCId);
@@ -863,8 +811,7 @@ export default class DialogScene extends Phaser.Scene {
                         maxValue: npc.maxRomance,
                         relationship: npc.relationship
                     };
-                    console.log('DialogScene: Final romance data:', finalRomanceData);
-                }
+                                    }
             }
             
             // Get calling scene reference before stopping
@@ -874,8 +821,7 @@ export default class DialogScene extends Phaser.Scene {
             if (finalRomanceData && callingSceneRef) {
                 try {
                     if (callingSceneRef.events && typeof callingSceneRef.events.emit === 'function') {
-                        console.log('DialogScene: Emitting romance meter update to calling scene');
-                        callingSceneRef.events.emit('romance-meter-updated', finalRomanceData);
+                                                callingSceneRef.events.emit('romance-meter-updated', finalRomanceData);
                         
                         // Also emit dialog-ended event
                         callingSceneRef.events.emit('dialog-ended', {
@@ -887,8 +833,7 @@ export default class DialogScene extends Phaser.Scene {
                     
                     // Call the onRomanceMeterUpdated method directly as a fallback
                     if (callingSceneRef.onRomanceMeterUpdated && typeof callingSceneRef.onRomanceMeterUpdated === 'function') {
-                        console.log('DialogScene: Calling onRomanceMeterUpdated directly');
-                        callingSceneRef.onRomanceMeterUpdated(finalRomanceData);
+                                                callingSceneRef.onRomanceMeterUpdated(finalRomanceData);
                     }
                 } catch (emitError) {
                     console.warn('DialogScene: Error emitting events to calling scene:', emitError);
@@ -904,8 +849,7 @@ export default class DialogScene extends Phaser.Scene {
             if (this.callingScene && this.scene && typeof this.scene.resume === 'function') {
                 try {
                     this.scene.resume(this.callingScene);
-                    console.log('DialogScene: Successfully resumed', this.callingScene);
-                } catch (resumeError) {
+                                    } catch (resumeError) {
                     console.warn('DialogScene: Could not resume calling scene:', resumeError);
                     // Try alternative method
                     if (callingSceneRef && callingSceneRef.scene && callingSceneRef.scene.resume) {
@@ -914,8 +858,7 @@ export default class DialogScene extends Phaser.Scene {
                 }
             }
             
-            console.log('DialogScene: Dialog closed successfully');
-        } catch (error) {
+                    } catch (error) {
             console.error('DialogScene: Error closing dialog:', error);
             // Force close anyway
             try {

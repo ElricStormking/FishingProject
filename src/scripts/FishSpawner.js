@@ -27,8 +27,7 @@ export class FishSpawner {
             'championship_waters': 'championship_hall_of_fame'
         };
         
-        console.log('FishSpawner: Initialized for 50 locations with boss system');
-    }
+            }
 
     /**
      * Spawn a fish at a specific location

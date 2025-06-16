@@ -87,8 +87,7 @@ export class RenJsDebugUI {
         
         this.createTabContent(panelX + 10, panelY + 100, panelWidth - 20, panelHeight - 110);
         
-        console.log('RenJsDebugUI: Debug panel created');
-    }
+            }
 
     createTabNavigation(x, y, width) {
         this.tabContainer = this.scene.add.container(0, 0);
@@ -634,6 +633,5 @@ export class RenJsDebugUI {
             this.container.destroy();
             this.container = null;
         }
-        console.log('RenJsDebugUI: Debug tools destroyed');
-    }
+            }
 } 

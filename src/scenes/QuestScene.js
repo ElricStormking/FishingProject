@@ -1,4 +1,5 @@
 import { QuestManager } from '../scripts/QuestManager.js';
+import Logger from '../utils/Logger.js';
 
 /**
  * Quest Scene - UI for displaying and managing all quest types
@@ -19,16 +20,12 @@ export default class QuestScene extends Phaser.Scene {
     preload() {
         // Skip loading quest UI assets since they don't exist yet
         // We'll use procedural graphics instead
-        console.log('QuestScene: Using procedural graphics for UI elements');
-        
-        // Create placeholder assets programmatically
+                // Create placeholder assets programmatically
         this.createPlaceholderAssets();
     }
 
     create() {
-        console.log('QuestScene: CREATE called');
-        
-        // Initialize async components in the background
+                // Initialize async components in the background
         this.initializeAsyncComponents();
         
         // Continue with synchronous initialization
@@ -50,41 +47,29 @@ export default class QuestScene extends Phaser.Scene {
             // Get GameState reference from any available scene
             if (gameScene && gameScene.gameState) {
                 gameState = gameScene.gameState;
-                console.log('QuestScene: GameState found from GameScene');
-            } else if (boatMenuScene && boatMenuScene.gameState) {
+                            } else if (boatMenuScene && boatMenuScene.gameState) {
                 gameState = boatMenuScene.gameState;
-                console.log('QuestScene: GameState found from BoatMenuScene');
-            }
+                            }
             
             // CRITICAL FIX: Try to get QuestManager from GameState first
             if (gameState && gameState.questManager) {
                 this.questManager = gameState.questManager;
-                console.log('QuestScene: ✅ QuestManager found from GameState');
-                console.log('QuestScene: QuestManager active quests:', Array.from(this.questManager.activeQuests.keys()));
+                                console.log('QuestScene: QuestManager active quests:', Array.from(this.questManager.activeQuests.keys()));
             } else {
                 // Fallback: Try to get it from a running GameScene
                 if (gameScene && gameScene.questManager) {
                     this.questManager = gameScene.questManager;
-                    console.log('QuestScene: QuestManager found from GameScene direct reference');
-                } else if (boatMenuScene && boatMenuScene.questManager) {
+                                    } else if (boatMenuScene && boatMenuScene.questManager) {
                     this.questManager = boatMenuScene.questManager;
-                    console.log('QuestScene: QuestManager found from BoatMenuScene');
-                } else {
+                                    } else {
                     // CRITICAL FIX: Create a new QuestManager AND store it in GameState
-                    console.log('QuestScene: Creating new QuestManager instance');
-                    this.questManager = new QuestManager(this);
-                    console.log('QuestScene: QuestManager created successfully');
-                    
-                    // Initialize the QuestManager asynchronously
-                    console.log('QuestScene: QuestManager will be initialized asynchronously...');
-                    // await this.questManager.initialize(); // Removed - will be handled asynchronously
-                    console.log('QuestScene: QuestManager initialization will complete asynchronously');
-                    
-                    // CRITICAL FIX: Store the new QuestManager in GameState for other scenes to use
+                                        this.questManager = new QuestManager(this);
+                                        // Initialize the QuestManager asynchronously
+                                        // await this.questManager.initialize(); // Removed - will be handled asynchronously
+                                        // CRITICAL FIX: Store the new QuestManager in GameState for other scenes to use
                     if (gameState) {
                         gameState.questManager = this.questManager;
-                        console.log('QuestScene: ✅ QuestManager stored in GameState for other scenes');
-                    } else {
+                                            } else {
                         console.warn('QuestScene: Could not store QuestManager in GameState - GameState not available');
                     }
                 }
@@ -237,8 +222,7 @@ export default class QuestScene extends Phaser.Scene {
             const hitArea = this.add.zone(x, buttonY, 100, 30);
             hitArea.setInteractive({ useHandCursor: true });
             hitArea.on('pointerdown', () => {
-                console.log(`QuestScene: Filter clicked: ${filter.key}`);
-                this.setFilter(filter.key);
+                                this.setFilter(filter.key);
             });
             hitArea.on('pointerover', () => {
                 if (this.currentFilter !== filter.key) {
@@ -368,8 +352,7 @@ export default class QuestScene extends Phaser.Scene {
     }
 
     setFilter(filterKey) {
-        console.log(`QuestScene: Setting filter to: ${filterKey} (was: ${this.currentFilter})`);
-        this.currentFilter = filterKey;
+                this.currentFilter = filterKey;
         this.updateFilterButtons();
         this.refreshQuestDisplay();
     }
@@ -421,10 +404,8 @@ export default class QuestScene extends Phaser.Scene {
                     // Only add if not completed and not already in map
                     if (!isCompleted && !questMap.has(quest.id)) {
                         questMap.set(quest.id, quest);
-                        console.log(`QuestScene: Adding quest to display: ${quest.id} - ${quest.title}`);
-                    } else if (isCompleted) {
-                        console.log(`QuestScene: Filtering out completed quest: ${quest.id} - ${quest.title}`);
-                    }
+                                            } else if (isCompleted) {
+                                            }
                 });
                 
                 quests = Array.from(questMap.values());
@@ -438,12 +419,10 @@ export default class QuestScene extends Phaser.Scene {
                                       (quest.template && quest.template.status === 'completed');
                     
                     if (isCompleted) {
-                        console.log(`QuestScene: Filtering out completed quest (by type): ${quest.id} - ${quest.title}`);
-                        return false;
+                                                return false;
                     }
                     
-                    console.log(`QuestScene: Including quest (by type): ${quest.id} - ${quest.title}`);
-                    return true;
+                                        return true;
                 });
             }
             
@@ -453,8 +432,7 @@ export default class QuestScene extends Phaser.Scene {
                 return statusOrder[a.status] - statusOrder[b.status];
             });
             
-            console.log(`QuestScene: Displaying ${quests.length} quests for filter '${this.currentFilter}'`);
-            console.log('QuestScene: Quest IDs:', quests.map(q => q.id));
+                        console.log('QuestScene: Quest IDs:', quests.map(q => q.id));
             console.log('QuestScene: Completed quest IDs:', Array.from(this.questManager.completedQuests));
             
             this.displayQuestList(quests);
@@ -657,8 +635,7 @@ export default class QuestScene extends Phaser.Scene {
                     if (this.questManager && this.questManager.startQuest) {
                         this.questManager.startQuest(quest.id);
                         this.refreshQuestDisplay();
-                        console.log(`QuestScene: Started quest ${quest.id}`);
-                    } else {
+                                            } else {
                         console.warn('QuestScene: Cannot start quest - QuestManager not available');
                     }
                 } catch (error) {
@@ -792,13 +769,11 @@ export default class QuestScene extends Phaser.Scene {
     }
     
     onQuestStarted(data) {
-        console.log('QuestScene: Quest started event received:', data.questId);
-        this.refreshQuestDisplay();
+                this.refreshQuestDisplay();
     }
     
     onQuestCompleted(data) {
-        console.log('QuestScene: Quest completed event received:', data.questId);
-        // Force cleanup and refresh when quest is completed
+                // Force cleanup and refresh when quest is completed
         if (this.questManager) {
             this.questManager.cleanupQuestStates();
         }
@@ -812,14 +787,11 @@ export default class QuestScene extends Phaser.Scene {
     }
     
     onQuestObjectiveUpdated(data) {
-        console.log('QuestScene: Quest objective updated event received:', data.questId, data.objectiveId);
-        this.refreshQuestDisplay();
+                this.refreshQuestDisplay();
     }
 
     returnToGame() {
-        console.log('QuestScene: Returning to game');
-        
-        // Show fish button when quest UI is closed
+                // Show fish button when quest UI is closed
         if (this.scene.get('BoatMenuScene') && this.scene.get('BoatMenuScene').showFishButton) {
             this.scene.get('BoatMenuScene').showFishButton();
         }
@@ -844,13 +816,10 @@ export default class QuestScene extends Phaser.Scene {
      */
     async initializeAsyncComponents() {
         try {
-            console.log('QuestScene: Starting async component initialization...');
-            
-            // Initialize Quest Manager asynchronously
+                        // Initialize Quest Manager asynchronously
             await this.initializeQuestManagerAsync();
             
-            console.log('QuestScene: Async component initialization completed');
-        } catch (error) {
+                    } catch (error) {
             console.error('QuestScene: Error in async component initialization:', error);
         }
     }
@@ -860,34 +829,25 @@ export default class QuestScene extends Phaser.Scene {
      */
     async initializeQuestManagerAsync() {
         try {
-            console.log('QuestScene: Initializing Quest Manager asynchronously...');
-            
-            if (this.gameState.questManager) {
-                console.log('QuestScene: Using existing QuestManager from GameState');
-                this.questManager = this.gameState.questManager;
+                        if (this.gameState.questManager) {
+                                this.questManager = this.gameState.questManager;
                 
                 // Update scene reference
                 this.questManager.scene = this;
                 
                 // Ensure it's initialized
                 if (!this.questManager.isInitialized) {
-                    console.log('QuestScene: QuestManager not initialized, initializing now...');
-                    await this.questManager.initialize();
+                                        await this.questManager.initialize();
                 }
             } else {
-                console.log('QuestScene: Creating new QuestManager and storing in GameState');
-                this.questManager = new QuestManager(this);
+                                this.questManager = new QuestManager(this);
                 this.gameState.questManager = this.questManager;
                 
                 // Initialize the QuestManager asynchronously
-                console.log('QuestScene: Initializing QuestManager asynchronously...');
-                // await this.questManager.initialize(); // Removed - will be handled asynchronously
-                console.log('QuestScene: QuestManager initialization will complete asynchronously');
-            }
+                                // await this.questManager.initialize(); // Removed - will be handled asynchronously
+                            }
             
-            console.log('QuestScene: Quest Manager initialized successfully');
-            
-        } catch (error) {
+                    } catch (error) {
             console.error('QuestScene: Error initializing Quest Manager:', error);
             this.questManager = null;
         }

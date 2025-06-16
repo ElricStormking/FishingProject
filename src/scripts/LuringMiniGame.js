@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { gameDataLoader } from './DataLoader.js';
 import UITheme from '../ui/UITheme.js';
+import Logger from '../utils/Logger.js';
 
 // Lure Minigame - Enhanced rhythm-based fish attraction
 export class LuringMiniGame {
@@ -37,8 +38,7 @@ export class LuringMiniGame {
         this.inputCooldown = false;
         this.fishObservationTimer = null;
         
-        console.log('LuringMiniGame: Initialized');
-    }
+            }
 
     start(options = {}) {
         if (this.isActive) {
@@ -46,9 +46,7 @@ export class LuringMiniGame {
             return;
         }
 
-        console.log('LuringMiniGame: Starting luring phase with options:', options);
-        
-        this.isActive = true; // Set active state manually instead of calling super
+                this.isActive = true; // Set active state manually instead of calling super
         this.isCompleted = false; // Reset completion flag for new session
         
         // Handle different calling patterns for backwards compatibility
@@ -82,9 +80,7 @@ export class LuringMiniGame {
         
         // If we have a selected fish from database, use its properties
         if (this.selectedFish) {
-            console.log('LuringMiniGame: Using selected fish:', this.selectedFish.name);
-            
-            // Determine fish shadow size based on fish size attribute
+                        // Determine fish shadow size based on fish size attribute
             if (this.selectedFish.size <= 3) {
                 this.fishShadowSize = 'small';
             } else if (this.selectedFish.size <= 6) {
@@ -131,9 +127,7 @@ export class LuringMiniGame {
     }
 
     showTutorialPanel() {
-        console.log('LuringMiniGame: Showing tutorial panel in bottom right corner');
-        
-        this.tutorialActive = true;
+                this.tutorialActive = true;
         
         // Create tutorial panel in bottom right corner
         this.createTutorialPanel();
@@ -244,8 +238,7 @@ export class LuringMiniGame {
         // Update timer display
         this.updateTimerDisplay();
         
-        console.log('LuringMiniGame: Tutorial panel created in bottom right corner');
-    }
+            }
 
     updateTimerDisplay() {
         if (!this.tutorialActive || !this.timerText || !this.tutorialTimer) return;
@@ -284,8 +277,7 @@ export class LuringMiniGame {
         
         if (this.scene && this.scene.input && this.scene.input.keyboard) {
             this.scene.input.keyboard.on('keydown', this.tutorialKeyHandler);
-            console.log('LuringMiniGame: Tutorial input handling setup (ESC to dismiss)');
-        } else {
+                    } else {
             console.warn('LuringMiniGame: Could not setup tutorial input - keyboard not available');
         }
     }
@@ -293,9 +285,7 @@ export class LuringMiniGame {
     hideTutorialPanel() {
         if (!this.tutorialActive) return;
         
-        console.log('LuringMiniGame: Hiding tutorial panel');
-        
-        this.tutorialActive = false;
+                this.tutorialActive = false;
         
         // Clear timer first to prevent updates
         if (this.tutorialTimer && !this.tutorialTimer.hasDispatched) {
@@ -351,9 +341,7 @@ export class LuringMiniGame {
     }
 
     startLuringMinigame() {
-        console.log('LuringMiniGame: Starting actual luring minigame');
-        
-        // Apply equipment effects
+                // Apply equipment effects
         this.applyEquipmentEffects();
         
         // Initialize UI elements
@@ -373,8 +361,7 @@ export class LuringMiniGame {
         // Set up keyboard input handling
         if (this.scene.input && this.scene.input.keyboard) {
             this.scene.input.keyboard.on('keydown', this.handleLureInput, this);
-            console.log('LuringMiniGame: Input handling setup');
-        } else {
+                    } else {
             console.warn('LuringMiniGame: No keyboard input available');
         }
     }
@@ -383,9 +370,7 @@ export class LuringMiniGame {
         if (!this.isActive) return;
         
         const key = event.key.toLowerCase();
-        console.log('LuringMiniGame: Input received:', key);
-        
-        // Handle different input types based on key
+                // Handle different input types based on key
         let inputType = 'unknown';
         let inputData = {};
         
@@ -494,9 +479,7 @@ export class LuringMiniGame {
                     if (isGoodTiming) {
                         // Good timing - advance sequence
                         this.currentFlyStep++;
-                        console.log(`LuringMiniGame: Fly sequence step ${this.currentFlyStep}/${this.flySequence.length} completed with good timing`);
-                        
-                        if (this.currentFlyStep < this.flySequence.length) {
+                                                if (this.currentFlyStep < this.flySequence.length) {
                             // Show next key in sequence
                             const nextKey = this.flySequence[this.currentFlyStep].toUpperCase();
                             const stepText = `PRESS ${nextKey} NEXT! (${this.currentFlyStep + 1}/${this.flySequence.length})`;
@@ -512,8 +495,7 @@ export class LuringMiniGame {
                         // Bad timing but correct key
                         const currentKeyUpper = this.flySequence[this.currentFlyStep].toUpperCase();
                         this.showSingleKeyIndicator(currentKeyUpper, `BAD TIMING! TRY AGAIN!`, '#FF8800');
-                        console.log(`LuringMiniGame: Correct key but bad timing - retry`);
-                    }
+                                            }
                 } else {
                     // Wrong key pressed
                     const expectedKeyUpper = this.flySequence[this.currentFlyStep].toUpperCase();
@@ -536,9 +518,7 @@ export class LuringMiniGame {
                     if (isGoodTiming) {
                         // Good timing - advance sequence
                         this.currentSpoonStep++;
-                        console.log(`LuringMiniGame: Spoon sequence step ${this.currentSpoonStep}/${this.spoonSequence.length} completed with good timing`);
-                        
-                        if (this.currentSpoonStep < this.spoonSequence.length) {
+                                                if (this.currentSpoonStep < this.spoonSequence.length) {
                             // Show next key in sequence
                             const nextKey = this.spoonSequence[this.currentSpoonStep].toUpperCase();
                             const stepText = `PRESS ${nextKey} NEXT! (${this.currentSpoonStep + 1}/${this.spoonSequence.length})`;
@@ -554,8 +534,7 @@ export class LuringMiniGame {
                         // Bad timing but correct key
                         const currentKeyUpper = this.spoonSequence[this.currentSpoonStep].toUpperCase();
                         this.showSingleKeyIndicator(currentKeyUpper, `BAD TIMING! TRY AGAIN!`, '#FF8800');
-                        console.log(`LuringMiniGame: Correct key but bad timing - retry`);
-                    }
+                                            }
                 } else {
                     // Wrong key pressed
                     const expectedKeyUpper = this.spoonSequence[this.currentSpoonStep].toUpperCase();
@@ -591,8 +570,7 @@ export class LuringMiniGame {
             criticalChance: this.lureStats.criticalChance || 0
         };
         
-        console.log('LuringMiniGame: Equipment effects applied:', this.equipmentEffects);
-    }
+            }
 
     createLureSimulationUI() {
         const width = this.scene.cameras.main.width;
@@ -632,8 +610,7 @@ export class LuringMiniGame {
         // Control instructions
         this.createControlInstructions(uiWidth, uiHeight);
         
-        console.log('LuringMiniGame: Lure Simulation UI created');
-    }
+            }
 
     createSimulationLure(uiWidth, uiHeight) {
         // Initial lure position (center of water area)
@@ -889,9 +866,7 @@ export class LuringMiniGame {
     }
 
     startFishApproach() {
-        console.log(`LuringMiniGame: Starting fish approach phase ${this.currentPhase + 1}/${this.totalPhases}`);
-        
-        // Reset phase state
+                // Reset phase state
         this.phaseActive = true;
         this.phaseComplete = false;
         this.fishInterested = false;
@@ -955,8 +930,7 @@ export class LuringMiniGame {
             this.resolveFishObservation(fish);
         });
         
-        console.log('LuringMiniGame: Fish is now observing the lure');
-    }
+            }
 
     resolveFishObservation(fish) {
         if (!fish.observing) return;
@@ -979,14 +953,11 @@ export class LuringMiniGame {
             this.startFishMovement(fish, 300);
             this.updateFishVisual(fish);
             
-            console.log('LuringMiniGame: Fish lost interest and swam away');
-        }
+                    }
     }
 
     handleFishBite(fish) {
-        console.log('LuringMiniGame: Fish bit the lure!');
-        
-        // Play fish bite audio
+                // Play fish bite audio
         this.audioManager?.playSFX('fish_bite');
         
         // Create bite effect
@@ -1068,8 +1039,7 @@ export class LuringMiniGame {
         this.requiredInputs = this.lurePattern.phases;
         this.maxPhases = Math.min(4, Math.max(3, this.requiredInputs.length)); // 3-4 opportunities as per GDD
         
-        console.log(`LuringMiniGame: Setup ${this.lurePattern.name} lure with ${this.maxPhases} phases`);
-    }
+            }
 
     createFishShadow() {
         // Create fish shadow representation (using selectedFish data if available)
@@ -1089,8 +1059,7 @@ export class LuringMiniGame {
             fleeChance: this.fishElusiveness / 20
         };
         
-        console.log('LuringMiniGame: Fish shadow created with size:', shadowSize);
-    }
+            }
 
     getShadowSize() {
         const fishSize = this.selectedFish?.size || 5;
@@ -1125,9 +1094,7 @@ export class LuringMiniGame {
         // Elusive fish are more likely to flee on mistakes
         this.fishShadow.fleeChance = elusiveness / 20;
         
-        console.log(`LuringMiniGame: Phase ${this.currentPhase + 1}/${this.maxPhases} - Input: ${requiredInput}, Difficulty: ${difficulty.toFixed(1)}`);
-        
-        // Create visual fish shadow approach animation
+                // Create visual fish shadow approach animation
         this.animateFishShadowApproach();
         
         // Emit phase start event with enhanced data
@@ -1148,8 +1115,7 @@ export class LuringMiniGame {
         const timeLimit = Math.max(3000, baseTime - (difficulty * 500)); // 3-8 seconds based on type and difficulty
         this.phaseTimeout = this.scene.time.delayedCall(timeLimit, () => {
             this.phaseTimeout = null;
-            console.log(`LuringMiniGame: Phase ${this.currentPhase + 1} timed out`);
-            this.handlePhaseFailure();
+                        this.handlePhaseFailure();
         });
         
         // Show phase progress
@@ -1260,8 +1226,7 @@ export class LuringMiniGame {
         // For sequence inputs, let updateSequenceProgress handle it rather than immediate success/failure
         if (isSequenceInput) {
             // Don't trigger success/failure directly - sequence updates are handled in updateSequenceProgress
-            console.log('LuringMiniGame: Sequence-based input received, letting updateSequenceProgress handle it');
-            return true;
+                        return true;
         }
         
         // Standard validation for non-sequence lures
@@ -1278,9 +1243,7 @@ export class LuringMiniGame {
 
     validateInput(inputType, requiredInput, inputData) {
         // Enhanced input validation for each lure type
-        console.log(`LuringMiniGame: Validating ${inputType} against ${requiredInput}`);
-        
-        // Handle case where requiredInput is undefined
+                // Handle case where requiredInput is undefined
         if (!requiredInput) {
             console.warn('LuringMiniGame: No required input specified, accepting any input');
             return true;
@@ -1333,8 +1296,7 @@ export class LuringMiniGame {
                 
             default:
                 // Fallback to basic validation
-                console.log(`LuringMiniGame: Using fallback validation for ${requiredInput}`);
-                return inputType === requiredInput || inputType === 'tap'; // Accept tap as fallback
+                                return inputType === requiredInput || inputType === 'tap'; // Accept tap as fallback
         }
     }
 
@@ -1363,9 +1325,7 @@ export class LuringMiniGame {
         const lureBonus = this.lureStats?.lureSuccess || 0;
         this.shadowInterest += lureBonus;
         
-        console.log(`LuringMiniGame: Phase ${this.currentPhase + 1} success! Timing: ${(timingAccuracy * 100).toFixed(0)}%, Interest: ${this.shadowInterest}`);
-        
-        // Show success feedback
+                // Show success feedback
         this.showPhaseSuccessFeedback(timingAccuracy);
         
         // Move to next phase
@@ -1463,9 +1423,7 @@ export class LuringMiniGame {
         // Decrease shadow interest
         this.shadowInterest = Math.max(0, this.shadowInterest - 30);
         
-        console.log(`LuringMiniGame: Phase ${this.currentPhase + 1} failed! Interest: ${this.shadowInterest}`);
-        
-        // Show failure feedback
+                // Show failure feedback
         this.showPhaseFailureFeedback();
         
         // Check if fish loses interest completely
@@ -1552,8 +1510,7 @@ export class LuringMiniGame {
     attemptHook() {
         // Prevent duplicate hook attempts
         if (this.isCompleted) {
-            console.log('LuringMiniGame: Already completed, ignoring hook attempt');
-            return;
+                        return;
         }
         
         // Hide all indicators immediately for clean transition
@@ -1566,8 +1523,8 @@ export class LuringMiniGame {
         
         const success = Math.random() < finalChance;
         
-        console.log(`LuringMiniGame: Hook attempt - Chance: ${(finalChance * 100).toFixed(1)}%, Success: ${success}`);
-        
+        if (import.meta.env.DEV) console.log('Debug statement');
+        if (import.meta.env.DEV) console.log('Debug statement');
         // Show hook attempt message before transition
         if (this.phaseInstructionText) {
             // Make the result message large and prominent
@@ -1602,23 +1559,19 @@ export class LuringMiniGame {
     complete(success, fishHooked) {
         // Prevent multiple completions
         if (this.isCompleted) {
-            console.log('LuringMiniGame: Already completed, ignoring duplicate completion call');
-            return;
+                        return;
         }
         
         this.isCompleted = true;
         this.isActive = false;
         
-        console.log('LuringMiniGame: Complete called with:', { success, fishHooked });
-        
-        // IMMEDIATELY clean up input handling to prevent interference with next phase
+                // IMMEDIATELY clean up input handling to prevent interference with next phase
         if (this.scene && this.scene.input && this.scene.input.keyboard) {
         this.scene.input.keyboard.off('keydown', this.handleLureInput, this);
             
             // In debug mode, don't restore regular game controls - LuringDebugTool will handle that
             // This prevents issues with both systems trying to manage controls
-            console.log(`LuringMiniGame: Cleaned up input handling (debugMode: ${this.debugMode})`);
-        }
+                    }
         
         // Clean up timers
         if (this.phaseTimeout) {
@@ -1675,13 +1628,7 @@ export class LuringMiniGame {
             };
         }
         
-        console.log('LuringMiniGame: Emitting lureComplete event with validated data:', {
-            success,
-            fishHooked: validatedFishHooked,
-            finalInterest: this.shadowInterest
-        });
-
-        // Schedule emission of completion event after cleanup
+                // Schedule emission of completion event after cleanup
         this.scene.time.delayedCall(100, () => {
         // Emit completion event
         this.scene.events.emit('fishing:lureComplete', {
@@ -1698,9 +1645,7 @@ export class LuringMiniGame {
     }
     
     performCleanup() {
-        console.log('LuringMiniGame: Performing final cleanup');
-        
-        // Stop all animations/tweens on UI elements
+                // Stop all animations/tweens on UI elements
         this.stopAllIndicatorAnimations();
         
         // Hide all UI elements
@@ -1718,9 +1663,7 @@ export class LuringMiniGame {
     }
 
     destroy() {
-        console.log('LuringMiniGame: Starting destroy process');
-        
-        this.isActive = false;
+                this.isActive = false;
         this.isCompleted = true; // Mark as completed to prevent duplicate calls
         this.tutorialActive = false;
         
@@ -1902,8 +1845,7 @@ export class LuringMiniGame {
          this.arrowLeftTween = null;
          this.arrowRightTween = null;
         
-        console.log('LuringMiniGame: Destroy process completed');
-    }
+            }
 
     detectCircularPattern() {
         if (!this.spoonPattern || this.spoonPattern.length < 4) return false;
@@ -2142,8 +2084,7 @@ export class LuringMiniGame {
     }
 
     completePhase(success) {
-        console.log(`LuringMiniGame: Phase ${this.currentPhase + 1} complete. Success:`, success);
-        
+        if (import.meta.env.DEV) console.log('LuringMiniGame: Completing phase with success:', success);
         this.phaseComplete = true;
         this.phaseActive = false;
         this.phaseSuccesses[this.currentPhase] = success;
@@ -2177,9 +2118,7 @@ export class LuringMiniGame {
     }
 
     fishSwimAway() {
-        console.log('LuringMiniGame: Fish swims away due to failed phase');
-        
-        // Complete the minigame as failure
+                // Complete the minigame as failure
         this.scene.time.delayedCall(1000, () => {
             this.complete(false, null);
         });
@@ -2195,12 +2134,11 @@ export class LuringMiniGame {
     hookFish() {
         // Prevent duplicate hook calls
         if (this.isCompleted) {
-            console.log('LuringMiniGame: Already completed, ignoring hook fish call');
-            return;
+                        return;
         }
         
-        console.log('LuringMiniGame: Fish hooked successfully!');
-        
+        if (import.meta.env.DEV) console.log('Debug statement');
+        if (import.meta.env.DEV) console.log('Debug statement');
         // Create hook animation
         this.createHookAnimation();
         
@@ -2216,8 +2154,7 @@ export class LuringMiniGame {
         this.scene.time.delayedCall(1500, () => {
             // Check again before completing to prevent race conditions
             if (this.isCompleted) {
-                console.log('LuringMiniGame: Completion prevented during delayed call');
-                return;
+                                return;
             }
             
             // Ensure we have a valid fish object to pass
@@ -2237,8 +2174,7 @@ export class LuringMiniGame {
     createBackground() {
         // Don't create a dark background overlay - let the fishing scene remain visible
         // The luring minigame UI has its own containers and backgrounds
-        console.log('LuringMiniGame: Skipping background creation to keep scene visible');
-    }
+            }
 
     createLureSimulation() {
         // Create the lure simulation UI
@@ -2248,8 +2184,7 @@ export class LuringMiniGame {
         this.setupLurePattern();
         this.applyEquipmentEffects();
         
-        console.log('LuringMiniGame: Lure simulation created');
-    }
+            }
 
     createUI() {
         const width = this.scene.cameras.main.width;
@@ -2360,8 +2295,7 @@ export class LuringMiniGame {
         // Interest meter
         this.createInterestMeter();
         
-        console.log('LuringMiniGame: Enhanced UI with input indicators created');
-    }
+            }
     
     createInputIndicator() {
         // Container for input indicators
@@ -2769,13 +2703,10 @@ export class LuringMiniGame {
             this.updatePhaseInstructions();
         }
         
-        console.log(`LuringMiniGame: Phase display updated - ${this.currentPhase + 1}/${this.totalPhases}`);
-    }
+            }
 
     startObservation() {
-        console.log('LuringMiniGame: Fish is observing the lure');
-        
-        // Find a fish to make interested
+                // Find a fish to make interested
         const availableFish = this.simulationFish.find(fish => !fish.interested && !fish.observing);
         if (availableFish) {
             this.makeFishInterested(availableFish);
@@ -2835,7 +2766,6 @@ export class LuringMiniGame {
         // Get current lure info or fallback to Spinner
         const currentLureInfo = lureInfoMap[this.lurePattern.name] || lureInfoMap['Spinner'];
         
-        console.log('LuringMiniGame: Current lure info:', currentLureInfo);
-        return currentLureInfo;
+                return currentLureInfo;
     }
 } 

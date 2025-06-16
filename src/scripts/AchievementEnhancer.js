@@ -21,7 +21,7 @@ export class AchievementEnhancer {
         // Achievement progress tracking
         this.achievementProgress = new Map();
         
-        console.log('AchievementEnhancer: Enhanced achievement system initialized');
+        if (import.meta.env.DEV) console.log('AchievementEnhancer: Enhanced achievement system initialized');
     }
 
     initializeEnhancedAchievements() {
@@ -563,7 +563,7 @@ export class AchievementEnhancer {
                 rewards: achievement.rewards
             });
             
-            console.log(`AchievementEnhancer: Enhanced achievement unlocked: ${achievement.name}`);
+            if (import.meta.env.DEV) console.log(`AchievementEnhancer: Enhanced achievement unlocked: ${achievement.name}`);
             return true;
         }
         return false;
@@ -633,7 +633,7 @@ export class AchievementEnhancer {
                 rewards: chain.rewards
             });
             
-            console.log(`AchievementEnhancer: Achievement chain completed: ${chain.name}`);
+            if (import.meta.env.DEV) console.log(`AchievementEnhancer: Achievement chain completed: ${chain.name}`);
         }
     }
 

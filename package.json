@@ -10,7 +10,10 @@
     "build": "node scripts/csv-to-json-converter.js && vite build",
     "preview": "vite preview",
     "convert-csv": "node scripts/csv-to-json-converter.js",
-    "watch-csv": "node scripts/watch-csv.js"
+    "watch-csv": "node scripts/watch-csv.js",
+    "clean-logs": "node scripts/remove-debug-logs.js",
+    "clean-logs-aggressive": "node scripts/aggressive-log-cleanup.js",
+    "setup-logger": "node scripts/cleanup-logs.js"
   },
   "keywords": [
     "phaser",

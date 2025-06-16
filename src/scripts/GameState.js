@@ -8,6 +8,7 @@ import { PlayerProgression } from './PlayerProgression.js';
 import FishDatabase from './FishDatabase.js';
 import { LocationManager } from './LocationManager.js';
 import { QuestManager } from './QuestManager.js';
+import Logger from '../utils/Logger.js';
 
 class GameState {
     constructor() {
@@ -60,19 +61,11 @@ class GameState {
      */
     async initialize() {
         try {
-            console.log('GameState: Starting initialization...');
-            
-            // Load all game data first
+                        // Load all game data first
             await gameDataLoader.loadAllData();
-            console.log('GameState: Game data loaded successfully');
-            
-            // 🚨 DISABLED: Automatic sample fish generation to prevent undefined items
+                        // 🚨 DISABLED: Automatic sample fish generation to prevent undefined items
             // Sample fish can be added manually through the inventory UI debug buttons if needed
-            console.log('GameState: Skipping automatic sample fish generation to prevent undefined items');
-            
-            console.log('GameState: Initialization completed');
-            
-        } catch (error) {
+                                } catch (error) {
             console.error('GameState: Error during initialization:', error);
         }
     }
@@ -82,33 +75,21 @@ class GameState {
      * This method was creating undefined/placeholder items when fish IDs weren't found
      */
     async addProperSampleFish() {
-        console.log('GameState: ⚠️ addProperSampleFish() is DISABLED to prevent undefined items');
-        console.log('GameState: Sample fish can be added manually through inventory UI debug buttons if needed');
-        return; // Early return to prevent execution
+                        return; // Early return to prevent execution
         
         // 🚨 COMMENTED OUT: Original code that was creating undefined items
         /*
         try {
-            console.log('GameState: Adding proper sample fish items...');
-            
-            // Get fish data from the DataLoader
+                        // Get fish data from the DataLoader
             const allFish = gameDataLoader.getAllFish();
-            console.log('GameState: Retrieved fish data from DataLoader:', allFish);
-            console.log('GameState: Fish data length:', allFish ? allFish.length : 'null/undefined');
-            
-            if (allFish && allFish.length > 0) {
-                console.log('GameState: First few fish from DataLoader:', allFish.slice(0, 3));
+                                    if (allFish && allFish.length > 0) {
+                this.logger?.debug('GameState: First few fish from DataLoader:', allFish.slice(0, 3)) || Logger.debug(this.constructor.name, 'GameState: First few fish from DataLoader:', allFish.slice(0, 3));
                 
                 // Add some basic fish for crafting
                 const sampleFishIds = ['bluegill', 'perch', 'bass', 'trout', 'pike', 'salmon'];
-                console.log('GameState: Looking for fish with IDs:', sampleFishIds);
-                
-                sampleFishIds.forEach(fishId => {
-                    console.log(`GameState: Searching for fish with ID: ${fishId}`);
-                    const fishData = allFish.find(f => f.id === fishId);
-                    console.log(`GameState: Found fish data for ${fishId}:`, fishData);
-                    
-                    if (fishData) {
+                                sampleFishIds.forEach(fishId => {
+                                        const fishData = allFish.find(f => f.id === fishId);
+                                        if (fishData) {
                         const fishItem = {
                             id: `fish_${fishId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                             fishId: fishData.id,
@@ -122,20 +103,15 @@ class GameState {
                             owned: true
                         };
                         
-                        console.log(`GameState: Created fish item:`, fishItem);
-                        
-                        // Add to inventory using the InventoryManager
+                                                // Add to inventory using the InventoryManager
                         if (this.inventoryManager) {
                             this.inventoryManager.addItem('fish', fishItem);
-                            console.log(`GameState: Added fish via InventoryManager: ${fishItem.name}`);
-                        } else {
+                                                    } else {
                             // Fallback: add directly to inventory
                             this.inventory.fish.push(fishItem);
-                            console.log(`GameState: Added fish directly to inventory: ${fishItem.name}`);
-                        }
+                                                    }
                         
-                        console.log(`GameState: Added sample fish: ${fishItem.name} (${fishItem.quantity})`);
-                    } else {
+                                            } else {
                         console.warn(`GameState: Could not find fish data for ID: ${fishId}`);
                         
                         // 🚨 THIS WAS THE PROBLEM: Creating placeholder items with undefined names
@@ -152,9 +128,7 @@ class GameState {
                             owned: true
                         };
                         
-                        console.log(`GameState: Created placeholder item for missing fish:`, placeholderItem);
-                        
-                        if (this.inventoryManager) {
+                                                if (this.inventoryManager) {
                             this.inventoryManager.addItem('fish', placeholderItem);
                         } else {
                             this.inventory.fish.push(placeholderItem);
@@ -162,13 +136,9 @@ class GameState {
                     }
                 });
                 
-                console.log('GameState: Sample fish items added successfully');
-                console.log('GameState: Current fish inventory:', this.inventory.fish);
-            } else {
+                                            } else {
                 console.warn('GameState: No fish data available from DataLoader');
-                console.log('GameState: DataLoader loaded status:', gameDataLoader.loaded);
-                console.log('GameState: DataLoader fish data:', gameDataLoader.fishData);
-            }
+                                            }
             
         } catch (error) {
             console.error('GameState: Error adding sample fish:', error);
@@ -421,8 +391,7 @@ class GameState {
     levelUp() {
         // This is now handled automatically by PlayerProgression
         // Keep this method for backward compatibility
-        console.log('GameState: levelUp() called - now handled by PlayerProgression system');
-    }
+            }
 
     addMoney(amount) {
         this.player.money += amount;
@@ -544,9 +513,7 @@ class GameState {
      * @param {boolean} isPerfectCatch - Whether it was a perfect catch
      */
     catchFish(fishData, isPerfectCatch = false) {
-        console.log('GameState: Catching fish:', fishData);
-        
-        // Validate input fish data
+                // Validate input fish data
         if (!fishData || typeof fishData !== 'object') {
             console.error('GameState: Invalid fish data provided:', fishData);
             return {
@@ -572,9 +539,7 @@ class GameState {
             ...fishData // Spread original data but keep safe defaults for essential props
         };
         
-        console.log('GameState: Processing safe fish data:', safeFishData);
-        
-        let catchResult = null;
+                let catchResult = null;
         
         // Use FishDatabase if available
         if (this.fishDatabase && safeFishData.fishId && safeFishData.fishId !== 'unknown') {
@@ -639,9 +604,7 @@ class GameState {
                             owned: true
                         };
                         
-                        console.log('GameState: Adding fish card to inventory:', fishCard);
-                        
-                        // Add to inventory with error handling
+                                                // Add to inventory with error handling
                         try {
                             if (this.inventoryManager && this.inventoryManager.addItem) {
                                 const addResult = this.inventoryManager.addItem('fish', fishCard);
@@ -655,16 +618,7 @@ class GameState {
                             console.error('GameState: Error adding fish to inventory:', inventoryError);
                         }
                         
-                        console.log('GameState: Fish caught successfully:', {
-                            fish: fish.name || safeFishData.name,
-                            weight: catchResult.weight || safeFishData.weight,
-                            coins: coinReward,
-                            exp: expReward,
-                            isFirstCatch: catchResult.isFirstCatch,
-                            isRecord: catchResult.isRecord
-                        });
-                        
-                        this.markDirty();
+                                                this.markDirty();
                         return {
                             success: true,
                             fish: fish,
@@ -691,9 +645,7 @@ class GameState {
             }
         }
         
-        console.log('GameState: Using legacy fish catching behavior');
-        
-        // Fallback to legacy behavior if FishDatabase not available or failed
+                // Fallback to legacy behavior if FishDatabase not available or failed
         try {
             this.player.fishCaught = (this.player.fishCaught || 0) + 1;
             
@@ -742,8 +694,7 @@ class GameState {
                 }
             }
             
-            console.log('GameState: Fish caught (legacy):', fish);
-            this.markDirty();
+                        this.markDirty();
             
             return {
                 success: true,
@@ -831,8 +782,7 @@ class GameState {
                 });
             }
             
-            console.log('GameState: Audio manager initialized');
-        }
+                    }
         return this.audioManager;
     }
 
@@ -851,13 +801,10 @@ class GameState {
      */
     initializeQuestManager(scene) {
         if (!this.questManager) {
-            console.log('GameState: Initializing QuestManager with scene:', scene.scene.key);
-            this.questManager = new QuestManager(scene);
-            console.log('GameState: QuestManager initialized successfully');
-        } else if (this.questManager.scene !== scene) {
+                        this.questManager = new QuestManager(scene);
+                    } else if (this.questManager.scene !== scene) {
             // Update scene reference if different
-            console.log('GameState: Updating QuestManager scene reference to:', scene.scene.key);
-            this.questManager.scene = scene;
+                        this.questManager.scene = scene;
         }
         return this.questManager;
     }
@@ -884,19 +831,16 @@ class GameState {
     initializeTimeWeather(scene) {
         // Note: TimeManager and WeatherManager are now initialized in GameScene
         // This method is kept for compatibility but doesn't create managers
-        console.log('GameState: Time & Weather initialization handled by GameScene');
-    }
+            }
 
     setupTimeWeatherEvents() {
         if (this.timeManager) {
             this.timeManager.onTimeChange((currentTime, timeString, timePeriod) => {
-                console.log(`Time period changed to ${timePeriod}`);
-                this.emit('timePeriodChanged', { currentTime, timeString, timePeriod });
+                                this.emit('timePeriodChanged', { currentTime, timeString, timePeriod });
             });
             
             this.timeManager.onPeriodChange((oldPeriod, newPeriod, effects) => {
-                console.log(`Time period changed: ${oldPeriod} → ${newPeriod}`);
-                this.emit('timePeriodChanged', { oldPeriod, newPeriod, effects });
+                                this.emit('timePeriodChanged', { oldPeriod, newPeriod, effects });
                 
                 // Update fish behavior based on time
                 this.updateFishBehaviorForTime(effects);
@@ -904,8 +848,7 @@ class GameState {
         }
         
         // Weather events will be handled when WeatherManager is available
-        console.log('GameState: Time & Weather events setup (managers may not be ready yet)');
-    }
+            }
 
     updateTimeWeather(deltaTime) {
         // Update time manager if available
@@ -948,13 +891,11 @@ class GameState {
 
     refreshShopInventory() {
         // Add logic to refresh shop items daily
-        console.log('GameState: Shop inventory refreshed for new day');
-    }
+            }
 
     resetDailyProgress() {
         // Reset any daily progress tracking
-        console.log('GameState: Daily progress reset');
-    }
+            }
 
     getCurrentTimeInfo() {
         if (this.timeManager && this.timeManager.getTimeString) {
@@ -1090,8 +1031,7 @@ class GameState {
         );
         
         this.emit('perfectCast', { experienceGained: expGained });
-        console.log('GameState: Perfect cast! +' + expGained + ' experience');
-    }
+            }
 
     trackPerfectLure() {
         // Award experience for perfect lure
@@ -1101,8 +1041,7 @@ class GameState {
         );
         
         this.emit('perfectLure', { experienceGained: expGained });
-        console.log('GameState: Perfect lure! +' + expGained + ' experience');
-    }
+            }
 
     trackPerfectReel() {
         // Award experience for perfect reel
@@ -1112,8 +1051,7 @@ class GameState {
         );
         
         this.emit('perfectReel', { experienceGained: expGained });
-        console.log('GameState: Perfect reel! +' + expGained + ' experience');
-    }
+            }
 
     trackCraftingActivity(itemId) {
         this.session.sessionStats.itemsCrafted++;
@@ -1235,8 +1173,7 @@ class GameState {
     addGems(amount) {
         this.player.gems = (this.player.gems || 0) + amount;
         this.markDirty();
-        console.log(`GameState: Added ${amount} gems (total: ${this.player.gems})`);
-    }
+            }
 
     // Save/Load methods
     markDirty() {
@@ -1278,8 +1215,7 @@ class GameState {
             this.session.isDirty = false;
             this.session.totalSaves = saveData.session.totalSaves;
             
-            console.log(`GameState: Game saved successfully (Save #${this.session.totalSaves})`);
-            this.emit('gameSaved', { 
+                        this.emit('gameSaved', { 
                 timestamp: this.session.lastSave,
                 saveNumber: this.session.totalSaves,
                 dataSize: JSON.stringify(saveData).length
@@ -1309,8 +1245,7 @@ class GameState {
             }
             
             localStorage.setItem('luxuryAngler_backups', JSON.stringify(backups));
-            console.log(`GameState: Backup saved (${backups.length} backups total)`);
-        } catch (error) {
+                    } catch (error) {
             console.warn('GameState: Failed to save backup:', error);
         }
     }
@@ -1361,9 +1296,7 @@ class GameState {
                 
                 // Calculate play time since last save
                 const timeSinceLastSave = Date.now() - (data.timestamp || Date.now());
-                console.log(`GameState: Game loaded successfully (${Math.round(timeSinceLastSave / 1000)}s since last save)`);
-                
-                this.emit('gameLoaded', {
+                                this.emit('gameLoaded', {
                     ...data,
                     timeSinceLastSave,
                     loadTimestamp: Date.now()
@@ -1385,9 +1318,7 @@ class GameState {
             const backups = JSON.parse(localStorage.getItem('luxuryAngler_backups') || '[]');
             if (backups.length > backupIndex) {
                 const backup = backups[backupIndex];
-                console.log(`GameState: Loading from backup ${backupIndex + 1}/${backups.length}`);
-                
-                // Use the backup data
+                                // Use the backup data
                 this.player = { ...this.player, ...backup.player };
                 this.inventory = { ...this.inventory, ...backup.inventory };
                 this.world = { ...this.world, ...backup.world };
@@ -1450,9 +1381,7 @@ class GameState {
 
     migrateSaveData(data) {
         // Handle save data migration for different versions
-        console.log('GameState: Migrating save data...');
-        
-        // Add missing fields with defaults
+                // Add missing fields with defaults
         if (!data.session) {
             data.session = {
                 startTime: Date.now(),
@@ -1476,8 +1405,7 @@ class GameState {
             };
         }
         
-        console.log('GameState: Save data migration completed');
-    }
+            }
 
     // Save management utilities
     getSaveInfo() {
@@ -1548,8 +1476,7 @@ class GameState {
             localStorage.setItem('luxuryAngler_save', JSON.stringify(data));
             this.loadFromStorage();
             
-            console.log('GameState: Save imported successfully');
-            this.emit('saveImported', data);
+                        this.emit('saveImported', data);
             return true;
         } catch (error) {
             console.error('GameState: Failed to import save:', error);
@@ -1562,8 +1489,7 @@ class GameState {
         try {
             localStorage.removeItem('luxuryAngler_save');
             localStorage.removeItem('luxuryAngler_backups');
-            console.log('GameState: Save data deleted');
-            this.emit('saveDeleted');
+                        this.emit('saveDeleted');
             return true;
         } catch (error) {
             console.error('GameState: Failed to delete save:', error);
@@ -1598,35 +1524,29 @@ class GameState {
     }
 
     reset() {
-        console.log('GameState: Resetting to initial state...');
-        
-        // Reset core state
+                // Reset core state
         this.initializeState();
         
         // Reset all managers to initial state
         if (this.playerProgression) {
             this.playerProgression.initializeProgression();
-            console.log('GameState: PlayerProgression reset');
-        }
+                    }
         
         if (this.inventoryManager) {
             // Reset inventory to initial state (correct method name)
             this.inventoryManager.initializeInventory();
-            console.log('GameState: InventoryManager reset');
-        }
+                    }
         
         if (this.craftingManager) {
             // Reset crafting to initial state (clear queue and reload recipes)
             this.craftingManager.craftingQueue = [];
             this.craftingManager.loadRecipes();
-            console.log('GameState: CraftingManager reset');
-        }
+                    }
         
         if (this.locationManager) {
             // Reset location to initial state
             this.locationManager.initialize();
-            console.log('GameState: LocationManager reset');
-        }
+                    }
         
         // Clear all save data
         this.deleteSave();
@@ -1636,8 +1556,7 @@ class GameState {
         
         // Emit reset event
         this.emit('gameReset');
-        console.log('GameState: Game reset to initial state completed');
-    }
+            }
 
     // Auto-save functionality
     startAutoSave() {
@@ -1759,14 +1678,11 @@ class GameState {
 
     // Debug and testing methods
     debugFishInventory() {
-        console.log('GameState: Current fish inventory:', this.inventory.fish);
-        return this.inventory.fish;
+                return this.inventory.fish;
     }
 
     debugProgressionSystem() {
-        console.log('GameState: Testing progression system...');
-        
-        // Add some experience
+                // Add some experience
         this.addExperience(500, 'debug', { reason: 'Testing progression' });
         
         // Add skill points
@@ -1774,15 +1690,11 @@ class GameState {
         
         // Show progression summary
         const summary = this.playerProgression.getProgressionSummary();
-        console.log('Progression Summary:', summary);
-        
-        return summary;
+                return summary;
     }
 
     debugTestPerfectActions() {
-        console.log('GameState: Testing perfect action tracking...');
-        
-        // Test perfect actions
+                // Test perfect actions
         this.trackPerfectCast();
         this.trackPerfectLure();
         this.trackPerfectReel();
@@ -1795,8 +1707,7 @@ class GameState {
     }
 
     forceResetFishInventory() {
-        console.log('GameState: Force resetting fish inventory to default values');
-        this.inventory.fish = [
+                this.inventory.fish = [
             // Sample fish cards for testing crafting
             { id: 'minnow', name: 'Minnow', rarity: 1, quantity: 5, owned: true },
             { id: 'perch', name: 'Perch', rarity: 1, quantity: 4, owned: true },
@@ -1809,28 +1720,23 @@ class GameState {
         ];
         this.markDirty();
         this.save();
-        console.log('GameState: Fish inventory reset and saved');
-        return this.inventory.fish;
+                return this.inventory.fish;
     }
 
     forceAddTestingCoins() {
-        console.log('GameState: Adding 50,000 coins for testing');
-        this.player.money += 50000;
+                this.player.money += 50000;
         this.markDirty();
         this.save();
-        console.log('GameState: Player now has', this.player.money, 'coins');
-        return this.player.money;
+                return this.player.money;
     }
 
     forceSetTestingLevel() {
-        console.log('GameState: Setting player level to 15 for testing');
-        this.player.level = 15;
+                this.player.level = 15;
         this.player.experience = 0;
         this.player.experienceToNext = 1000;
         this.markDirty();
         this.save();
-        console.log('GameState: Player is now level', this.player.level);
-        return this.player.level;
+                return this.player.level;
     }
 
     // Singleton getter

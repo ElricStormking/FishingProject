@@ -1,4 +1,5 @@
 import fishData from '../data/fish.json';
+import Logger from '../utils/Logger.js';
 
 export class FishDatabase {
     constructor(gameState) {
@@ -26,9 +27,7 @@ export class FishDatabase {
             this.struggleStyles[style.id] = { ...style };
         });
         
-        console.log('FishDatabase: Loaded', Object.keys(this.fishSpecies).length, 'fish species');
-        console.log('FishDatabase: Loaded', Object.keys(this.struggleStyles).length, 'struggle styles');
-    }
+                    }
 
     /**
      * Initialize fish collection tracking

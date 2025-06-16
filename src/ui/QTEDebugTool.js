@@ -92,8 +92,7 @@ export class QTEDebugTool {
         // Initialize hold QTE tracking
         this.holdCompleted = false;
         
-        console.log('QTEDebugTool: Initialized as standalone testing system with input isolation');
-    }
+            }
     
     initializeStats() {
         // Initialize QTE type statistics
@@ -126,8 +125,7 @@ export class QTEDebugTool {
         this.enableInputIsolation();
         
         this.createDebugInterface();
-        console.log('QTEDebugTool: Debug interface shown with input isolation active');
-    }
+            }
     
     hide() {
         if (!this.isVisible) return;
@@ -233,8 +231,7 @@ export class QTEDebugTool {
         // Close button
         this.createCloseButton(panelX + panelWidth - 40, panelY + 20);
         
-        console.log('QTEDebugTool: Standalone debug interface created with clear QTE area');
-    }
+            }
     
     createControlPanel(x, y, width, height) {
         // Panel background
@@ -525,9 +522,7 @@ export class QTEDebugTool {
         }
         container.add(buttonText);
         
-        console.log(`QTEDebugTool: Button text created: "${buttonText.text}"`);
-        
-        // Interactive area using rectangle with proper hit area
+                // Interactive area using rectangle with proper hit area
         const hitArea = this.scene.add.rectangle(width/2, height/2, width, height, 0x000000, 0);
         hitArea.setInteractive({
             useHandCursor: true,
@@ -851,8 +846,7 @@ export class QTEDebugTool {
     
     // Standalone debug session methods - completely separate from main game
     startDebugSession() {
-        console.log('QTEDebugTool: Starting standalone debug session');
-        this.debugSessionActive = true;
+                this.debugSessionActive = true;
         
         // Start real-time monitoring timer for standalone system
         this.startRealtimeMonitoring();
@@ -1125,9 +1119,7 @@ export class QTEDebugTool {
     }
     
     startRapidFireTest() {
-        console.log('QTEDebugTool: Starting rapid fire test (standalone)');
-        
-        let count = 0;
+                let count = 0;
         const maxTests = 20;
         
         const rapidTest = () => {
@@ -1148,9 +1140,7 @@ export class QTEDebugTool {
     startAutoTesting() {
         if (this.autoTestTimer) return;
         
-        console.log('QTEDebugTool: Starting auto testing mode');
-        
-        this.autoTestTimer = this.scene.time.addEvent({
+                this.autoTestTimer = this.scene.time.addEvent({
             delay: 5000, // Test every 5 seconds
             callback: () => {
                 if (Math.random() < 0.5) {
@@ -1190,9 +1180,7 @@ export class QTEDebugTool {
         this.mockQTEContainer.setDepth(5000); // HIGHER than debug interface (3000)
         this.mockQTEContainer.setVisible(true);
         
-        console.log(`QTEDebugTool: QTE container created at (${width / 2}, ${height / 2}) with depth 5000`);
-        
-        // Create background panel - EXACT MATCH to ReelingMiniGame
+                // Create background panel - EXACT MATCH to ReelingMiniGame
         this.mockQTEBackground = this.scene.add.graphics();
         this.mockQTEBackground.fillStyle(0x2c3e50, 0.95);
         this.mockQTEBackground.fillRoundedRect(-150, -80, 300, 160, 10);
@@ -1200,9 +1188,7 @@ export class QTEDebugTool {
         this.mockQTEBackground.strokeRoundedRect(-150, -80, 300, 160, 10);
         this.mockQTEContainer.add(this.mockQTEBackground);
         
-        console.log('QTEDebugTool: QTE background panel created');
-        
-        // QTE settings - EXACT MATCH to ReelingMiniGame
+                // QTE settings - EXACT MATCH to ReelingMiniGame
         const difficulty = this.debugDifficulty || 3;
         this.mockQTE = {
             type: qteType,
@@ -1886,9 +1872,7 @@ export class QTEDebugTool {
     
     // Enhanced destroy method with proper cleanup
     destroy() {
-        console.log('QTEDebugTool: Starting destroy process');
-        
-        try {
+                try {
             // FIRST: Ensure input isolation is disabled and game controls are restored
             this.disableInputIsolation();
             

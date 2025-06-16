@@ -729,8 +729,7 @@ export class PlayerProgressionUI {
         const upgradeHitArea = this.scene.add.rectangle(60, height - 22, 100, 25, 0x000000, 0);
         upgradeHitArea.setInteractive({ useHandCursor: true });
         upgradeHitArea.on('pointerdown', () => {
-            console.log('PlayerProgressionUI: Original upgrade button clicked for', treeId, skillId);
-            this.upgradeSkill(treeId, skillId);
+                        this.upgradeSkill(treeId, skillId);
         });
         container.add(upgradeHitArea);
 
@@ -746,8 +745,7 @@ export class PlayerProgressionUI {
         
         // Store click handler
         const upgradeClickHandler = () => {
-            console.log('PlayerProgressionUI: Working upgrade button clicked for', treeId, skillId);
-            this.upgradeSkill(treeId, skillId);
+                        this.upgradeSkill(treeId, skillId);
         };
         
         // Apply hover and click effects for both areas
@@ -1380,6 +1378,11 @@ export class PlayerProgressionUI {
             this.scene.hideFishButton();
         }
         
+        // CRITICAL: Hide DOM buttons from BoatMenuScene when player progression UI is open
+        if (this.scene.hideDOMButtons) {
+            this.scene.hideDOMButtons();
+        }
+        
         this.updateDisplay();
         
         // Animate in
@@ -1401,6 +1404,11 @@ export class PlayerProgressionUI {
         // Show fish button when player progression is closed
         if (this.scene.showFishButton) {
             this.scene.showFishButton();
+        }
+        
+        // CRITICAL: Show DOM buttons from BoatMenuScene when player progression UI is closed
+        if (this.scene.showDOMButtons) {
+            this.scene.showDOMButtons();
         }
         
         this.scene.tweens.add({

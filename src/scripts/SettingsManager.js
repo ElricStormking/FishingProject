@@ -6,8 +6,7 @@ export class SettingsManager {
         // Event listeners for settings changes
         this.listeners = {};
         
-        console.log('SettingsManager: Initialized with settings:', this.settings);
-    }
+            }
 
     getDefaultSettings() {
         return {
@@ -76,8 +75,7 @@ export class SettingsManager {
                 // Merge with defaults to ensure all settings exist
                 this.settings = this.mergeSettings(this.getDefaultSettings(), parsed);
                 
-                console.log('SettingsManager: Settings loaded from localStorage');
-                this.emit('settingsLoaded', this.settings);
+                                this.emit('settingsLoaded', this.settings);
                 return true;
             }
         } catch (error) {
@@ -96,8 +94,7 @@ export class SettingsManager {
             };
             
             localStorage.setItem('luxuryAngler_settings', JSON.stringify(settingsData));
-            console.log('SettingsManager: Settings saved to localStorage');
-            this.emit('settingsSaved', this.settings);
+                        this.emit('settingsSaved', this.settings);
             return true;
         } catch (error) {
             console.error('SettingsManager: Failed to save settings:', error);
@@ -147,8 +144,7 @@ export class SettingsManager {
             oldValue
         });
         
-        console.log(`SettingsManager: ${category}.${key} changed from ${oldValue} to ${value}`);
-    }
+            }
 
     // Apply settings to game systems
     applySettings() {
@@ -172,8 +168,7 @@ export class SettingsManager {
         this.saveSettings();
         this.applySettings();
         this.emit('settingsReset', this.settings);
-        console.log('SettingsManager: Settings reset to defaults');
-    }
+            }
 
     // Export settings for backup
     exportSettings() {
@@ -192,8 +187,7 @@ export class SettingsManager {
             this.saveSettings();
             this.applySettings();
             this.emit('settingsImported', this.settings);
-            console.log('SettingsManager: Settings imported successfully');
-            return true;
+                        return true;
         } catch (error) {
             console.error('SettingsManager: Failed to import settings:', error);
             return false;

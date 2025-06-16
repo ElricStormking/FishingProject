@@ -41,8 +41,7 @@ export default class PlayerController {
         this.setupEventListeners();
         this.setupEquipmentListeners();
         
-        console.log('PlayerController initialized for first-person fishing');
-    }
+            }
 
     // Getter and setter for forcedNextFish to track when it gets modified
     get forcedNextFish() {
@@ -51,8 +50,7 @@ export default class PlayerController {
 
     set forcedNextFish(value) {
         if (value !== this._forcedNextFish) {
-            console.log('PlayerController: forcedNextFish changed from:', this._forcedNextFish, 'to:', value);
-            if (value === null && this._forcedNextFish !== null) {
+                        if (value === null && this._forcedNextFish !== null) {
                 console.trace('PlayerController: forcedNextFish set to null - stack trace:');
             }
         }
@@ -137,8 +135,7 @@ export default class PlayerController {
             };
             
             this.gameState.inventoryManager.on('equipmentChanged', this.equipmentChangeHandler);
-            console.log('PlayerController: Equipment change listeners set up');
-        }
+                    }
     }
 
     canCast() {
@@ -182,9 +179,7 @@ export default class PlayerController {
         
         try {
             this.isCasting = true;
-            console.log('PlayerController: Starting cast minigame...');
-            
-            // IMMEDIATELY disable casting input to prevent interference
+                        // IMMEDIATELY disable casting input to prevent interference
             this.disableCastingInput();
             
             // Play casting preparation sound
@@ -197,13 +192,9 @@ export default class PlayerController {
             
             // Get player fishing stats
             const playerStats = this.getPlayerFishingStats();
-            console.log('PlayerController: Player stats:', playerStats);
-            
-            // Get water area
+                        // Get water area
             const waterArea = this.getWaterArea();
-            console.log('PlayerController: Water area:', waterArea);
-            
-            // Create and start cast minigame
+                        // Create and start cast minigame
             this.castMinigame = new CastingMiniGame(this.scene, {});
             this.castMinigame.start(playerStats, waterArea);
             
@@ -216,8 +207,7 @@ export default class PlayerController {
             // REMOVED: No longer calling quest objectives directly from PlayerController
             // Quest completion is now handled by QuestManager listening to GameScene events
             
-            console.log('PlayerController: Cast minigame started successfully');
-        } catch (error) {
+                    } catch (error) {
             console.error('PlayerController: Error starting cast minigame:', error);
             this.isCasting = false;
             this.enableCastingInput();
@@ -230,9 +220,7 @@ export default class PlayerController {
     }
 
     getPlayerFishingStats() {
-        console.log('PlayerController: 🎣 Getting player fishing stats from CSV-converted data...');
-        
-        // Get player attributes and equipment bonuses with safe defaults
+                // Get player attributes and equipment bonuses with safe defaults
         const player = this.gameState.player || {};
         const baseStats = player.attributes || {};
         
@@ -246,21 +234,14 @@ export default class PlayerController {
         }
         
         // Debug logging
-        console.log('PlayerController: ✅ Player object (from CSV):', player);
-        console.log('PlayerController: ✅ Base stats (from CSV):', baseStats);
-        
-        // Get all equipped items and their combined effects (from CSV-converted equipment data)
+                        // Get all equipped items and their combined effects (from CSV-converted equipment data)
         const equipmentEffects = this.getEquipmentEffects();
         if (!equipmentEffects || Object.keys(equipmentEffects).length === 0) {
             console.error('PlayerController: 🚨 No equipment effects available - CSV equipment data may not be loaded!');
         }
-        console.log('PlayerController: ✅ Equipment effects (from CSV):', equipmentEffects);
-        
-        // Get Time & Weather effects (Priority 1.4 integration)
+                // Get Time & Weather effects (Priority 1.4 integration)
         const timeWeatherEffects = this.getTimeWeatherEffects();
-        console.log('PlayerController: ✅ Time/weather effects:', timeWeatherEffects);
-        
-        // Helper function to safely add numbers and avoid NaN
+                // Helper function to safely add numbers and avoid NaN
         const safeAdd = (...values) => {
             return values.reduce((sum, val) => {
                 const num = Number(val) || 0;
@@ -399,9 +380,7 @@ export default class PlayerController {
             playerVisibility: timeWeatherEffects.playerVisibility || 1.0
         };
         
-        console.log('PlayerController: Debug - finalStats:', finalStats);
-        
-        // Check for any NaN values in final stats
+                // Check for any NaN values in final stats
         Object.entries(finalStats).forEach(([key, value]) => {
             if (isNaN(value)) {
                 console.error(`PlayerController: NaN detected in finalStats.${key}:`, value);
@@ -480,14 +459,12 @@ export default class PlayerController {
                     effects.experienceBonus += Math.floor(bonus / 2);
                 });
 
-                console.log('PlayerController: Applied enhancement bonuses', { setBonuses, specializationBonuses });
-            } catch (error) {
+                            } catch (error) {
                 console.error('PlayerController: Error applying enhancement bonuses:', error);
             }
         }
 
-        console.log('PlayerController: Final equipment effects calculated', effects);
-        return effects;
+                return effects;
     }
 
     /**
@@ -506,8 +483,7 @@ export default class PlayerController {
      */
     setTargetFish(fishId) {
         this.targetFish = fishId;
-        console.log(`PlayerController: Target fish set to ${fishId}`);
-    }
+            }
 
     getTimeWeatherEffects() {
         let effects = {
@@ -763,7 +739,8 @@ export default class PlayerController {
             modifiedOutcome.isCritical = true;
             modifiedOutcome.experienceGain *= 2;
             modifiedOutcome.rareFishChance *= 1.5;
-            console.log('PlayerController: Critical fishing success!');
+            if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('PlayerController: Applied legendary equipment bonus');
         }
         
         // Apply experience bonus
@@ -815,13 +792,10 @@ export default class PlayerController {
             this.reelMinigame.updatePlayerStats(newStats);
         }
         
-        console.log('PlayerController: Equipment changed, stats updated:', newStats);
-    }
+            }
 
     getAvailableFish(castType, hitAccurateSection) {
-        console.log('PlayerController: 🐟 Getting available fish from CSV-converted data...');
-        
-        // Get all fish from data loader (CSV-converted data)
+                // Get all fish from data loader (CSV-converted data)
         const allFish = gameDataLoader.getAllFish();
         
         if (!allFish || allFish.length === 0) {
@@ -830,29 +804,21 @@ export default class PlayerController {
             return [];
         }
         
-        console.log(`PlayerController: ✅ Found ${allFish.length} fish species from CSV data`);
-        
-        if (hitAccurateSection && castType === 'hotspot') {
+                if (hitAccurateSection && castType === 'hotspot') {
             // Hotspot cast - higher chance of rare fish
             const rareFish = allFish.filter(fish => fish.rarity >= 4);
-            console.log(`PlayerController: Hotspot cast - returning ${rareFish.length} rare fish`);
-            return rareFish;
+                        return rareFish;
         } else {
             // Normal cast - common fish
             const commonFish = allFish.filter(fish => fish.rarity <= 6);
-            console.log(`PlayerController: Normal cast - returning ${commonFish.length} common fish`);
-            return commonFish;
+                        return commonFish;
         }
     }
 
     selectFishForCast(castType, spotInfo = null, rarityBonus = 0) {
-        console.log(`PlayerController: 🎣 Selecting fish for ${castType} cast from CSV-converted data...`);
-        
-        // --- Fish Tuning Tool Override ---
+                // --- Fish Tuning Tool Override ---
         if (this.forcedNextFish) {
-            console.log(`PlayerController: Using forced fish from tuning tool: ${this.forcedNextFish.name} (ID: ${this.forcedNextFish.id})`);
-            console.log('PlayerController: Forced fish data in selectFishForCast:', this.forcedNextFish);
-            const fishToReturn = this.forcedNextFish;
+                                    const fishToReturn = this.forcedNextFish;
             // DON'T clear forcedNextFish here - keep it for the lure phase
             // It will be cleared in resetFishingState() when the entire sequence is done
             return fishToReturn;
@@ -865,9 +831,7 @@ export default class PlayerController {
             throw new Error('CRITICAL: No CSV fish data available for fish selection');
         }
         
-        console.log(`PlayerController: ✅ Found ${allFish.length} fish species from CSV data`);
-        
-        let availableFish = allFish;
+                let availableFish = allFish;
         
         // Filter fish based on cast type and spot
         if (castType === 'spot' && spotInfo) {
@@ -881,8 +845,7 @@ export default class PlayerController {
             // If we have spot-specific fish, use them, otherwise use all fish
             if (spotSpecificFish.length > 0) {
                 availableFish = spotSpecificFish;
-                console.log(`PlayerController: Using ${spotSpecificFish.length} spot-specific fish for ${spotInfo.config.name}`);
-            }
+                            }
         } else if (castType === 'hotspot') {
             // Main hotspot prefers rare fish
             const rareFish = allFish.filter(fish => fish.rarity >= 4);
@@ -896,15 +859,13 @@ export default class PlayerController {
             const higherRarityFish = availableFish.filter(fish => fish.rarity >= 5);
             if (higherRarityFish.length > 0) {
                 availableFish = higherRarityFish;
-                console.log(`PlayerController: Rarity bonus (+${rarityBonus}%) triggered, using higher rarity fish`);
-            }
+                            }
         }
         
         // Select random fish from available pool
         const selectedFish = Phaser.Utils.Array.GetRandom(availableFish);
         
-        console.log(`PlayerController: Selected ${selectedFish.name} (rarity: ${selectedFish.rarity}) from ${availableFish.length} available fish`);
-        return selectedFish;
+                return selectedFish;
     }
 
     getWaterArea() {
@@ -917,9 +878,7 @@ export default class PlayerController {
     }
 
     onCastComplete(data) {
-        console.log('PlayerController: Cast completed with data:', data);
-        
-        // Extract values from data object
+                // Extract values from data object
         const { success, accuracy, hitAccurateSection, castType } = data;
         
         this.isCasting = false;
@@ -940,8 +899,7 @@ export default class PlayerController {
         
         // Handle error case
         if (success === false) {
-            console.log('PlayerController: Cast failed with error');
-            this.cleanupCast();
+                        this.cleanupCast();
             return;
         }
         
@@ -960,34 +918,29 @@ export default class PlayerController {
                 finalCastType = 'spot';
                 rarityBonus = spotHit.rarityBonus;
                 spotInfo = spotHit.spot;
-                console.log(`PlayerController: Hit fishing spot: ${spotInfo.config.name} (+${rarityBonus}% rarity)`);
-            } else if (hitAccurateSection) {
+                            } else if (hitAccurateSection) {
                 // Hit the main hotspot
                 finalCastType = 'hotspot';
                 rarityBonus = 30; // Main hotspot bonus
-                console.log('PlayerController: Hit main hotspot (+30% rarity)');
-            }
+                            }
             
-            console.log(`PlayerController: Cast successful! Accuracy: ${accuracy.toFixed(1)}%, Type: ${finalCastType}, Hit accurate section: ${hitAccurateSection}`);
+            if (import.meta.env.DEV) console.log('Debug statement');
+        console.log(`PlayerController: Cast complete - type: ${finalCastType}, accuracy: ${accuracy}`);
             
             // Proceed to lure phase with information about cast quality
             this.startLurePhase(accuracy, finalCastType, hitAccurateSection);
         } else {
-            console.log('PlayerController: Cast failed!');
-            this.cleanupCast();
+                        this.cleanupCast();
         }
     }
 
     startLurePhase(castAccuracy, castType, hitAccurateSection) {
         // Prevent multiple luring minigames from starting
         if (this.lureMinigame && this.lureMinigame.isActive) {
-            console.log('PlayerController: Luring minigame already active, ignoring new start request');
-            return;
+                        return;
         }
         
-        console.log(`PlayerController: Starting lure phase with accuracy ${castAccuracy}%...`);
-        
-        // Keep crosshair hidden during lure phase
+                // Keep crosshair hidden during lure phase
         if (this.scene.crosshair) {
             this.scene.crosshair.setVisible(false);
         }
@@ -1004,15 +957,12 @@ export default class PlayerController {
         // --- Fish Tuning Tool Override for Lure Phase ---
         if (this.forcedNextFish) {
             selectedFish = this.forcedNextFish;
-            console.log(`PlayerController: Using forced fish from tuning tool for luring: ${selectedFish.name} (ID: ${selectedFish.id})`);
-            console.log('PlayerController: Forced fish data:', selectedFish);
-            // DON'T clear forcedNextFish yet - keep it for the reel phase
+                                    // DON'T clear forcedNextFish yet - keep it for the reel phase
         } else if (availableFish && availableFish.length > 0) {
             // For now, randomly select from available fish
             // In the future, this could be based on cast accuracy, lure type, etc.
             selectedFish = Phaser.Utils.Array.GetRandom(availableFish);
-            console.log('PlayerController: Selected fish for luring:', selectedFish.name);
-        }
+                    }
         
         // Create and start lure minigame with options object
         this.lureMinigame = new LuringMiniGame(this.scene, {});
@@ -1030,9 +980,7 @@ export default class PlayerController {
     }
 
     onLureComplete(data) {
-        console.log('PlayerController: Lure completed with data:', data);
-        
-        // Extract values from data object
+                // Extract values from data object
         const { success, fishHooked, finalInterest } = data;
         
         // IMMEDIATELY clean up luring minigame to prevent input interference
@@ -1042,8 +990,7 @@ export default class PlayerController {
         }
         
         if (!success) {
-            console.log('PlayerController: Lure phase failed - fish not interested');
-            this.cleanupCast();
+                        this.cleanupCast();
             return;
         }
         
@@ -1054,21 +1001,21 @@ export default class PlayerController {
             return;
         }
         
-        console.log(`PlayerController: Fish hooked: ${fishHooked.name} (Interest: ${finalInterest}%)`);
+        if (import.meta.env.DEV) console.log('Debug statement');
         this.startReelPhase(fishHooked);
     }
 
     startReelPhase(fish) {
         // CRITICAL: Prevent multiple reeling minigames from starting
         if (this.reelMinigame && this.reelMinigame.isActive) {
-            console.log('PlayerController: Reeling minigame already active, ignoring new start request');
-            return;
+            if (import.meta.env.DEV) console.log('Debug statement');
+        return;
         }
         
         // Prevent multiple reeling phases with same fish
         if (this.isReeling) {
-            console.log('PlayerController: Already in reeling phase, ignoring duplicate startReelPhase call');
-            return;
+            if (import.meta.env.DEV) console.log('Debug statement');
+        return;
         }
         
         // ✅ FIX: Set isReeling to true to disable casting during the reeling minigame
@@ -1081,9 +1028,7 @@ export default class PlayerController {
             return;
         }
         
-        console.log(`PlayerController: Starting reel phase with ${fish.name}...`);
-        
-        // Keep crosshair hidden during reel phase
+                // Keep crosshair hidden during reel phase
         if (this.scene.crosshair) {
             this.scene.crosshair.setVisible(false);
         }
@@ -1293,13 +1238,14 @@ export default class PlayerController {
     }
 
     onReelComplete(data) {
-        console.log('PlayerController: Reel completed with data:', data);
+        if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('PlayerController: Reel complete', data);
         
         // Extract values from data object
         const { success, reason, fish, finalStats } = data;
         
-        console.log(`PlayerController: Reel complete - success: ${success}, reason: ${reason}`);
-        
+        if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('PlayerController: Test mode status:', this.isTestMode);
         const wasTestMode = this.isTestMode;
         
         try {
@@ -1318,21 +1264,20 @@ export default class PlayerController {
                     this.scene.events.off('fishing:qteComplete', this.activeQTEHandlers.qteComplete);
                 }
                 this.activeQTEHandlers = null;
-                console.log('PlayerController: QTE handlers cleaned up after reel completion');
-            }
+                            }
             
             // Always reset state first
             this.resetFishingState();
             
             // Handle test mode completion
             if (wasTestMode) {
-                console.log('PlayerController: Test mode completed, emitting tuningTestEnded');
-                this.isTestMode = false;
+                                this.isTestMode = false;
                 this.scene.events.emit('tuningTestEnded');
             }
             
             if (success) {
-                console.log(`PlayerController: Successfully caught fish!`, fish);
+                if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('PlayerController: Fishing success, processing catch result');
                 
                 // Extract catch result from finalStats if available
                 const catchResult = finalStats?.catchResult || null;
@@ -1343,8 +1288,7 @@ export default class PlayerController {
                     catchResult: catchResult
                 });
             } else {
-                console.log(`PlayerController: Failed to catch fish - ${reason}`);
-                this.onFishingFailed(reason, fish, finalStats);
+                                this.onFishingFailed(reason, fish, finalStats);
             }
         } catch (error) {
             console.error('PlayerController: Error in onReelComplete:', error);
@@ -1365,7 +1309,8 @@ export default class PlayerController {
             return;
         }
 
-        console.log(`PlayerController: Successfully caught ${fish.name}`);
+        if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('PlayerController: Playing catch success audio');
         this.audioManager?.playSFX('catch_success');
 
         // Calculate rewards
@@ -1460,8 +1405,7 @@ export default class PlayerController {
         // CRITICAL FIX: Remove duplicate fishing:catchSuccess emission
         // Event is already emitted from finishFishingSuccess - celebration should only show UI
         
-        console.log(`PlayerController: Catch celebration - ${fish.name}, +${totalXp} XP`);
-    }
+            }
     
     resetFishingState() {
         this.isReeling = false;
@@ -1470,8 +1414,7 @@ export default class PlayerController {
         
         // Clear forced fish from tuning tool
         if (this.forcedNextFish) {
-            console.log('PlayerController: Clearing forced fish from tuning tool:', this.forcedNextFish.name);
-            this.forcedNextFish = null;
+                        this.forcedNextFish = null;
         }
         
         this.cleanupCast();
@@ -1481,7 +1424,8 @@ export default class PlayerController {
         if (!this.canReel()) return;
         
         this.isReeling = true;
-        console.log('PlayerController: Reeling in line...');
+        if (import.meta.env.DEV) console.log('Debug statement');
+        console.log('PlayerController: Starting reel mechanics');
         
         // Trigger reeling mechanics (to be expanded)
         this.scene.events.emit('player:startReeling');
@@ -1490,9 +1434,7 @@ export default class PlayerController {
     reelInLine() {
         if (!this.currentLure) return;
         
-        console.log('PlayerController: Auto-reeling line');
-        
-        // Animate reel-in
+                // Animate reel-in
         this.scene.tweens.add({
             targets: this.currentLure,
             x: this.position.x,
@@ -1588,9 +1530,7 @@ export default class PlayerController {
     }
 
     triggerInteraction(zoneName, zone) {
-        console.log(`PlayerController: Interacting with ${zoneName}`);
-        
-        switch (zone.action) {
+                switch (zone.action) {
             case 'openTackleBox':
                 this.openTackleBox();
                 break;
@@ -1598,34 +1538,29 @@ export default class PlayerController {
                 this.changeRod();
                 break;
             default:
-                console.log(`Unknown interaction: ${zone.action}`);
-        }
+                        }
     }
 
     openTackleBox() {
-        console.log('PlayerController: Opening tackle box...');
-        this.audioManager?.playSFX('button');
+                this.audioManager?.playSFX('button');
         this.scene.events.emit('player:openTackleBox');
         // Could open inventory or equipment screen
     }
 
     changeRod() {
-        console.log('PlayerController: Changing fishing rod...');
-        this.audioManager?.playSFX('button');
+                this.audioManager?.playSFX('button');
         this.scene.events.emit('player:changeRod');
         // Could cycle through available rods
     }
 
     openInventory() {
-        console.log('PlayerController: Opening inventory...');
-        this.audioManager?.playSFX('button');
+                this.audioManager?.playSFX('button');
         this.scene.events.emit('player:openInventory');
         // Could switch to inventory scene or open overlay
     }
 
     interact() {
-        console.log('PlayerController: General interaction');
-        // Handle context-sensitive interactions
+                // Handle context-sensitive interactions
     }
 
     // Update method called each frame
@@ -1654,13 +1589,10 @@ export default class PlayerController {
         // CRITICAL FIX: Remove duplicate fishing:catchSuccess emission
         // Event is already emitted from finishFishingSuccess - feedback should only show UI
         
-        console.log(`PlayerController: Catch success - ${fish.name}, +${rewards.coins} coins, +${rewards.experience} XP`);
-    }
+            }
 
     onFishingFailed(reason, fish, finalStats) {
-        console.log(`PlayerController: Fishing failed - ${reason}`);
-        
-        try {
+                try {
             // Play failure audio based on reason
             switch (reason) {
                 case 'line_break':
@@ -1773,9 +1705,7 @@ export default class PlayerController {
             const item = items[0];
             if (item.durability !== undefined) {
                 item.durability = Math.max(0, item.durability - damage);
-                console.log(`PlayerController: ${item.name} durability reduced by ${damage} (now ${item.durability})`);
-                
-                // Emit equipment damage event
+                                // Emit equipment damage event
                 this.scene.events.emit('equipment:damaged', {
                     item: item,
                     damage: damage,
@@ -1895,8 +1825,6 @@ export default class PlayerController {
         if (this.qteCompleteHandler) {
             this.scene.events.off('fishing:qteComplete', this.qteCompleteHandler);
         }
-        
-        console.log('PlayerController destroyed');
     }
 
     handleCasting() {
@@ -1937,9 +1865,7 @@ export default class PlayerController {
         
         this.castAccuracy = accuracy;
         
-        console.log(`PlayerController: Cast completed - Power: ${this.castPower.toFixed(2)}, Accuracy: ${accuracy.toFixed(2)}, Perfect: ${isPerfect}`);
-        
-        // Audio feedback
+                // Audio feedback
         if (this.gameState.audioManager) {
             this.gameState.audioManager.playSFX('cast');
         }
@@ -1954,9 +1880,7 @@ export default class PlayerController {
     }
 
     startReelingMiniGame(selectedFish, castInfo = {}) {
-        console.log('PlayerController: Starting reeling minigame with fish:', selectedFish.name);
-        
-        try {
+                try {
             // Create reeling minigame configuration
             const reelingConfig = {
                 fishData: selectedFish,
@@ -2012,10 +1936,7 @@ export default class PlayerController {
     }
 
     startCastingTest(fish) {
-        console.log(`PlayerController: Starting casting test for fish: ${fish.name} (ID: ${fish.id})`);
-        console.log('PlayerController: Fish data received for test:', fish);
-        
-        // Prevent multiple tests from running
+                        // Prevent multiple tests from running
         if (this.isTestMode) {
             console.warn('PlayerController: Test already in progress, ignoring new test request');
             return;
@@ -2023,10 +1944,7 @@ export default class PlayerController {
         
         this.scene.events.emit('tuningTestStarted');
         this.forcedNextFish = fish;
-        console.log('PlayerController: forcedNextFish set to:', this.forcedNextFish);
-        console.log('PlayerController: forcedNextFish ID:', this.forcedNextFish?.id);
-        console.log('PlayerController: forcedNextFish name:', this.forcedNextFish?.name);
-        this.isTestMode = true;
+                                this.isTestMode = true;
         this.castLine();
     }
     

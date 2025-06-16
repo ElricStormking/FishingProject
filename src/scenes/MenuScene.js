@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import SceneManager from '../scripts/SceneManager.js';
 import GameState from '../scripts/GameState.js';
 import UITheme from '../ui/UITheme.js';
+import Logger from '../utils/Logger.js';
 
 export default class MenuScene extends Phaser.Scene {
     constructor() {
@@ -82,8 +83,7 @@ export default class MenuScene extends Phaser.Scene {
             // Check for main save file first
             const mainSave = localStorage.getItem('luxuryAngler_save');
             if (mainSave && mainSave !== 'null' && mainSave !== '{}') {
-                console.log('MenuScene: Found main save data in luxuryAngler_save');
-                return true;
+                                return true;
             }
             
             // Check if there's any significant saved data in individual keys
@@ -98,8 +98,7 @@ export default class MenuScene extends Phaser.Scene {
             for (const key of savedData) {
                 const data = localStorage.getItem(key);
                 if (data && data !== 'null' && data !== '{}' && data !== '[]') {
-                    console.log(`MenuScene: Found save data in ${key}`);
-                    return true;
+                                        return true;
                 }
             }
             
@@ -122,15 +121,13 @@ export default class MenuScene extends Phaser.Scene {
                     if (lowerKey.includes(pattern)) {
                         const data = localStorage.getItem(key);
                         if (data && data !== 'null' && data !== '{}' && data !== '[]' && data.length > 10) {
-                            console.log(`MenuScene: Found potential save data in ${key}`);
-                            return true;
+                                                        return true;
                         }
                     }
                 }
             }
             
-            console.log('MenuScene: No save data found');
-            return false;
+                        return false;
             
         } catch (error) {
             console.warn('MenuScene: Error checking save data:', error);
@@ -166,26 +163,19 @@ export default class MenuScene extends Phaser.Scene {
     }
 
     startNewGame() {
-        console.log('MenuScene: Starting new game - clearing all saved data');
-        
-        try {
+                try {
             // Clear all localStorage data first
             localStorage.clear();
-            console.log('MenuScene: All localStorage data cleared');
-            
-            // Reset the GameState to initial values (this is the key fix!)
+                        // Reset the GameState to initial values (this is the key fix!)
             this.gameState.reset();
-            console.log('MenuScene: GameState reset to initial values');
-            
-            // Show confirmation message
+                        // Show confirmation message
             this.showNewGameMessage();
             
             // Wait a moment then start fresh
             this.time.delayedCall(2000, () => {
                 // Reinitialize game state for fresh start
                 this.gameState.initialize().then(() => {
-                    console.log('MenuScene: Game state reinitialized for new game');
-                    // Start at the boat menu, not directly in the fishing scene
+                                        // Start at the boat menu, not directly in the fishing scene
                     this.scene.start('BoatMenuScene');
                 });
             });

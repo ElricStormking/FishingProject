@@ -9,8 +9,7 @@ export class FishTuningTool {
         this.container = null;
         this.selectedFish = null;
         
-        console.log('FishTuningTool: Initialized');
-    }
+            }
     
     toggle() {
         if (this.isVisible) {

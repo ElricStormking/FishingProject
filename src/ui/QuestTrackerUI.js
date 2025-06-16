@@ -1,4 +1,5 @@
 import UITheme from './UITheme.js';
+import Logger from '../utils/Logger.js';
 
 export class QuestTrackerUI {
     constructor(scene, questManager, x = 20, y = 100) {
@@ -34,8 +35,7 @@ export class QuestTrackerUI {
         this.questEntriesContainer = this.scene.add.container(0, 50);
         this.container.add(this.questEntriesContainer);
         
-        console.log('QuestTrackerUI: Created quest tracker UI');
-    }
+            }
 
     createHeader() {
         // Header background
@@ -92,9 +92,7 @@ export class QuestTrackerUI {
             return;
         }
         
-        console.log('QuestTrackerUI: ✅ Setting up GLOBAL quest event listeners');
-        
-        // Use the global event bus for all listeners
+                // Use the global event bus for all listeners
         this.scene.game.events.on('quest-started', this.onQuestStarted, this);
         this.scene.game.events.on('quest-completed', this.onQuestCompleted, this);
         this.scene.game.events.on('quest-objective-completed', this.onObjectiveCompleted, this);
@@ -105,13 +103,11 @@ export class QuestTrackerUI {
         this.scene.game.events.on('fishing:castComplete', this.refreshOnFishingEvent, this);
         this.scene.game.events.on('fishing:catchSuccess', this.refreshOnFishingEvent, this);
 
-        console.log('QuestTrackerUI: ✅ Global event listeners set up successfully');
-    }
+            }
 
     refreshQuests() {
         if (!this.questEntriesContainer) {
-            console.log('QuestTrackerUI: Cannot refresh - container not available');
-            return;
+                        return;
         }
         
         // CRITICAL FIX: If quest processing is disabled, show "No active quests" message
@@ -129,15 +125,10 @@ export class QuestTrackerUI {
             return;
         }
         
-        console.log('QuestTrackerUI: 🔄 Refreshing quest display...');
-        console.log('QuestTrackerUI: Quest manager available:', !!this.questManager);
-        
-        try {
+                        try {
             // Get active quests with detailed logging
             const activeQuests = this.questManager.getActiveQuests();
-            console.log('QuestTrackerUI: Found', activeQuests.length, 'active quests');
-            
-            if (activeQuests.length === 0) {
+                        if (activeQuests.length === 0) {
                 console.log('QuestTrackerUI: No active quests to display');
                 this.clearQuestEntries();
                 this.showNoQuestsMessage();
@@ -176,53 +167,45 @@ export class QuestTrackerUI {
                 this.createQuestEntry(quest, index);
             });
             
-            console.log('QuestTrackerUI: ✅ Quest display refresh completed');
-            
-        } catch (error) {
+                    } catch (error) {
             console.error('QuestTrackerUI: Error refreshing quests:', error);
             this.showErrorMessage('Error loading quests');
         }
     }
 
     onQuestStarted(data) {
-        console.log('QuestTrackerUI: Quest started event received:', data);
-        if (this.scene.time) {
+                if (this.scene.time) {
             this.scene.time.delayedCall(100, () => this.refreshQuests());
         }
     }
     
     onQuestCompleted(data) {
-        console.log('QuestTrackerUI: Quest completed event received:', data);
-        if (this.scene.time) {
+                if (this.scene.time) {
             this.scene.time.delayedCall(100, () => this.refreshQuests());
         }
     }
     
     onObjectiveCompleted(data) {
-        console.log('QuestTrackerUI: Quest objective completed event received:', data);
-        if (this.scene.time) {
+                if (this.scene.time) {
             this.scene.time.delayedCall(100, () => this.refreshQuests());
         }
     }
 
     onObjectiveUpdated(data) {
-        console.log('QuestTrackerUI: Quest objective updated event received:', data);
-        if (this.scene.time) {
+                if (this.scene.time) {
             this.scene.time.delayedCall(100, () => this.refreshQuests());
         }
     }
 
     onQuestProgressUpdated(data) {
-        console.log('QuestTrackerUI: Quest progress updated event received:', data);
-        if (this.scene.time) {
+                if (this.scene.time) {
             this.scene.time.delayedCall(100, () => this.refreshQuests());
         }
     }
 
     refreshOnFishingEvent() {
         if (!this.questProcessingDisabled && this.questManager && this.questManager.activeQuests && this.questManager.activeQuests.size > 0) {
-            console.log('QuestTrackerUI: Fishing event triggered, refreshing quests');
-            if (this.scene.time) {
+                        if (this.scene.time) {
                 this.scene.time.delayedCall(100, () => this.refreshQuests());
             }
         } else {
@@ -427,9 +410,7 @@ export class QuestTrackerUI {
     }
 
     destroy() {
-        console.log('QuestTrackerUI: Starting destroy process...');
-        
-        if (this.container) {
+                if (this.container) {
             this.clearQuestEntries();
             this.container.destroy();
             this.container = null;

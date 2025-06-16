@@ -9,8 +9,7 @@ export default class TournamentManager {
         this.activeEntry = null;
         this.playerStats = this.loadPlayerStats();
         
-        console.log('TournamentManager: Initialized with tournament system');
-    }
+            }
 
     initializeTournaments() {
         return {
@@ -226,8 +225,7 @@ export default class TournamentManager {
             participationTime: 0
         };
         
-        console.log('TournamentManager: Entered tournament:', tournament.name);
-        return { success: true, entry: this.activeEntry };
+                return { success: true, entry: this.activeEntry };
     }
 
     recordCatch(fish) {

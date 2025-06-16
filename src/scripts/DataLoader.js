@@ -10,23 +10,16 @@ export class DataLoader {
 
     async loadAllData() {
         try {
-            console.log('DataLoader: Loading game data...');
+                        // Load all data files - ONLY use real JSON data, no fallbacks
+                        this.fishData = await this.loadDataFile('fish');
             
-            // Load all data files - ONLY use real JSON data, no fallbacks
-            console.log('DataLoader: Loading fish data...');
-            this.fishData = await this.loadDataFile('fish');
+                        this.lureData = await this.loadDataFile('lures');
             
-            console.log('DataLoader: Loading lure data...');
-            this.lureData = await this.loadDataFile('lures');
+                        this.equipmentData = await this.loadDataFile('equipment');
             
-            console.log('DataLoader: Loading equipment data...');
-            this.equipmentData = await this.loadDataFile('equipment');
+                        this.attributeData = await this.loadDataFile('attributes');
             
-            console.log('DataLoader: Loading attribute data...');
-            this.attributeData = await this.loadDataFile('attributes');
-            
-            console.log('DataLoader: Loading game config...');
-            this.gameConfig = await this.loadDataFile('gameConfig');
+                        this.gameConfig = await this.loadDataFile('gameConfig');
 
             // Validate all data was loaded successfully
             if (!this.fishData || !this.lureData || !this.equipmentData || !this.attributeData || !this.gameConfig) {
@@ -43,8 +36,7 @@ export class DataLoader {
             }
 
             this.loaded = true;
-            console.log('✅ DataLoader: All game data loaded successfully with REAL JSON data');
-            console.log('✅ DataLoader: Data summary:', this.getDataSummary());
+                        console.log('✅ DataLoader: Data summary:', this.getDataSummary());
             
             return {
                 fish: this.fishData,
@@ -70,9 +62,7 @@ export class DataLoader {
     }
 
     getFallbackData(dataType) {
-        console.log(`DataLoader: Using fallback data for ${dataType}`);
-        
-        switch (dataType) {
+                switch (dataType) {
             case 'fish data':
                 return {
                     fishSpecies: [
@@ -144,57 +134,49 @@ export class DataLoader {
     }
 
     loadFallbackData() {
-        console.log('DataLoader: Loading complete fallback data set');
-        this.fishData = this.getFallbackData('fish data');
+                this.fishData = this.getFallbackData('fish data');
         this.lureData = this.getFallbackData('lure data');
         this.equipmentData = this.getFallbackData('equipment data');
         this.attributeData = this.getFallbackData('attribute data');
         this.gameConfig = this.getFallbackData('game config');
     }
 
-    async loadDataFile(fileName) {
-        console.log(`DataLoader: Loading ${fileName} data - ENFORCING CSV-CONVERTED DATA ONLY`);
-        
+        async loadDataFile(fileName) {
         try {
             // Try to import the actual JSON files using dynamic imports
             let data;
             switch (fileName) {
                 case 'fish':
-                    console.log('DataLoader: 🐟 Attempting to import CSV-converted fish.json...');
                     data = await import('../data/fish.json');
                     break;
                 case 'lures':
-                    console.log('DataLoader: 🎣 Attempting to import CSV-converted lures.json...');
                     data = await import('../data/lures.json');
                     break;
                 case 'equipment':
-                    console.log('DataLoader: ⚙️ Attempting to import CSV-converted equipment.json...');
                     data = await import('../data/equipment.json');
                     break;
                 case 'attributes':
-                    console.log('DataLoader: 📊 Attempting to import CSV-converted attributes.json...');
                     data = await import('../data/attributes.json');
                     break;
                 case 'gameConfig':
-                    console.log('DataLoader: ⚙️ Attempting to import CSV-converted gameConfig.json...');
                     data = await import('../data/gameConfig.json');
                     break;
                 default:
                     throw new Error(`Unknown data file: ${fileName}`);
             }
             
-            console.log(`DataLoader: Raw import result for ${fileName}:`, data);
-            
             // Extract the default export (the actual JSON data)
-            const jsonData = data.default || data;
+            let jsonData = data.default || data;
             
-            console.log(`DataLoader: Extracted JSON data for ${fileName}:`, jsonData);
             console.log(`DataLoader: JSON data type: ${typeof jsonData}, keys:`, Object.keys(jsonData || {}));
             
             // Validate that we actually got data
             if (!jsonData || (typeof jsonData === 'object' && Object.keys(jsonData).length === 0)) {
                 throw new Error(`Empty or invalid data loaded from ${fileName}.json - CSV conversion may have failed!`);
             }
+            
+            // 🔧 TRANSFORM CSV FIELD NAMES: Convert CSV field names to expected field names
+            jsonData = this.transformCsvFieldNames(fileName, jsonData);
             
             // ⚠️ CRITICAL: Validate that this is REAL CSV-CONVERTED JSON data, not fallback data
             const isRealData = this.validateRealJsonData(fileName, jsonData);
@@ -204,22 +186,17 @@ export class DataLoader {
                 console.error(`🚨 DataLoader: This indicates a critical failure in the CSV conversion system`);
                 
                 // FORCE RETRY: Try alternative loading method
-                console.log(`🔄 DataLoader: Attempting alternative loading method for ${fileName}...`);
                 const alternativeData = await this.loadDataFileAlternative(fileName);
                 if (alternativeData && this.validateRealJsonData(fileName, alternativeData)) {
-                    console.log(`✅ DataLoader: Alternative loading successful for ${fileName}`);
-                    return alternativeData;
+                    return this.transformCsvFieldNames(fileName, alternativeData);
                 }
                 
                 throw new Error(`CRITICAL: Fallback data detected for ${fileName} - CSV conversion system has failed!`);
             }
             
-            console.log(`✅ DataLoader: Successfully loaded REAL CSV-CONVERTED ${fileName} data from JSON file`);
-            console.log(`✅ DataLoader: ${fileName} validated as authentic CSV-converted JSON data`);
-            
             // Log specific data counts for verification
             if (fileName === 'fish' && jsonData.fishSpecies) {
-                console.log(`✅ DataLoader: Loaded ${jsonData.fishSpecies.length} fish species from CSV-converted fish.json`);
+                console.log(`✅ DataLoader: Loaded ${jsonData.fishSpecies.length} fish species`);
                 console.log(`✅ DataLoader: First fish species:`, jsonData.fishSpecies[0]);
                 
                 // Check for any fish with undefined names - this should NOT happen with CSV data
@@ -231,8 +208,25 @@ export class DataLoader {
             }
             
             if (fileName === 'equipment' && jsonData.fishingRods) {
-                console.log(`✅ DataLoader: Loaded ${jsonData.fishingRods.length} fishing rods from CSV-converted equipment.json`);
+                console.log(`✅ DataLoader: Loaded ${jsonData.fishingRods.length} fishing rods`);
                 console.log(`✅ DataLoader: First fishing rod:`, jsonData.fishingRods[0]);
+                
+                // Check for undefined rod names
+                const undefinedRods = jsonData.fishingRods.filter(rod => !rod.name || rod.name === 'undefined');
+                if (undefinedRods.length > 0) {
+                    console.error(`🚨 DataLoader: Found ${undefinedRods.length} rods with undefined names!`, undefinedRods);
+                }
+            }
+            
+            if (fileName === 'lures' && jsonData.lures) {
+                console.log(`✅ DataLoader: Loaded ${jsonData.lures.length} lures`);
+                console.log(`✅ DataLoader: First lure:`, jsonData.lures[0]);
+                
+                // Check for undefined lure names
+                const undefinedLures = jsonData.lures.filter(lure => !lure.name || lure.name === 'undefined');
+                if (undefinedLures.length > 0) {
+                    console.error(`🚨 DataLoader: Found ${undefinedLures.length} lures with undefined names!`, undefinedLures);
+                }
             }
             
             return jsonData;
@@ -252,24 +246,164 @@ export class DataLoader {
         }
     }
 
+        /**
+     * Transform CSV field names to expected field names
+     * @param {string} fileName - The data file name
+     * @param {object} jsonData - The raw JSON data from CSV conversion
+     * @returns {object} - Transformed data with correct field names
+     */
+    transformCsvFieldNames(fileName, jsonData) {
+        try {
+            console.log(`🔧 DataLoader: Transforming CSV field names for ${fileName}`);
+            
+            switch (fileName) {
+                case 'equipment':
+                    if (jsonData.fishingRods) {
+                        jsonData.fishingRods = jsonData.fishingRods.map(rod => ({
+                            id: rod.rod_id,
+                            name: rod.rod_name,
+                            rarity: rod.rarity,
+                            equipSlot: rod.equip_slot || 'rod',
+                            unlockLevel: rod.unlock_level || 1,
+                            cost: rod.cost,
+                            description: rod.description,
+                            stats: {
+                                castAccuracy: rod.cast_accuracy || 0,
+                                tensionStability: rod.tension_stability || 0,
+                                rareFishChance: rod.rare_fish_chance || 0,
+                                castingRange: rod.casting_range || 0,
+                                reelSpeed: rod.reel_speed || 0,
+                                struggleResistance: rod.struggle_resistance || 0
+                            },
+                            // Keep original fields for compatibility
+                            ...rod
+                        }));
+                    }
+                    
+                    if (jsonData.boats) {
+                        jsonData.boats = jsonData.boats.map(boat => ({
+                            id: boat.boat_id,
+                            name: boat.boat_name,
+                            rarity: boat.rarity,
+                            equipSlot: boat.equip_slot || 'boat',
+                            unlockLevel: boat.unlock_level || 1,
+                            cost: boat.cost,
+                            description: boat.description,
+                            stats: {
+                                craftingEfficiency: boat.crafting_efficiency || 0,
+                                autoFishingYield: boat.auto_fishing_yield || 0,
+                                fishDetection: boat.fish_detection || 0,
+                                hotspotStability: boat.hotspot_stability || 0,
+                                companionSlots: boat.companion_slots || 0,
+                                autoFishingEfficiency: boat.auto_fishing_efficiency || 0,
+                                boatDurability: boat.boat_durability || 0,
+                                fishtankStorage: boat.fishtank_storage || 0
+                            },
+                            // Keep original fields for compatibility
+                            ...boat
+                        }));
+                    }
+                    
+                    if (jsonData.clothing) {
+                        jsonData.clothing = jsonData.clothing.map(clothing => ({
+                            id: clothing.clothing_id,
+                            name: clothing.clothing_name,
+                            rarity: clothing.rarity,
+                            equipSlot: clothing.equip_slot,
+                            unlockLevel: clothing.unlock_level || 1,
+                            cost: clothing.cost,
+                            description: clothing.description,
+                            stats: {
+                                sunProtection: clothing.sun_protection || 0,
+                                comfort: clothing.comfort || 0,
+                                style: clothing.style || 0,
+                                durability: clothing.durability || 0
+                            },
+                            // Keep original fields for compatibility
+                            ...clothing
+                        }));
+                    }
+                    break;
+                    
+                case 'lures':
+                    if (jsonData.lures) {
+                        jsonData.lures = jsonData.lures.map(lure => ({
+                            id: lure.lure_id,
+                            name: lure.lure_name,
+                            type: lure.lure_type,
+                            rarity: lure.rarity,
+                            equipSlot: lure.equip_slot || 'lure',
+                            unlockLevel: lure.unlock_level || 1,
+                            cost: lure.cost,
+                            description: lure.description,
+                            stats: {
+                                biteRate: lure.bite_rate || 0,
+                                lureSuccess: lure.lure_success || 0,
+                                durability: lure.durability || 0,
+                                precision: lure.precision || 0
+                            },
+                            // Keep original fields for compatibility
+                            ...lure
+                        }));
+                    }
+                    break;
+                    
+                case 'fish':
+                    if (jsonData.fishSpecies) {
+                        jsonData.fishSpecies = jsonData.fishSpecies.map(fish => ({
+                            id: fish.fish_id,
+                            name: fish.fish_name,
+                            rarity: fish.rarity,
+                            size: fish.size,
+                            weight: fish.weight,
+                            coinValue: fish.coin_value,
+                            experienceValue: fish.experience_value,
+                            description: fish.description,
+                            habitat: fish.habitat,
+                            struggleStyle: fish.struggle_style,
+                            activeTimePeriod: fish.active_time_period ? fish.active_time_period.split(',').map(s => s.trim()) : ['morning'],
+                            weatherPreference: fish.weather_preference ? fish.weather_preference.split(',').map(s => s.trim()) : ['sunny'],
+                            aggressiveness: fish.aggressiveness || 1,
+                            elusiveness: fish.elusiveness || 1,
+                            strength: fish.strength || 1,
+                            speed: fish.speed || 1,
+                            depthPreference: fish.depth_preference || 1,
+                            baitPreference: fish.bait_preference || 1,
+                            endurance: fish.endurance || 1,
+                            // Keep original fields for compatibility
+                            ...fish
+                        }));
+                    }
+                    break;
+                    
+                // For other files, just pass through as-is
+                default:
+                    console.log(`🔧 DataLoader: No transformation needed for ${fileName}`);
+                    break;
+            }
+            
+            console.log(`✅ DataLoader: Field transformation completed for ${fileName}`);
+            return jsonData;
+            
+        } catch (error) {
+            console.error(`🚨 DataLoader: Error transforming CSV field names for ${fileName}:`, error);
+            console.error(`🚨 DataLoader: Returning original data to prevent crash`);
+            return jsonData; // Return original data to prevent crash
+        }
+    }
+
     /**
      * Alternative loading method using fetch instead of dynamic import
      */
     async loadDataFileAlternative(fileName) {
-        console.log(`DataLoader: Trying alternative fetch method for ${fileName}`);
-        
         try {
             const filePath = `./src/data/${fileName}.json`;
-            console.log(`DataLoader: Fetching ${filePath}`);
-            
             const response = await fetch(filePath);
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
             
             const jsonData = await response.json();
-            console.log(`DataLoader: Alternative fetch successful for ${fileName}:`, jsonData);
-            
             return jsonData;
             
         } catch (error) {
@@ -279,9 +413,7 @@ export class DataLoader {
     }
 
     getEnhancedFallbackData(fileName) {
-        console.log(`DataLoader: Generating enhanced fallback data for ${fileName}`);
-        
-        switch (fileName) {
+                switch (fileName) {
             case 'fish':
                 return {
                     fishSpecies: [
@@ -758,15 +890,12 @@ export class DataLoader {
             const hasValidEquipmentData = this.equipmentData && this.equipmentData.fishingRods && Array.isArray(this.equipmentData.fishingRods);
             
             if (hasValidFishData && hasValidLureData && hasValidEquipmentData) {
-                console.log('DataLoader: Enhanced game data validated successfully');
-                return true;
+                                return true;
             } else {
-                console.log('DataLoader: Using partial data structures (this is normal for enhanced fallback)');
-                return true; // Continue anyway with partial data
+                                return true; // Continue anyway with partial data
             }
         } catch (error) {
-            console.log('DataLoader: Validation completed with enhanced fallback data');
-            return true; // Continue anyway
+                        return true; // Continue anyway
         }
     }
 
@@ -854,9 +983,7 @@ export class DataLoader {
                 console.error('🚨 DataLoader: Empty files:', report.fallbackFiles);
                 console.error('🚨 DataLoader: Warnings:', report.warnings);
             } else {
-                console.log('✅ DataLoader: All data loaded successfully');
-                console.log('✅ DataLoader: Loaded files:', report.realFiles);
-                if (report.warnings.length > 0) {
+                                                if (report.warnings.length > 0) {
                     console.warn('⚠️ DataLoader: Warnings:', report.warnings);
                 }
             }
@@ -879,9 +1006,7 @@ export class DataLoader {
      * @returns {boolean} - True if real data, false if fallback data
      */
     validateRealJsonData(fileName, data) {
-        console.log(`DataLoader: Validating JSON data for ${fileName}`);
-        
-        try {
+                try {
             switch (fileName) {
                 case 'fish':
                     // Accept any fish data with basic structure
@@ -898,8 +1023,7 @@ export class DataLoader {
                         console.error(`DataLoader: ${fileName} missing struggleStyles array`);
                         return false;
                     }
-                    console.log(`✅ DataLoader: ${fileName} validated successfully (${data.fishSpecies.length} species, ${data.struggleStyles.length} struggle styles)`);
-                    return true;
+                                        return true;
                     
                 case 'equipment':
                     // Accept any equipment data with basic structure
@@ -908,8 +1032,7 @@ export class DataLoader {
                         return false;
                     }
                     // Accept any number of equipment items
-                    console.log(`✅ DataLoader: ${fileName} validated successfully (${data.fishingRods.length} rods, ${(data.boats || []).length} boats, ${(data.clothing || []).length} clothing)`);
-                    return true;
+                                        return true;
                     
                 case 'lures':
                     // Accept any lure data with basic structure
@@ -917,8 +1040,7 @@ export class DataLoader {
                         console.error(`DataLoader: ${fileName} missing lures array`);
                         return false;
                     }
-                    console.log(`✅ DataLoader: ${fileName} validated successfully (${data.lures.length} lures)`);
-                    return true;
+                                        return true;
                     
                 case 'attributes':
                     // Accept any attributes data with playerAttributes
@@ -928,8 +1050,7 @@ export class DataLoader {
                     }
                     // Accept any number of attribute categories
                     const playerAttrCategories = Object.keys(data.playerAttributes);
-                    console.log(`✅ DataLoader: ${fileName} validated successfully (${playerAttrCategories.length} player categories)`);
-                    return true;
+                                        return true;
                     
                 case 'gameConfig':
                     // Accept any config data
@@ -937,8 +1058,7 @@ export class DataLoader {
                         console.error(`DataLoader: ${fileName} is empty`);
                         return false;
                     }
-                    console.log(`✅ DataLoader: ${fileName} validated successfully`);
-                    return true;
+                                        return true;
                     
                 default:
                     // For other files, basic validation
@@ -946,8 +1066,7 @@ export class DataLoader {
                         console.error(`DataLoader: ${fileName} is empty`);
                         return false;
                     }
-                    console.log(`✅ DataLoader: ${fileName} validated successfully`);
-                    return true;
+                                        return true;
             }
         } catch (error) {
             console.error(`DataLoader: Error validating ${fileName}:`, error);

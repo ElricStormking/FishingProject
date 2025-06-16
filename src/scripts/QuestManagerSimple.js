@@ -61,8 +61,7 @@ export class QuestManager {
             progress: 0
         });
         
-        console.log('QuestManager: Added quest:', questData.title);
-    }
+            }
 
     startQuest(questId) {
         const quest = this.availableQuests.get(questId);
@@ -335,8 +334,7 @@ export class QuestManager {
     onBoatMenuAccessed() {
         console.log('QuestManager: onBoatMenuAccessed called');
         const completed = this.completeObjective('story_001_tutorial', 'visit_boat_menu');
-        console.log('QuestManager: Boat menu objective completion result:', completed);
-    }
+            }
 
     debugCompleteQuest(questId = 'story_001_tutorial') {
         console.log(`🧪 DEBUG: Force completing quest: ${questId}`);
@@ -360,7 +358,7 @@ export class QuestManager {
             });
             
             this.completeQuest(questId);
-            console.log('✅ DEBUG: Quest completed and reward UI should be displayed');
+            if (import.meta.env.DEV) console.log('✅ DEBUG: Quest completed and reward UI should be displayed');
         }
     }
 
